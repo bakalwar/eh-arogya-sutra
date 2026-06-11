@@ -22,7 +22,7 @@ const LONG_TIMEOUT_PATHS = [
 ];
 
 const client = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE || '',
+  baseURL: import.meta.env.VITE_API_BASE || import.meta.env.VITE_API_URL || '',
   timeout: DEFAULT_REQUEST_TIMEOUT_MS,
   headers: { 'Content-Type': 'application/json' }
 });
