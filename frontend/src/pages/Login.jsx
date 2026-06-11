@@ -56,7 +56,7 @@ export default function Login() {
   const [form, setForm] = useState({ mobile: '', password: '', otp: '', totp: '' });
   const [challengeId, setChallengeId] = useState('');
   const [userId, setUserId] = useState('');
-  const [emailHint, setEmailHint] = useState('');
+  const [mobileHint, setMobileHint] = useState('');
   const [otpDevConsole, setOtpDevConsole] = useState(false);
   const [otpMessage, setOtpMessage] = useState('');
   const [devOtp, setDevOtp] = useState('');
@@ -107,7 +107,7 @@ export default function Login() {
         setStep('2fa');
       } else if (data.success && data.requiresOtp && data.challengeId) {
         setChallengeId(data.challengeId);
-        setEmailHint(data.emailHint || '');
+        setMobileHint(data.mobileHint || data.emailHint || '');
         setOtpDevConsole(!!data.otpDevConsole);
         setOtpMessage(data.message || '');
         const code = data.devOtp ? String(data.devOtp) : '';
@@ -263,8 +263,7 @@ export default function Login() {
           {step === 'otp' && (
             <div className="space-y-4">
               <p className="text-center text-sm text-white/60">
-                OTP bheja gaya — {form.mobile}
-                {emailHint ? ` (${emailHint})` : ''}
+                OTP aapke mobile par bheja gaya — {mobileHint || form.mobile}
               </p>
               {otpMessage && <p className="text-center text-xs text-white/45">{otpMessage}</p>}
 

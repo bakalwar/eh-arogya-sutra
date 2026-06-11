@@ -5,7 +5,8 @@ const { asyncHandler } = require('../utils/asyncHandler');
 const { normalizeMobile, mobilesMatch } = require('../utils/mobile');
 const { isDbReady, getPostgresModels } = require('../utils/dataSource');
 const { writeAudit } = require('../services/auditLog');
-const { generateOtpSecretAndCode, verifyOtpCode, sendLoginOtpEmail } = require('../services/emailOtp');
+const { generateOtpSecretAndCode, verifyOtpCode } = require('../services/emailOtp');
+const { sendLoginOtpSms, maskMobile } = require('../services/smsOtp');
 const { isDevelopment } = require('../services/emailService');
 const { verifyTotpToken } = require('../services/twoFactor');
 const {
@@ -160,14 +161,6 @@ router.post(
       await user.reload();
     }
 
-    const email = await ensureOtpEmail(user);
-    if (!email) {
-      return res.status(400).json({
-        success: false,
-        message: 'No email on file for OTP. Set DEMO_DOCTOR_EMAIL in .env or add email to your account.'
-      });
-    }
-
     await clearLoginFailures(user);
 
     // Check if TOTP is enabled
@@ -196,43 +189,44 @@ router.post(
       verify_attempts: 0
     });
 
-    const mailResult = await sendLoginOtpEmail(email, code, user.get('name'));
+    const smsResult = await sendLoginOtpSms(mobileNorm, code, user.get('name'));
     await writeAudit(user.id, 'login.otp_sent', {
       ip,
       challengeId: challenge.id,
-      email,
-      sent: mailResult.sent,
-      smtpConfigured: mailResult.smtpConfigured
+      mobile: maskMobile(mobileNorm),
+      channel: 'sms',
+      sent: smsResult.sent,
+      smsConfigured: smsResult.smsConfigured
     });
 
-    if (!mailResult.sent && !isDevelopment()) {
-      const smtpHint = mailResult.smtpConfigured
-        ? 'Email send failed — check Gmail App Password and Railway logs.'
-        : 'Email not configured — admin must set EMAIL_PASS (Gmail App Password) on Railway.';
+    if (!smsResult.sent && !isDevelopment()) {
+      const smsHint = smsResult.smsConfigured
+        ? 'SMS send failed — check Fast2SMS balance and Railway logs.'
+        : 'SMS not configured — admin must set FAST2SMS_KEY on Railway.';
       return res.status(503).json({
         success: false,
-        message: `Could not send OTP. ${smtpHint}`,
-        emailHint: email.replace(/(.{2}).*(@.*)/, '$1***$2')
+        message: `Could not send OTP to mobile. ${smsHint}`,
+        mobileHint: maskMobile(mobileNorm)
       });
     }
 
-    const sentToGmail = mailResult.sent;
-    const devHint = mailResult.devOtp
+    const sentToMobile = smsResult.sent;
+    const devHint = smsResult.devOtp
       ? 'OTP is shown below (development mode).'
-      : mailResult.devLogged
+      : smsResult.devLogged
         ? 'OTP is in the server terminal (=== OTP CODE ===).'
         : '';
     return res.json({
       success: true,
       requiresOtp: true,
       requireOtp: true,
-      message: sentToGmail
-        ? `Verification code sent to your email. ${devHint}`.trim()
-        : devHint || 'Enter the verification code.',
+      message: sentToMobile
+        ? `Verification code sent to your mobile ${maskMobile(mobileNorm)}. ${devHint}`.trim()
+        : devHint || 'Enter the verification code sent to your mobile.',
       challengeId: String(challenge.id),
-      emailHint: email.replace(/(.{2}).*(@.*)/, '$1***$2'),
-      otpDevConsole: !!mailResult.devLogged,
-      devOtp: mailResult.devOtp || undefined
+      mobileHint: maskMobile(mobileNorm),
+      otpDevConsole: !!smsResult.devLogged,
+      devOtp: smsResult.devOtp || undefined
     });
   })
 );
@@ -294,7 +288,7 @@ router.post(
     await challenge.update({ consumed_at: new Date() });
     await clearLoginFailures(user);
     const { accessToken, refreshToken } = await issueTokenPair(user);
-    await writeAudit(user.id, 'login.success', { ip, method: 'email_otp' });
+    await writeAudit(user.id, 'login.success', { ip, method: 'sms_otp' });
 
     return res.json({
       success: true,

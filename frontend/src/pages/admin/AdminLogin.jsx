@@ -102,7 +102,7 @@ export default function AdminLogin() {
           <form onSubmit={onOtpSubmit} className="space-y-3">
             <input
               className="admin-input"
-              placeholder="Email OTP"
+              placeholder="SMS OTP (mobile par aaya)"
               value={form.otp}
               onChange={(e) => setForm({ ...form, otp: e.target.value })}
               required
