@@ -61,6 +61,7 @@
     "apiReady": "Server connected",
     "errNetwork": "Cannot reach the API server",
     "errNetworkHint": "Double-click CHALAO.bat or run: npm run dev (wait until both API + Vite are ready)",
+    "errNetworkHintProd": "Live site: check Railway backend is running. Local: run npm run dev.",
     "errBackend": "Server unavailable. Start the backend.",
     "errRateLimit": "Too many attempts — wait 15 minutes.",
     "errLocked": "Account locked after too many failed attempts.",

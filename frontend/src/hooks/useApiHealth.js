@@ -1,13 +1,18 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import client from '../api/client';
 
-const DEV_DIRECT_HEALTH =
-  import.meta.env.DEV &&
-  (import.meta.env.VITE_API_PROXY_TARGET || `http://${window.location.hostname}:5000`).replace(/\/$/, '') +
-    '/health';
+function apiBase() {
+  return (import.meta.env.VITE_API_BASE || import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+}
+
+/** Health URL: production → Railway/direct base; dev → Vite proxy /health */
+function healthUrl() {
+  const base = apiBase();
+  if (base) return `${base}/health`;
+  return '/health';
+}
 
 /**
- * API health — dev mein seedha port 5000 check (Vite proxy spam avoid).
+ * API health — dev: Vite proxy /health; production: VITE_API_BASE/health or /health (Vercel rewrite).
  */
 export function useApiHealth(pollMs = 30000) {
   const [status, setStatus] = useState('checking');
@@ -15,12 +20,11 @@ export function useApiHealth(pollMs = 30000) {
 
   const check = useCallback(async () => {
     const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), 5000);
+    const t = setTimeout(() => ctrl.abort(), 8000);
     try {
-      // 1. Try proxy path (most reliable, avoids CORS issues)
-      const proxyRes = await fetch('/health', { signal: ctrl.signal });
-      if (proxyRes.ok) {
-        const data = await proxyRes.json().catch(() => ({}));
+      const res = await fetch(healthUrl(), { signal: ctrl.signal });
+      if (res.ok) {
+        const data = await res.json().catch(() => ({}));
         if (data?.status === 'OK' || data?.status === 'ok') {
           clearTimeout(t);
           setStatus('ok');

@@ -74,11 +74,15 @@ export default function Login() {
 
   if (!booted) return null;
 
+  function networkHint() {
+    return import.meta.env.PROD ? t('login.errNetworkHintProd') : t('login.errNetworkHint');
+  }
+
   function handleApiError(e2) {
     const status = e2.response?.status;
     const msg = e2.response?.data?.message;
     if (!e2.response) {
-      setErr(apiStatus === 'checking' ? t('login.apiStarting') : `${t('login.errNetwork')} — ${t('login.errNetworkHint')}`);
+      setErr(apiStatus === 'checking' ? t('login.apiStarting') : `${t('login.errNetwork')} — ${networkHint()}`);
     } else if (status === 502 || status === 503) setErr(t('login.errBackend'));
     else if (status === 429) setErr(t('login.errRateLimit'));
     else if (status === 423) setErr(msg || t('login.errLocked'));
@@ -96,7 +100,7 @@ export default function Login() {
     if (!apiReady) {
       const ok = await recheckApi();
       if (!ok) {
-        setErr(t('login.errNetworkHint'));
+        setErr(networkHint());
         return;
       }
     }
@@ -205,7 +209,7 @@ export default function Login() {
         )}
         {apiStatus === 'down' && (
           <p className="mt-4 rounded-lg border border-amber-500/35 bg-amber-500/10 px-3 py-2 text-center text-xs text-amber-100">
-            {t('login.errNetwork')} — {t('login.errNetworkHint')}
+            {t('login.errNetwork')} — {networkHint()}
           </p>
         )}
         {apiReady && <p className="mt-3 text-center text-[10px] text-emerald-400/90">● {t('login.apiReady')}</p>}
