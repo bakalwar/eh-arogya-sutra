@@ -41,7 +41,7 @@ async function connectPostgres() {
   try {
     await sequelize.authenticate();
     models = connectModels();
-    if (process.env.NODE_ENV !== 'production' && process.env.PG_AUTO_BOOTSTRAP !== '0') {
+    if (process.env.PG_AUTO_BOOTSTRAP === '1' || (process.env.NODE_ENV !== 'production' && process.env.PG_AUTO_BOOTSTRAP !== '0')) {
       await ensurePostgresReady(sequelize, models);
     }
     pgState.connected = true;

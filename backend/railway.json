@@ -1,10 +1,12 @@
 {
   "build": {
-    "builder": "NIXPACKS"
+    "builder": "NIXPACKS",
+    "watchPatterns": ["backend/**", "database/**", "package.json"]
   },
   "deploy": {
-    "startCommand": "node server.js",
+    "startCommand": "node ../backend/server.js",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 3
-  }
+  },
+  "$comment": "Use repo-root railway.toml — deploy from project root, not backend/ alone"
 }

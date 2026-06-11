@@ -1,0 +1,8 @@
+[build]
+builder = "NIXPACKS"
+
+[deploy]
+startCommand = "node backend/server.js"
+releaseCommand = "node database/apply-schema.js"
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3

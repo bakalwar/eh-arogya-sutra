@@ -66,13 +66,23 @@ function getDatabaseUrl() {
   return buildUriFromSplitConfig(getSplitPostgresConfig());
 }
 
+function urlNeedsSsl(url) {
+  const u = String(url || '').toLowerCase();
+  if (process.env.POSTGRES_SSL === '0') return false;
+  return (
+    process.env.POSTGRES_SSL === '1' ||
+    u.includes('supabase') ||
+    u.includes('sslmode=require')
+  );
+}
+
 const poolMax = Math.min(100, Math.max(5, parseInt(process.env.PG_POOL_MAX || '30', 10) || 30));
 const poolMin = Math.min(poolMax, Math.max(0, parseInt(process.env.PG_POOL_MIN || '2', 10) || 2));
 
-const dialectOptions =
-  process.env.POSTGRES_SSL === '1'
-    ? { ssl: { require: true, rejectUnauthorized: process.env.POSTGRES_SSL_REJECT_UNAUTHORIZED !== '0' } }
-    : { ssl: false };
+const dbUrlForSsl = getDatabaseUrl();
+const dialectOptions = urlNeedsSsl(dbUrlForSsl)
+  ? { ssl: { require: true, rejectUnauthorized: process.env.POSTGRES_SSL_REJECT_UNAUTHORIZED === '1' } }
+  : { ssl: false };
 
 const commonOptions = {
   dialect: 'postgres',

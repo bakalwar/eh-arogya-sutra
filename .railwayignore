@@ -1,0 +1,15 @@
+node_modules
+frontend/node_modules
+frontend/dist
+.vercel
+eh-api
+eh-expert-engine
+local-site
+uploads
+search_10000.txt
+*.log
+.git
+docs
+tests
+medical_reports
+patient_data
