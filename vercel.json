@@ -1,6 +1,19 @@
 {
+  "installCommand": "npm install && npm install --prefix frontend",
   "buildCommand": "npm run build:web",
   "outputDirectory": "frontend/dist",
   "framework": null,
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ],
+  "experimentalServices": {
+    "backend": {
+      "root": "backend",
+      "entrypoint": "server.js",
+      "routePrefix": "/"
+    }
+  }
 }
