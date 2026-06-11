@@ -6,6 +6,7 @@ const { normalizeMobile, mobilesMatch } = require('../utils/mobile');
 const { isDbReady, getPostgresModels } = require('../utils/dataSource');
 const { writeAudit } = require('../services/auditLog');
 const { generateOtpSecretAndCode, verifyOtpCode, sendLoginOtpEmail } = require('../services/emailOtp');
+const { isDevelopment } = require('../services/emailService');
 const { verifyTotpToken } = require('../services/twoFactor');
 const {
   issueTokenPair,
@@ -196,7 +197,24 @@ router.post(
     });
 
     const mailResult = await sendLoginOtpEmail(email, code, user.get('name'));
-    await writeAudit(user.id, 'login.otp_sent', { ip, challengeId: challenge.id, email });
+    await writeAudit(user.id, 'login.otp_sent', {
+      ip,
+      challengeId: challenge.id,
+      email,
+      sent: mailResult.sent,
+      smtpConfigured: mailResult.smtpConfigured
+    });
+
+    if (!mailResult.sent && !isDevelopment()) {
+      const smtpHint = mailResult.smtpConfigured
+        ? 'Email send failed — check Gmail App Password and Railway logs.'
+        : 'Email not configured — admin must set EMAIL_PASS (Gmail App Password) on Railway.';
+      return res.status(503).json({
+        success: false,
+        message: `Could not send OTP. ${smtpHint}`,
+        emailHint: email.replace(/(.{2}).*(@.*)/, '$1***$2')
+      });
+    }
 
     const sentToGmail = mailResult.sent;
     const devHint = mailResult.devOtp

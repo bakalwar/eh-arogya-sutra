@@ -45,19 +45,23 @@ async function sendLoginOtpEmail(toEmail, code, userName) {
     logOtpToConsole(toEmail, code, 'configure EMAIL_USER + EMAIL_PASS in .env for Gmail');
   }
 
-  let result = { sent: false, devLogged: false };
+  let result = { sent: false, devLogged: false, error: null };
   if (isSmtpConfigured()) {
     result = await sendOtpEmail({ to: toEmail, subject, text, html });
   } else if (isDevelopment()) {
     logOtpToConsole(toEmail, code, 'configure EMAIL_USER + EMAIL_PASS in .env for Gmail');
     result = { sent: false, devLogged: true };
+  } else {
+    console.error('[email] SMTP not configured — set EMAIL_USER + EMAIL_PASS on Railway');
+    result = { sent: false, devLogged: false, error: 'smtp_not_configured' };
   }
 
   return {
     sent: result.sent,
     devLogged: result.devLogged || (!result.sent && isDevelopment()),
     devOtp: shouldShowDevOtpOnScreen() ? code : undefined,
-    smtpConfigured: isSmtpConfigured()
+    smtpConfigured: isSmtpConfigured(),
+    error: result.error
   };
 }
 
