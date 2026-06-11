@@ -48,7 +48,7 @@
     "mobile": "Mobile Number",
     "password": "Password",
     "submit": "Sign In",
-    "hint": "Demo: 9876543210 / demo123 — OTP sent to email (see server console if SMTP not set).",
+    "hint": "OTP will be sent to your registered email.",
     "otpSent": "Check your email for the 6-digit verification code.",
     "otpEmailHint": "Sent to {{email}}",
     "otpLabel": "Verification code",
@@ -62,7 +62,8 @@
     "errNetwork": "Cannot reach the API server",
     "errNetworkHint": "Double-click CHALAO.bat or run: npm run dev (wait until both API + Vite are ready)",
     "errNetworkHintProd": "Live site: check Railway backend is running. Local: run npm run dev.",
-    "errBackend": "Server unavailable. Start the backend.",
+    "errBackend": "Server temporarily unavailable. Please try again in a moment.",
+    "errBackendProd": "Could not reach server. Check your connection or try again later.",
     "errRateLimit": "Too many attempts — wait 15 minutes.",
     "errLocked": "Account locked after too many failed attempts.",
     "errGeneric": "Something went wrong. Please try again."

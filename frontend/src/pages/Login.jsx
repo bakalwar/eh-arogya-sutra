@@ -83,27 +83,19 @@ export default function Login() {
     const msg = e2.response?.data?.message;
     if (!e2.response) {
       setErr(apiStatus === 'checking' ? t('login.apiStarting') : `${t('login.errNetwork')} — ${networkHint()}`);
-    } else if (status === 502 || status === 503) setErr(t('login.errBackend'));
-    else if (status === 429) setErr(t('login.errRateLimit'));
+    } else if (status === 503 && msg) {
+      setErr(msg);
+    } else if (status === 502 || status === 503) {
+      setErr(import.meta.env.PROD ? t('login.errBackendProd') : t('login.errBackend'));
+    } else if (status === 429) setErr(t('login.errRateLimit'));
     else if (status === 423) setErr(msg || t('login.errLocked'));
     else setErr(msg || e2.message || t('login.errGeneric'));
-  }
-
-  function fillDemo() {
-    setForm({ mobile: '9876543210', password: 'demo123', otp: '' });
-    setErr('');
   }
 
   async function handleLogin(e) {
     e?.preventDefault();
     setErr('');
-    if (!apiReady) {
-      const ok = await recheckApi();
-      if (!ok) {
-        setErr(networkHint());
-        return;
-      }
-    }
+    if (!apiReady) await recheckApi();
     setLoading(true);
     try {
       const { data } = await client.post('/api/auth/login', {
@@ -209,7 +201,7 @@ export default function Login() {
         )}
         {apiStatus === 'down' && (
           <p className="mt-4 rounded-lg border border-amber-500/35 bg-amber-500/10 px-3 py-2 text-center text-xs text-amber-100">
-            {t('login.errNetwork')} — {networkHint()}
+            {networkHint()} — login try kar sakte hain.
           </p>
         )}
         {apiReady && <p className="mt-3 text-center text-[10px] text-emerald-400/90">● {t('login.apiReady')}</p>}
@@ -229,7 +221,7 @@ export default function Login() {
                   className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none ring-emerald-500/40 focus:ring-2"
                   type="tel"
                   inputMode="numeric"
-                  placeholder="9876543210"
+                  placeholder="10-digit mobile"
                   maxLength={10}
                   value={form.mobile}
                   onChange={(e) => setForm({ ...form, mobile: e.target.value.replace(/\D/g, '') })}
@@ -251,11 +243,12 @@ export default function Login() {
               </div>
               <button
                 type="submit"
-                disabled={loading || !apiReady}
+                disabled={loading}
                 className="w-full rounded-xl bg-gradient-to-r from-[#2d6a35] to-[#4a9b54] py-3 font-semibold text-white disabled:opacity-50"
               >
                 {loading ? 'Verify ho raha hai…' : 'LOGIN →'}
               </button>
+              <p className="text-center text-[11px] text-white/40">{t('login.hint')}</p>
               <div className="flex flex-col gap-2 text-center text-xs">
                 <Link to="/register" className="text-[#c9963a]/90 underline">
                   Naye Doctor? Register Karen
@@ -263,18 +256,6 @@ export default function Login() {
                 <Link to="/website" className="text-white/40 underline">
                   ← Public website
                 </Link>
-              </div>
-              <div className="rounded-xl border border-[#c9963a]/25 bg-[#c9963a]/5 p-4 text-center text-xs text-white/60">
-                <p className="font-semibold text-[#e8c46a]">Demo Login</p>
-                <p className="mt-1">Mobile: 9876543210</p>
-                <p>Password: demo123</p>
-                <button
-                  type="button"
-                  onClick={fillDemo}
-                  className="mt-3 rounded-lg border border-white/15 px-4 py-1.5 text-white/80 hover:bg-white/5"
-                >
-                  Demo se Fill Karen
-                </button>
               </div>
             </form>
           )}

@@ -48,7 +48,7 @@
     "mobile": "Mobile Number",
     "password": "Password",
     "submit": "Sign In",
-    "hint": "डेमो: 9876543210 / demo123 — OTP ईमेल पर (SMTP न हो तो सर्वर कंसोल देखें)।",
+    "hint": "OTP आपके पंजीकृत ईमेल पर भेजा जाएगा।",
     "otpSent": "ईमेल में 6 अंकों का कोड भेजा गया।",
     "otpEmailHint": "भेजा गया: {{email}}",
     "otpLabel": "सत्यापन कोड",
@@ -62,7 +62,8 @@
     "errNetwork": "API सर्वर तक पहुँच नहीं",
     "errNetworkHint": "CHALAO.bat चलाएँ या npm run dev (API + Vite ready होने तक रुकें)",
     "errNetworkHintProd": "Live site: Railway backend चालू हो। Local: npm run dev चलाएँ।",
-    "errBackend": "सर्वर उपलब्ध नहीं।",
+    "errBackend": "सर्वर अस्थायी रूप से उपलब्ध नहीं। कुछ देर बाद फिर कोशिश करें।",
+    "errBackendProd": "सर्वर से कनेक्ट नहीं हो सका। कनेक्शन जाँचें या बाद में कोशिश करें।",
     "errRateLimit": "बहुत अधिक प्रयास — 15 मिनट बाद कोशिश करें।",
     "errLocked": "खाता लॉक — बहुत अधिक गलत प्रयास।",
     "errGeneric": "कुछ गलत हुआ। फिर कोशिश करें।"
