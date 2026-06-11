@@ -115,6 +115,8 @@ Thumbs.db
 medical_reports/
 patient_data/
 uploads/
+search_10000.txt
+*.traineddata
 
 # SSL certificates
 *.pem
