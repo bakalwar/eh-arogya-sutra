@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import client from '../api/client';
-import { useApiHealth } from '../hooks/useApiHealth';
 import CaduceusLogo from '../components/website/CaduceusLogo';
 import { setSession, clearSession } from '../security/tokenManager';
 import { setLanguage } from '../i18n';
@@ -63,7 +62,6 @@ export default function Login() {
   const [err, setErr] = useState('');
   const [loading, setLoading] = useState(false);
   const [booted, setBooted] = useState(false);
-  const { apiReady, apiStatus, recheckApi } = useApiHealth();
 
   useEffect(() => {
     document.title = `${t('nav.login')} — E.H. Arogya Sutra`;
@@ -74,15 +72,11 @@ export default function Login() {
 
   if (!booted) return null;
 
-  function networkHint() {
-    return import.meta.env.PROD ? t('login.errNetworkHintProd') : t('login.errNetworkHint');
-  }
-
   function handleApiError(e2) {
     const status = e2.response?.status;
     const msg = e2.response?.data?.message;
     if (!e2.response) {
-      setErr(apiStatus === 'checking' ? t('login.apiStarting') : `${t('login.errNetwork')} — ${networkHint()}`);
+      setErr(import.meta.env.PROD ? t('login.errBackendProd') : `${t('login.errNetwork')} — ${t('login.errNetworkHint')}`);
     } else if (status === 503 && msg) {
       setErr(msg);
     } else if (status === 502 || status === 503) {
@@ -95,7 +89,6 @@ export default function Login() {
   async function handleLogin(e) {
     e?.preventDefault();
     setErr('');
-    if (!apiReady) await recheckApi();
     setLoading(true);
     try {
       const { data } = await client.post('/api/auth/login', {
@@ -193,18 +186,6 @@ export default function Login() {
             ✦ Doctor CDSS — Smart Search &amp; Clinical Summary
           </span>
         </div>
-
-        {apiStatus === 'checking' && (
-          <p className="mt-4 rounded-lg border border-sky-500/30 bg-sky-500/10 px-3 py-2 text-center text-xs text-sky-100">
-            {t('login.apiStarting')}
-          </p>
-        )}
-        {apiStatus === 'down' && (
-          <p className="mt-4 rounded-lg border border-amber-500/35 bg-amber-500/10 px-3 py-2 text-center text-xs text-amber-100">
-            {networkHint()} — login try kar sakte hain.
-          </p>
-        )}
-        {apiReady && <p className="mt-3 text-center text-[10px] text-emerald-400/90">● {t('login.apiReady')}</p>}
 
         {err && (
           <p className="mt-4 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-center text-sm text-rose-200">

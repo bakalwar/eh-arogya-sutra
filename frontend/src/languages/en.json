@@ -63,7 +63,7 @@
     "errNetworkHint": "Double-click CHALAO.bat or run: npm run dev (wait until both API + Vite are ready)",
     "errNetworkHintProd": "Live site: check Railway backend is running. Local: run npm run dev.",
     "errBackend": "Server temporarily unavailable. Please try again in a moment.",
-    "errBackendProd": "Could not reach server. Check your connection or try again later.",
+    "errBackendProd": "Server se connect nahi ho paya. Thodi der baad dubara try karein.",
     "errRateLimit": "Too many attempts — wait 15 minutes.",
     "errLocked": "Account locked after too many failed attempts.",
     "errGeneric": "Something went wrong. Please try again."

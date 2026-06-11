@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { getValidToken, clearSession } from '../security/tokenManager';
+import { resolveApiBase } from './resolveApiBase';
 
 /** Default API calls (login, lists, save) */
 export const DEFAULT_REQUEST_TIMEOUT_MS = 30000;
@@ -22,7 +23,7 @@ const LONG_TIMEOUT_PATHS = [
 ];
 
 const client = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE || import.meta.env.VITE_API_URL || '',
+  baseURL: resolveApiBase(),
   timeout: DEFAULT_REQUEST_TIMEOUT_MS,
   headers: { 'Content-Type': 'application/json' }
 });
@@ -104,8 +105,9 @@ client.interceptors.response.use(
     } else if (!err.response && (err.code === 'ERR_NETWORK' || /ECONNREFUSED|Network Error/i.test(err.message || ''))) {
       const reqUrl = String(err.config?.url || '');
       if (reqUrl.includes('/api/')) {
-        err.message =
-          'Backend से कनेक्ट नहीं — `npm run dev` चलाएं (API port 5000)। Vite चल रहा हो तो API crash हो सकता है; terminal देखें।';
+        err.message = import.meta.env.PROD
+          ? 'Server se connect nahi ho paya. Internet check karein aur thodi der baad dubara try karein.'
+          : 'Backend se connect nahi — npm run dev chalayein (API port 5000). Terminal mein error dekhein.';
       }
     } else if (err.code === 'ECONNABORTED' || /timeout/i.test(err.message || '')) {
       const reqUrl = String(err.config?.url || '');

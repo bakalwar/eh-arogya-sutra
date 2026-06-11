@@ -1,18 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-
-function apiBase() {
-  return (import.meta.env.VITE_API_BASE || import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
-}
-
-/** Health URL: production → Railway/direct base; dev → Vite proxy /health */
-function healthUrl() {
-  const base = apiBase();
-  if (base) return `${base}/health`;
-  return '/health';
-}
+import { resolveHealthUrl } from '../api/resolveApiBase';
 
 /**
- * API health — dev: Vite proxy /health; production: VITE_API_BASE/health or /health (Vercel rewrite).
+ * API health — dev: Vite proxy /health; production browser: same-origin /health (Vercel rewrite).
  */
 export function useApiHealth(pollMs = 30000) {
   const [status, setStatus] = useState('checking');
@@ -20,9 +10,9 @@ export function useApiHealth(pollMs = 30000) {
 
   const check = useCallback(async () => {
     const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), 8000);
+    const t = setTimeout(() => ctrl.abort(), 15000);
     try {
-      const res = await fetch(healthUrl(), { signal: ctrl.signal });
+      const res = await fetch(resolveHealthUrl(), { signal: ctrl.signal, cache: 'no-store' });
       if (res.ok) {
         const data = await res.json().catch(() => ({}));
         if (data?.status === 'OK' || data?.status === 'ok') {
@@ -58,10 +48,10 @@ export function useApiHealth(pollMs = 30000) {
     };
 
     (async () => {
-      for (let i = 0; i < 12 && !cancelled; i++) {
+      for (let i = 0; i < 8 && !cancelled; i++) {
         const ok = await check();
         if (ok) break;
-        await new Promise((r) => setTimeout(r, 1500 + i * 500));
+        await new Promise((r) => setTimeout(r, 1000 + i * 400));
       }
       if (!cancelled) schedule();
     })();
