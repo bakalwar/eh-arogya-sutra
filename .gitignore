@@ -137,3 +137,8 @@ public/build/
 # Lock files (keep one)
 # package-lock.json
 yarn.lock
+# Vercel local link (keep output folder for CLI prebuilt deploys)
+.vercel/project.json
+.vercel/README.txt
+.vercel/repo.json
+.vercel/.env*.local
