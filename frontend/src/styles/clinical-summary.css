@@ -1,0 +1,53 @@
+.eh-summary-doc {
+  font-family: 'DM Sans', 'Noto Sans Devanagari', sans-serif;
+  line-height: 1.75;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.eh-summary-doc h1,
+.eh-summary-doc h2,
+.eh-summary-doc h3 {
+  color: #c9963a;
+  margin-top: 1.25rem;
+}
+
+.eh-summary-doc hr {
+  border: none;
+  border-top: 1px solid rgba(201, 150, 58, 0.35);
+  margin: 1.25rem 0;
+}
+
+.eh-summary-doc blockquote {
+  border-left: 3px solid #c9963a;
+  background: rgba(45, 106, 53, 0.15);
+  padding: 0.5rem 1rem;
+  margin: 0.75rem 0;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.eh-summary-doc strong {
+  color: #e8c46a;
+}
+
+.eh-summary-doc p,
+.eh-summary-doc li {
+  font-size: 0.92rem;
+}
+
+.eh-summary-doc table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  font-size: 0.85rem;
+}
+
+.eh-summary-doc th {
+  background: rgba(45, 106, 53, 0.4);
+  padding: 8px;
+  text-align: left;
+}
+
+.eh-summary-doc td {
+  border: 1px solid rgba(74, 155, 84, 0.25);
+  padding: 6px 8px;
+}

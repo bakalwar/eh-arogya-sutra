@@ -1,0 +1,39 @@
+E.H. Arogya Sutra — yahan se dekhein (agar HTML browser mein na khule)
+================================================================
+
+1) Sabse aasaan: project folder mein DEKHO.bat par double-click karein.
+
+2) HTML seedha kholein (path copy karke Explorer address bar mein paste karein):
+   [Project Folder]\docs\project-dekho.html
+
+3) Terminal se (project root par):
+   npm run open:dekho
+
+4) Cursor / VS Code: File > Open File ... upar wala path choose karein.
+   .md files ke liye bhi yahi — editor mein hi khulenge.
+
+Jo kaam ho chuka hai (short)
+----------------------------
+- Backend: Express, routes (auth, patients, medicines, reports, prescriptions, admin, payment)
+- DB models: User, Patient, Medicine, Prescription, Report
+- Login + JWT; Mongo na ho to demo login
+- Patients CRUD; medicines list + name search; report file upload; prescription create
+- Admin counts; seed script (default medicines + demo doctor)
+- Frontend: React pages, protected routes, API client + token
+
+Aage kya karna (priority)
+-------------------------
+1) Prescription PDF: backend/routes/prescriptions.js (:id/pdf) + backend/services/pdfGenerator.js
+2) Real OTP: backend/routes/auth.js (Twilio env) — abhi verify-otp stub hai
+3) Real payments: backend/routes/payment.js + Stripe
+4) Search / formula: backend/services/searchEngine.js, formulaEngine.js — frontend SearchEngine.jsx se jodna
+5) Report analysis + OCR: backend/services/ocrService.js, reportAnalyzer.js; reports route analysis field
+6) Tests: tests/ folder khali — unit/integration likhna
+
+Important file paths (copy)
+----------------------------
+README.md
+AGENTS.md
+docs/design.html
+backend/server.js
+frontend/src/App.jsx

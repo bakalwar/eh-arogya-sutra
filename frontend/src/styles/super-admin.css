@@ -1,0 +1,219 @@
+.sa-root {
+  display: flex;
+  min-height: 100dvh;
+  background: #060d07;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.sa-sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  background: #0b1a0d;
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 40;
+  overflow-y: auto;
+}
+
+.sa-sidebar-brand {
+  padding: 1.25rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.sa-sidebar-brand h1 {
+  font-family: 'Cinzel', serif;
+  font-size: 0.85rem;
+  color: #e8c46a;
+  letter-spacing: 0.08em;
+}
+
+.sa-nav {
+  flex: 1;
+  padding: 0.75rem 0;
+}
+
+.sa-nav a {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1rem;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.55);
+  border-left: 3px solid transparent;
+  transition: all 0.15s;
+}
+
+.sa-nav a:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.sa-nav a.active {
+  color: #fff;
+  background: rgba(45, 106, 53, 0.2);
+  border-left-color: #4a9b54;
+}
+
+.sa-main {
+  flex: 1;
+  margin-left: 240px;
+  padding: 1.25rem 1.5rem 2rem;
+  min-width: 0;
+}
+
+.sa-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.sa-stat-card {
+  background: #0f1f10;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 1rem;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.sa-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.sa-stat-card .icon {
+  font-size: 1.25rem;
+  margin-bottom: 0.35rem;
+}
+
+.sa-stat-card .value {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #e8c46a;
+}
+
+.sa-stat-card .sub {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.4);
+  margin-top: 0.25rem;
+}
+
+.sa-panel {
+  background: #0f1f10;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.sa-panel h2 {
+  font-family: 'Cinzel', serif;
+  font-size: 0.9rem;
+  color: #c9963a;
+  letter-spacing: 0.1em;
+  margin-bottom: 1rem;
+}
+
+.sa-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.sa-table th {
+  background: #1a3d1c;
+  text-align: left;
+  padding: 0.6rem 0.75rem;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.sa-table td {
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.sa-table tbody tr:nth-child(even) {
+  background: #111f12;
+}
+
+.sa-table tbody tr:hover {
+  background: rgba(74, 155, 84, 0.08);
+}
+
+.sa-input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: #fff;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8rem;
+  margin-bottom: 0.5rem;
+}
+
+.sa-btn {
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  background: linear-gradient(135deg, #2d6a35, #4a9b54);
+  color: #fff;
+}
+
+.sa-btn-ghost {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.sa-login-page {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #060d07;
+  padding: 1rem;
+}
+
+.sa-login-box {
+  width: 100%;
+  max-width: 400px;
+  background: #0b1a0d;
+  border: 1px solid rgba(201, 150, 58, 0.25);
+  border-radius: 16px;
+  padding: 2rem;
+}
+
+.sa-alert-red {
+  background: rgba(220, 38, 38, 0.12);
+  border: 1px solid rgba(220, 38, 38, 0.35);
+  border-radius: 8px;
+  padding: 0.75rem;
+  font-size: 0.8rem;
+  color: #fca5a5;
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 900px) {
+  .sa-sidebar {
+    position: relative;
+    width: 100%;
+    height: auto;
+  }
+  .sa-main {
+    margin-left: 0;
+  }
+  .sa-root {
+    flex-direction: column;
+  }
+}

@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E.H. Arogya Sutra — Complete Medical App</title>
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cinzel+Decorative:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@200;300;400;500;600&family=Noto+Sans+Devanagari:wght@300;400;500&display=swap" rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/styles.css">
+
+    <!-- Icons -->
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+
+    <!-- Meta Tags for SEO -->
+    <meta name="description" content="E.H. Arogya Sutra - Clinical Decision Support System for Ayurveda & Homeopathy practitioners">
+    <meta name="keywords" content="ayurveda, homeopathy, medical app, clinical decision support, EH platform">
+    <meta name="author" content="E.H. Arogya Sutra Team">
+
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#0e1a0f">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="E.H. Arogya Sutra">
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loading-content">
+            <div class="loading-logo">
+                <svg viewBox="0 0 110 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="55" cy="55" r="52" stroke="#c9963a" stroke-width="1" opacity="0.4"/>
+                    <line x1="55" y1="18" x2="55" y2="92" stroke="#c9963a" stroke-width="2.5" stroke-linecap="round"/>
+                    <path d="M55 26 C46 20 31 22 29 28 C36 25 47 28 55 33" fill="#c9963a" opacity="0.75"/>
+                    <path d="M55 26 C64 20 79 22 81 28 C74 25 63 28 55 33" fill="#c9963a" opacity="0.75"/>
+                    <path d="M55 33 C48 38 44 46 48 53 C52 60 48 68 43 73" stroke="#4a9b54" stroke-width="2" fill="none" stroke-linecap="round"/>
+                    <path d="M55 33 C62 38 66 46 62 53 C58 60 62 68 67 73" stroke="#4a9b54" stroke-width="2" fill="none" stroke-linecap="round"/>
+                    <circle cx="55" cy="53" r="4" fill="#c9963a" opacity="0.8"/>
+                    <circle cx="55" cy="53" r="2" fill="#e8c46a"/>
+                </svg>
+            </div>
+            <div class="loading-text">
+                <div class="loading-eh">E · H</div>
+                <div class="loading-name">AROGYA<br><span class="loading-g">SUTRA</span></div>
+                <div class="loading-deva">आरोग्य सूत्र</div>
+                <div class="loading-tag">Ancient Wisdom · Modern Precision</div>
+            </div>
+            <div class="loading-progress">
+                <div class="loading-bar">
+                    <div class="loading-fill"></div>
+                </div>
+            </div>
+            <div class="loading-bottom">Count Cesare Mattei · Est. 1850</div>
+        </div>
+    </div>
+
+    <!-- Main App Container -->
+    <div id="app" class="app-container" style="display: none;" role="application" aria-label="E.H. Arogya Sutra">
+
+        <!-- Top Banner -->
+        <div class="top-banner">
+            <div class="banner-logo">
+                <svg viewBox="0 0 110 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="55" cy="55" r="52" stroke="#c9963a" stroke-width="1" opacity="0.4"/>
+                    <line x1="55" y1="18" x2="55" y2="92" stroke="#c9963a" stroke-width="2.5" stroke-linecap="round"/>
+                    <path d="M55 26 C46 20 31 22 29 28 C36 25 47 28 55 33" fill="#c9963a" opacity="0.75"/>
+                    <path d="M55 26 C64 20 79 22 81 28 C74 25 63 28 55 33" fill="#c9963a" opacity="0.75"/>
+                    <path d="M55 33 C48 38 44 46 48 53 C52 60 48 68 43 73" stroke="#4a9b54" stroke-width="2" fill="none" stroke-linecap="round"/>
+                    <path d="M55 33 C62 38 66 46 62 53 C58 60 62 68 67 73" stroke="#4a9b54" stroke-width="2" fill="none" stroke-linecap="round"/>
+                    <circle cx="55" cy="53" r="4" fill="#c9963a" opacity="0.8"/>
+                    <circle cx="55" cy="53" r="2" fill="#e8c46a"/>
+                </svg>
+                <div class="banner-logo-text">
+                    <div class="banner-app-name">E.H. AROGYA SUTRA</div>
+                    <div class="banner-app-sub">Complete App Design Guide</div>
+                </div>
+            </div>
+            <div class="banner-title">Clinical Decision Support System · 2026</div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="main-content">
+
+            <!-- Screen: Splash -->
+            <div id="screen-splash" class="screen">
+                <div class="page">
+                    <div class="sec-header">
+                        <div class="sec-tag">01 — Welcome</div>
+                        <div class="sec-title">App का <span class="g">Splash Screen</span></div>
+                        <div class="sec-sub">Loading screen with brand animation</div>
+                        <div class="sec-line"></div>
+                    </div>
+
+                    <div class="phones-grid">
+                        <div class="phone-col">
+                            <div class="phone-col-label">Splash Screen</div>
+                            <div class="ph">
+                                <div class="ph-notch"></div>
+                                <div class="s-splash">
+                                    <div class="s-splash-topline"></div>
+                                    <svg class="logo-svg-lg" viewBox="0 0 110 110" fill="none">
+                                        <circle cx="55" cy="55" r="50" stroke="#c9963a" stroke-width="1" opacity="0.4"/>
+                                        <line x1="55" y1="18" x2="55" y2="92" stroke="#c9963a" stroke-width="2.5" stroke-linecap="round"/>
+                                        <path d="M55 26 C46 20 31 22 29 28 C36 25 47 28 55 33" fill="#c9963a" opacity="0.75"/>
+                                        <path d="M55 26 C64 20 79 22 81 28 C74 25 63 28 55 33" fill="#c9963a" opacity="0.75"/>
+                                        <path d="M55 33 C48 38 44 46 48 53 C52 60 48 68 43 73" stroke="#4a9b54" stroke-width="2" fill="none" stroke-linecap="round"/>
+                                        <path d="M55 33 C62 38 66 46 62 53 C58 60 62 68 67 73" stroke="#4a9b54" stroke-width="2" fill="none" stroke-linecap="round"/>
+                                        <circle cx="55" cy="53" r="4" fill="#c9963a" opacity="0.8"/>
+                                        <circle cx="55" cy="53" r="2" fill="#e8c46a"/>
+                                    </svg>
+                                    <div class="s-eh">E · H</div>
+                                    <div class="s-name">AROGYA<br><span class="g">SUTRA</span></div>
+                                    <div class="s-deva">आरोग्य सूत्र</div>
+                                    <div class="s-divline"></div>
+                                    <div class="s-tag">Ancient Wisdom · Modern Precision</div>
+                                    <div class="s-pract">E.H. Practitioner Platform</div>
+                                    <div class="s-loader"><div class="s-loader-fill"></div></div>
+                                    <div class="s-bottom">Count Cesare Mattei · Est. 1850</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Screen: Welcome -->
+            <div id="screen-welcome" class="screen active">
+                <div class="page">
+                    <div class="welcome-panel">
+                        <div class="welcome-logo">
+                            <svg viewBox="0 0 110 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="55" cy="55" r="52" stroke="#c9963a" stroke-width="1" opacity="0.4"/>
+                                <line x1="55" y1="18" x2="55" y2="92" stroke="#c9963a" stroke-width="2.5" stroke-linecap="round"/>
+                                <path d="M55 26 C46 20 31 22 29 28 C36 25 47 28 55 33" fill="#c9963a" opacity="0.75"/>
+                                <path d="M55 26 C64 20 79 22 81 28 C74 25 63 28 55 33" fill="#c9963a" opacity="0.75"/>
+                                <path d="M55 33 C48 38 44 46 48 53 C52 60 48 68 43 73" stroke="#4a9b54" stroke-width="2" fill="none" stroke-linecap="round"/>
+                                <path d="M55 33 C62 38 66 46 62 53 C58 60 62 68 67 73" stroke="#4a9b54" stroke-width="2" fill="none" stroke-linecap="round"/>
+                                <circle cx="55" cy="53" r="4" fill="#c9963a" opacity="0.8"/>
+                                <circle cx="55" cy="53" r="2" fill="#e8c46a"/>
+                            </svg>
+                        </div>
+                        <div class="welcome-copy">
+                            <div class="welcome-badge">स्वागत है</div>
+                            <h1>E.H. Arogya Sutra</h1>
+                            <p>आपका डिजिटल स्वास्थ्य साथी। आज ही रोगी देखभाल को तेज़, सुरक्षित और बुद्धिमान बनाएं।</p>
+                            <button class="welcome-action" type="button">आगे बढ़ें</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Screen: Login -->
+            <div id="screen-login" class="screen">
+                <div class="page">
+                    <div class="sec-header">
+                        <div class="sec-tag">02 — Authentication</div>
+                        <div class="sec-title"><span class="g">Login</span> Screen</div>
+                        <div class="sec-sub">मोबाइल और पासवर्ड — OTP की ज़रूरत नहीं</div>
+                        <div class="sec-line"></div>
+                    </div>
+
+                    <div class="phones-grid">
+                        <div class="phone-col">
+                            <div class="phone-col-label">Doctor Login</div>
+                            <div class="ph">
+                                <div class="ph-notch"></div>
+                                <div class="s-login">
+                                    <div class="login-top">
+                                        <svg class="logo-svg-md" viewBox="0 0 110 110" fill="none">
+                                            <circle cx="55" cy="55" r="50" stroke="#c9963a" stroke-width="1.5" opacity="0.5"/>
+                                            <line x1="55" y1="18" x2="55" y2="92" stroke="#c9963a" stroke-width="2.5" stroke-linecap="round"/>
+                                            <path d="M55 26 C46 20 31 22 29 28 C36 25 47 28 55 33" fill="#c9963a" opacity="0.8"/>
+                                            <path d="M55 26 C64 20 79 22 81 28 C74 25 63 28 55 33" fill="#c9963a" opacity="0.8"/>
+                                            <path d="M55 33 C48 38 44 46 48 53 C52 60 48 68 43 73" stroke="#4a9b54" stroke-width="2" fill="none" stroke-linecap="round"/>
+                                            <path d="M55 33 C62 38 66 46 62 53 C58 60 62 68 67 73" stroke="#4a9b54" stroke-width="2" fill="none" stroke-linecap="round"/>
+                                            <circle cx="55" cy="53" r="3.5" fill="#c9963a"/>
+                                        </svg>
+                                        <div class="login-title">AROGYA SUTRA</div>
+                                        <div class="login-sub">Doctor Login</div>
+                                        <p class="login-hint">कोई OTP नहीं — सिर्फ़ मोबाइल नंबर और पासवर्ड से साइन इन करें।</p>
+                                    </div>
+                                    <form class="login-form" action="#" method="post" novalidate>
+                                        <div>
+                                            <label class="lf-label" for="login-mobile">Mobile Number</label>
+                                            <div class="lf-input">
+                                                <span aria-hidden="true">📱</span>
+                                                <input id="login-mobile" type="tel" name="mobile" inputmode="numeric" maxlength="10" placeholder="9876543210" autocomplete="tel" required />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label class="lf-label" for="login-password">Password</label>
+                                            <div class="lf-input">
+                                                <span aria-hidden="true">🔒</span>
+                                                <input id="login-password" type="password" name="password" placeholder="कम से कम 6 अक्षर" minlength="6" autocomplete="current-password" required />
+                                            </div>
+                                        </div>
+                                        <button type="submit" class="lf-btn">LOGIN →</button>
+                                        <div class="lf-trial">New? <span>14 Din Free Trial</span> milega!</div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Screen: Dashboard -->
+            <div id="screen-dashboard" class="screen">
+                <div class="page">
+                    <div class="sec-header">
+                        <div class="sec-tag">03 — Main Interface</div>
+                        <div class="sec-title"><span class="g">Dashboard</span></div>
+                        <div class="sec-sub">Doctor's home screen with stats and actions</div>
+                        <div class="sec-line"></div>
+                    </div>
+
+                    <div class="phones-grid">
+                        <div class="phone-col">
+                            <div class="phone-col-label">Doctor Dashboard</div>
+                            <div class="ph">
+                                <div class="ph-notch"></div>
+                                <div class="s-dash">
+                                    <div class="dash-topbar">
+                                        <div class="dash-logo">
+                                            <svg class="logo-svg-sm" viewBox="0 0 110 110" fill="none">
+                                                <circle cx="55" cy="55" r="50" stroke="#c9963a" stroke-width="2" opacity="0.5"/>
+                                                <line x1="55" y1="18" x2="55" y2="92" stroke="#c9963a" stroke-width="3" stroke-linecap="round"/>
+                                                <path d="M55 26 C46 20 31 22 29 28 C36 25 47 28 55 33" fill="#c9963a" opacity="0.8"/>
+                                                <path d="M55 26 C64 20 79 22 81 28 C74 25 63 28 55 33" fill="#c9963a" opacity="0.8"/>
+                                                <path d="M55 33 C48 38 44 46 48 53 C52 60 48 68 43 73" stroke="#4a9b54" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                                                <path d="M55 33 C62 38 66 46 62 53 C58 60 62 68 67 73" stroke="#4a9b54" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                                            </svg>
+                                            <div><div class="dash-logo-name">AROGYA SUTRA</div><div class="dash-logo-sub">E.H. Platform</div></div>
+                                        </div>
+                                        <div class="dash-avatar">DR</div>
+                                    </div>
+                                    <div class="dash-body">
+                                        <div class="dash-greet-small">Namaskar</div>
+                                        <div class="dash-greet">Dr. <span>Ram Kumar</span></div>
+                                        <div class="dash-badge"><div class="dash-badge-dot"></div><div class="dash-badge-text">Pro Plan Active</div></div>
+                                        <div class="dash-stats">
+                                            <div class="ds"><div class="ds-val">48</div><div class="ds-lbl">Patients</div></div>
+                                            <div class="ds"><div class="ds-val">12</div><div class="ds-lbl">Today</div></div>
+                                            <div class="ds"><div class="ds-val">6</div><div class="ds-lbl">Follow-up</div></div>
+                                        </div>
+                                        <div class="dash-sec">Quick Actions</div>
+                                        <div class="dash-actions">
+                                            <div class="da"><div class="da-icon">🔍</div><div><div class="da-title">Search Engine</div><div class="da-sub">Symptoms → Medicine</div></div></div>
+                                            <div class="da"><div class="da-icon">📋</div><div><div class="da-title">New Case</div><div class="da-sub">Add Patient</div></div></div>
+                                            <div class="da"><div class="da-icon">🧪</div><div><div class="da-title">Report Analysis</div><div class="da-sub">Blood/MRI/CT</div></div></div>
+                                            <div class="da"><div class="da-icon">📚</div><div><div class="da-title">Book Library</div><div class="da-sub">EH Knowledge</div></div></div>
+                                        </div>
+                                        <div class="dash-sec">Recent Patients</div>
+                                        <div class="dash-recent">
+                                            <div class="dr-item"><div class="dr-left"><div class="dr-av">RS</div><div><div class="dr-name">Ram Sharma</div><div class="dr-diag">Bukhar · Positive</div></div></div><div class="dr-pill">C-8+S-1</div></div>
+                                            <div class="dr-item"><div class="dr-left"><div class="dr-av">PV</div><div><div class="dr-name">Priya Verma</div><div class="dr-diag">Joint Pain · Negative</div></div></div><div class="dr-pill">A-1+S-2</div></div>
+                                        </div>
+                                    </div>
+                                    <div class="dash-nav">
+                                        <div class="dn-item active"><div class="dn-icon">🏠</div><div class="dn-lbl">Home</div></div>
+                                        <div class="dn-item"><div class="dn-icon">🔍</div><div class="dn-lbl">Search</div></div>
+                                        <div class="dn-item"><div class="dn-icon">👥</div><div class="dn-lbl">Patients</div></div>
+                                        <div class="dn-item"><div class="dn-icon">📄</div><div class="dn-lbl">Rx</div></div>
+                                        <div class="dn-item"><div class="dn-icon">⚙️</div><div class="dn-lbl">Settings</div></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="app-navigation">
+                <button class="nav-btn active" data-screen="screen-splash">Splash</button>
+                <button class="nav-btn" data-screen="screen-login">Login</button>
+                <button class="nav-btn" data-screen="screen-dashboard">Dashboard</button>
+                <button class="nav-btn" data-screen="screen-search">Search</button>
+                <button class="nav-btn" data-screen="screen-report">Report</button>
+                <button class="nav-btn" data-screen="screen-rx">Rx</button>
+                <button class="nav-btn" data-screen="screen-admin">Admin</button>
+                <button class="nav-btn" data-screen="screen-payment">Payment</button>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/app.js"></script>
+    <script src="js/navigation.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/api.js"></script>
+
+    <!-- Service Worker for PWA -->
+    <script>
+        if ('serviceWorker' in navigator && window.location.protocol !== 'file:') {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => console.log('SW registered'))
+                    .catch(error => console.log('SW registration failed'));
+            });
+        }
+    </script>
+</body>
+</html>

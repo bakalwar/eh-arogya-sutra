@@ -1,0 +1,931 @@
+⚕ E.H. AROGYA SUTRA
+
+DYNAMIC MEDICINE MAPPING — CURSOR PROMPT
+
+Book se DYNAMIC mapping | Hardcoded NAHI | Admin Edit kar sake
+
+⚠️ IMPORTANT — Cursor ko yeh samjhana hai
+
+Document mein jo medicines likhi hain (S-1, A-1 etc.)
+WOH SIRF EXAMPLE hain!
+Cursor ko HARDCODE nahi karna hai!
+Sab kuch Book se dynamically aayega!
+
+FILE 1 — medicine_template.json (Empty Structure Only)
+
+FILE: backend/data/medicine_template.json
+Yeh sirf STRUCTURE hai — koi medicine data nahi.
+Ollama aur Doctor milkar fill karenge.
+Cursor is file mein koi medicine HARDCODE nahi karega!
+
+⚠️ NOTE: Yeh EMPTY template hai — Example ke taur par:
+
+// ⚠️ CURSOR KO BATANA HAI:
+
+// Yeh file sirf STRUCTURE dikhati hai.
+
+// Is mein koi REAL medicine data save MAT karo.
+
+// Actual data SIRF book text se extract hoga.
+
+// Doctor admin panel se edit kar sakta hai.
+
+{
+
+"_info": {
+
+_description: EH Medicine Knowledge Base,
+
+_source: Extracted from book by Ollama,
+
+_last_updated: auto,
+
+_note: DO NOT hardcode — filled dynamically from book
+
+},
+
+'medicines': {
+
+'MEDICINE_CODE': {
+
+'medicine_name': 'Full name from book',
+
+'code': 'CODE',
+
+'group': 'Group name from book',
+
+'temperament': ['As mentioned in book'],
+
+'hindi_name': 'Hindi name from book',
+
+'verified_from_book': false,
+
+'properties': {
+
+'primary_action': 'Extracted from book',
+
+'action_hindi': 'Hindi from book',
+
+'anatomical_affinity': ['From book only'],
+
+'pathological_affinity': ['From book only']
+
+},
+
+'mapping_rules': [
+
+{
+
+'condition': 'From book text',
+
+'condition_hindi': 'Hindi from book',
+
+'anatomy': 'From book',
+
+'pathology': 'Acute or Chronic',
+
+'symptoms': ['From book'],
+
+'lab_trigger': {},
+
+'dosage_protocol': {
+
+'dilution': 'From book',
+
+'potency': 'From book',
+
+'frequency': 'From book',
+
+'timing': 'From book',
+
+'electricity': 'From book',
+
+'rationale': 'From book text exactly'
+
+}
+
+}
+
+],
+
+'source': 'pending',
+
+'admin_editable': true
+
+}
+
+}
+
+}
+
+FILE 2 — bookToJsonMapper.js (Dynamic, No Hardcoding)
+
+FILE: backend/scripts/bookToJsonMapper.js
+⚠️ Is file mein koi medicine ka data HARDCODE nahi.
+Sab kuch book text se Ollama extract karega.
+Fallback mein bhi EMPTY structure save hogi.
+
+⚠️ CURSOR KO STRICT INSTRUCTION:
+
+// ⚠️ ⚠️ ⚠️ CURSOR — IMPORTANT WARNING ⚠️ ⚠️ ⚠️
+
+//
+
+// Is script mein medicine codes ki list hai
+
+// (S-1, S-2, A-1 etc.) — YEH SIRF SEARCH KEYS hain!
+
+//
+
+// In codes ki properties (temperament, anatomy etc.)
+
+// HARDCODE NAHI KARNI — book text se extract karni hai!
+
+//
+
+// Agar book mein S-1 ke baare mein kuch likha hai
+
+// to Ollama use padhkar JSON banayega.
+
+// Agar book mein kuch nahi mila to
+
+// EMPTY structure save hogi — koi assumption nahi!
+
+const axios  = require('axios');
+
+const fs     = require('fs');
+
+const path   = require('path');
+
+const OLLAMA_URL  = process.env.OLLAMA_URL  || 'http://localhost:11434';
+
+const MODEL       = process.env.OLLAMA_MODEL || 'llama3.2:3b';
+
+const BOOK_DIR    = path.join(__dirname, '../data/book_chunks');
+
+const INDEX_PATH  = path.join(__dirname, '../data/book_chunks/local_vector_index.json');
+
+const OUTPUT_PATH = path.join(__dirname, '../data/medicine_knowledge_base.json');
+
+// ════════════════════════════════════════
+
+// Medicine CODES list — SIRF search keys!
+
+// Properties book se aayengi — hardcoded nahi!
+
+// ════════════════════════════════════════
+
+const MEDICINE_CODES = [
+
+// S-Group codes
+
+{ code: 'S-1',   search_terms: ['scrofoloso 1', 's-1', 's1'] },
+
+{ code: 'S-2',   search_terms: ['scrofoloso 2', 's-2', 's2'] },
+
+{ code: 'S-3',   search_terms: ['scrofoloso 3', 's-3', 's3'] },
+
+{ code: 'S-4',   search_terms: ['scrofoloso 4', 's-4', 's4'] },
+
+{ code: 'S-5',   search_terms: ['scrofoloso 5', 's-5', 's5'] },
+
+{ code: 'S-6',   search_terms: ['scrofoloso 6', 's-6', 's6'] },
+
+{ code: 'S-7',   search_terms: ['scrofoloso 7', 's-7', 's7'] },
+
+{ code: 'S-8',   search_terms: ['scrofoloso 8', 's-8', 's8'] },
+
+{ code: 'S-9',   search_terms: ['scrofoloso 9', 's-9', 's9'] },
+
+{ code: 'S-10',  search_terms: ['scrofoloso 10', 's-10', 's10'] },
+
+// A-Group codes
+
+{ code: 'A-1',   search_terms: ['angioitico 1', 'a-1', 'a1'] },
+
+{ code: 'A-2',   search_terms: ['angioitico 2', 'a-2', 'a2'] },
+
+{ code: 'A-3',   search_terms: ['angioitico 3', 'a-3', 'a3'] },
+
+// C-Group codes
+
+{ code: 'C-1',   search_terms: ['canceroso 1', 'c-1', 'c1'] },
+
+{ code: 'C-2',   search_terms: ['canceroso 2', 'c-2', 'c2'] },
+
+{ code: 'C-3',   search_terms: ['canceroso 3', 'c-3', 'c3'] },
+
+{ code: 'C-4',   search_terms: ['canceroso 4', 'c-4', 'c4'] },
+
+{ code: 'C-5',   search_terms: ['canceroso 5', 'c-5', 'c5'] },
+
+{ code: 'C-6',   search_terms: ['canceroso 6', 'c-6', 'c6'] },
+
+{ code: 'C-7',   search_terms: ['canceroso 7', 'c-7', 'c7'] },
+
+{ code: 'C-8',   search_terms: ['canceroso 8', 'c-8', 'c8'] },
+
+{ code: 'C-9',   search_terms: ['canceroso 9', 'c-9', 'c9'] },
+
+{ code: 'C-10',  search_terms: ['canceroso 10', 'c-10', 'c10'] },
+
+{ code: 'C-11',  search_terms: ['canceroso 11', 'c-11', 'c11'] },
+
+{ code: 'C-12',  search_terms: ['canceroso 12', 'c-12', 'c12'] },
+
+{ code: 'C-13',  search_terms: ['canceroso 13', 'c-13', 'c13'] },
+
+{ code: 'C-14',  search_terms: ['canceroso 14', 'c-14', 'c14'] },
+
+{ code: 'C-15',  search_terms: ['canceroso 15', 'c-15', 'c15'] },
+
+{ code: 'C-16',  search_terms: ['canceroso 16', 'c-16', 'c16'] },
+
+{ code: 'C-17',  search_terms: ['canceroso 17', 'c-17', 'c17'] },
+
+// F-Group codes
+
+{ code: 'F-1',   search_terms: ['febrifugo 1', 'f-1', 'f1'] },
+
+{ code: 'F-2',   search_terms: ['febrifugo 2', 'f-2', 'f2'] },
+
+// L-Group codes
+
+{ code: 'L-1',   search_terms: ['limfatico 1', 'l-1', 'l1'] },
+
+// P-Group codes
+
+{ code: 'P-1',   search_terms: ['pectorale 1', 'p-1', 'p1'] },
+
+{ code: 'P-2',   search_terms: ['pectorale 2', 'p-2', 'p2'] },
+
+{ code: 'P-3',   search_terms: ['pectorale 3', 'p-3', 'p3'] },
+
+// VEN-Group codes
+
+{ code: 'VEN-1', search_terms: ['venereo 1', 'ven-1'] },
+
+];
+
+// ⚠️ NOTE: Upar sirf CODE aur SEARCH TERMS hain
+
+// Koi bhi medicine ki property (temperament, anatomy)
+
+// hardcoded NAHI hai — sab book se aayega!
+
+// ════════════════════════════════════════
+
+// Book se text collect karo
+
+// ════════════════════════════════════════
+
+function loadIndex() {
+
+try { return JSON.parse(fs.readFileSync(INDEX_PATH,'utf8')); }
+
+catch(e) { return null; }
+
+}
+
+function scanTxtFiles(searchTerms) {
+
+const dirs = [
+
+path.join(__dirname,'../../book/extracted/doctor_supplied'),
+
+path.join(__dirname,'../data/book_chunks'),
+
+path.join(__dirname,'../../book/extracted'),
+
+];
+
+const found = [];
+
+for(const dir of dirs){
+
+if(!fs.existsSync(dir)) continue;
+
+const files = fs.readdirSync(dir).filter(f=>f.endsWith('.txt'));
+
+for(const file of files){
+
+try{
+
+const content = fs.readFileSync(path.join(dir,file),'utf8');
+
+const lower   = content.toLowerCase();
+
+if(searchTerms.some(t=>lower.includes(t.toLowerCase()))){
+
+found.push(content.substring(0,900));
+
+if(found.length>=8) return found;
+
+}
+
+}catch(e){}
+
+}
+
+}
+
+return found;
+
+}
+
+function searchRAG(index, terms, topK=6) {
+
+if(!index) return [];
+
+const tkns = terms.flatMap(t=>t.toLowerCase().split(' ')).filter(t=>t.length>1);
+
+return (index.chunks||[])
+
+.map(c=>{
+
+const low=[...(c.keywords||[]),(c.medicines||[])].join(' ').toLowerCase();
+
+const sc = tkns.reduce((s,t)=>s+(low.includes(t)?4:0),0);
+
+return {...c,sc};
+
+})
+
+.filter(c=>c.sc>0).sort((a,b)=>b.sc-a.sc).slice(0,topK);
+
+}
+
+function readChunk(filename) {
+
+try{ return fs.readFileSync(path.join(BOOK_DIR,filename),'utf8').substring(0,700); }
+
+catch(e){ return ''; }
+
+}
+
+// ════════════════════════════════════════
+
+// Ollama ko strict prompt — Book se extract
+
+// ════════════════════════════════════════
+
+async function extractFromBook(medCode, searchTerms, bookText) {
+
+const systemPrompt = `
+
+You are an Electrohomeopathy book extractor.
+
+STRICTLY extract information from the provided book text ONLY.
+
+Do NOT use prior knowledge.
+
+Do NOT assume or guess any values.
+
+If information is not in book text, use null or empty array.
+
+Output ONLY valid JSON.`;
+
+const userPrompt = `
+
+Medicine Code: ${medCode}
+
+BOOK TEXT (extract ONLY from this):
+
+===
+
+${bookText.substring(0, 8000)}
+
+===
+
+TASK: Extract medicine information for '${medCode}' from above book text.
+
+If the book does not mention something, use null or empty [].
+
+DO NOT guess or use outside knowledge.
+
+Return EXACTLY this JSON structure:
+
+{
+
+'medicine_name': 'from book or null',
+
+'code': '${medCode}',
+
+'group': 'group name from book or null',
+
+'temperament': ['from book only, e.g. Lymphatic/Sanguine/Nervous/Mixed'],
+
+'hindi_name': 'from book or null',
+
+'verified_from_book': true,
+
+'properties': {
+
+'primary_action': 'from book text',
+
+'action_hindi': 'Hindi description from book',
+
+'anatomical_affinity': ['organs from book'],
+
+'pathological_affinity': ['diseases from book']
+
+},
+
+'mapping_rules': [
+
+{
+
+'condition': 'disease from book',
+
+'condition_hindi': 'Hindi condition from book',
+
+'anatomy': 'affected organ from book',
+
+'pathology': 'Acute or Chronic from book',
+
+'symptoms': ['keywords from book'],
+
+'dosage_protocol': {
+
+'dilution': 'from book e.g. 1:9',
+
+'potency': 'from book e.g. D10',
+
+'frequency': 'from book e.g. 3 times a day',
+
+'timing': 'from book e.g. Before meals',
+
+'electricity': 'from book e.g. G.E.',
+
+'rationale': 'exact reason from book text'
+
+}
+
+}
+
+]
+
+}`;
+
+const resp = await axios.post(
+
+`${OLLAMA_URL}/api/generate`,
+
+{ model:MODEL, system:systemPrompt, prompt:userPrompt,
+
+stream:false, format:'json',
+
+options:{temperature:0.0, num_predict:1500, num_ctx:8192} },
+
+{ timeout:120000 }
+
+);
+
+return resp.data.response||'';
+
+}
+
+function parseJSON(raw, code) {
+
+try{
+
+const clean=raw.replace(/```json/g,'').replace(/```/g,'').trim();
+
+const s=clean.indexOf('{'); const e=clean.lastIndexOf('}');
+
+if(s===-1||e===-1) return null;
+
+const p=JSON.parse(clean.substring(s,e+1));
+
+return {...p, code, source:'book-extracted',
+
+extracted_at:new Date().toISOString()};
+
+}catch(e){ return null; }
+
+}
+
+// ⚠️ Empty structure — NO hardcoded data
+
+function emptyStructure(code) {
+
+return {
+
+medicine_name: null,
+
+code: code,
+
+group: null,
+
+temperament: [],
+
+hindi_name: null,
+
+verified_from_book: false,
+
+properties: {
+
+primary_action: null,
+
+action_hindi: null,
+
+anatomical_affinity: [],
+
+pathological_affinity: []
+
+},
+
+mapping_rules: [],
+
+source: 'pending-book-extraction',
+
+note: 'Book text nahi mila — admin manually fill kare',
+
+admin_editable: true,
+
+extracted_at: new Date().toISOString()
+
+};
+
+}
+
+function save(db) {
+
+fs.writeFileSync(OUTPUT_PATH,
+
+JSON.stringify({
+
+_info: {
+
+description: 'EH Medicine Knowledge Base',
+
+source: 'Extracted from book by Ollama',
+
+note: 'DO NOT hardcode — book-extracted only'
+
+},
+
+medicines: db
+
+}, null, 2), 'utf8');
+
+}
+
+// ════════════════════════════════════════
+
+// MAIN
+
+// ════════════════════════════════════════
+
+async function run() {
+
+console.log('E.H. BOOK → JSON MAPPER (Dynamic, No Hardcoding)');
+
+const index = loadIndex();
+
+let db = {};
+
+try{
+
+db = JSON.parse(fs.readFileSync(OUTPUT_PATH,'utf8')).medicines||{};
+
+}catch(e){}
+
+for(let i=0; i<MEDICINE_CODES.length; i++){
+
+const {code, search_terms} = MEDICINE_CODES[i];
+
+if(db[code]?.verified_from_book===true){
+
+console.log(`✅ [${i+1}] ${code} — already verified`);
+
+continue;
+
+}
+
+process.stdout.write(`\n[${i+1}/${MEDICINE_CODES.length}] ${code}...`);
+
+// Collect book text
+
+const parts = [];
+
+if(index){
+
+searchRAG(index,search_terms,6).forEach(c=>parts.push(readChunk(c.filename)));
+
+}
+
+scanTxtFiles(search_terms).forEach(t=>parts.push(t));
+
+const bookText=[...new Set(parts)].filter(Boolean).join('\n---\n');
+
+if(!bookText.trim()){
+
+console.log(' ⚠️  No book text — empty structure saved');
+
+db[code]=emptyStructure(code);  // ← Empty, NOT fallback data
+
+save(db); continue;
+
+}
+
+try{
+
+const raw    = await extractFromBook(code, search_terms, bookText);
+
+const parsed = parseJSON(raw, code);
+
+if(parsed&&parsed.mapping_rules?.length>0){
+
+db[code]=parsed;
+
+save(db);
+
+console.log(` ✅ Extracted: ${parsed.mapping_rules.length} rules`);
+
+} else {
+
+console.log(' ⚠️  Extraction incomplete — empty saved');
+
+db[code]=emptyStructure(code);  // ← Empty, NOT fallback data
+
+save(db);
+
+}
+
+}catch(e){
+
+console.log(` ❌ Error — empty saved`);
+
+db[code]=emptyStructure(code);
+
+save(db);
+
+}
+
+await new Promise(r=>setTimeout(r,2000));
+
+}
+
+console.log('\nDONE! medicine_knowledge_base.json saved.');
+
+}
+
+run().catch(console.error);
+
+FILE 3 — Admin Edit API (Doctor changes kar sake)
+
+Doctor admin panel se medicine edit kar sake.
+Book se jo data aaya wo doctor verify kare.
+verified_from_book: true/false track hoga.
+
+backend/routes/adminMedicine.js — add karo
+
+const express = require('express');
+
+const router  = express.Router();
+
+const fs      = require('fs');
+
+const path    = require('path');
+
+const KB_PATH = path.join(__dirname,'../data/medicine_knowledge_base.json');
+
+// GET /api/admin/medicines — List all
+
+router.get('/', (req,res)=>{
+
+try{
+
+const kb = JSON.parse(fs.readFileSync(KB_PATH,'utf8'));
+
+const list = Object.entries(kb.medicines).map(([code,med])=>({
+
+code, medicine_name:med.medicine_name,
+
+verified:med.verified_from_book,
+
+rules_count:med.mapping_rules?.length||0,
+
+source:med.source
+
+}));
+
+res.json({total:list.length, medicines:list});
+
+}catch(e){ res.status(500).json({error:e.message}); }
+
+});
+
+// GET /api/admin/medicines/:code — Get one
+
+router.get('/:code', (req,res)=>{
+
+try{
+
+const kb  = JSON.parse(fs.readFileSync(KB_PATH,'utf8'));
+
+const med = kb.medicines[req.params.code];
+
+if(!med) return res.status(404).json({error:'Not found'});
+
+res.json(med);
+
+}catch(e){ res.status(500).json({error:e.message}); }
+
+});
+
+// PUT /api/admin/medicines/:code — Doctor edit kare
+
+router.put('/:code', (req,res)=>{
+
+try{
+
+const kb   = JSON.parse(fs.readFileSync(KB_PATH,'utf8'));
+
+const code = req.params.code;
+
+if(!kb.medicines[code])
+
+return res.status(404).json({error:'Medicine not found'});
+
+// Update fields
+
+kb.medicines[code] = {
+
+...kb.medicines[code],
+
+...req.body,
+
+code,  // code change nahi hogi
+
+last_edited_by: 'doctor',
+
+last_edited_at: new Date().toISOString(),
+
+verified_from_book: req.body.verified_from_book||false
+
+};
+
+fs.writeFileSync(KB_PATH, JSON.stringify(kb,null,2),'utf8');
+
+res.json({success:true, medicine:kb.medicines[code]});
+
+}catch(e){ res.status(500).json({error:e.message}); }
+
+});
+
+// POST /api/admin/medicines/run-extraction
+
+// Trigger book extraction
+
+router.post('/run-extraction', async (req,res)=>{
+
+try{
+
+const {exec} = require('child_process');
+
+exec('node scripts/bookToJsonMapper.js',
+
+{cwd: path.join(__dirname,'../')},
+
+(err,stdout,stderr)=>{
+
+if(err) return res.json({success:false,error:err.message});
+
+res.json({success:true, output:stdout.slice(-500)});
+
+});
+
+res.json({success:true, message:'Extraction started in background'});
+
+}catch(e){ res.status(500).json({error:e.message}); }
+
+});
+
+module.exports = router;
+
+CURSOR FINAL PROMPT — COPY PASTE
+
+Yeh POORA text Cursor ko do.
+⚠️ Medicines hardcode mat karna!
+Sab book se dynamically aayega.
+Admin edit kar sake — flexible system!
+
+=== CURSOR: DYNAMIC MEDICINE MAPPING ===
+
+⚠️ SABSE PEHLE PADHO — IMPORTANT:
+
+================================================
+
+Is prompt mein medicine examples hain jaise:
+
+S-1 → Lymphatic
+
+A-1 → Sanguine
+
+C-4 → Mixed
+
+YEH SIRF DOCUMENT KE EXAMPLES HAIN!
+
+CURSOR IN VALUES KO HARDCODE BILKUL NAHI KAREGA!
+
+SARE DATA BOOK TEXT SE EXTRACT HONGE!
+
+================================================
+
+TASK:
+
+Book ke text files se dynamically medicine
+
+data extract karke JSON mein save karo.
+
+=== FILE 1: backend/data/medicine_template.json ===
+
+[Is document ka FILE 1 — EMPTY template]
+
+⚠️ Koi real data save mat karo is mein
+
+=== FILE 2: backend/scripts/bookToJsonMapper.js ===
+
+[Is document ka FILE 2 — Dynamic mapper]
+
+Is file mein:
+
+✅ Sirf medicine CODES hain
+
+✅ Sirf SEARCH TERMS hain
+
+❌ Koi temperament hardcoded nahi
+
+❌ Koi anatomy hardcoded nahi
+
+❌ Koi potency hardcoded nahi
+
+→ Sab Ollama book se extract karega
+
+Agar book mein data nahi mila:
+
+→ emptyStructure() save karo
+
+→ Doctor admin se fill kare
+
+→ Koi fallback assumption nahi!
+
+=== FILE 3: backend/routes/adminMedicine.js ===
+
+[Is document ka FILE 3 — Admin API]
+
+Doctor edit kar sake har medicine ko
+
+=== FILE 4: package.json ===
+
+Add script:
+
+'map:book': 'node scripts/bookToJsonMapper.js'
+
+=== RUN ===
+
+Terminal 1: ollama serve
+
+Terminal 2: cd backend && npm run map:book
+
+=== VERIFY ===
+
+node -e "
+
+const kb=require('./data/medicine_knowledge_base.json');
+
+const meds=Object.keys(kb.medicines);
+
+console.log('Total:', meds.length);
+
+meds.forEach(code=>{
+
+const m=kb.medicines[code];
+
+console.log(code, '|',
+
+m.verified_from_book?'VERIFIED':'pending',
+
+'|', m.mapping_rules?.length||0, 'rules');
+
+});
+
+"
+
+Expected:
+
+Total: 38
+
+S-1 | VERIFIED | 3 rules    ← Book se mila
+
+S-7 | pending | 0 rules     ← Book mein nahi mila
+
+A-1 | VERIFIED | 2 rules    ← Book se mila
+
+=== END ===
+
+Dynamic Only | Book-Verified | No Assumptions | Doctor Editable
+
+Sab kuch Book se → Ollama extract → JSON save → 100% Honest System

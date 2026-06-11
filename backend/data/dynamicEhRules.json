@@ -1,0 +1,550 @@
+{
+  "version": 1,
+  "updatedAt": "2026-01-01T00:00:00.000Z",
+  "source": "builtin-seed",
+  "rules": [
+    {
+      "id": "low_bp_block_ge_use_we",
+      "enabled": true,
+      "priority": 100,
+      "if": { "bp_systolic_lte": 110 },
+      "then": {
+        "block_electricity": ["GE", "G.E."],
+        "force_electricity": "WE",
+        "note_hi": "निम्न/कमजोर बीपी पर हरी विद्युत (GE) ब्लॉक — सफेद विद्युत (WE)"
+      }
+    },
+    {
+      "id": "norm_low_bp_positive_hypo_potency_d6",
+      "enabled": true,
+      "priority": 90,
+      "if": { "bp_systolic_lte": 130, "polarity_in": ["POSITIVE", "HYPO"] },
+      "then": {
+        "force_potency": "D6",
+        "note_hi": "बीपी ≤130 + सकारात्मक/निष्क्रिय → D6 लॉक (गंभीर HYPO + बीपी<100 → D4 नियम इंजन)"
+      }
+    },
+    {
+      "id": "high_bp_block_re_prefer_be",
+      "enabled": true,
+      "priority": 95,
+      "if": { "bp_systolic_gte": 130 },
+      "then": {
+        "block_electricity": ["RE", "R.E."],
+        "prefer_electricity": ["BE", "B.E.", "WE", "W.E."],
+        "note_hi": "उच्च बीपी पर लाल विद्युत (R.E.) वर्जित — नीली/सफेद विद्युत प्राथमिक"
+      }
+    },
+    {
+      "id": "hyper_phase_potency_d10",
+      "enabled": true,
+      "priority": 80,
+      "if": { "polarity_in": ["HYPER"], "phase_in": ["ACUTE", "SUB_ACUTE"] },
+      "then": {
+        "force_potency": "D10",
+        "block_electricity": ["GE", "YE"],
+        "note_hi": "HYPER तीव्र अवस्था — D10, GE/YE सावधानी"
+      }
+    },
+    {
+      "id": "mattei_positive_disease_high_dilution",
+      "enabled": true,
+      "priority": 88,
+      "if": {
+        "polarity_in": ["HYPER", "POSITIVE"],
+        "symptoms_any": [
+          "ज्वर",
+          "बुखार",
+          "दस्त",
+          "खाँसी",
+          "रक्तश्राव",
+          "सूजन",
+          "कण्डू",
+          "अधिक धड़कना",
+          "fever",
+          "diarrhea",
+          "cough"
+        ]
+      },
+      "then": {
+        "force_potency": "D10",
+        "set_potency_min": "D6",
+        "note_hi": "डा. मैटी — घनात्मक (Positive) रोग: ऋणात्मक औषधि, III से उच्च डायलुशन (D6–D10+)"
+      },
+      "rationale_hi": "पुस्तक: अवयव अधिक सक्रिय → ऋणात्मक मात्रा औषधि से उत्तेजना कम"
+    },
+    {
+      "id": "mattei_negative_disease_low_dilution",
+      "enabled": true,
+      "priority": 88,
+      "if": {
+        "polarity_in": ["HYPO", "NEGATIVE"],
+        "symptoms_any": [
+          "कब्ज",
+          "पाचन मन्द",
+          "कमजोरी",
+          "दुर्बलता",
+          "कम दिखना",
+          "constipation",
+          "weakness",
+          "sluggish"
+        ]
+      },
+      "then": {
+        "force_potency": "D6",
+        "set_potency_max": "D10",
+        "note_hi": "डा. मैटी — ऋणात्मक (Negative) रोग: धनात्मक औषधि, कम डायलुशन (D4–D6)"
+      },
+      "rationale_hi": "पुस्तक: अंगों की क्षमता कम → I–III डायलुशन स्तर (इंजन: D4/D6)"
+    },
+    {
+      "id": "mattei_blood_lymph_vitiation_respiratory",
+      "enabled": true,
+      "priority": 75,
+      "if": {
+        "symptoms_any": ["जुकाम", "सर्दी", "खाँसी", "ग्रन्थि", "cold", "cough", "lymph"]
+      },
+      "then": {
+        "prefer_electricity": ["WE", "BE"],
+        "note_hi": "रस अशुद्धि — श्वसन/ग्रन्थि: सफेद/नीली विद्युत प्राथमिक (पुस्तक सिद्धान्त)"
+      },
+      "rationale_hi": "रक्त-रस vitiation → जुकाम, ज्वर, पाचन दोष (डा. मैटी)"
+    },
+    {
+      "id": "eh_ras_rakta_vitiation_digestion",
+      "enabled": true,
+      "priority": 74,
+      "if": {
+        "symptoms_any": [
+          "पाचन",
+          "अपच",
+          "पेट",
+          "पाचन दोष",
+          "मंदाग्नि",
+          "भोजन",
+          "indigestion",
+          "bloating",
+          "metabolism"
+        ]
+      },
+      "then": {
+        "prefer_electricity": ["WE", "BE"],
+        "force_potency": "D6",
+        "note_hi": "रस-रक्त दूषित → पाचन/चयापचय बाधित; शुद्धिकरण (अध्याय 7)"
+      },
+      "rationale_hi": "स्वास्थ्य रस-रक्त शुद्धता पर निर्भर — पाचन क्रिया सुचारु न हो तो रोग"
+    },
+    {
+      "id": "eh_high_potency_dilution_purification",
+      "enabled": true,
+      "priority": 73,
+      "if": {
+        "phase_in": ["CHRONIC", "SUB_ACUTE"],
+        "polarity_in": ["HYPER", "POSITIVE"]
+      },
+      "then": {
+        "force_potency": "D30",
+        "set_potency_min": "D10",
+        "note_hi": "शक्ति करण — उच्च डायलुशन (D30+) रस-रक्त शुद्धिकरण; मैटी काल में D3, आज शोधानुसार"
+      },
+      "rationale_hi": "अध्याय 8: ऊँचे डायलुशन → अणु ऊर्जा → दूषित रस-रक्त शुद्ध"
+    },
+    {
+      "id": "eh_obstruction_organ_blockage",
+      "enabled": true,
+      "priority": 82,
+      "if": {
+        "symptoms_any": [
+          "कब्ज",
+          "सड़न",
+          "गलन",
+          "कीड़े",
+          "अवरुद्ध",
+          "अवरोध",
+          "constipation",
+          "worms",
+          "obstruction"
+        ]
+      },
+      "then": {
+        "prefer_electricity": ["YE", "GE", "YE", "GE"],
+        "note_hi": "अवरुद्धता (सड़न, कीड़े, कब्ज) — C5, C15, Ven, Ver, YE, GE (पुस्तक)"
+      },
+      "rationale_hi": "शरीर के अवयवों में अवरुद्धता — उदासीन/ऋणात्मक श्रेणि के साथ YE, GE प्राथमिक"
+    },
+    {
+      "id": "eh_neutral_protective_we",
+      "enabled": true,
+      "priority": 78,
+      "if": {
+        "symptoms_any": [
+          "बेचैनी",
+          "बैचेनी",
+          "अशांति",
+          "टकरात",
+          "restless",
+          "anxiety",
+          "insomnia"
+        ]
+      },
+      "then": {
+        "force_electricity": "WE",
+        "prefer_electricity": ["WE", "W.E."],
+        "block_electricity": ["RE", "GE"],
+        "note_hi": "उदासीन (Neutral) सुरक्षात्मक — WE, F, Sio, L; दो शक्तियाँ टकराएँ तो बलयोग"
+      },
+      "rationale_hi": "क्रियाशून्य औषधि — बैचेनी/द्विधा शक्ति में सफेद विद्युत (WE)"
+    },
+    {
+      "id": "eh_law_similarity_match_potency",
+      "enabled": true,
+      "priority": 70,
+      "if": {
+        "phase_in": ["ACUTE", "SUB_ACUTE"],
+        "polarity_in": ["HYPER", "POSITIVE"]
+      },
+      "then": {
+        "note_hi": "ऐकिक नियम (Law of Similarity) — रोग की मात्रा के बराबर चार्ज/पोटेंसी; सुधार पर औषधि बदलें"
+      },
+      "rationale_hi": "गम्भीर अवस्था = समान चार्ज की मात्रा; क्रमिक सुधार पर पोटेंसी समायोजन"
+    },
+    {
+      "id": "eh_recovery_closure_ver",
+      "enabled": true,
+      "priority": 45,
+      "if": {
+        "phase_in": ["CHRONIC"],
+        "symptoms_any": ["सुधार", "स्वस्थ", "ठीक", "recovery", "improved"]
+      },
+      "then": {
+        "prefer_electricity": ["Ver", "VER"],
+        "force_electricity": "WE",
+        "note_hi": "स्वास्थ्य प्राप्ति — विपरीत चार्ज परीक्षा (कोई प्रतिक्रिया न हो) → Ver एक मात्रा, चिकित्सा समाप्त"
+      },
+      "rationale_hi": "दोनों शक्तियाँ समान → क्रियाशून्य औषधि; अंत में Ver"
+    },
+    {
+      "id": "eh_strong_positive_dose_acute",
+      "enabled": true,
+      "priority": 86,
+      "if": {
+        "symptoms_any": [
+          "वेदना",
+          "दर्द",
+          "ऐठन",
+          "वायु",
+          "वायुपीड़ा",
+          "संकुचन",
+          "सूखना",
+          "बेहोशी",
+          "pain",
+          "cramp",
+          "colic",
+          "vata"
+        ],
+        "phase_in": ["ACUTE", "SUB_ACUTE"]
+      },
+      "then": {
+        "force_potency": "D4",
+        "set_potency_max": "D6",
+        "note_hi": "तीव्र (Strong Positive) मात्रा — प्रथम डायलुशन/D4–D6; वेदना, ऐठन, वात, संकुचन में उत्तेजना+उत्सर्जन"
+      },
+      "rationale_hi": "पुस्तक (क): 20–30 गोलियाँ/औंस — मल-मूत्र-स्वेद उत्सर्जन हेतु तीव्र मात्रा"
+    },
+    {
+      "id": "eh_negative_thin_dose_hyper",
+      "enabled": true,
+      "priority": 85,
+      "if": {
+        "symptoms_any": [
+          "रक्तश्राव",
+          "दस्त",
+          "मोटापा",
+          "उष्णता",
+          "गर्मी",
+          "bleeding",
+          "diarrhea",
+          "obesity",
+          "heat"
+        ],
+        "polarity_in": ["HYPER", "POSITIVE"]
+      },
+      "then": {
+        "force_potency": "D10",
+        "set_potency_min": "D10",
+        "note_hi": "तनु (Negative) मात्रा — 10वें–1000वें डायलुशन (D10–D30); रक्तश्राव, दस्त, उष्णता घटाए"
+      },
+      "rationale_hi": "पुस्तक (ख): बढ़ी क्रियाएँ कम — D10+ शक्ति करण"
+    },
+    {
+      "id": "eh_negative_disease_positive_dose_equal",
+      "enabled": true,
+      "priority": 87,
+      "if": {
+        "polarity_in": ["HYPO", "NEGATIVE"],
+        "symptoms_any": ["कमजोरी", "मन्द", "sluggish", "weakness", "ऋणात्मक"]
+      },
+      "then": {
+        "force_potency": "D6",
+        "set_potency_max": "D10",
+        "note_hi": "ऋणात्मक रोग → धनात्मक मात्रा बराबर अनुपात (I–III डायलुशन / D4–D6)"
+      },
+      "rationale_hi": "पुस्तक (1): ऋणात्मक रोग में धनात्मक मात्रा आवश्यकतानुसार"
+    },
+    {
+      "id": "eh_neutral_dose_balance",
+      "enabled": true,
+      "priority": 72,
+      "if": {
+        "symptoms_any": ["संतुलन", "उदासीन", "समान शक्ति", "balance", "neutral"]
+      },
+      "then": {
+        "force_electricity": "WE",
+        "note_hi": "क्रियाशून्य (Neutral) मात्रा — न तीव्र न तनु; दोनों शक्तियाँ समान रखें"
+      },
+      "rationale_hi": "पुस्तक (ग): उदासीन मात्रा — अप्रत्यक्ष संतुलनकारी प्रभाव"
+    },
+    {
+      "id": "eh_positive_disease_requires_negative_dose",
+      "enabled": true,
+      "priority": 91,
+      "if": { "polarity_in": ["HYPER", "POSITIVE"] },
+      "then": {
+        "force_potency": "D10",
+        "set_potency_min": "D6",
+        "note_hi": "धनात्मक रोग → ऋणात्मक (तनु/Dilute) मात्रा — अवस्थानुसार D10+; धनात्मक मात्रा वर्जित"
+      },
+      "rationale_hi": "पुस्तक: धनात्मक रोग में ऋणात्मक मात्रा ही उचित"
+    },
+    {
+      "id": "eh_climate_cold_region_positive_bias",
+      "enabled": true,
+      "priority": 76,
+      "if": {
+        "symptoms_any": [
+          "ठंड",
+          "शिशु",
+          "बाल",
+          "पर्वत",
+          "उत्तरी",
+          "ध्रुव",
+          "cold",
+          "mountain",
+          "infant"
+        ]
+      },
+      "then": {
+        "force_potency": "D10",
+        "prefer_electricity": ["BE", "WE"],
+        "note_hi": "ठंडी/उत्तरी/पर्वतीय/शिशु लक्षण → धनात्मक मानें — तनु मात्रा (ऋणात्मक औषधि)"
+      },
+      "rationale_hi": "जलवायु: ठण्डे देश, पर्वत, ध्रुव निकट — धनात्मक प्रवृत्ति"
+    },
+    {
+      "id": "eh_climate_hot_region_negative_bias",
+      "enabled": true,
+      "priority": 76,
+      "if": {
+        "symptoms_any": [
+          "गर्म",
+          "दुर्बल",
+          "समुद्र",
+          "वृद्ध",
+          "भूमध्य",
+          "tropical",
+          "maritime",
+          "elderly",
+          "weak"
+        ]
+      },
+      "then": {
+        "force_potency": "D6",
+        "prefer_electricity": ["WE", "GE"],
+        "note_hi": "गर्म/समुद्री/वृद्ध/भूमध्य लक्षण → ऋणात्मक मानें — धनात्मक मात्रा (D4–D6)"
+      },
+      "rationale_hi": "जलवायु: गर्म प्रदेश, दुर्बलता, वृद्धावस्था — ऋणात्मक प्रवृत्ति"
+    },
+    {
+      "id": "eh_wrong_same_polarity_use_opposite",
+      "enabled": true,
+      "priority": 92,
+      "if": {
+        "symptoms_any": [
+          "कष्ट बढ़ा",
+          "उत्तेजना बढ़ी",
+          "अतिरिक्त कष्ट",
+          "aggravation",
+          "worse after dose"
+        ]
+      },
+      "then": {
+        "note_hi": "भूलवश समान ध्रुव की मात्रा से कष्ट बढ़ सकता है — विपरीत मात्रा या नींबू-सिरका",
+        "water_instruction_hi": "नींबू-सिरका (lemon-vinegar) — विपरीत मात्रा प्रतिकूल प्रतिक्रिया पर"
+      },
+      "rationale_hi": "ऋणात्मक रोग+ऋणात्मक मात्रा या धनात्मक+धनात्मक मात्रा = हानि; विपरीत दें"
+    },
+    {
+      "id": "eh_escalate_more_negative_dilution_stalled",
+      "enabled": true,
+      "priority": 84,
+      "if": {
+        "polarity_in": ["HYPER", "POSITIVE"],
+        "phase_in": ["SUB_ACUTE", "CHRONIC"],
+        "symptoms_any": ["रूक गया", "क्षणिक लाभ", "stalled", "relapse", "पुनः"]
+      },
+      "then": {
+        "force_potency": "D30",
+        "set_potency_min": "D10",
+        "note_hi": "धनात्मक रोग में तनु मात्रा से लाभ रुका → मात्रा और अधिक ऋणात्मक (D30)"
+      },
+      "rationale_hi": "Dilute मात्रा क्षणिक लाभ 후 रुकी → उच्चतर डायलुशन"
+    },
+    {
+      "id": "eh_escalate_more_positive_dose_stalled",
+      "enabled": true,
+      "priority": 84,
+      "if": {
+        "polarity_in": ["HYPO", "NEGATIVE"],
+        "phase_in": ["SUB_ACUTE", "CHRONIC"],
+        "symptoms_any": ["पुनः रोग", "रूक गया", "relapse", "stalled", "कमी के बाद"]
+      },
+      "then": {
+        "force_potency": "D4",
+        "set_potency_max": "D6",
+        "note_hi": "ऋणात्मक रोग में धनात्मक मात्रा से लाभ फिर रुका → मात्रा और अधिक धनात्मक (D4)"
+      },
+      "rationale_hi": "Original मात्रा से क्षणिक कमी, पुनः व्याप्ति → प्रथम डायलुशन की ओर"
+    },
+    {
+      "id": "eh_topical_negative_body_part_positive_elec",
+      "enabled": true,
+      "priority": 83,
+      "if": {
+        "symptoms_any": [
+          "दाहिना",
+          "दाहिनी",
+          "तलवा",
+          "पैर का तल",
+          "अन्दर",
+          "अंदर",
+          "right",
+          "sole",
+          "inner",
+          "ऋणात्मक भाग"
+        ]
+      },
+      "then": {
+        "prefer_electricity": ["RE", "R.E.", "GE", "YE"],
+        "note_hi": "ऋणात्मक अंग (दाहिना, तलवा, अंदर) → धनात्मक तरल बिजली लगाएँ (RE/GE)"
+      },
+      "rationale_hi": "आकर्षण: ऋणात्मक भाग पर धनात्मक बिजली — अतिरिक्त चार्ज समाप्त"
+    },
+    {
+      "id": "eh_topical_positive_body_part_negative_elec",
+      "enabled": true,
+      "priority": 83,
+      "if": {
+        "symptoms_any": [
+          "बायाँ",
+          "बायां",
+          "बायीं",
+          "चंदिया",
+          "चाँदिया",
+          "मस्तिष्क",
+          "बाहर",
+          "बाह्य",
+          "left",
+          "crown",
+          "outer",
+          "धनात्मक भाग"
+        ]
+      },
+      "then": {
+        "prefer_electricity": ["BE", "B.E."],
+        "note_hi": "धनात्मक अंग (बायाँ, चंदिया, बाह्य सतह) → ऋणात्मक तरल बिजली (BE)"
+      },
+      "rationale_hi": "आकर्षण: धनात्मक भाग पर ऋणात्मक बिजली"
+    },
+    {
+      "id": "eh_neutral_spine_chest_any_electricity",
+      "enabled": true,
+      "priority": 77,
+      "if": {
+        "symptoms_any": [
+          "कशेरुका",
+          "वक्ष",
+          "वक्षस्थल",
+          "पीठ",
+          "spine",
+          "chest",
+          "back",
+          "उदासीन भाग"
+        ]
+      },
+      "then": {
+        "prefer_electricity": ["WE", "BE", "RE"],
+        "note_hi": "उदासीन भाग (कशेरुका, वक्ष, पीठ मध्य) — कोई भी तरल बिजली"
+      },
+      "rationale_hi": "कशेरुकीय/वक्ष उदासीन — प्रयोग विधि (3)"
+    },
+    {
+      "id": "eh_white_electricity_topical_anywhere",
+      "enabled": true,
+      "priority": 81,
+      "if": {
+        "symptoms_any": [
+          "त्वचा",
+          "लोशन",
+          "मरहम",
+          "तरल",
+          "बाह्य",
+          "लगाना",
+          "45 अंग",
+          "topical",
+          "lotion",
+          "skin",
+          "ointment"
+        ]
+      },
+      "then": {
+        "force_electricity": "WE",
+        "prefer_electricity": ["WE", "W.E."],
+        "note_hi": "उदासीन तरल बिजली (White Ele. / WE) — निसंकोच किसी भी अंग पर; 45 अंग लोशन"
+      },
+      "rationale_hi": "सफेद बिजली — उदासीन तरल, सर्वांग प्रयोग"
+    },
+    {
+      "id": "eh_clinical_catchall_any_case",
+      "enabled": true,
+      "priority": 5,
+      "if": {},
+      "then": {
+        "prefer_electricity": ["WE", "BE", "RE"],
+        "note_hi": "सामान्य केस — विद्युत प्राथमिकता (विशिष्ट JSON rule न हो तो)"
+      },
+      "rationale_hi": "Catch-all — हर केस में कम से कम विद्युत lock"
+    },
+    {
+      "id": "eh_hyper_vitals_potency_d10",
+      "enabled": true,
+      "priority": 82,
+      "if": { "polarity_in": ["HYPER", "POSITIVE"] },
+      "then": {
+        "force_potency": "D10",
+        "note_hi": "उग्र/HYPER — D10 (लक्षण-सूची बिना भी)"
+      },
+      "rationale_hi": "HYPER polarity — potency lock बिना अनिवार्य symptom match"
+    },
+    {
+      "id": "eh_hypo_vitals_potency_d6",
+      "enabled": true,
+      "priority": 82,
+      "if": { "polarity_in": ["HYPO", "NEGATIVE"] },
+      "then": {
+        "force_potency": "D6",
+        "note_hi": "निष्क्रिय/HYPO — D6"
+      },
+      "rationale_hi": "HYPO polarity — potency lock"
+    }
+  ]
+}

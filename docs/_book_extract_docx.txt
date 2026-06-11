@@ -1,0 +1,797 @@
+E.H. AROGYA SUTRA
+BOOK DATA EXTRACTION
+Cursor AI ko Book PDF se Data Nikalne ka Complete Prompt
+PyMuPDF + Tesseract + Python → Structured Tables
+Book Data → JSON → Database → Summary mein use
+SECTION 1: BOOK DATA EXTRACTION PLAN
+E.H. Arogya Sutra Book PDF se yeh data nikalna hai:
+1. Medicines list (S1-S7, A1-A3, C1-C17, P1-P5, F1-F3)
+2. Anatomy Chart (Page 71 — Organ to Medicine map)
+3. Polarity Rules (Positive/Negative rog ke niyam)
+4. Dilution Method (D4 se D30 tak)
+5. Electricity Chart (Y.E., R.E., G.E., B.E., W.E.)
+6. Disease-Symptom data jahan bhi mile
+Book se kya-kya Tables banani hain
+Table
+Book mein Kahan
+Kya Data
+Medicine Table
+Har chapter mein
+Code, Group, System, Kaam
+Anatomy Map
+Page 71 area
+Organ, Side, Pole, Medicine
+Polarity Rules
+Rules chapter
+Positive/Negative symptoms
+Potency Chart
+Dilution chapter
+D4-D30, Phase, Frequency
+Electricity
+Electricity chapter
+YE/RE/GE/BE/WE, Indication
+Symptom Map
+Case examples
+Symptom → Organ → Medicine
+SECTION 2: BOOK PDF SE DATA NIKALNE KA CODE
+File: backend/scripts/extract_book.py
+"""
+E.H. Arogya Sutra Book PDF/Images se data nikalo.
+Run: python extract_book.py
+Input:  book/eh_arogya_sutra.pdf
+book/pages/*.jpg (scanned pages)
+Output: book/extracted/
+├── medicines.json
+├── anatomy.json
+├── polarity.json
+├── potency.json
+├── electricity.json
+└── symptoms.json
+"""
+import fitz          # pip install pymupdf
+import pytesseract   # pip install pytesseract
+import json, re, os
+from PIL import Image
+from pathlib import Path
+BOOK_PDF    = "book/eh_arogya_sutra.pdf"
+BOOK_PAGES  = "book/pages/"
+OUTPUT_DIR  = "book/extracted/"
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+# ══════════════════════════════════
+# STEP 1: PDF se text nikalo
+# ══════════════════════════════════
+def extract_pdf_text() -> dict:
+"""
+PDF ke har page ka text nikalo.
+Returns: {page_num: text}
+"""
+pages = {}
+if not os.path.exists(BOOK_PDF):
+print(f"PDF nahi mila: {BOOK_PDF}")
+return {}
+doc = fitz.open(BOOK_PDF)
+print(f"Total pages: {len(doc)}")
+for i, page in enumerate(doc):
+# Direct text extraction (typed PDF)
+text = page.get_text("text")
+# Agar text kam ho to OCR karo
+if len(text.strip()) < 50:
+pix  = page.get_pixmap(dpi=300)
+img  = Image.frombytes("RGB",
+[pix.width, pix.height], pix.samples)
+text = pytesseract.image_to_string(
+img, lang="hin+eng",
+config="--psm 6 --oem 3")
+pages[i+1] = text
+print(f"Page {i+1}: {len(text)} chars")
+return pages
+# ══════════════════════════════════
+# STEP 2: Scanned Images se text
+# ══════════════════════════════════
+def extract_images_text() -> dict:
+"""
+Book ke scanned page images se text nikalo.
+"""
+pages = {}
+img_dir = Path(BOOK_PAGES)
+if not img_dir.exists():
+return {}
+images = sorted(img_dir.glob("*.jpg")) + \
+sorted(img_dir.glob("*.png"))
+for i, img_path in enumerate(images):
+img  = Image.open(img_path)
+# Hindi + English OCR
+text = pytesseract.image_to_string(
+img,
+lang="hin+eng",
+config="--psm 6 --oem 3 -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-./: अआइईउऊएओकखगघचछजझटठडढणतथदधनपफबभमयरलवशषसह"
+)
+pages[i+1] = text
+print(f"Image {img_path.name}: {len(text)} chars")
+return pages
+# ══════════════════════════════════
+# STEP 3: Medicines Table nikalo
+# ══════════════════════════════════
+def extract_medicines(pages: dict) -> list:
+"""
+Book se har medicine ki information nikalo.
+Pattern: S-1, C-4, A-2, P-1, F-1, VEN-1 etc.
+"""
+medicines = []
+seen = set()
+# Medicine patterns in EH book
+MED_PATTERNS = [
+r"S[-\s]?(\d+)",   # Scrofoloso
+r"C[-\s]?(\d+)",   # Canceroso
+r"A[-\s]?(\d+)",   # Angitico
+r"P[-\s]?(\d+)",   # Pectorale
+r"F[-\s]?(\d+)",   # Febrifugo
+r"L[-\s]?(\d+)",   # Limfatico
+r"VEN[-\s]?(\d+)", # Venereo
+]
+# Group descriptions from book
+GROUP_MAP = {
+"S": {"group":"Scrofoloso","system":"Lymphatic",
+"hindi":"स्क्रोफोलोसो","nature":"Negative"},
+"C": {"group":"Canceroso", "system":"Multi-system",
+"hindi":"कैंसरोसो","nature":"Both"},
+"A": {"group":"Angitico",  "system":"Sanguine/Blood",
+"hindi":"एंजिटिको","nature":"Negative"},
+"P": {"group":"Pectorale", "system":"Respiratory",
+"hindi":"पेक्टोरले","nature":"Negative"},
+"F": {"group":"Febrifugo", "system":"Nervous/Fever",
+"hindi":"फेब्रीफुगो","nature":"Both"},
+"L": {"group":"Limfatico", "system":"Blood/Immunity",
+"hindi":"लिम्फेटिको","nature":"Both"},
+"V": {"group":"Venereo",   "system":"Antiviral",
+"hindi":"वेनेरेओ","nature":"Negative"},
+}
+for page_num, text in pages.items():
+lines = text.split("\n")
+for line in lines:
+line_clean = line.strip()
+if not line_clean: continue
+# Check each medicine pattern
+for prefix in ["S","C","A","P","F","L","VEN"]:
+grp_key = prefix[0]
+pat = rf"{prefix}[-\s]?(\d+)"
+matches = re.findall(pat, line_clean, re.IGNORECASE)
+for num in matches:
+code = f"{prefix}-{num}"
+if code in seen: continue
+seen.add(code)
+grp = GROUP_MAP.get(grp_key, {})
+medicines.append({
+"medicine_code": code,
+"group_name":    grp.get("group", prefix),
+"group_hindi":   grp.get("hindi", prefix),
+"target_system": grp.get("system", ""),
+"nature":        grp.get("nature", "Both"),
+"page_found":    page_num,
+"context_line":  line_clean[:200],
+"action": extract_action(line_clean, code)
+})
+# Sort: S-1, S-2... C-1, C-2...
+medicines.sort(key=lambda x: (
+x["medicine_code"][0],
+int(x["medicine_code"].split("-")[1])
+if x["medicine_code"].split("-")[1].isdigit() else 0
+))
+print(f"Medicines found: {len(medicines)}")
+return medicines
+def extract_action(line: str, code: str) -> str:
+"""Line se medicine ka kaam nikalo."""
+# Remove medicine code from line
+clean = re.sub(r"[A-Z]+-\d+", "", line).strip()
+clean = re.sub(r"[-:;,]", " ", clean).strip()
+if len(clean) > 20:
+return clean[:200]
+return "EH formula mein upyog"
+# ══════════════════════════════════
+# STEP 4: Anatomy Chart (Page 71)
+# ══════════════════════════════════
+def extract_anatomy(pages: dict) -> list:
+"""
+Anatomy chart se organ aur medicine mapping.
+EH Book mein usually Page 71 ke aaspaas.
+"""
+anatomy = []
+# EH Anatomy known data (from book)
+ANATOMY_KNOWN = [
+{"organ":"Brain","hindi":"मस्तिष्क","system":"Nervous",
+"side":"Both","pole":"Both","upper_lower":"Upper",
+"medicines":["F-1","W.E."],"page":71},
+{"organ":"Hair","hindi":"बाल","system":"Lymphatic",
+"side":"Both","pole":"Both","upper_lower":"Upper",
+"medicines":["C-4"],"page":71},
+{"organ":"Throat","hindi":"गला","system":"Respiratory",
+"side":"Both","pole":"Both","upper_lower":"Upper",
+"medicines":["C-13"],"page":71},
+{"organ":"Lungs","hindi":"फेफड़े","system":"Respiratory",
+"side":"Left","pole":"Positive","upper_lower":"Upper",
+"medicines":["P-1","P-2"],"page":71},
+{"organ":"Heart_Left","hindi":"हृदय बायाँ","system":"Sanguine",
+"side":"Left","pole":"Positive","upper_lower":"Upper",
+"medicines":["A-1"],"page":71},
+{"organ":"Heart_Right","hindi":"हृदय दाहिना","system":"Sanguine",
+"side":"Right","pole":"Negative","upper_lower":"Upper",
+"medicines":["A-2"],"page":71},
+{"organ":"Liver","hindi":"जिगर","system":"Lymphatic",
+"side":"Right","pole":"Negative","upper_lower":"Upper",
+"medicines":["S-2"],"page":71},
+{"organ":"Stomach","hindi":"आमाशय","system":"Digestive",
+"side":"Both","pole":"Both","upper_lower":"Middle",
+"medicines":["S-10","C-8"],"page":71},
+{"organ":"Spleen","hindi":"तिल्ली","system":"Lymphatic",
+"side":"Left","pole":"Positive","upper_lower":"Middle",
+"medicines":["S-2","S-3"],"page":71},
+{"organ":"Kidney","hindi":"गुर्दा","system":"Urinary",
+"side":"Both","pole":"Both","upper_lower":"Middle",
+"medicines":["S-6"],"page":71},
+{"organ":"Skin","hindi":"त्वचा","system":"Lymphatic",
+"side":"Left","pole":"Positive","upper_lower":"Both",
+"medicines":["S-5"],"page":71},
+{"organ":"Bone","hindi":"हड्डी","system":"Skeletal",
+"side":"Both","pole":"Both","upper_lower":"Both",
+"medicines":["C-4"],"page":71},
+{"organ":"Blood_RBC","hindi":"रक्त","system":"Sanguine",
+"side":"Right","pole":"Negative","upper_lower":"Both",
+"medicines":["A-3","L-1"],"page":71},
+{"organ":"Intestine","hindi":"आंत","system":"Digestive",
+"side":"Both","pole":"Both","upper_lower":"Lower",
+"medicines":["S-10","C-15"],"page":71},
+{"organ":"Repro_Female","hindi":"स्त्री अंग","system":"Reproductive",
+"side":"Left","pole":"Positive","upper_lower":"Lower",
+"medicines":["S-2","C-16"],"page":71},
+{"organ":"Repro_Male","hindi":"पुरुष अंग","system":"Reproductive",
+"side":"Right","pole":"Negative","upper_lower":"Lower",
+"medicines":["S-3","C-3"],"page":71},
+]
+# Book ke pages mein aur data dhundho
+for page_num, text in pages.items():
+text_low = text.lower()
+# Page 68-75 mein anatomy chart hoti hai
+if 65 <= page_num <= 80:
+# Look for organ patterns
+organ_patterns = [
+r"(liver|jigar|kidney|gurda|lungs|brain)",
+r"(right|left|positive|negative)\s+pole",
+]
+for pat in organ_patterns:
+if re.search(pat, text_low):
+print(f"Anatomy data on page {page_num}")
+print(f"Anatomy entries: {len(ANATOMY_KNOWN)}")
+return ANATOMY_KNOWN
+# ══════════════════════════════════
+# STEP 5: Polarity Rules nikalo
+# ══════════════════════════════════
+def extract_polarity_rules(pages: dict) -> list:
+"""Book se Polarity Law data nikalo."""
+rules = [
+{"rule_id":"POL_001",
+"condition":"Positive Rog",
+"hindi_condition":"धनात्मक रोग",
+"symptoms":["sujan","fever","bukhar","pain","swelling","high values"],
+"medicine_type":"Negative Medicine",
+"potency":["D6","D10","D30"],
+"electricity":["Y.E.","G.E.","B.E."],
+"rule":"Higher dilution = more negative effect",
+"warning":"D4 KABHI NAHI in positive rog"},
+{"rule_id":"POL_002",
+"condition":"Negative Rog",
+"hindi_condition":"ऋणात्मक रोग",
+"symptoms":["kamzori","weakness","atrophy","low values","pale"],
+"medicine_type":"Positive Medicine",
+"potency":["D4","D6"],
+"electricity":["R.E.","W.E."],
+"rule":"Lower dilution = more positive effect",
+"warning":"D30 KABHI NAHI in negative rog"},
+]
+# Book pages mein dhundho
+POSITIVE_KEYWORDS = ["positive","dhanaatmak","badhna",
+"swelling","inflammation","sujan"]
+NEGATIVE_KEYWORDS = ["negative","rinatmak","ghatna",
+"weakness","atrophy","kamzori"]
+for page_num, text in pages.items():
+text_low = text.lower()
+pos_found = sum(1 for k in POSITIVE_KEYWORDS if k in text_low)
+neg_found = sum(1 for k in NEGATIVE_KEYWORDS if k in text_low)
+if pos_found + neg_found > 3:
+print(f"Polarity rules found on page {page_num}")
+# Extract relevant lines
+for line in text.split("\n"):
+if any(k in line.lower() for k in POSITIVE_KEYWORDS + NEGATIVE_KEYWORDS):
+if len(line.strip()) > 20:
+rules.append({
+"rule_id": f"POL_BOOK_{page_num}",
+"source_page": page_num,
+"raw_text": line.strip()[:300],
+"extracted": True
+})
+return rules
+# ══════════════════════════════════
+# STEP 6: Potency Chart nikalo
+# ══════════════════════════════════
+def extract_potency(pages: dict) -> list:
+"""Dilution method (D4-D30) data nikalo."""
+potency = [
+{"dilution":"D4","steps":1,"ratio":"1:9",
+"method":"Crude(1) + D.W.(9) + 100 strokes",
+"nature":"Crude-level","use":"Strong positive cases"},
+{"dilution":"D5","steps":2,"ratio":"1:9",
+"method":"D4(1) + D.W.(9) + 100 strokes",
+"nature":"Mild positive","use":"Mild negative rog"},
+{"dilution":"D6","steps":3,"ratio":"1:9",
+"method":"D5(1) + D.W.(9) + 100 strokes",
+"nature":"Mild negative","use":"Acute positive rog"},
+{"dilution":"D10","steps":7,"ratio":"1:9",
+"method":"D6 se 4 baar aur yahi process",
+"nature":"Medium negative","use":"Sub-acute positive rog"},
+{"dilution":"D30","steps":27,"ratio":"1:9",
+"method":"D10 se 20 baar aur yahi process",
+"nature":"Deep negative","use":"Chronic positive rog"},
+]
+# Book mein dilution pages dhundho
+DIL_KEYWORDS = ["dilution","d6","d10","d30","1:9","strokes"]
+for page_num, text in pages.items():
+text_low = text.lower()
+if sum(1 for k in DIL_KEYWORDS if k in text_low) >= 2:
+print(f"Dilution method on page {page_num}")
+return potency
+# ══════════════════════════════════
+# STEP 7: Electricity Chart
+# ══════════════════════════════════
+def extract_electricity(pages: dict) -> list:
+"""5 types of EH Electricity data."""
+electricity = [
+{"code":"Y.E.","name":"Yellow Electricity",
+"hindi":"येलो इलेक्ट्रिसिटी",
+"nature":"Negative","polarity":"POSITIVE rog",
+"indication":"Acute pain, fever, inflammation, HIGH values",
+"keywords":"sujan,fever,bukhar,pain,dard,high,infection",
+"how_to_use":"Formula mein last mein add karein"},
+{"code":"R.E.","name":"Red Electricity",
+"hindi":"रेड इलेक्ट्रिसिटी",
+"nature":"Positive","polarity":"NEGATIVE rog",
+"indication":"Weakness, low values, atrophy, coldness",
+"keywords":"kamzori,weakness,low,atrophy,cold,anemia",
+"how_to_use":"Negative rog mein urja dena"},
+{"code":"B.E.","name":"Blue Electricity",
+"hindi":"ब्लू इलेक्ट्रिसिटी",
+"nature":"Negative","polarity":"POSITIVE cardiac",
+"indication":"Heart, BP, cardiac, palpitation",
+"keywords":"heart,bp,cardiac,hypertension,dhadkan,pulse",
+"how_to_use":"Heart aur BP cases mein"},
+{"code":"G.E.","name":"Green Electricity",
+"hindi":"ग्रीन इलेक्ट्रिसिटी",
+"nature":"Negative","polarity":"POSITIVE joints",
+"indication":"Joint pain, lymph, tumor, sujan",
+"keywords":"joint,jod,ganth,sujan,lymph,tumor,arthritis",
+"how_to_use":"Jod dard aur lymph mein use karein"},
+{"code":"W.E.","name":"White Electricity",
+"hindi":"व्हाइट इलेक्ट्रिसिटी",
+"nature":"Neutral","polarity":"BOTH",
+"indication":"Brain, nervous, mental, sleep",
+"keywords":"brain,nervous,mental,depression,neend,memory",
+"how_to_use":"Nervous system cases mein"},
+]
+# Book mein dhundho
+for page_num, text in pages.items():
+text_low = text.lower()
+if any(k in text_low for k in ["yellow electricity","red electricity",
+"y.e.","r.e.","g.e."]):
+print(f"Electricity data on page {page_num}")
+return electricity
+# ══════════════════════════════════
+# STEP 8: Symptoms se Medicine Map
+# ══════════════════════════════════
+def extract_symptom_map(pages: dict) -> list:
+"""
+Book mein jahan bhi symptoms aur medicines
+saath mein hain, woh extract karo.
+"""
+symptom_map = []
+SYMPTOM_KEYWORDS = [
+"fever","bukhar","headache","sir dard",
+"joint","jod","kidney","gurda","liver",
+"diabetes","sugar","asthma","blood pressure",
+"weakness","kamzori","skin","twacha",
+]
+MED_PATTERN = r"[SCAPFLV][A-Z]*[-\s]\d+"
+for page_num, text in pages.items():
+text_low = text.lower()
+lines = text.split("\n")
+for line in lines:
+line_low = line.lower().strip()
+if not line_low: continue
+# Check if symptom + medicine both present
+has_symptom = any(s in line_low for s in SYMPTOM_KEYWORDS)
+med_matches = re.findall(MED_PATTERN, line, re.IGNORECASE)
+if has_symptom and len(med_matches) > 0:
+# Find which symptom
+matched_syms = [s for s in SYMPTOM_KEYWORDS if s in line_low]
+symptom_map.append({
+"symptoms": matched_syms[:3],
+"medicines": med_matches[:5],
+"page": page_num,
+"raw_line": line.strip()[:300]
+})
+print(f"Symptom-Medicine mappings: {len(symptom_map)}")
+return symptom_map
+# ══════════════════════════════════
+# STEP 9: MAIN - Sab run karo
+# ══════════════════════════════════
+def main():
+print("=" * 50)
+print("E.H. AROGYA SUTRA BOOK EXTRACTION")
+print("=" * 50)
+# Get text from PDF or Images
+pages = {}
+if os.path.exists(BOOK_PDF):
+print("\nPDF se text nikal raha hai...")
+pages = extract_pdf_text()
+elif os.path.exists(BOOK_PAGES):
+print("\nImages se OCR kar raha hai...")
+pages = extract_images_text()
+else:
+print("Book PDF ya Pages folder nahi mila!")
+print("Manual data use kar raha hai...")
+# Extract all data
+print("\nMedicines nikaal raha hai...")
+medicines = extract_medicines(pages)
+print("\nAnatomy chart nikaal raha hai...")
+anatomy = extract_anatomy(pages)
+print("\nPolarity rules nikaal raha hai...")
+polarity = extract_polarity_rules(pages)
+print("\nPotency chart nikaal raha hai...")
+potency = extract_potency(pages)
+print("\nElectricity data nikaal raha hai...")
+electricity = extract_electricity(pages)
+print("\nSymptom-Medicine map nikaal raha hai...")
+symptoms = extract_symptom_map(pages)
+# Save all as JSON
+data_map = {
+"medicines.json":   medicines,
+"anatomy.json":     anatomy,
+"polarity.json":    polarity,
+"potency.json":     potency,
+"electricity.json": electricity,
+"symptoms.json":    symptoms,
+}
+for filename, data in data_map.items():
+path = os.path.join(OUTPUT_DIR, filename)
+with open(path, "w", encoding="utf-8") as f:
+json.dump(data, f, ensure_ascii=False, indent=2)
+print(f"Saved: {path} ({len(data)} items)")
+# Summary table print karo
+print("\n" + "=" * 50)
+print("EXTRACTION SUMMARY:")
+print("=" * 50)
+print(f"Medicines     : {len(medicines)}")
+print(f"Anatomy items : {len(anatomy)}")
+print(f"Polarity rules: {len(polarity)}")
+print(f"Potency chart : {len(potency)}")
+print(f"Electricity   : {len(electricity)}")
+print(f"Symptom maps  : {len(symptoms)}")
+print("=" * 50)
+print("Book data extraction complete!")
+if __name__ == "__main__":
+main()
+SECTION 3: EXTRACTED DATA DATABASE MEIN LOAD KARO
+File: backend/scripts/load_book_to_db.py
+"""
+Extracted book JSON data ko database mein load karo.
+Run AFTER extract_book.py:
+python extract_book.py
+python load_book_to_db.py
+"""
+import json, os
+from database import SessionLocal
+from models import (AnatomyMaster, EhMateriaMedica,
+ElectricityMaster, PotencyRules)
+OUTPUT_DIR = "book/extracted/"
+db = SessionLocal()
+def load_medicines():
+path = os.path.join(OUTPUT_DIR, "medicines.json")
+if not os.path.exists(path): return
+with open(path, encoding="utf-8") as f:
+data = json.load(f)
+count = 0
+for item in data:
+existing = db.query(EhMateriaMedica).filter(
+EhMateriaMedica.medicine_code == item["medicine_code"]
+).first()
+if not existing:
+db.add(EhMateriaMedica(
+medicine_code  = item["medicine_code"],
+group_name     = item.get("group_name",""),
+target_system  = item.get("target_system",""),
+target_organ   = item.get("context_line","")[:200],
+polarity       = item.get("nature","Both"),
+action         = item.get("action",""),
+))
+count += 1
+db.commit()
+print(f"Medicines loaded: {count}")
+def load_anatomy():
+path = os.path.join(OUTPUT_DIR, "anatomy.json")
+if not os.path.exists(path): return
+with open(path, encoding="utf-8") as f:
+data = json.load(f)
+count = 0
+for item in data:
+existing = db.query(AnatomyMaster).filter(
+AnatomyMaster.organ_name == item["organ"]
+).first()
+if not existing:
+db.add(AnatomyMaster(
+organ_name   = item["organ"],
+organ_hindi  = item.get("hindi",""),
+system_name  = item.get("system",""),
+body_side    = item.get("side","Both"),
+pole         = item.get("pole","Both"),
+))
+count += 1
+db.commit()
+print(f"Anatomy loaded: {count}")
+def load_electricity():
+path = os.path.join(OUTPUT_DIR, "electricity.json")
+if not os.path.exists(path): return
+with open(path, encoding="utf-8") as f:
+data = json.load(f)
+count = 0
+for item in data:
+existing = db.query(ElectricityMaster).filter(
+ElectricityMaster.fluid_code == item["code"]
+).first()
+if not existing:
+db.add(ElectricityMaster(
+fluid_code  = item["code"],
+fluid_name  = item["name"],
+nature      = item.get("nature",""),
+polarity    = item.get("polarity",""),
+indication  = item.get("indication",""),
+keywords    = item.get("keywords",""),
+))
+count += 1
+db.commit()
+print(f"Electricity loaded: {count}")
+print("Book data database mein load ho raha hai...")
+load_medicines()
+load_anatomy()
+load_electricity()
+print("Done! Book data ab database mein hai.")
+SECTION 4: BOOK DATA SE SUMMARY BETTER BANAO
+File: backend/services/bookKnowledge.py
+"""
+Book se nikale gaye data ko summary mein use karo.
+Jab doctor patient analyze kare, book ka data
+relevant medicines ke baare mein aur jaankari de.
+"""
+import json, os
+from database import SessionLocal
+from models import EhMateriaMedica
+OUTPUT_DIR = "book/extracted/"
+def get_book_medicine_info(medicine_code: str) -> dict:
+"""
+Book se nikali gayi medicine information do.
+Summary mein is data ko use karo.
+"""
+# First check extracted JSON
+path = os.path.join(OUTPUT_DIR, "medicines.json")
+if os.path.exists(path):
+with open(path, encoding="utf-8") as f:
+meds = json.load(f)
+for m in meds:
+if m.get("medicine_code") == medicine_code:
+return {
+"code": medicine_code,
+"book_info": m.get("action",""),
+"page": m.get("page_found",0),
+"context": m.get("context_line",""),
+"source": "book"
+}
+# Fallback to DB
+db = SessionLocal()
+med = db.query(EhMateriaMedica).filter(
+EhMateriaMedica.medicine_code == medicine_code
+).first()
+db.close()
+if med:
+return {
+"code": medicine_code,
+"book_info": med.action or "",
+"group": med.group_name,
+"system": med.target_system,
+"source": "database"
+}
+return {"code": medicine_code, "book_info": "", "source": "none"}
+def enrich_formula_with_book(formula: dict) -> dict:
+"""
+Formula ki har dawa mein book ka data add karo.
+Yeh summary mein use hoga.
+"""
+enriched = formula.copy()
+for key in ["formula_a","formula_b","formula_c","formula_d"]:
+f = enriched.get(key, {})
+if not f: continue
+meds = f.get("medicines", [])
+enriched_meds = []
+for med in meds:
+info = get_book_medicine_info(med)
+enriched_meds.append({
+"code": med,
+"book_data": info.get("book_info",""),
+"page": info.get("page",0)
+})
+f["medicines_detail"] = enriched_meds
+enriched[key] = f
+return enriched
+def get_symptom_book_reference(symptom: str) -> list:
+"""
+Book mein is symptom ke liye kya likha hai?
+"""
+path = os.path.join(OUTPUT_DIR, "symptoms.json")
+if not os.path.exists(path):
+return []
+with open(path, encoding="utf-8") as f:
+data = json.load(f)
+matches = []
+sym_low = symptom.lower()
+for item in data:
+if any(s in sym_low or sym_low in s
+for s in item.get("symptoms",[])):
+matches.append({
+"medicines": item.get("medicines",[]),
+"page": item.get("page",0),
+"book_text": item.get("raw_line","")[:200]
+})
+return matches[:3]
+SECTION 5: CURSOR KO DENE WALA POORA PROMPT
+Yeh poora prompt Cursor mein paste karein.
+Book PDF ka path batayein.
+Cursor sab kuch kar dega!
+=== CURSOR PROMPT: EH BOOK DATA EXTRACTION ===
+Project: E.H. Arogya Sutra AI Expert System
+TASK: E.H. AROGYA SUTRA BOOK se data nikalo
+aur database mein structured tables banao.
+=== BOOK FILE LOCATION ===
+Book PDF rakhein yahan:
+backend/book/eh_arogya_sutra.pdf
+Ya scanned pages rakhein yahan:
+backend/book/pages/page_001.jpg
+backend/book/pages/page_002.jpg
+... etc
+=== FILES BANAO ===
+1. backend/scripts/extract_book.py
+[Upar diya gaya poora code use karein]
+2. backend/scripts/load_book_to_db.py
+[Upar diya gaya load code use karein]
+3. backend/services/bookKnowledge.py
+[Upar diya gaya service code use karein]
+=== EXTRACTION RULES ===
+1. Book se YEH DATA zaroor nikalo:
+a. Medicine codes: S-1 se S-10, C-1 se C-17,
+A-1 se A-3, P-1 se P-5, F-1 se F-3,
+L-1, VEN-1
+b. Anatomy Chart (Page 71 area):
+Organ → Side → Pole → Medicine
+c. Polarity Rules:
+Positive rog → Negative medicine
+Negative rog → Positive medicine
+d. Dilution method 1:9:
+D4 → D5 → D6 → D10 → D30
+e. 5 Electricities:
+Y.E., R.E., G.E., B.E., W.E.
+f. Jahan bhi symptom + medicine saath ho
+2. Data JSON mein save karo:
+backend/book/extracted/medicines.json
+backend/book/extracted/anatomy.json
+backend/book/extracted/polarity.json
+backend/book/extracted/potency.json
+backend/book/extracted/electricity.json
+backend/book/extracted/symptoms.json
+3. JSON ko Database mein load karo:
+Table: eh_materia_medica
+Table: anatomy_master
+Table: electricity_master
+Table: potency_rules
+4. Tables structure:
+MEDICINES TABLE:
+| Code | Group | System | Action | Page |
+|------|-------|--------|--------|------|
+| S-1  | Scrofoloso | Lymphatic | ... | 45 |
+ANATOMY TABLE:
+| Organ | Hindi | System | Side | Pole | Medicine |
+|-------|-------|--------|------|------|----------|
+| Liver | जिगर  | Lymph  | Right| Neg  | S-2      |
+ELECTRICITY TABLE:
+| Code | Name | Nature | Polarity | Indication | Keywords |
+|------|------|--------|----------|------------|----------|
+| Y.E. | Yellow | Neg | POSITIVE | Acute pain | sujan... |
+POTENCY TABLE:
+| Phase | Polarity | Potency | Frequency |
+|-------|----------|---------|-----------|
+| Acute | POSITIVE | D6      | Har 3 ghante |
+=== BOOK DATA SUMMARY MEIN USE ===
+Jab doctor patient analyze kare:
+1. Formula A: S-1 + S-6 + C-4
+2. Book se S-1 ka data nikalo:
+"S-1: Lymph tonic, immunity boost..."
+3. Yeh info summary mein add karo:
+"S-1 — Book ke Page 45 ke anusaar:
+Lymph system ki safai karta hai..."
+=== HOW TO RUN ===
+1. Book PDF rakho: backend/book/eh_arogya_sutra.pdf
+2. Run: cd backend && python scripts/extract_book.py
+3. Run: python scripts/load_book_to_db.py
+4. Verify: python -c "from models import EhMateriaMedica;
+from database import SessionLocal;
+db=SessionLocal();
+print(db.query(EhMateriaMedica).count())"
+=== TEST ===
+After running:
+backend/book/extracted/medicines.json mein
+S-1 se S-10 tak sari medicines hongi.
+Database mein eh_materia_medica table mein
+sab entries hongi.
+API call karein:
+GET http://localhost:8000/api/book/medicines
+Response: All medicines from book
+=== END ===
+SECTION 6: BOOK KI PHOTOS SE DATA NIKALNA
+Agar book ka PDF nahi hai to photos se karo.
+WhatsApp se jo images aaye woh bhi kaam karengi.
+Folder mein rakhein → Script chalayein → Done!
+Step-by-Step Instructions
+Step
+Action
+Detail
+1
+Folder Banao
+backend/book/pages/ folder create karein
+2
+Photos Rakhein
+Book ke page photos => page_001.jpg...
+3
+Script Chalao
+python scripts/extract_book.py
+4
+JSON Check
+book/extracted/ mein files dekho
+5
+DB Load
+python scripts/load_book_to_db.py
+6
+Verify
+API se medicines list check karo
+Photos Name Format
+# Sahi naam format:
+backend/book/pages/
+├── page_001.jpg  (Book page 1)
+├── page_002.jpg  (Book page 2)
+├── page_003.jpg  (Book page 3)
+│   ...
+├── page_071.jpg  (Anatomy Chart page)
+│   ...
+└── page_200.jpg  (Last page)
+# Ya aise bhi chalega:
+├── IMG-20260516-WA0001.jpg
+├── IMG-20260516-WA0002.jpg
+└── etc...
+# Script automatically sort karke read karega
+Tesseract Hindi Install (Ek Baar)
+# Ubuntu/Linux:
+sudo apt install tesseract-ocr
+sudo apt install tesseract-ocr-hin
+sudo apt install tesseract-ocr-eng
+# Windows:
+# https://github.com/UB-Mannheim/tesseract/wiki
+# Download installer + Hindi language pack
+# Python package:
+pip install pytesseract pillow pymupdf
+# Test:
+python -c "import pytesseract; print(pytesseract.get_languages())"
+# Should show: [hin, eng, ...]
+E.H. Arogya Sutra — Book Data Extraction System
+Book → JSON → Database → Summary mein use | 100% Free

@@ -1,0 +1,17 @@
+{
+  "watch": ["backend"],
+  "ext": "js,cjs,json",
+  "ignore": [
+    "**/node_modules/**",
+    "**/uploads/**",
+    "local-site/**",
+    "frontend/**",
+    "database/**",
+    "scripts/**",
+    "docs/**",
+    "eh-expert-engine/**",
+    "**/*.test.js"
+  ],
+  "delay": 2500,
+  "signal": "SIGTERM"
+}

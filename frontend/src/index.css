@@ -1,0 +1,201 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* GLOBAL DESIGN SYSTEM */
+  --bg:        #080f09;
+  --surface:   #0e1a0f;
+  --card:      #121f13;
+  --border:    rgba(201,150,58,0.15);
+  --border2:   rgba(255,255,255,0.07);
+  --gold:      #c9963a;
+  --gold2:     #e8c46a;
+  --green:     #4a9b54;
+  --green2:    #6abf72;
+  --text:      rgba(255,255,255,0.90);
+  --muted:     rgba(255,255,255,0.45);
+  --faint:     rgba(255,255,255,0.18);
+  --red:       #c0392b;
+  --blue:      #2980b9;
+
+  /* Spacing */
+  --xs: 4px;
+  --sm: 8px;
+  --md: 16px;
+  --lg: 24px;
+  --xl: 40px;
+
+  /* Radius */
+  --radius-card: 12px;
+  --radius-button: 8px;
+  --radius-badge: 20px;
+  --radius-input: 8px;
+
+  /* Fonts */
+  --font-heading: 'Cinzel', serif;
+  --font-body: 'DM Sans', sans-serif;
+  --font-subtitle: 'Cormorant Garamond', serif;
+
+  /* Shadows */
+  --shadow-card: 0 2px 12px rgba(0,0,0,0.4);
+  --shadow-button: 0 2px 8px rgba(201,150,58,0.2);
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+h1, h2, h3, h4, h5, h6, .font-heading {
+  font-family: var(--font-heading);
+  letter-spacing: 1px;
+}
+
+.font-subtitle {
+  font-family: var(--font-subtitle);
+  font-style: italic;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--surface);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gold);
+}
+
+@layer components {
+  .card-base {
+    background-color: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    transition: all 0.3s ease;
+  }
+
+  .card-base:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+    border-color: rgba(201,150,58,0.3);
+  }
+
+  .btn-gold-filled {
+    background-color: var(--gold);
+    color: var(--bg);
+    height: 36px;
+    padding: 0 20px;
+    border-radius: var(--radius-button);
+    font-weight: 700;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.2s;
+    box-shadow: var(--shadow-button);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .btn-gold-filled:hover {
+    background-color: var(--gold2);
+    filter: brightness(1.1);
+  }
+
+  .btn-gold-outline {
+    background-color: transparent;
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    height: 36px;
+    padding: 0 20px;
+    border-radius: var(--radius-button);
+    font-weight: 700;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .btn-gold-outline:hover {
+    background-color: rgba(201, 150, 58, 0.1);
+    filter: brightness(1.1);
+  }
+
+  .section-label {
+    font-family: var(--font-heading);
+    font-size: 9px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    font-weight: 800;
+    color: var(--gold);
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--faint);
+    border-radius: 10px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: var(--gold);
+  }
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease forwards;
+}
+
+/* Mobile Fixes */
+@media (max-width: 768px) {
+  .container-fluid {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  
+  /* Prevent horizontal scroll */
+  body {
+    width: 100vw;
+    overflow-x: hidden;
+  }
+}

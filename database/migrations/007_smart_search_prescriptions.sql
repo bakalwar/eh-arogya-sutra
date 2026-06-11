@@ -1,0 +1,33 @@
+-- EH Smart Search: extended prescription / visit records
+ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS patient_name VARCHAR(255);
+ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS patient_age INTEGER;
+ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS patient_gender VARCHAR(32);
+ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS patient_weight DECIMAL(6, 2);
+ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS bp_systolic INTEGER;
+ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS bp_diastolic INTEGER;
+ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS bp_status VARCHAR(64);
+ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS symptoms_json JSONB DEFAULT '[]';
+ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS symptom_count INTEGER DEFAULT 0;
+ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS positive_symptom_count INTEGER DEFAULT 0;
+ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS negative_symptom_count INTEGER DEFAULT 0;
+ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS polarity VARCHAR(32);
+ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS vitiation_type VARCHAR(64);
+ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS phase VARCHAR(32);
+ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS dilution VARCHAR(64);
+ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS electricity VARCHAR(64);
+ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS medicines_json JSONB;
+ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS improvement_percent INTEGER;
+ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS visit_number INTEGER DEFAULT 1;
+ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS confidence_score INTEGER;
+ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS summary_en TEXT;
+ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS summary_hi TEXT;
+ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS diet_do TEXT[];
+ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS diet_dont TEXT[];
+ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS follow_up_date DATE;
+ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS doctor_action VARCHAR(32);
+ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS modify_reason TEXT;
+ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS duration_label VARCHAR(64);
+ALTER TABLE prescriptions ADD COLUMN IF NOT EXISTS duration_days INTEGER;
+
+CREATE INDEX IF NOT EXISTS idx_prescriptions_patient_name ON prescriptions (patient_name);
+CREATE INDEX IF NOT EXISTS idx_prescriptions_name_age ON prescriptions (patient_name, patient_age);

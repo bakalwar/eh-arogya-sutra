@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>E.H. Arogya — Local Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root { --bg:#060d07; --card:#0f1f10; --gold:#c9963a; --gold2:#e8c46a; --mint:#4a9b54; --text:rgba(255,255,255,0.88); --muted:rgba(255,255,255,0.5); }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family:'DM Sans',system-ui,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; padding:1.25rem; }
+    .wrap { max-width: 900px; margin: 0 auto; }
+    header { border-bottom: 1px solid rgba(201,150,58,0.2); padding-bottom: 1rem; margin-bottom: 1.25rem; }
+    h1 { font-family:Cinzel,serif; font-size:1.35rem; color:var(--gold2); letter-spacing:0.12em; margin:0 0 0.35rem; }
+    .sub { font-size:0.82rem; color:var(--muted); }
+    .pill { display:inline-block; margin-top:0.5rem; padding:0.25rem 0.65rem; border-radius:999px; font-size:11px; background:rgba(74,155,84,0.15); color:var(--mint); border:1px solid rgba(74,155,84,0.35); }
+    .grid { display:grid; gap:12px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+    .card { background:var(--card); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:14px 16px; }
+    .card h2 { font-family:Cinzel,serif; font-size:0.95rem; color:var(--gold); margin:0 0 8px; letter-spacing:0.06em; }
+    .card p { margin:0; font-size:0.88rem; color:var(--muted); line-height:1.5; }
+    .card a { color:var(--mint); }
+    ul.log { list-style: none; padding: 0; margin: 0; }
+    ul.log li { border-left: 3px solid var(--mint); padding: 10px 12px 10px 14px; margin-bottom: 10px; background: rgba(255,255,255,0.03); border-radius: 0 8px 8px 0; }
+    ul.log .d { font-size: 10px; color: var(--gold); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px; }
+    ul.log .t { font-weight: 600; color: var(--text); margin-bottom: 4px; }
+    .meta { font-size: 11px; color: var(--muted); margin-top: 1rem; text-align: center; }
+    .blink { animation: pulse 1.2s ease-in-out infinite; }
+    .live-row { font-size: 12px; padding: 8px 10px; background: rgba(0,0,0,0.25); border-radius: 8px; margin-bottom: 8px; border: 1px solid rgba(74,155,84,0.2); }
+    #agent-now { color: rgba(255,255,255,0.92); white-space: pre-wrap; }
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>E.H. AROGYA SUTRA</h1>
+      <p class="sub">Local server hub — <strong>bina refresh</strong> repo changes + “abhi” line (SSE). <code>work-log.json</code> mein <code>autoLog</code> har ~45s file save se bhar sakta hai.</p>
+      <span class="pill blink" id="live-pill">● LIVE</span>
+    </header>
+
+    <div class="grid" id="links-grid"></div>
+
+    <div class="card" style="margin-top:16px;">
+      <h2>● Abhi kya ho raha hai (real-time)</h2>
+      <p style="font-size:12px;margin-bottom:8px;color:var(--muted);">File: <code style="color:var(--gold2)">local-site/eh-arogya/data/agent-now.txt</code> ya <code>npm run agent:now -- "..."</code></p>
+      <div class="live-row" id="agent-now">(server se judne ka intezar…)</div>
+      <h3 style="font-size:11px;color:var(--gold);margin:14px 0 6px;letter-spacing:0.15em;text-transform:uppercase;">Haali file changes (buffer)</h3>
+      <div id="live-files"></div>
+    </div>
+
+    <div class="card" style="margin-top:16px;">
+      <h2>Kaam ki diary — manual (<code>entries</code>)</h2>
+      <p style="margin-bottom:12px;font-size:12px;">Agent milestone yahan likhein.</p>
+      <ul class="log" id="log-list"></ul>
+    </div>
+
+    <div class="card" style="margin-top:16px;">
+      <h2>Auto diary (<code>autoLog</code> — repo watcher)</h2>
+      <p style="margin-bottom:12px;font-size:12px;"><code>frontend/src</code> + <code>backend</code> mein save → yahan snapshot (~45s debounce).</p>
+      <ul class="log" id="auto-log-list"></ul>
+    </div>
+
+    <p class="meta" id="progress-line">—</p>
+    <p class="meta" id="updated-meta">—</p>
+  </div>
+  <script src="./hub-app.js"></script>
+</body>
+</html>

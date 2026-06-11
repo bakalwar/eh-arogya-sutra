@@ -1,0 +1,44 @@
+{
+  "patient": {
+    "age": 50,
+    "gender": "Male",
+    "weight": 72,
+    "bp_systolic": 150,
+    "bp_diastolic": 92,
+    "pulse": 86,
+    "chiefComplaint": "सिरदर्द, धड़कन और जोड़ों में दर्द",
+    "symptoms": [
+      {
+        "name": "sar dard"
+      },
+      {
+        "name": "dhadkan"
+      },
+      {
+        "name": "joint pain"
+      },
+      {
+        "name": "uric"
+      }
+    ]
+  },
+  "analysis": {
+    "phase": "ACUTE",
+    "temperament": "",
+    "chief_complaint": "तेज़ सिरदर्द, धड़कन, जोड़ में सूजन",
+    "report_values": {
+      "hemoglobin": 13.5,
+      "uric_acid": 8.5,
+      "creatinine": 1,
+      "sugar_fast": 105,
+      "tsh": 2.1,
+      "sgpt": 32,
+      "cholesterol": 210,
+      "pth": 45
+    },
+    "affected_organs": [
+      "heart",
+      "joints"
+    ]
+  }
+}

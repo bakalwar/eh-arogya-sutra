@@ -1,0 +1,840 @@
+
+
+
+E.H. AROGYA SUTRA
+PURE HINDI 7-SECTION SUMMARY
+शुद्ध देवनागरी हिंदी | Correct Polarity | Formula Format
+Count Cesare Mattei EH Principles | Cursor Complete Prompt
+
+
+
+
+4 STRICT RULES — YEH ZAROORI HAIN
+Yeh rules abhi galat hain — fix karna hai.
+Cursor ko yeh 4 rules strictly follow karne honge.
+Ek bhi rule miss nahi hona chahiye.
+
+Rule
+Abhi Galat
+Sahi Hona Chahiye
+RULE 1
+Hinglish: "Rogi ki sthiti"
+Pure Hindi: "रोगी की स्थिति"
+RULE 2
+S-1 + Y.E. D10 D10
+C1 + S1 + BE D10 (potency ek baar)
+RULE 3
+Acute=D6, Chronic=D30
+तीव्र(Acute)=HYPER=D10, जीर्ण=HYPO=D3
+RULE 4
+Short/truncated summary
+~1000 words, 7 sections, complete
+
+
+
+
+SECTION 2: OLLAMA SYSTEM PROMPT (Exact Copy)
+Yeh EXACT prompt Ollama ko dena hai.
+backend/engines/llm_engine.py mein
+EH_SYSTEM_PROMPT variable mein paste karo.
+
+EH_SYSTEM_PROMPT — backend/engines/llm_engine.py
+EH_SYSTEM_PROMPT = """
+You are an expert Electro-Homeopathy (EH)
+Specialist System. Your job is to generate
+a highly professional, comprehensive, and
+scientifically accurate Clinical Expert
+Summary based on patient data.
+ 
+══════════════════════════════════════════
+STRICT RULES FOR OUTPUT GENERATION:
+══════════════════════════════════════════
+ 
+RULE 1 — LANGUAGE (MOST IMPORTANT):
+Write the ENTIRE summary in clear,
+professional Devanagari Hindi script
+(शुद्ध हिंदी).
+Use standard medical terms in English
+where necessary, but the script MUST be
+Hindi Devanagari.
+DO NOT use Hinglish or Romanized text.
+ 
+WRONG: 'Rogi ki sthiti hyper hai'
+RIGHT: 'रोगी की स्थिति अति-सक्रिय है'
+ 
+WRONG: 'Ras pranali ki safai'
+RIGHT: 'रस प्रणाली की शुद्धि'
+ 
+RULE 2 — FORMULA FORMATTING:
+Display formula beautifully.
+Combine medicines with ' + ' separator.
+Place potency ONLY ONCE at the very end.
+ 
+WRONG: 'S-1 + S-10 + A-3 + Y.E. D10 D10'
+RIGHT: 'C1 + S1 + S10 + BE D10'
+ 
+RULE 3 — LAW OF POLARITY (CRITICAL):
+IF Avadhi = Tivra (Acute 0-14 din):
+  → State = HYPER (अति-सक्रिय)
+  → Requires Negative Dose
+  → Higher Dilution: D10, D30
+  → Count Mattei: Hyper ko shaant karna
+ 
+IF Avadhi = Jeerna (Chronic 60+ din):
+  → State = HYPO (निष्क्रिय)
+  → Requires Positive Dose
+  → Lower Dilution: D3, D4, D6
+  → Count Mattei: Hypo ko jagana
+ 
+RULE 4 — LENGTH:
+Deliver deeply detailed analysis
+approaching 1000 words across 7 sections.
+DO NOT truncate any section.
+ 
+══════════════════════════════════════════
+MANDATORY OUTPUT STRUCTURE (7 SECTIONS):
+══════════════════════════════════════════
+ 
+# 🏥 इलेक्ट्रो होम्योपैथी क्लिनिकल विशेषज्ञ सारांश
+**AI ऑफलाइन EH विशेषज्ञ प्रणाली द्वारा निर्मित**
+ 
+---
+## 1. कार्यकारी क्लिनिकल विवरण
+   (Executive Clinical Overview)
+   - रोगी की समग्र स्थिति का वर्णन करें
+   - Vital Force की अवस्था बताएं
+   - HYPER या HYPO — स्पष्ट करें
+   - EH सिद्धांत से व्याख्या करें
+   [150-200 शब्द]
+ 
+## 2. प्रकृति विश्लेषण
+   (Temperament Analysis)
+   - Sanguine / Lymphatic / Nervous / Mixed
+   - रक्त में दोष है या रस में — कारण सहित
+   - कौन सा समूह प्राथमिकता में — क्यों
+   [100-150 शब्द]
+ 
+## 3. शारीरिक एवं रोग विश्लेषण
+   (Anatomical & Pathological Evaluation)
+   - प्रत्येक प्रभावित तंत्र का विवरण
+   - Cardiovascular, Nervous, Digestive आदि
+   - प्रत्येक में क्या हो रहा है
+   [150-200 शब्द]
+ 
+## 4. औषधि निर्माण का वैज्ञानिक कारण
+   (Dynamic Formula Formulation Logic)
+   - Formula: [Medicine1 + Medicine2 + E Potency]
+   - प्रत्येक औषधि का कारण अलग से बताएं:
+     'S10 क्यों? — क्योंकि...'
+     'A3 क्यों? — क्योंकि...'
+   - 'Complexa Complexis Curantur' सिद्धांत
+   - बाहरी प्रयोग (Compress) भी बताएं
+   [200-250 शब्द]
+ 
+## 5. पोटेंसी और ध्रुवता का नियम
+   (Potency & The Law of Polarity)
+   - चुनी गई Potency: D10 / D3 / D4
+   - EH ध्रुवता नियम स्पष्ट रूप से समझाएं
+   - तीव्र=HYPER=D10 OR जीर्ण=HYPO=D3/D4
+   - इस केस में यह Potency क्यों सही है
+   [100-150 शब्द]
+ 
+## 6. खुराक और सेवन विधि
+   (Posology & Dosage Instructions)
+   A. आंतरिक औषधि (पीने की दवा):
+      - कितनी बूंदें, कितने पानी में, कब
+      - दिन में कितनी बार
+      - Tablet Chart (6 समय की तालिका)
+   B. बाहरी प्रयोग:
+      - Compress कहाँ, कैसे, कब
+   [100-150 शब्द]
+ 
+## 7. आहार और जीवन शैली
+   (Dietary & Lifestyle Adjuvants)
+   - क्या न खाएं (सूची)
+   - क्या खाएं (सूची)
+   - जीवनशैली सलाह
+   - Clinical Prognosis: कब ठीक होगा
+   [100-150 शब्द]
+ 
+---
+## 💡 AI प्रणाली कार्यप्रवाह
+   - Critical Alert: क्या पहचाना
+   - Dynamic Logic: सूत्र कैसे बना
+   - Safety (Potency): सुरक्षित खुराक क्यों
+ 
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🌿 **E.H. AROGYA SUTRA CLINIC**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+"""
+
+
+
+
+SECTION 3: FORMULA FORMAT FUNCTION
+Yeh function formula ko sahi format mein banata hai.
+Potency sirf ek baar — aakhir mein.
+backend/services/summaryEngine.js mein add karo.
+
+Formula Format Helper
+// ════════════════════════════════════════
+// RULE 2 FIX: Formula Format
+// WRONG: S-1 + S-10 + A-3 + Y.E. D10 D10
+// RIGHT: S1 + S10 + A3 + BE D10
+// ════════════════════════════════════════
+ 
+function formatFormula(medicines, potency) {
+  if (!medicines || medicines.length === 0)
+    return '--';
+ 
+  // Remove hyphens: S-1 → S1, C-4 → C4
+  const cleanMeds = medicines.map(m => {
+    if (!m) return '';
+    return String(m)
+      .replace(/-/g, '')    // S-1 → S1
+      .replace(/\./g, '')  // Y.E. → YE
+      .trim();
+  }).filter(Boolean);
+ 
+  // Join with ' + '
+  const medStr = cleanMeds.join(' + ');
+ 
+  // Potency sirf ek baar aakhir mein
+  const pot = (potency || 'D10')
+    .replace(/D(\d+)\/D(\d+)/, 'D$1');
+ 
+  return `${medStr} ${pot}`;
+}
+ 
+// Example output:
+// formatFormula(['S-1','S-10','A-3','Y.E.'], 'D10')
+// → 'S1 + S10 + A3 + YE D10' ✅
+ 
+// formatFormula(['C-4','F-1','B.E.'], 'D30')
+// → 'C4 + F1 + BE D30' ✅
+
+Polarity Fix — RULE 3
+// ════════════════════════════════════════
+// RULE 3 FIX: Correct Polarity Logic
+// ════════════════════════════════════════
+// Count Cesare Mattei ka Siddhant:
+//
+// तीव्र (Acute, 0-14 din):
+//   = HYPER (अति-सक्रिय) state
+//   = Negative Dose chahiye
+//   = Higher Dilution: D10, D30
+//   (Hyper awastha ko shaant karna)
+//
+// जीर्ण (Chronic, 60+ din):
+//   = HYPO (निष्क्रिय) state
+//   = Positive Dose chahiye
+//   = Lower Dilution: D3, D4, D6
+//   (Hypo awastha ko jagana)
+// ════════════════════════════════════════
+ 
+function getPotencyByPhaseAndPolarity(
+  phase, polarity) {
+ 
+  // RULE 3: Correct mapping
+  if (polarity === 'POSITIVE') {
+    // Hyper/Positive rog → Negative dose
+    // = Higher dilution
+    if (phase === 'ACUTE')        return 'D10';
+    if (phase === 'SUB_ACUTE')    return 'D10';
+    if (phase === 'CHRONIC')      return 'D30';
+    if (phase === 'DEGENERATIVE') return 'D30';
+    return 'D10';
+  }
+ 
+  if (polarity === 'NEGATIVE') {
+    // Hypo/Negative rog → Positive dose
+    // = Lower dilution
+    if (phase === 'ACUTE')     return 'D4';
+    if (phase === 'SUB_ACUTE') return 'D4';
+    if (phase === 'CHRONIC')   return 'D3';
+    return 'D4';
+  }
+ 
+  return 'D10'; // Default
+}
+ 
+// Phase Hindi names
+const PHASE_HI = {
+  ACUTE:        'तीव्र (0-14 दिन)',
+  SUB_ACUTE:    'अर्ध-तीव्र (14-60 दिन)',
+  CHRONIC:      'जीर्ण (60+ दिन)',
+  DEGENERATIVE: 'अपक्षयी'
+};
+ 
+// State type
+function getStateType(phase) {
+  return ['ACUTE','SUB_ACUTE'].includes(phase)
+    ? 'HYPER (अति-सक्रिय)'
+    : 'HYPO (निष्क्रिय)';
+}
+
+
+
+
+SECTION 4: PURE HINDI SUMMARY ENGINE
+Yeh poora code Rule 1-4 follow karta hai.
+Poori Hindi Devanagari mein output.
+backend/services/summaryEngine.js mein replace karo.
+
+FILE: backend/services/summaryEngine.js
+// ════════════════════════════════════════
+// E.H. AROGYA SUTRA — HINDI SUMMARY ENGINE
+// Rules: Pure Hindi + Formula Format +
+//        Correct Polarity + 1000 words
+// ════════════════════════════════════════
+ 
+// ── Medicine reasons — Pure Hindi ──
+const DAWA_KARAN = {
+  'S-1':  'स्क्रोफोलोसो-1 (S1): यह रस प्रणाली की मुख्य औषधि है। लसीका तंत्र को शुद्ध करती है। प्रतिरक्षा शक्ति बढ़ाती है।',
+  'S-2':  'स्क्रोफोलोसो-2 (S2): यकृत (Liver) और लसीका ग्रंथियों की शुद्धि करती है। पित्त प्रवाह को सामान्य करती है।',
+  'S-3':  'स्क्रोफोलोसो-3 (S3): प्रजनन ग्रंथियों और हार्मोनल संतुलन की औषधि है।',
+  'S-4':  'स्क्रोफोलोसो-4 (S4): थायरॉइड ग्रंथि और चयापचय को नियंत्रित करती है।',
+  'S-5':  'स्क्रोफोलोसो-5 (S5): त्वचा के रोग, जोड़ों का दर्द और लसीका की सूजन के लिए।',
+  'S-6':  'स्क्रोफोलोसो-6 (S6): गुर्दे और मूत्रवाह तंत्र की शुद्धि करती है। यूरिक एसिड निकालती है।',
+  'S-10': 'स्क्रोफोलोसो-10 (S10): आधार औषधि के रूप में चुनी गई। पेट और आंतों पर सीधा प्रभाव डालती है। कब्ज दूर करती है।',
+  'A-1':  'एंजिटिको-1 (A1): हृदय और धमनियों की औषधि है। उच्च रक्तचाप को नियंत्रित करती है। रक्त संचार सुधारती है।',
+  'A-2':  'एंजिटिको-2 (A2): शिराओं और नसों की जकड़न की औषधि है।',
+  'A-3':  'एंजिटिको-3 (A3): रक्त वाहिकाओं की प्रमुख दवा है। रक्तचाप को नियंत्रित करती है।',
+  'C-1':  'कैंसरोसो-1 (C1): शरीर को शक्ति देता है। सामान्य दुर्बलता दूर करता है।',
+  'C-2':  'कैंसरोसो-2 (C2): तंत्रिका तंत्र, मस्तिष्क और रीढ़ की हड्डी की औषधि।',
+  'C-3':  'कैंसरोसो-3 (C3): मांसपेशियों और स्नायुओं की औषधि।',
+  'C-4':  'कैंसरोसो-4 (C4): ऊतक मरम्मत और जोड़ों की विशेष दवा। जोड़ों के दर्द में राहत देती है।',
+  'C-5':  'कैंसरोसो-5 (C5): लसीका ग्रंथियों की गांठ और असामान्य वृद्धि के लिए।',
+  'C-6':  'कैंसरोसो-6 (C6): गुर्दे की कोशिकाओं की गहरी औषधि। Creatinine अधिक होने पर।',
+  'C-8':  'कैंसरोसो-8 (C8): पाचन तंत्र और यकृत की पुरानी समस्याओं की औषधि।',
+  'C-10': 'कैंसरोसो-10 (C10): अग्न्याशय की औषधि। मधुमेह में इंसुलिन नियंत्रण के लिए।',
+  'C-11': 'कैंसरोसो-11 (C11): हृदय की मांसपेशियों और पेरिकार्डियम की औषधि।',
+  'C-13': 'कैंसरोसो-13 (C13): गला और थायरॉइड ग्रंथि की औषधि।',
+  'C-14': 'कैंसरोसो-14 (C14): रक्त शोधक। त्वचा के गहरे रोगों में।',
+  'C-15': 'कैंसरोसो-15 (C15): बड़ी आंत और बृहदांत्र की औषधि।',
+  'C-16': 'कैंसरोसो-16 (C16): महिला प्रजनन तंत्र की औषधि।',
+  'C-17': 'कैंसरोसो-17 (C17): गुर्दे का गहरा उपचार।',
+  'F-1':  'फेब्रीफुगो-1 (F1): यह तंत्रिका तंत्र की मास्टर रेमेडी है। चक्कर, घबराहट और अनिद्रा को तुरंत रोकती है। मस्तिष्क की अति-सक्रियता शांत करती है।',
+  'F-2':  'फेब्रीफुगो-2 (F2): बुखार उतारने की औषधि।',
+  'L-1':  'लिम्फेटिको-1 (L1): प्लेटलेट्स और प्रतिरक्षा कोशिकाएं बढ़ाने की औषधि।',
+  'P-1':  'पेक्टोरले-1 (P1): फेफड़ों के ऊपरी भाग और ब्रोंकाई की औषधि।',
+  'P-2':  'पेक्टोरले-2 (P2): फेफड़ों के निचले भाग की औषधि।',
+  'P-3':  'पेक्टोरले-3 (P3): पुरानी सांस की तकलीफ और अस्थमा की औषधि।',
+  'VEN-1':'वेनेरेओ-1 (VEN1): वायरल और परजीवी संक्रमणों के लिए।',
+  'Y.E.': 'पीली विद्युत (YE): HYPER/POSITIVE रोग में ऋणात्मक बिजली — सूजन और दर्द तेजी से कम करती है।',
+  'R.E.': 'लाल विद्युत (RE): HYPO/NEGATIVE रोग में ऊर्जा देती है। दुर्बलता दूर करती है।',
+  'B.E.': 'नीली विद्युत (BE): रक्त वाहिकाओं को संकुचित करके BP कम करने में जादुई असर। माथे और हृदय पर बाहरी लगाएं।',
+  'G.E.': 'हरी विद्युत (GE): जोड़ों का दर्द और लसीका की सूजन के लिए। Compress में उपयोग करें।',
+  'W.E.': 'सफेद विद्युत (WE): तटस्थ प्रकृति का द्रव। नसों को आराम देती है। नींद लाती है। घबराहट में राहत।',
+};
+ 
+const RANGES = {
+  hemoglobin:[12,17], wbc:[4000,11000],
+  sugar:[70,100], creatinine:[0.6,1.2],
+  uric_acid:[3.5,7], potassium:[3.5,5],
+  pth:[15,65], hba1c:[4,5.6],
+  sgpt:[7,56], sgot:[10,40],
+};
+ 
+const TEST_HINDI = {
+  hemoglobin:'हीमोग्लोबिन', wbc:'श्वेत रक्त कोशिका (WBC)',
+  sugar:'रक्त शर्करा', creatinine:'क्रिएटिनिन',
+  uric_acid:'यूरिक एसिड', potassium:'पोटेशियम',
+  pth:'पैराथायरॉइड हार्मोन (PTH)', hba1c:'HbA1c',
+  sgpt:'SGPT (यकृत)', sgot:'SGOT',
+};
+ 
+// Formula Format (RULE 2)
+function formatFormula(medicines, potency) {
+  if (!medicines || medicines.length === 0) return '--';
+  const clean = medicines.map(m =>
+    String(m).replace(/-/g,'').replace(/\./g,'').trim()
+  ).filter(Boolean);
+  const pot = (potency || 'D10').split('/')[0];
+  return `${clean.join(' + ')} ${pot}`;
+}
+ 
+// Potency (RULE 3 — Corrected)
+function getPotency(phase, polarity) {
+  if (polarity === 'POSITIVE') {
+    // Hyper → Higher dilution (Negative dose)
+    return ['ACUTE','SUB_ACUTE'].includes(phase)
+      ? 'D10' : 'D30';
+  }
+  // Hypo → Lower dilution (Positive dose)
+  return ['ACUTE','SUB_ACUTE'].includes(phase)
+    ? 'D4' : 'D3';
+}
+ 
+function toArr(m) {
+  if (!m) return [];
+  if (Array.isArray(m)) return m;
+  return String(m).split('+').map(x=>x.trim()).filter(Boolean);
+}
+ 
+// ════════════════════════════════════════
+// MAIN: generateClinicalSummary()
+// RULE 1: Pure Hindi Devanagari output
+// ════════════════════════════════════════
+function generateClinicalSummary(input) {
+  const {
+    age=30, gender='Unknown', weight=60,
+    bp_systolic=120, bp_diastolic=80,
+    symptoms=[], duration_days=0,
+    report_values={}, phase='ACUTE',
+    polarity='POSITIVE', formulas={},
+    confidence=80
+  } = input;
+ 
+  const fa  = formulas.formula_a || {};
+  const fb  = formulas.formula_b || {};
+  const fc  = formulas.formula_c || {};
+  const fd  = formulas.formula_d || {};
+  const pot = getPotency(phase, polarity);
+ 
+  // Formula strings (RULE 2)
+  const faFmt = formatFormula(fa.medicines, pot);
+  const fbFmt = formatFormula(fb.medicines, pot);
+  const fcFmt = formatFormula(fc.medicines, pot);
+  const fdFmt = formatFormula(fd.medicines, pot);
+ 
+  const gHi = gender === 'Male' ? 'पुरुष' : 'महिला';
+  const dose = age <= 12 ? 5 : age > 60 ? 7 : 10;
+ 
+  // RULE 3: State type
+  const isHyper = polarity === 'POSITIVE';
+  const stateHi = isHyper
+    ? 'HYPER (अति-सक्रिय)'
+    : 'HYPO (निष्क्रिय)';
+ 
+  const PHASE_HI = {
+    ACUTE:        'तीव्र (0-14 दिन)',
+    SUB_ACUTE:    'अर्ध-तीव्र (14-60 दिन)',
+    CHRONIC:      'जीर्ण (60+ दिन)',
+    DEGENERATIVE: 'अपक्षयी'
+  };
+ 
+  const symNames = symptoms.map(s =>
+    typeof s === 'object' ? (s.hindi || s.name || '') : String(s)
+  ).filter(Boolean);
+ 
+  const rvEntries = Object.entries(report_values)
+    .filter(([k,v]) => v && v !== 0);
+ 
+  const symText = symNames.join(' ').toLowerCase();
+  const L = [];
+  const A = (...ls) => ls.forEach(l => L.push(l));
+ 
+  // ═══ HEADER ═══
+  A('# 🏥 इलेक्ट्रो होम्योपैथी क्लिनिकल विशेषज्ञ सारांश');
+  A('**AI ऑफलाइन EH विशेषज्ञ प्रणाली द्वारा निर्मित**');
+  A('');
+  A('| विवरण | जानकारी |');
+  A('|-------|--------|');
+  A(`| **आयु** | ${age} वर्ष |`);
+  A(`| **लिंग** | ${gHi} |`);
+  A(`| **भार** | ${weight} किग्रा |`);
+  A(`| **रक्तचाप** | ${bp_systolic}/${bp_diastolic} mmHg |`);
+  A(`| **अवधि** | ${PHASE_HI[phase] || phase} |`);
+  A(`| **रोग प्रकृति** | ${stateHi} |`);
+  A('');
+ 
+  // ALERT
+  if (bp_systolic >= 180) {
+    A('---');
+    A('## 🚨 चिकित्सा चेतावनी: उच्च रक्तचाप संकट (Hypertensive Crisis)');
+    A(`**रक्तचाप ${bp_systolic}/${bp_diastolic} mmHg — अत्यंत गंभीर स्तर**`);
+    A('**रोगी को तत्काल चिकित्सकीय ध्यान की आवश्यकता है।**');
+    A('**प्रत्येक 30 मिनट में रक्तचाप की निगरानी करें।**');
+    A('---');
+  } else if (bp_systolic >= 140) {
+    A('---');
+    A('## 🚨 चिकित्सा चेतावनी: उच्च रक्तचाप');
+    A(`**रक्तचाप ${bp_systolic}/${bp_diastolic} mmHg — ऊंचा स्तर**`);
+    A('**नमक और तनाव तुरंत कम करें।**');
+    A('---');
+  } else if (bp_systolic < 90) {
+    A('---');
+    A('## ⚠️ निम्न रक्तचाप चेतावनी');
+    A(`**रक्तचाप ${bp_systolic}/${bp_diastolic} mmHg — बहुत कम**`);
+    A('---');
+  }
+  A('');
+ 
+  // ═══ SECTION 1 ═══
+  A('---');
+  A('## 1. कार्यकारी क्लिनिकल विवरण');
+  A('### (Executive Clinical Overview)');
+  A('');
+  A(`${gHi} रोगी (आयु ${age} वर्ष) की वर्तमान शारीरिक स्थिति एक गंभीर **${stateHi}** अवस्था को दर्शाती है।`);
+  A('');
+  A('**इलेक्ट्रो होम्योपैथी (Spagyric Medicine)** के सिद्धांतों के अनुसार, रोगी का **जीवनी शक्ति (Vital Force)** वर्तमान में असंतुलित है।');
+  A('');
+  if (symNames.length > 0) {
+    A('**मुख्य लक्षण (Chief Complaints):**');
+    symNames.slice(0,6).forEach(s => A(`- ${s}`));
+    A('');
+  }
+  const stateExplain = isHyper
+    ? 'ये सभी लक्षण मिलकर **अति-सक्रियता (Hyperactivity)** की स्थिति को दर्शाते हैं, जिसमें शरीर की प्रणालियाँ अत्यधिक उत्तेजित हैं।'
+    : 'ये सभी लक्षण मिलकर **निष्क्रियता (Hypoactivity)** की स्थिति को दर्शाते हैं, जिसमें शरीर की ऊर्जा कम हो रही है।';
+  A(stateExplain);
+  A('');
+ 
+  // ═══ SECTION 2 ═══
+  A('---');
+  A('## 2. प्रकृति विश्लेषण');
+  A('### (Temperament Analysis)');
+  A('');
+  const hasSanguine = bp_systolic > 130 ||
+    ['heart','dhadkan','sar dard','headache'].some(w => symText.includes(w));
+  const hasLymphatic =
+    ['sujan','uric','kabz','gas','swelling'].some(w => symText.includes(w));
+  const hasNervous =
+    ['chakkar','neend','ghabrahat','anxiety','vertigo'].some(w => symText.includes(w));
+ 
+  let tempDiag = 'मिश्रित प्रकृति';
+  if (hasSanguine && hasNervous)
+    tempDiag = 'मिश्रित — सांगुइन एवं नर्वस प्रकृति';
+  else if (hasSanguine && hasLymphatic)
+    tempDiag = 'मिश्रित — सांगुइन एवं लिम्फेटिक प्रकृति';
+  else if (hasSanguine) tempDiag = 'सांगुइन (रक्त प्रकृति)';
+  else if (hasLymphatic) tempDiag = 'लिम्फेटिक (रस प्रकृति)';
+  else if (hasNervous) tempDiag = 'नर्वस (स्नायु प्रकृति)';
+ 
+  A(`**AI प्रणाली विश्लेषण: ${tempDiag}**`);
+  A('');
+  if (hasSanguine) {
+    A('**सांगुइन (रक्त) प्रकृति के संकेत:**');
+    A('- उच्च रक्तचाप (High BP)');
+    A('- हृदय और धमनियों में दबाव');
+    A('- रक्त विकृति — A-समूह की प्राथमिकता');
+    A('');
+  }
+  if (hasLymphatic) {
+    A('**लिम्फेटिक (रस) प्रकृति के संकेत:**');
+    A('- सूजन, कब्ज या गैस');
+    A('- रस विकृति — S-समूह की प्राथमिकता');
+    A('');
+  }
+  if (hasNervous) {
+    A('**नर्वस (स्नायु) प्रकृति के संकेत:**');
+    A('- घबराहट (Anxiety), चक्कर (Vertigo)');
+    A('- नींद न आना (Insomnia)');
+    A('- F-समूह की आवश्यकता');
+    A('');
+  }
+  A('**निष्कर्ष:** इन्हीं कारणों से उपचार में Angioitico + Scrofoloso + Febrifugo का मिश्रण आवश्यक है।');
+  A('');
+ 
+  // ═══ SECTION 3 ═══
+  A('---');
+  A('## 3. शारीरिक एवं रोग विश्लेषण');
+  A('### (Anatomical & Pathological Evaluation)');
+  A('');
+  A('AI इंजन ने रोगी के लक्षणों को निम्नलिखित शारीरिक प्रणालियों से मैप किया है:');
+  A('');
+  if (bp_systolic > 130) {
+    A(`**हृदय एवं रक्त वाहिकाएं (Cardiovascular System):** रक्तचाप ${bp_systolic}/${bp_diastolic} स्पष्ट रूप से धमनियों में कठोरता या अत्यधिक दबाव को दर्शाता है।`);
+    A('');
+  }
+  if (hasNervous) {
+    A('**केंद्रीय तंत्रिका तंत्र (CNS):** घबराहट, नींद न आना, चक्कर — ये सभी मस्तिष्क और नसों की अत्यधिक उत्तेजना के परिणाम हैं।');
+    A('');
+  }
+  if (hasLymphatic) {
+    A('**पाचन एवं उत्सर्जन तंत्र (Digestive System):** कब्ज या सूजन — आंतों की गति धीमी, शरीर में विषाक्त पदार्थों का जमाव।');
+    A('');
+  }
+  if (['jod','joint','dard','pain'].some(w=>symText.includes(w))) {
+    A('**मांसपेशियाँ एवं कंकाल (Musculoskeletal):** जोड़ों का दर्द — यूरिक एसिड या अन्य चयापचय अपशिष्टों का जोड़ों में जमाव।');
+    A('');
+  }
+  if (rvEntries.length > 0) {
+    A('**प्रयोगशाला परिणाम विश्लेषण:**');
+    rvEntries.forEach(([k, v]) => {
+      const rng = RANGES[k];
+      const nm  = TEST_HINDI[k] || k;
+      if (rng) {
+        const status = v > rng[1]
+          ? 'उच्च (HIGH) ⬆️'
+          : v < rng[0] ? 'निम्न (LOW) ⬇️' : 'सामान्य ✅';
+        A(`- **${nm}:** ${v} → ${status} (सामान्य: ${rng[0]}-${rng[1]})`);
+      }
+    });
+    A('');
+  }
+ 
+  // ═══ SECTION 4 ═══
+  A('---');
+  A('## 4. औषधि निर्माण का वैज्ञानिक कारण');
+  A('### (Dynamic Formula Formulation Logic)');
+  A('');
+  A('AI रूल इंजन ने किसी भी पहले से बनी हुई दवा का उपयोग **नहीं** किया है।');
+  A('रोगी की शारीरिक रचना और लक्षणों के आधार पर यह **कस्टम फॉर्मूला** तैयार किया गया:');
+  A('');
+  if (faFmt !== '--') A(`**आंतरिक फॉर्मूला A:** \`${faFmt}\``);
+  if (fbFmt !== '--') A(`**आंतरिक फॉर्मूला B:** \`${fbFmt}\``);
+  if (fcFmt !== '--') A(`**रात्रि फॉर्मूला C:** \`${fcFmt}\``);
+  A('');
+  A('**औषधियों के चयन का वैज्ञानिक तर्क:**');
+  A('');
+ 
+  // Har dawa ka reason — Pure Hindi
+  const allMeds = [
+    ...toArr(fa.medicines),
+    ...toArr(fb.medicines),
+    ...toArr(fc.medicines)
+  ].filter((m,i,arr) => arr.indexOf(m) === i);
+ 
+  allMeds.forEach(med => {
+    const reason = DAWA_KARAN[med];
+    if (reason) { A(`**${reason}**`); A(''); }
+  });
+ 
+  A('*सिद्धांत: "Complexa Complexis Curantur"*');
+  A('*(मिश्रित रोग के लिए मिश्रित औषधि)*');
+  A('');
+  A('**B. बाहरी प्रयोग (External Application):**');
+  if (bp_systolic >= 140) {
+    A('- **उच्च रक्तचाप के लिए (Compress):** नीली विद्युत (B.E.) की 10 बूंदें ठंडे पानी में, सूती कपड़े में भिगोकर माथे और हृदय पर रखें। B.E. रक्त वाहिकाओं को संकुचित करके BP घटाती है।');
+  }
+  if (fdFmt !== '--') {
+    A(`- **बाहरी फॉर्मूला D:** \`${fdFmt}\` — प्रभावित जगह पर 20 मिनट, दिन में 2 बार।`);
+  }
+  A('');
+ 
+  // ═══ SECTION 5 ═══
+  A('---');
+  A('## 5. पोटेंसी और ध्रुवता का नियम');
+  A('### (Potency & The Law of Polarity)');
+  A('');
+  A(`**गणना की गई पोटेंसी: ${pot}**`);
+  A('');
+  A('**ध्रुवता नियम का तर्क (Count Cesare Mattei):**');
+  A('');
+  if (isHyper) {
+    A(`रोगी की स्थिति **${stateHi}** है।`);
+    if (bp_systolic >= 160) {
+      A(`रक्तचाप ${bp_systolic} एक अत्यधिक उग्र (Violent) अवस्था है।`);
+    }
+    A('');
+    A('**नियम के अनुसार:**');
+    A('*"HYPER (Positive) बीमारी को शांत करने के लिए हमेशा Negative (Higher Dilution) डोज़ देनी चाहिए।"*');
+    A('');
+    A(`**इसलिए AI ने ${pot} (ऋणात्मक/Negative Dose) चुना।**`);
+    A('');
+    A('**यदि यहाँ Strong Dose (D3/D4) देते:**');
+    A('- रक्तचाप और बढ़ सकता था');
+    A('- घबराहट और तीव्र हो सकती थी');
+    A('');
+    A(`**${pot} पोटेंसी** नसों और धमनियों को तुरंत 'Sedate' (शांत) करेगी।`);
+  } else {
+    A(`रोगी की स्थिति **${stateHi}** है। दुर्बलता और ऊर्जा की कमी है।`);
+    A('');
+    A('**नियम के अनुसार:**');
+    A('*"HYPO (Negative) बीमारी में Positive (Lower Dilution) डोज़ देनी चाहिए।"*');
+    A('');
+    A(`**इसलिए ${pot} चुना गया है।**`);
+    A('- Negative रोग में D30 कभी नहीं देना');
+  }
+  A('');
+ 
+  // ═══ SECTION 6 ═══
+  A('---');
+  A('## 6. खुराक और सेवन विधि');
+  A('### (Posology & Dosage Instructions)');
+  A('');
+  A('**A. आंतरिक औषधि (पीने की दवा):**');
+  A(`- **तैयारी:** ${pot} पोटेंसी से तैयार फॉर्मूला की **${dose} बूंदें** 30 ml साफ पानी में मिलाएं।`);
+  if (bp_systolic >= 160) {
+    A('- **खुराक:** दिन में **4-5 बार** (हर 3-4 घंटे में)।');
+    A('- घबराहट अधिक होने पर पानी में डालकर **घूंट-घूंट कर (Sip by sip)** पिलाएं।');
+  } else {
+    A('- **खुराक:** दिन में **3-4 बार** (भोजन से 30 मिनट पहले या बाद)।');
+  }
+  A('');
+  A('**समय सारणी (Tablet Chart):**');
+  A('');
+  A('| समय | मिश्रण | खुराक | मुख्य लाभ |');
+  A('|-----|--------|-------|-----------|');
+  A(`| सुबह (खाली पेट) | ${faFmt} | ${dose} बूंद | चयापचय, शुद्धि |`);
+  A(`| नाश्ते के बाद | ${(fbFmt !== '--' ? fbFmt : faFmt)} | ${dose} बूंद | सूजन, दर्द |`);
+  A(`| दोपहर (भोजन से) | ${faFmt} | ${dose} बूंद | विष निकालना |`);
+  A(`| दोपहर (भोजन के बाद) | ${(fbFmt !== '--' ? fbFmt : faFmt)} | ${dose} बूंद | गहरी चिकित्सा |`);
+  A(`| रात (भोजन से) | ${faFmt} | ${dose} बूंद | विष निकासी |`);
+  A(`| रात (भोजन के बाद) | ${(fcFmt !== '--' ? fcFmt : faFmt)} | ${dose} बूंद | रात्रि चिकित्सा |`);
+  A('');
+  A('**आधार:** एक कप गुनगुना पानी');
+  A('');
+ 
+  // ═══ SECTION 7 ═══
+  A('---');
+  A('## 7. आहार और जीवन शैली');
+  A('### (Dietary & Lifestyle Adjuvants)');
+  A('');
+  A('**🚫 क्या न खाएं (Avoid):**');
+  if (isHyper) {
+    A('- **नमक (Sodium)** का सेवन तुरंत आधा कर दें');
+    A('- तली-भुनी चीजें, चाय, कॉफी बंद करें');
+    A('- भारी गरिष्ठ भोजन — कब्ज और BP बढ़ाते हैं');
+    A('- शराब, तंबाकू — बिल्कुल बंद');
+  } else {
+    A('- ठंडा पानी, आइसक्रीम');
+    A('- बासी खाना बिल्कुल नहीं');
+  }
+  const rv = report_values || {};
+  if (rv.potassium > 5.5)
+    A('- **केला, आलू, टमाटर** — पोटेशियम उच्च है');
+  if (rv.uric_acid > 7)
+    A('- **लाल मांस, शराब, बीयर, दाल अधिक** — यूरिक एसिड');
+  if (rv.sugar > 150)
+    A('- **चीनी, गुड़, सफेद चावल** — शर्करा नियंत्रण');
+  A('');
+  A('**✅ क्या खाएं (Recommended):**');
+  if (isHyper) {
+    A('- **पपीता, हरी सब्जियाँ, दलिया** — कब्ज दूर');
+    A('- **पानी** — 8-10 गिलास रोज');
+    A('- खिचड़ी, लौकी, तोरी — हल्का भोजन');
+    A('- अदरक-तुलसी की चाय — ठंडे पेय की जगह');
+  } else {
+    A('- गर्म दूध हल्दी के साथ');
+    A('- सूखे मेवे — बादाम, अखरोट');
+    A('- दाल चावल रोटी — पौष्टिक भोजन');
+  }
+  A('');
+  A('**जीवनशैली (Lifestyle):**');
+  if (bp_systolic >= 160) {
+    A('- रोगी को **पूर्ण आराम (Bed rest)** की आवश्यकता है');
+    A('- तनाव (Stress) वाले वातावरण से दूर रखें');
+    A('- अगले **24 घंटे** BP की निरंतर निगरानी करें');
+  }
+  A('');
+  const followDays = phase === 'ACUTE' ? '7' : phase === 'SUB_ACUTE' ? '15' : '30';
+  A('**पूर्वानुमान (Clinical Prognosis):**');
+  A(`${isHyper ? 'ऋणात्मक' : 'धनात्मक'} पोटेंसी में दी गई यह स्पैजिरिक औषधि तंत्र और हृदय प्रणाली को कुछ ही घंटों में शांत करना शुरू कर देगी।`);
+  A(`**${followDays} दिनों में पुनः आएं।**`);
+  A('');
+ 
+  // AI WORKFLOW
+  A('---');
+  A('## 💡 AI प्रणाली कार्यप्रवाह');
+  A('');
+  if (bp_systolic >= 160) {
+    A(`- **गंभीर चेतावनी:** AI ने तुरंत पहचाना कि BP ${bp_systolic}/${bp_diastolic} एक Medical Emergency है।`);
+  }
+  A('- **गतिशील तर्क (Dynamic Logic):** AI ने EH सिद्धांत "Complexa Complexis Curantur" का पालन करते हुए एक Master Formula बनाया।');
+  A(`- **सुरक्षा (Potency):** AI ने समझदारी से ${pot} (${isHyper ? 'ऋणात्मक' : 'धनात्मक'} डोज़) चुना।`);
+  A('');
+  A('---');
+  A('🌿 **E.H. AROGYA SUTRA CLINIC**');
+  A('*शुद्ध Spagyric औषधि — Count Cesare Mattei के सिद्धांत*');
+  A(`*विश्वास स्कोर: ${confidence}%*`);
+ 
+  return { summary: L.join('\n'), source: 'rule-engine', ready: true };
+}
+ 
+module.exports = {
+  generateClinicalSummary,
+  formatFormula,
+  getPotency,
+  DAWA_KARAN
+};
+
+
+
+
+CURSOR KO DENE WALA FINAL PROMPT
+Yeh poora prompt Cursor mein paste karo.
+Purana summaryEngine.js delete hoga.
+Naya 4-rule compliant code install hoga.
+
+=== CURSOR: EH SUMMARY 4-RULE FIX ===
+ 
+Mera app mein summary 4 rules violate
+kar rahi hai. Fix karo:
+ 
+RULE 1: Language = Pure Hindi Devanagari
+  NO Hinglish like 'Rogi ki sthiti'
+  YES: 'रोगी की स्थिति'
+ 
+RULE 2: Formula Format
+  NO: 'S-1 + S-10 + Y.E. D10 D10'
+  YES: 'S1 + S10 + YE D10' (potency once)
+ 
+RULE 3: Law of Polarity (CORRECTED)
+  Tivra/Acute = HYPER = D10 (Higher dilution)
+  Jeerna/Chronic = HYPO = D3/D4 (Lower)
+  (Abhi iska ulta tha — fix karo!)
+ 
+RULE 4: 1000 words, 7 sections complete
+ 
+=== FILE REPLACE KARO ===
+ 
+FILE: backend/services/summaryEngine.js
+→ Is document ka SECTION 4 ka poora code paste karo
+ 
+=== TEST CASE ===
+Patient: 55 saal, Male, BP 200/101
+Symptoms: घबराहट, चक्कर, कब्ज, जोड़ों का दर्द
+Phase: ACUTE (tivra)
+ 
+Expected output:
+1. PURE HINDI: 'रोगी की स्थिति...' (no Hinglish)
+2. FORMULA: 'S10 + A3 + F1 + BE D10' (clean)
+3. POTENCY: D10 (Acute=HYPER=Higher dilution)
+4. 7 sections complete ~1000 words
+5. Alert: 🚨 उच्च रक्तचाप संकट
+ 
+Show me the fixed output.
+=== END ===
+
+
+Summary ka Output Preview
+# 🏥 इलेक्ट्रो होम्योपैथी क्लिनिकल विशेषज्ञ सारांश
+**AI ऑफलाइन EH विशेषज्ञ प्रणाली द्वारा निर्मित**
+ 
+| विवरण | जानकारी |
+|-------|--------|
+| आयु | 55 वर्ष |
+| रक्तचाप | 200/101 mmHg |
+| अवधि | तीव्र (0-14 दिन) |
+| रोग प्रकृति | HYPER (अति-सक्रिय) |
+ 
+## 🚨 चिकित्सा चेतावनी: उच्च रक्तचाप संकट
+ 
+## 1. कार्यकारी क्लिनिकल विवरण
+पुरुष रोगी (55 वर्ष) की वर्तमान शारीरिक स्थिति
+एक गंभीर HYPER (अति-सक्रिय) अवस्था...
+ 
+## 2. प्रकृति विश्लेषण
+AI विश्लेषण: मिश्रित — सांगुइन एवं नर्वस प्रकृति
+ 
+## 3. शारीरिक एवं रोग विश्लेषण
+हृदय एवं रक्त वाहिकाएं: BP 200/101...
+ 
+## 4. औषधि निर्माण का वैज्ञानिक कारण
+आंतरिक फॉर्मूला A: `S10 + A3 + F1 + BE D10`
+ 
+S10 (स्क्रोफोलोसो-10): आधार औषधि...
+A3 (एंजिटिको-3): हृदय की प्रमुख दवा...
+F1 (फेब्रीफुगो-1): तंत्रिका तंत्र की Master Remedy...
+ 
+## 5. पोटेंसी और ध्रुवता का नियम
+गणना की गई पोटेंसी: D10
+HYPER → Negative Dose → D10 ✅
+ 
+## 6. खुराक और सेवन विधि
+| समय | मिश्रण | खुराक |
+|-----|--------|-------|
+| सुबह | S10 + A3 + F1 + BE D10 | 10 बूंद |
+...
+ 
+## 7. आहार और जीवन शैली
+नमक का सेवन आधा करें...
+ 
+🌿 **E.H. AROGYA SUTRA CLINIC**
+
+
+E.H. AROGYA SUTRA — 4 Rules Fixed | Pure Hindi | Correct Polarity
+शुद्ध देवनागरी हिंदी | तीव्र=D10 | जीर्ण=D3 | Formula: S10 + A3 + BE D10

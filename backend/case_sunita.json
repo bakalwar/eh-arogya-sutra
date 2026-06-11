@@ -1,0 +1,44 @@
+{
+  "patient": {
+    "age": 36,
+    "gender": "Female",
+    "weight": 60,
+    "bp_systolic": 99,
+    "bp_diastolic": 45,
+    "pulse": 74,
+    "chiefComplaint": "शाइन में गाँठ, दर्द, सफेद पानी (leucorrhea)",
+    "symptoms": [
+      {
+        "name": "shine me ganth"
+      },
+      {
+        "name": "dard"
+      },
+      {
+        "name": "safed pani"
+      },
+      {
+        "name": "leucorrhea"
+      }
+    ]
+  },
+  "analysis": {
+    "phase": "ACUTE",
+    "temperament": "",
+    "chief_complaint": "शाइन में गाँठ और सफेद पानी",
+    "report_values": {
+      "hemoglobin": 12.5,
+      "uric_acid": 4,
+      "creatinine": 0.9,
+      "sugar_fast": 95,
+      "tsh": 2.5,
+      "sgpt": 28,
+      "cholesterol": 180,
+      "pth": 40
+    },
+    "affected_organs": [
+      "reproductive",
+      "lymphatic"
+    ]
+  }
+}

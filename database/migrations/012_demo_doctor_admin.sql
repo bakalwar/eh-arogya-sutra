@@ -1,0 +1,2 @@
+-- Deprecated: demo mobile is clinic doctor (see 015). Kept for migration history.
+-- UPDATE users SET role = 'admin' WHERE mobile = '9876543210';

@@ -1,0 +1,33 @@
+name: Staging CI
+
+on:
+  push:
+    branches: [staging]
+  pull_request:
+    branches: [staging]
+
+jobs:
+  build-and-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Install frontend dependencies
+        run: npm ci --prefix frontend
+
+      - name: Build frontend (Vercel parity)
+        run: npm run build:web
+        env:
+          VITE_APP_ENV: staging
+          VITE_API_BASE: https://staging-api.example.com
+
+      - name: Verify backend modules load
+        run: node -e "require('./backend/services/expertClinicalSummaryService'); require('./backend/config/environment'); console.log('backend ok')"

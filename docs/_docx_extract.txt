@@ -1,0 +1,724 @@
+E.H. AROGYA SUTRA
+CLINICAL SUMMARY — COMPLETE CURSOR PROMPT
+Purana DELETE — Naya 7-Section Summary INSTALL
+Rajesh Case Format | Hindi + Medical English | 1000 Words
+STEP 1: YEH PURANI FILES DELETE KARO
+Cursor ko sabse pehle yeh batao:
+In files ka POORA content hatao / replace karo.
+Koi purana summary code NAHI rehna chahiye.
+=== CURSOR KO BATAO: YEH DELETE KARO ===
+1. backend/services/summaryEngine.js
+→ POORA file replace karo
+2. backend/services/masterSearchEngine.js
+→ analyzePatient() function replace karo
+3. frontend/src/pages/SearchResult.jsx
+→ POORA file replace karo
+4. frontend/src/components/SummaryView.jsx
+→ Agar hai to delete karo
+5. frontend/src/components/FormulaCard.jsx
+→ Summary section agar nahi hai to add karo
+=== REASON ===
+Abhi sirf formula buttons aa rahe hain.
+Summary NAHI aa rahi.
+Purana code connected nahi hai.
+Isliye sab replace karna hai.
+STEP 2: NAYA SUMMARY ENGINE BANAO
+Yeh poora code copy karke
+backend/services/summaryEngine.js
+mein paste karo. Purana sab hatao.
+FILE: backend/services/summaryEngine.js
+// ════════════════════════════════════════
+// E.H. AROGYA SUTRA — CLINICAL SUMMARY ENGINE
+// 7-Section Professional Format
+// Rajesh Case Pattern
+// ════════════════════════════════════════
+const MED_REASONS = {
+&apos;S-1&apos;:  &apos;S-1 (Scrofoloso-1): Ras pranali ki mukhya aushadh. Lymph system purify karta hai. Immunity boost karta hai.&apos;,
+&apos;S-2&apos;:  &apos;S-2 (Scrofoloso-2): Jigar (Liver) aur lymph nodes ki safai. Bile flow theek karta hai.&apos;,
+&apos;S-3&apos;:  &apos;S-3 (Scrofoloso-3): Prajanan granthi aur hormonal system ki aushadh.&apos;,
+&apos;S-4&apos;:  &apos;S-4 (Scrofoloso-4): Thyroid gland aur metabolism regulate karta hai.&apos;,
+&apos;S-5&apos;:  &apos;S-5 (Scrofoloso-5): Twacha ke rog, jod dard, lymph ki sujan ke liye.&apos;,
+&apos;S-6&apos;:  &apos;S-6 (Scrofoloso-6): Gurda (Kidney) aur uric acid nikalne ki aushadh.&apos;,
+&apos;S-10&apos;: &apos;S-10 (Scrofoloso-10): Base medicine. Pet aur aanton par seedha asar. Kabz door karta hai.&apos;,
+&apos;A-1&apos;:  &apos;A-1 (Angioitico-1): Hriday aur dhamniyon ki aushadh. BP control karti hai.&apos;,
+&apos;A-2&apos;:  &apos;A-2 (Angioitico-2): Shiraaon (Veins) aur nas ki jakadan ki aushadh.&apos;,
+&apos;A-3&apos;:  &apos;A-3 (Angioitico-3): Hriday aur rakt vahikaon ki pramukh dawa. BP niyantrit karti hai.&apos;,
+&apos;C-1&apos;:  &apos;C-1 (Canceroso-1): Sharir ko shakti deta hai. Kamzori door karta hai.&apos;,
+&apos;C-2&apos;:  &apos;C-2 (Canceroso-2): Nervous system, brain, reedh ki haddi ki aushadh.&apos;,
+&apos;C-3&apos;:  &apos;C-3 (Canceroso-3): Maansapeshiyon aur tendons ki aushadh.&apos;,
+&apos;C-4&apos;:  &apos;C-4 (Canceroso-4): Tishu repair aur jod ki vishesh dawa. Jod dard mein rahat.&apos;,
+&apos;C-5&apos;:  &apos;C-5 (Canceroso-5): Lymph nodes ki ganth aur abnormal vriddhi ke liye.&apos;,
+&apos;C-6&apos;:  &apos;C-6 (Canceroso-6): Gurde ki koshikaon ki gehri aushadh. Creatinine high mein.&apos;,
+&apos;C-8&apos;:  &apos;C-8 (Canceroso-8): Pachan tantra aur jigar ki chronic problems ki aushadh.&apos;,
+&apos;C-10&apos;: &apos;C-10 (Canceroso-10): Pancreas ki aushadh. Diabetes mein insulin regulation.&apos;,
+&apos;C-11&apos;: &apos;C-11 (Canceroso-11): Hriday muscles aur pericardium ki aushadh.&apos;,
+&apos;C-13&apos;: &apos;C-13 (Canceroso-13): Gala, thyroid gland ki aushadh.&apos;,
+&apos;C-14&apos;: &apos;C-14 (Canceroso-14): Blood purifier. Twacha ke gehre rog mein.&apos;,
+&apos;C-15&apos;: &apos;C-15 (Canceroso-15): Badi aant aur colon ki aushadh.&apos;,
+&apos;C-16&apos;: &apos;C-16 (Canceroso-16): Mahila prajanan tantra ki aushadh.&apos;,
+&apos;C-17&apos;: &apos;C-17 (Canceroso-17): Kidney ka gehra treatment.&apos;,
+&apos;F-1&apos;:  &apos;F-1 (Febrifugo-1): Nervous System ki Master Remedy. Chakkar, ghabrahat, neend na aana turant rokta hai. Mastishtk ki ati-sakriyata shaant karta hai.&apos;,
+&apos;F-2&apos;:  &apos;F-2 (Febrifugo-2): Bukhar (Fever) utaarne ki aushadh.&apos;,
+&apos;L-1&apos;:  &apos;L-1 (Limfatico-1): Platelets aur immunity cells badhane ki aushadh. Dengue mein zaroor.&apos;,
+&apos;P-1&apos;:  &apos;P-1 (Pectorale-1): Phephde ke upar ke hisse aur bronchi ki aushadh.&apos;,
+&apos;P-2&apos;:  &apos;P-2 (Pectorale-2): Phephde ke neeche ke hisse ki aushadh.&apos;,
+&apos;P-3&apos;:  &apos;P-3 (Pectorale-3): Purani saans ki takleef aur asthma ki aushadh.&apos;,
+&apos;VEN-1&apos;:&apos;VEN-1 (Venereo-1): Viral aur parasitic infections ke liye. HCV mein.&apos;,
+&apos;Y.E.&apos;: &apos;Y.E. (Yellow Electricity): POSITIVE rog mein Negative bijli. Sujan aur dard tezi se kam karti hai.&apos;,
+&apos;R.E.&apos;: &apos;R.E. (Red Electricity): NEGATIVE rog mein urja deta hai. Kamzori door karta hai.&apos;,
+&apos;B.E.&apos;: &apos;B.E. (Blue Electricity): Rakt vahikaon ko samet kar BP kam karne mein jadui asar. Mathe aur hriday par baahri lagayein.&apos;,
+&apos;G.E.&apos;: &apos;G.E. (Green Electricity): Jod dard aur lymph ki sujan ke liye. Compress mein use karein.&apos;,
+&apos;W.E.&apos;: &apos;W.E. (White Electricity): Neutral prakriti ka taral. Nasson ko aaraam deta hai. Neend laata hai. Anxiety mein rahat.&apos;,
+};
+const RANGES = {
+hemoglobin:[12,17], wbc:[4000,11000], sugar:[70,100],
+creatinine:[0.6,1.2], uric_acid:[3.5,7], potassium:[3.5,5],
+pth:[15,65], hba1c:[4,5.6], sgpt:[7,56], sgot:[10,40],
+};
+const TEST_NAMES = {
+hemoglobin:&apos;Hemoglobin&apos;, wbc:&apos;WBC&apos;, sugar:&apos;Blood Sugar&apos;,
+creatinine:&apos;Creatinine&apos;, uric_acid:&apos;Uric Acid&apos;, potassium:&apos;Potassium&apos;,
+pth:&apos;PTH&apos;, hba1c:&apos;HbA1c&apos;, sgpt:&apos;SGPT (Liver)&apos;, sgot:&apos;SGOT&apos;,
+};
+function getPotency(phase, polarity) {
+if (polarity === &apos;NEGATIVE&apos;) return &apos;D6&apos;;
+if (phase === &apos;ACUTE&apos;)       return &apos;D6&apos;;
+if (phase === &apos;SUB_ACUTE&apos;)   return &apos;D10&apos;;
+if (phase === &apos;CHRONIC&apos;)     return &apos;D30&apos;;
+return &apos;D10/D30&apos;;
+}
+function toArr(m) {
+if (!m) return [];
+if (Array.isArray(m)) return m;
+return String(m).split(&apos;+&apos;).map(x =&gt; x.trim()).filter(Boolean);
+}
+function getMedStr(m) {
+const a = toArr(m);
+return a.length &gt; 0 ? a.join(&apos; + &apos;) : &apos;--&apos;;
+}
+// ════════════════════════════════════════
+// MAIN FUNCTION — CALL THIS
+// ════════════════════════════════════════
+function generateClinicalSummary(input) {
+const {
+age = 30, gender = &apos;Unknown&apos;, weight = 60,
+bp_systolic = 120, bp_diastolic = 80,
+symptoms = [], duration_days = 0,
+report_values = {}, face_analysis = null,
+phase = &apos;ACUTE&apos;, polarity = &apos;POSITIVE&apos;,
+formulas = {}, confidence = 80
+} = input;
+const fa  = formulas.formula_a || {};
+const fb  = formulas.formula_b || {};
+const fc  = formulas.formula_c || {};
+const fd  = formulas.formula_d || {};
+const pot = getPotency(phase, polarity);
+const gHi = gender === &apos;Male&apos; ? &apos;Purush&apos; : &apos;Mahila&apos;;
+const dose = age &lt;= 12 ? 5 : age &gt; 60 ? 7 : 10;
+const faStr = getMedStr(fa.medicines);
+const fbStr = getMedStr(fb.medicines);
+const fcStr = getMedStr(fc.medicines);
+const fdStr = getMedStr(fd.medicines);
+const symNames = symptoms.map(s =&gt;
+typeof s === &apos;object&apos; ? (s.name || s.hindi || &apos;&apos;) : String(s)
+).filter(Boolean);
+const rvEntries = Object.entries(report_values)
+.filter(([k, v]) =&gt; v &amp;&amp; v !== 0);
+const PHASE_HI = {
+ACUTE: &apos;Tivra (0-14 din)&apos;,
+SUB_ACUTE: &apos;Upa-Tivra (14-60 din)&apos;,
+CHRONIC: &apos;Purani (60+ din)&apos;,
+DEGENERATIVE: &apos;Apkshayee&apos;
+};
+const L = [];
+const A = (...ls) =&gt; ls.forEach(l =&gt; L.push(l));
+// ── HEADER ──
+A(&apos;# 🏥 ELECTRO HOMEOPATHY CLINICAL EXPERT SUMMARY&apos;);
+A(&apos;**Generated by: AI Offline EH Expert System**&apos;);
+A(&apos;&apos;);
+A(&apos;| Field | Detail |&apos;);
+A(&apos;|-------|--------|&apos;);
+A(`| **Umra** | ${age} Saal |`);
+A(`| **Ling** | ${gHi} |`);
+A(`| **Vajan** | ${weight} kg |`);
+A(`| **Blood Pressure** | ${bp_systolic}/${bp_diastolic} mmHg |`);
+A(`| **Avadhi** | ${PHASE_HI[phase] || phase} |`);
+A(`| **Rog Prakriti** | ${polarity} |`);
+A(&apos;&apos;);
+// ── ALERT ──
+if (bp_systolic &gt;= 180) {
+A(&apos;---&apos;);
+A(&apos;## 🚨 MEDICAL ALERT: HYPERTENSIVE CRISIS&apos;);
+A(`**BP ${bp_systolic}/${bp_diastolic} mmHg — CRITICAL**`);
+A(&apos;**Rogi ko TURANT dhyan ki zaroorat hai.**&apos;);
+A(&apos;**Har 30 min mein BP monitor karein.**&apos;);
+A(&apos;---&apos;);
+} else if (bp_systolic &gt;= 140) {
+A(&apos;---&apos;);
+A(&apos;## 🚨 MEDICAL ALERT: HIGH BP&apos;);
+A(`**BP ${bp_systolic}/${bp_diastolic} mmHg — Elevated**`);
+A(&apos;**Namak aur tanaav turant kam karein.**&apos;);
+A(&apos;---&apos;);
+} else if (bp_systolic &lt; 90) {
+A(&apos;---&apos;);
+A(&apos;## ⚠️ LOW BP ALERT&apos;);
+A(`**BP ${bp_systolic}/${bp_diastolic} — Bahut Neecha**`);
+A(&apos;---&apos;);
+}
+A(&apos;&apos;);
+// ── SECTION 1: OVERVIEW ──
+A(&apos;## 1. Executive Clinical Overview&apos;);
+A(&apos;### (संक्षिप्त क्लिनिकल विवरण)&apos;);
+A(&apos;&apos;);
+const polText = polarity === &apos;POSITIVE&apos;
+? &quot;**&apos;Hyper&apos; (अतिसक्रिय) awastha**&quot;
+: &quot;**&apos;Hypo&apos; (निष्क्रिय) awastha**&quot;;
+A(`Rogi (${gHi}, umra ${age} varsh) ki vartaman sthiti ek ${polText} ko darshati hai.`);
+A(&apos;&apos;);
+A(&apos;Electro Homoeopathy (Spagyric Medicine) ke siddhanton ke anusaar,&apos;);
+A(&apos;rogi ka **Vital Force** vartaman mein **asantulit** hai.&apos;);
+A(&apos;&apos;);
+if (symNames.length &gt; 0) {
+A(&apos;**Mukhya lakshan (Chief Complaints):**&apos;);
+symNames.slice(0, 6).forEach(s =&gt; A(`- ${s}`));
+A(&apos;&apos;);
+}
+A(`Yeh sab milkar **${polarity} Temperament** ki awastha ko darshate hain.`);
+A(&apos;&apos;);
+// ── SECTION 2: TEMPERAMENT ──
+A(&apos;---&apos;);
+A(&apos;## 2. Temperament Analysis&apos;);
+A(&apos;### (प्रकृति विश्लेषण)&apos;);
+A(&apos;&apos;);
+const symText = symNames.join(&apos; &apos;).toLowerCase();
+const hasSanguine = bp_systolic &gt; 130 ||
+[&apos;heart&apos;,&apos;dhadkan&apos;,&apos;sar dard&apos;,&apos;headache&apos;].some(w =&gt; symText.includes(w));
+const hasLymphatic =
+[&apos;sujan&apos;,&apos;uric&apos;,&apos;kabz&apos;,&apos;gas&apos;,&apos;motapa&apos;,&apos;swelling&apos;].some(w =&gt; symText.includes(w));
+const hasNervous =
+[&apos;chakkar&apos;,&apos;neend&apos;,&apos;ghabrahat&apos;,&apos;anxiety&apos;,&apos;vertigo&apos;].some(w =&gt; symText.includes(w));
+let tempDiag = &apos;Mixed Temperament&apos;;
+if (hasSanguine &amp;&amp; hasNervous) tempDiag = &apos;Mixed — Sanguine aur Nervous&apos;;
+else if (hasSanguine &amp;&amp; hasLymphatic) tempDiag = &apos;Mixed — Sanguine aur Lymphatic&apos;;
+else if (hasSanguine) tempDiag = &apos;Sanguine (Rakt Prakriti)&apos;;
+else if (hasLymphatic) tempDiag = &apos;Lymphatic (Ras Prakriti)&apos;;
+else if (hasNervous) tempDiag = &apos;Nervous Prakriti&apos;;
+A(`**AI System Analysis: ${tempDiag}**`);
+A(&apos;&apos;);
+if (hasSanguine) {
+A(&apos;**Sanguine (Rakt/Blood) Prakriti ke sanket:**&apos;);
+A(&apos;- Uchha Raktchaap (High BP)&apos;);
+A(&apos;- Hriday aur dhamniyon mein dabaav&apos;);
+A(&apos;- Rakt vitiation — A-Group priority&apos;);
+A(&apos;&apos;);
+}
+if (hasLymphatic) {
+A(&apos;**Lymphatic (Ras) Prakriti ke sanket:**&apos;);
+A(&apos;- Sujan, gas ya kabz&apos;);
+A(&apos;- Ras vitiation — S-Group priority&apos;);
+A(&apos;&apos;);
+}
+if (hasNervous) {
+A(&apos;**Nervous Prakriti ke sanket:**&apos;);
+A(&apos;- Ghabrahat, chakkar, neend na aana&apos;);
+A(&apos;- F-Group ki zaroorat&apos;);
+A(&apos;&apos;);
+}
+A(&apos;**Nikaash:** Inhi karno se Angioitico + Scrofoloso + Febrifugo ka mishran zaroori hai.&apos;);
+A(&apos;&apos;);
+// ── SECTION 3: ANATOMY ──
+A(&apos;---&apos;);
+A(&apos;## 3. Anatomical &amp; Pathological Evaluation&apos;);
+A(&apos;### (पैथोलॉजी और रोग विश्लेषण)&apos;);
+A(&apos;&apos;);
+A(&apos;AI engine ne rogi ke lakshon ko neeche di gayi sharirik pranaliyon se map kiya:&apos;);
+A(&apos;&apos;);
+if (bp_systolic &gt; 130) {
+A(`**Cardiovascular System (हृदय):** BP ${bp_systolic}/${bp_diastolic} dhamniyon mein kathorata ya dabaav darshata hai.`);
+A(&apos;&apos;);
+}
+if (hasNervous) {
+A(&apos;**Central Nervous System (तंत्रिका):** Ghabrahat, neend na aana, chakkar — mastishtk ki ati-sakriyata.&apos;);
+A(&apos;&apos;);
+}
+if (hasLymphatic) {
+A(&apos;**Digestive &amp; Excretory System (पाचन):** Kabz ya sujan — aanton ki gati dhimi, toxins ka jamav.&apos;);
+A(&apos;&apos;);
+}
+if ([&apos;jod&apos;,&apos;joint&apos;,&apos;dard&apos;,&apos;pain&apos;].some(w =&gt; symText.includes(w))) {
+A(&apos;**Musculoskeletal System (मांसपेशी):** Jod dard — uric acid ya metabolic toxins ka jamav.&apos;);
+A(&apos;&apos;);
+}
+if (rvEntries.length &gt; 0) {
+A(&apos;**Lab Reports Analysis:**&apos;);
+rvEntries.forEach(([k, v]) =&gt; {
+const rng = RANGES[k];
+const nm  = TEST_NAMES[k] || k;
+if (rng) {
+const status = v &gt; rng[1] ? &apos;HIGH ⬆️&apos; : v &lt; rng[0] ? &apos;LOW ⬇️&apos; : &apos;Normal ✅&apos;;
+A(`- **${nm}:** ${v} → ${status} (Saamaany: ${rng[0]}-${rng[1]})`);
+}
+});
+A(&apos;&apos;);
+}
+// ── SECTION 4: FORMULA LOGIC (MOST IMPORTANT) ──
+A(&apos;---&apos;);
+A(&apos;## 4. Dynamic Formula Formulation Logic&apos;);
+A(&apos;### (औषधि निर्माण का वैज्ञानिक कारण)&apos;);
+A(&apos;&apos;);
+A(&apos;AI Rule Engine ne kisi bhi pehle se bani dawa ka upyog **nahi** kiya.&apos;);
+A(&apos;Rogi ki sthiti ke aadhar par yeh **Custom Formula** taiyar kiya gaya:&apos;);
+A(&apos;&apos;);
+if (faStr !== &apos;--&apos;) A(`**Internal Formula A:** \`${faStr}\``);
+if (fbStr !== &apos;--&apos;) A(`**Internal Formula B:** \`${fbStr}\``);
+if (fcStr !== &apos;--&apos;) A(`**Internal Formula C (Raat):** \`${fcStr}\``);
+A(&apos;&apos;);
+A(&apos;**Aushadhiyon ke chunav ka vaigyanik tark:**&apos;);
+A(&apos;&apos;);
+// Har dawa ka reason
+const allMeds = [
+...toArr(fa.medicines),
+...toArr(fb.medicines),
+...toArr(fc.medicines)
+].filter((m, i, arr) =&gt; arr.indexOf(m) === i);
+allMeds.forEach(med =&gt; {
+const reason = MED_REASONS[med];
+if (reason) { A(`**${reason}**`); A(&apos;&apos;); }
+});
+A(&quot;*Principle: &apos;Complexa Complexis Curantur&apos;*&quot;);
+A(&apos;*(Mishrit rog ke liye mishrit aushadh)*&apos;);
+A(&apos;&apos;);
+// External
+A(&apos;**B. External Application (बाहरी प्रयोग):**&apos;);
+if (bp_systolic &gt;= 140) {
+A(&apos;- **High BP ke liye (Compress):** Blue Electricity (B.E.) ki 10 boonden thande paani mein, suti kapde mein bhigo kar mathe aur hriday par rakhein. B.E. rakt vahikaon ko sikodte hue BP ghatati hai.&apos;);
+}
+if (fdStr !== &apos;--&apos;) {
+A(`- **Baahri Formula D:** \`${fdStr}\` — Prabhavit jagah par compress 20 min, din mein 2 baar.`);
+}
+if ([&apos;jod&apos;,&apos;joint&apos;,&apos;dard&apos;].some(w =&gt; symText.includes(w))) {
+A(&apos;- **Jod dard ke liye:** G.E. ka compress prabhavit jod par 20 min din mein 2 baar.&apos;);
+}
+A(&apos;&apos;);
+// ── SECTION 5: POTENCY ──
+A(&apos;---&apos;);
+A(&apos;## 5. Potency &amp; The Law of Polarity&apos;);
+A(&apos;### (पोटेंसी और ध्रुवता का नियम)&apos;);
+A(&apos;&apos;);
+A(`**Calculated Potency: ${pot}**`);
+A(&apos;&apos;);
+A(&apos;Electro Homoeopathy **Law of Polarity** par kaam karti hai:&apos;);
+A(&apos;&apos;);
+if (polarity === &apos;POSITIVE&apos;) {
+A(`Rogi ki sthiti **HYPER (Positive/Dhanaatmak)** hai.`);
+A(&apos;&apos;);
+A(&apos;**Niyam ke anusaar:**&apos;);
+A(&apos;*&quot;Hyper (Positive) bimari ko shaant karne ke liye hamesha Negative (Lighter) doz deni chahiye.&quot;*&apos;);
+A(&apos;&apos;);
+A(`**Isliye AI ne ${pot} (Negative Dose) chuna.**`);
+A(&apos;&apos;);
+A(&apos;**Agar yahan Strong Dose (D3/D4) dete:**&apos;);
+A(&apos;- BP aur badh sakta tha&apos;);
+A(&apos;- Ghabrahat aur tez ho sakti thi&apos;);
+A(&apos;- Rogi ki jaan ko khatra ho sakta tha&apos;);
+A(&apos;&apos;);
+A(`**${pot} potency** nasson aur dhamniyon ko turant &apos;Sedate&apos; (shaant) karegi.`);
+} else {
+A(&apos;Rogi ki sthiti **HYPO (Negative/Rinatmak)** hai. Kamzori aur urja ki kami hai.&apos;);
+A(&apos;&apos;);
+A(&apos;*&quot;Hypo (Negative) bimari mein Positive (Stronger) doz deni chahiye.&quot;*&apos;);
+A(&apos;&apos;);
+A(`**Isliye ${pot} chuna gaya hai.**`);
+A(&apos;- Negative rog mein D30 KABHI NAHI&apos;);
+}
+A(&apos;&apos;);
+// ── SECTION 6: DOSAGE + TABLET CHART ──
+A(&apos;---&apos;);
+A(&apos;## 6. Posology &amp; Dosage Instructions&apos;);
+A(&apos;### (खुराक और सेवन विधि)&apos;);
+A(&apos;&apos;);
+A(&apos;**A. Internal Medicine (पीने की दवा):**&apos;);
+A(`- **Taiyari:** ${pot} potency se taiyar formula ki **${dose} boonden** 30 ml saaf paani mein milayein.`);
+if (bp_systolic &gt;= 160) {
+A(&apos;- **Khuraak:** Din mein **4-5 baar** (har 3-4 ghante mein).&apos;);
+A(&apos;- Ghabrahat adhik ho to **ghunt ghunt kar (Sip by sip)** pilayein.&apos;);
+} else {
+A(&apos;- **Khuraak:** Din mein **3-4 baar** (bhojan se 30 min pehle ya baad).&apos;);
+}
+A(&apos;&apos;);
+A(&apos;**Tablet Chart (Samay Anusaar):**&apos;);
+A(&apos;&apos;);
+A(&apos;| Samay | Mishran | Dose | Mukhya Laabh |&apos;);
+A(&apos;|-------|---------|------|--------------|&apos;);
+A(`| Subah (Khali Pet) | ${faStr.substring(0,20)} | ${dose} boo | Metabolism, safai |`);
+A(`| Nashte ke Baad | ${(fbStr !== &apos;--&apos; ? fbStr : faStr).substring(0,20)} | ${dose} boo | Sujan, dard |`);
+A(`| Dopahar (Bhojan se) | ${faStr.substring(0,20)} | ${dose} boo | Toxin control |`);
+A(`| Dopahar (Bhojan ke) | ${(fbStr !== &apos;--&apos; ? fbStr : faStr).substring(0,20)} | ${dose} boo | Deep healing |`);
+A(`| Raat (Bhojan se) | ${faStr.substring(0,20)} | ${dose} boo | Toxin nikalna |`);
+A(`| Raat (Bhojan ke) | ${(fcStr !== &apos;--&apos; ? fcStr : faStr).substring(0,20)} | ${dose} boo | Raat deep heal |`);
+A(&apos;&apos;);
+A(&apos;**Base:** Ek kap gunguna paani&apos;);
+A(&apos;&apos;);
+// ── SECTION 7: DIET ──
+A(&apos;---&apos;);
+A(&apos;## 7. Dietary &amp; Lifestyle Adjuvants&apos;);
+A(&apos;### (आहार और जीवन शैली)&apos;);
+A(&apos;&apos;);
+A(&apos;**🚫 Kya NA Khayen (Avoid):**&apos;);
+if (polarity === &apos;POSITIVE&apos;) {
+A(&apos;- **Namak (Sodium)** ka sevan turant aadha kar dein&apos;);
+A(&apos;- Tali-bhuni cheezein, chai, coffee band karein&apos;);
+A(&apos;- Bhaari garishth bhojan — kabz aur BP badhate hain&apos;);
+A(&apos;- Sharaab, tambaku — bilkul band&apos;);
+} else {
+A(&apos;- Thanda paani, ice cream&apos;);
+A(&apos;- Baasi khana bilkul nahi&apos;);
+}
+const rv = report_values || {};
+if (rv.potassium &gt; 5.5) A(&apos;- **KELA, AALU, TAMATAR** — Potassium HIGH hai&apos;);
+if (rv.uric_acid &gt; 7)   A(&apos;- **Laal maas, sharaab, beer, dal zyada** — Uric acid&apos;);
+if (rv.sugar &gt; 150)     A(&apos;- **Chini, gur, safed chawal** — Sugar control&apos;);
+A(&apos;&apos;);
+A(&apos;**✅ Kya KHAYEN (Recommended):**&apos;);
+if (polarity === &apos;POSITIVE&apos;) {
+A(&apos;- **Papaya, hari sabziyan, daliya** — kabz door&apos;);
+A(&apos;- **Paani** — 8-10 glass roz&apos;);
+A(&apos;- Khichdi, lauki, tori — halka bhojan&apos;);
+A(&apos;- Adrak-tulsi chai&apos;);
+} else {
+A(&apos;- Garm doodh haldi ke saath&apos;);
+A(&apos;- Dry fruits — badam, akhrot&apos;);
+A(&apos;- Dal chawal roti — poshtik bhojan&apos;);
+}
+A(&apos;&apos;);
+A(&apos;**Jeevanshaili (Lifestyle):**&apos;);
+if (bp_systolic &gt;= 160) {
+A(&apos;- Rogi ko **poorn aaraam (Bed rest)** chahiye&apos;);
+A(&apos;- Tanaav (Stress) wale vatavaran se door rakhein&apos;);
+A(&apos;- Agale **24 ghante** BP ki nirantar nigrani karein&apos;);
+}
+A(&apos;&apos;);
+const followDays = phase === &apos;ACUTE&apos; ? &apos;7&apos; : phase === &apos;SUB_ACUTE&apos; ? &apos;15&apos; : &apos;30&apos;;
+A(&apos;**Clinical Prognosis (पूर्वानुमान):**&apos;);
+A(&apos;Negative potency mein di gayi yeh Spagyric aushadh tantra aur hriday pranali ko&apos;);
+A(&apos;kuch hi ghanton mein shaant karna shuru kar degi.&apos;);
+A(`**${followDays} din mein wapas aayen.**`);
+A(&apos;&apos;);
+// ── AI WORKFLOW ──
+A(&apos;---&apos;);
+A(&apos;## 💡 AI System Workflow in this Case&apos;);
+A(&apos;&apos;);
+if (bp_systolic &gt;= 160) {
+A(`- **Critical Alert:** AI ne turant pehchana ki BP ${bp_systolic}/${bp_diastolic} ek Medical Emergency hai.`);
+}
+A(&apos;- **Dynamic Logic:** AI ne EH principle follow karte hue ek Master Formula banaya.&apos;);
+A(`- **Safety (Potency):** AI ne ${pot} (Negative Dose) chuni — Strong dose khatarnak tha.`);
+A(&apos;&apos;);
+A(&apos;---&apos;);
+A(&apos;🌿 **E.H. AROGYA SUTRA CLINIC**&apos;);
+A(&apos;*Shuddh Spagyric Medicine — Count Cesare Mattei ke Siddhant*&apos;);
+A(`*Vishwas Score: ${confidence}%*`);
+return {
+summary: L.join(&apos;\n&apos;),
+source: &apos;rule-engine&apos;,
+ready: true
+};
+}
+module.exports = { generateClinicalSummary, MED_REASONS, getPotency };
+STEP 3: BACKEND ROUTE UPDATE KARO
+FILE: backend/routes/search.js (ya analyze.js)
+const { generateClinicalSummary } =
+require(&apos;../services/summaryEngine&apos;);
+router.post(&apos;/api/patient/analyze&apos;,
+authMiddleware, async (req, res) =&gt; {
+try {
+const patientData = req.body;
+// Rule engine se formula lo
+const { processMultipleDiseases } =
+require(&apos;../services/multiDiseaseProcessor&apos;);
+const ruleResult = processMultipleDiseases({
+symptoms:     patientData.symptoms || [],
+report_values:patientData.reportValues || {},
+bp_systolic:  patientData.bp_systolic,
+bp_diastolic: patientData.bp_diastolic,
+age:          patientData.age,
+gender:       patientData.gender,
+duration_days:patientData.duration_days || 0
+});
+// Summary banao — YAHAN SE
+const summaryResult = generateClinicalSummary({
+age:          patientData.age,
+gender:       patientData.gender,
+weight:       patientData.weight || 60,
+bp_systolic:  patientData.bp_systolic,
+bp_diastolic: patientData.bp_diastolic,
+duration_days:patientData.duration_days || 0,
+symptoms:     patientData.symptoms || [],
+report_values:patientData.reportValues || {},
+phase:        ruleResult.phase,
+polarity:     ruleResult.overall_polarity,
+confidence:   ruleResult.confidence || 80,
+formulas: {
+formula_a: ruleResult.formula_a,
+formula_b: ruleResult.formula_b,
+formula_c: ruleResult.formula_c,
+formula_d: ruleResult.formula_d,
+}
+});
+// Response mein summary ZAROOR bhejo
+res.json({
+success:        true,
+polarity:       ruleResult.overall_polarity,
+phase:          ruleResult.phase,
+confidence:     ruleResult.confidence,
+bp_systolic:    patientData.bp_systolic,
+bp_diastolic:   patientData.bp_diastolic,
+formulas: {
+formula_a: ruleResult.formula_a,
+formula_b: ruleResult.formula_b,
+formula_c: ruleResult.formula_c,
+formula_d: ruleResult.formula_d,
+},
+summary:        summaryResult.summary,
+summary_source: summaryResult.source,
+warnings:       ruleResult.warnings || [],
+});
+} catch(err) {
+console.error(&apos;Analyze error:&apos;, err);
+res.status(500).json({
+success: false, error: err.message
+});
+}
+});
+STEP 4: FRONTEND SearchResult.jsx REPLACE KARO
+npm install react-markdown remark-gfm
+Phir yeh poora file replace karo.
+Purana FormulaCard buttons wala hatao.
+FILE: frontend/src/pages/SearchResult.jsx
+// npm install react-markdown remark-gfm
+import { useLocation, useNavigate } from &apos;react-router-dom&apos;;
+import ReactMarkdown from &apos;react-markdown&apos;;
+import remarkGfm from &apos;remark-gfm&apos;;
+export default function SearchResult() {
+const location  = useLocation();
+const navigate  = useNavigate();
+const result    = location.state?.result;
+if (!result) {
+navigate(&apos;/search&apos;);
+return null;
+}
+const isCritical = result.bp_systolic &gt;= 180;
+const isHighBP   = result.bp_systolic &gt;= 140;
+const S = {
+page: {
+background: &apos;#060d07&apos;, minHeight: &apos;100vh&apos;,
+padding: &apos;20px 24px&apos;, fontFamily: &apos;Courier New&apos;
+},
+btn: (clr=&apos;#2d6a35&apos;) =&gt; ({
+background: clr === &apos;outline&apos; ? &apos;transparent&apos; : clr,
+color: clr === &apos;outline&apos; ? &apos;#c9963a&apos; : &apos;white&apos;,
+border: clr === &apos;outline&apos; ? &apos;1px solid #c9963a&apos; : &apos;none&apos;,
+borderRadius: 8, padding: &apos;10px 20px&apos;,
+fontFamily: &apos;Courier New&apos;, fontSize: 13,
+cursor: &apos;pointer&apos;
+})
+};
+return (
+&lt;div style={S.page}&gt;
+{/* Top Bar */}
+&lt;div style={{
+display: &apos;flex&apos;, alignItems: &apos;center&apos;,
+gap: 12, marginBottom: 20,
+paddingBottom: 12,
+borderBottom: &apos;1px solid rgba(201,150,58,0.3)&apos;
+}}&gt;
+&lt;button style={S.btn(&apos;#1a3d1c&apos;)}
+onClick={() =&gt; navigate(&apos;/search&apos;)}&gt;
+← Wapas
+&lt;/button&gt;
+&lt;span style={{ color:&apos;#c9963a&apos;, fontWeight:&apos;bold&apos;, fontSize:14 }}&gt;
+🏥 EH Clinical Expert Summary
+&lt;/span&gt;
+&lt;div style={{
+marginLeft: &apos;auto&apos;, fontSize: 11,
+background: result.summary_source === &apos;ollama&apos;
+? &apos;rgba(74,155,84,0.15)&apos; : &apos;rgba(201,150,58,0.15)&apos;,
+border: `1px solid ${result.summary_source === &apos;ollama&apos; ? &apos;#4a9b54&apos; : &apos;#c9963a&apos;}`,
+borderRadius: 4, padding: &apos;3px 10px&apos;,
+color: result.summary_source === &apos;ollama&apos; ? &apos;#4a9b54&apos; : &apos;#c9963a&apos;
+}}&gt;
+{result.summary_source === &apos;ollama&apos; ? &apos;AI Enhanced ✅&apos; : &apos;Rule Engine ✅&apos;}
+&lt;/div&gt;
+&lt;/div&gt;
+{/* Critical Alert */}
+{isCritical &amp;&amp; (
+&lt;div style={{
+background: &apos;rgba(192,57,43,0.2)&apos;,
+border: &apos;2px solid #c0392b&apos;,
+borderRadius: 8, padding: &apos;12px 16px&apos;,
+marginBottom: 16,
+display: &apos;flex&apos;, alignItems: &apos;center&apos;, gap: 12
+}}&gt;
+&lt;span style={{ fontSize: 28 }}&gt;🚨&lt;/span&gt;
+&lt;div&gt;
+&lt;div style={{ color:&apos;#e74c3c&apos;, fontWeight:&apos;bold&apos;, fontSize:14 }}&gt;
+MEDICAL ALERT: HYPERTENSIVE CRISIS
+&lt;/div&gt;
+&lt;div style={{ color:&apos;rgba(255,255,255,0.7)&apos;, fontSize:12, marginTop:2 }}&gt;
+BP {result.bp_systolic}/{result.bp_diastolic} — Turant dhyan dein!
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+)}
+{/* Summary */}
+&lt;div style={{
+background: &apos;rgba(255,255,255,0.02)&apos;,
+border: &apos;1px solid rgba(74,155,84,0.2)&apos;,
+borderRadius: 12, padding: &apos;20px 24px&apos;
+}}&gt;
+&lt;ReactMarkdown
+remarkPlugins={[remarkGfm]}
+components={{
+h1: ({children}) =&gt; (
+&lt;h1 style={{
+color:&apos;#c9963a&apos;, fontSize:18,
+borderBottom:&apos;2px solid rgba(201,150,58,0.4)&apos;,
+paddingBottom:8, marginBottom:16,
+fontFamily:&apos;Courier New&apos;
+}}&gt;{children}&lt;/h1&gt;
+),
+h2: ({children}) =&gt; (
+&lt;h2 style={{
+color:&apos;#4a9b54&apos;, fontSize:15,
+marginTop:24, marginBottom:8,
+paddingLeft:10,
+borderLeft:&apos;3px solid #4a9b54&apos;,
+fontFamily:&apos;Courier New&apos;
+}}&gt;{children}&lt;/h2&gt;
+),
+h3: ({children}) =&gt; (
+&lt;h3 style={{
+color:&apos;rgba(255,255,255,0.5)&apos;,
+fontSize:12, fontStyle:&apos;italic&apos;,
+marginBottom:12, fontFamily:&apos;Courier New&apos;
+}}&gt;{children}&lt;/h3&gt;
+),
+strong: ({children}) =&gt; (
+&lt;strong style={{
+color:&apos;#e8c46a&apos;, fontFamily:&apos;Courier New&apos;
+}}&gt;{children}&lt;/strong&gt;
+),
+p: ({children}) =&gt; (
+&lt;p style={{
+color:&apos;rgba(255,255,255,0.85)&apos;,
+fontSize:13, lineHeight:1.85,
+marginBottom:8, fontFamily:&apos;Courier New&apos;
+}}&gt;{children}&lt;/p&gt;
+),
+li: ({children}) =&gt; (
+&lt;li style={{
+color:&apos;rgba(255,255,255,0.8)&apos;,
+fontSize:13, lineHeight:1.75,
+marginBottom:4, fontFamily:&apos;Courier New&apos;
+}}&gt;{children}&lt;/li&gt;
+),
+code: ({children}) =&gt; (
+&lt;code style={{
+background:&apos;rgba(74,155,84,0.15)&apos;,
+color:&apos;#6abf72&apos;, padding:&apos;2px 8px&apos;,
+borderRadius:4, fontSize:12,
+fontFamily:&apos;Courier New&apos;
+}}&gt;{children}&lt;/code&gt;
+),
+table: ({children}) =&gt; (
+&lt;div style={{overflowX:&apos;auto&apos;, marginTop:12}}&gt;
+&lt;table style={{
+width:&apos;100%&apos;, borderCollapse:&apos;collapse&apos;,
+fontSize:12, fontFamily:&apos;Courier New&apos;
+}}&gt;{children}&lt;/table&gt;
+&lt;/div&gt;
+),
+th: ({children}) =&gt; (
+&lt;th style={{
+background:&apos;#1A3D1C&apos;, color:&apos;white&apos;,
+padding:&apos;8px 12px&apos;, textAlign:&apos;left&apos;
+}}&gt;{children}&lt;/th&gt;
+),
+td: ({children}) =&gt; (
+&lt;td style={{
+border:&apos;1px solid rgba(74,155,84,0.3)&apos;,
+padding:&apos;7px 12px&apos;,
+color:&apos;rgba(255,255,255,0.8)&apos;
+}}&gt;{children}&lt;/td&gt;
+),
+hr: () =&gt; (
+&lt;hr style={{
+border:&apos;none&apos;,
+borderTop:&apos;1px solid rgba(201,150,58,0.25)&apos;,
+margin:&apos;20px 0&apos;
+}}/&gt;
+),
+}}
+&gt;
+{result.summary ||
+&apos;⚠️ Summary generate nahi hui. Backend check karein.&apos;}
+&lt;/ReactMarkdown&gt;
+&lt;/div&gt;
+{/* Buttons */}
+&lt;div style={{ display:&apos;flex&apos;, gap:12, marginTop:20, flexWrap:&apos;wrap&apos; }}&gt;
+&lt;button style={S.btn()} onClick={() =&gt; window.print()}&gt;
+🖨️ Print / PDF
+&lt;/button&gt;
+&lt;button style={S.btn(&apos;outline&apos;)}
+onClick={() =&gt; {
+navigator.clipboard.writeText(result.summary || &apos;&apos;);
+alert(&apos;Summary copy ho gayi!&apos;);
+}}&gt;
+📋 Copy
+&lt;/button&gt;
+&lt;button style={S.btn(&apos;#1a4a6b&apos;)}
+onClick={() =&gt; navigate(&apos;/search&apos;)}&gt;
+← Naya Rogi
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+);
+}
+STEP 5: CURSOR KO DENE WALA FINAL PROMPT
+Yeh POORA text Cursor mein paste karo.
+Cursor sab kuch kar dega.
+=== CURSOR: EH SUMMARY COMPLETE REPLACE ===
+Mera app localhost:5173/search/result par
+sirf formula buttons aa rahe hain.
+7-section clinical summary NAHI aa rahi.
+Purana code poora delete karo.
+Naya code neeche diya hai install karo.
+=== DELETE KARO ===
+backend/services/summaryEngine.js → REPLACE
+frontend/src/pages/SearchResult.jsx → REPLACE
+=== INSTALL KARO ===
+cd frontend &amp;&amp; npm install react-markdown remark-gfm
+=== FILES ===
+FILE 1: backend/services/summaryEngine.js
+[Is document ka STEP 2 ka poora code paste karo]
+FILE 2: backend/routes/search.js mein update
+[Is document ka STEP 3 ka code paste karo]
+FILE 3: frontend/src/pages/SearchResult.jsx
+[Is document ka STEP 4 ka poora code paste karo]
+=== TEST ===
+Patient: Age 55, Male, BP 200/101
+Symptoms: Ghabrahat, Chakkar, Kabz, Jod Dard
+Expected output:
+🚨 MEDICAL ALERT (laal box)
+## 1. Executive Clinical Overview
+## 2. Temperament Analysis
+## 3. Anatomical Evaluation
+## 4. Formula Logic (F1 KYOON? S10 KYOON?)
+## 5. Potency + Law of Polarity
+## 6. Dosage + Tablet Chart (6 timings)
+## 7. Diet + Lifestyle
+💡 AI Workflow
+🌿 E.H. AROGYA SUTRA CLINIC
+=== END ===
+E.H. AROGYA SUTRA — 7-Section Clinical Summary
+Purana Delete → Naya Install → Summary Taiyar!

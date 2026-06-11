@@ -1,0 +1,305 @@
+{
+  "generatedAt": "2026-05-24T00:00:21.093Z",
+  "candidates": [
+    {
+      "id": "candidate_24",
+      "text": "'S-5': {g:'S',a:'त्वचा + जोड़ लसीका शुद्धि'}, | 'S-6': {g:'S',a:'गुर्दे + यूरिक एसिड निकासी'}, | 'S-10':{g:'S',a:'पाचन + कब्ज दूर + आंत'}, | 'A-1': {g:'A',a:'हृदय + धमनियां + BP नियंत्रण'}, | 'A-2': {g:'A',a:'शिराएं + रक्त संचार सुधार'},"
+    },
+    {
+      "id": "candidate_25",
+      "text": "'S-6': {g:'S',a:'गुर्दे + यूरिक एसिड निकासी'}, | 'S-10':{g:'S',a:'पाचन + कब्ज दूर + आंत'}, | 'A-1': {g:'A',a:'हृदय + धमनियां + BP नियंत्रण'}, | 'A-2': {g:'A',a:'शिराएं + रक्त संचार सुधार'}, | 'A-3': {g:'A',a:'रक्त कोशिका + HB निर्माण'},"
+    },
+    {
+      "id": "candidate_40",
+      "text": "'F-2': {g:'F',a:'बुखार + Temperature'}, | 'L-1': {g:'L',a:'Platelets + Immunity बढ़ाना'}, | 'P-1': {g:'P',a:'फेफड़े ऊपर + खांसी'}, | 'P-3': {g:'P',a:'Asthma + पुरानी खांसी'}, | 'B.E.':{g:'E',a:'BP कम + हृदय शांत (नीली)'},"
+    },
+    {
+      "id": "candidate_41",
+      "text": "'L-1': {g:'L',a:'Platelets + Immunity बढ़ाना'}, | 'P-1': {g:'P',a:'फेफड़े ऊपर + खांसी'}, | 'P-3': {g:'P',a:'Asthma + पुरानी खांसी'}, | 'B.E.':{g:'E',a:'BP कम + हृदय शांत (नीली)'}, | 'R.E.':{g:'E',a:'ऊर्जा जागेगी (लाल)'},"
+    },
+    {
+      "id": "candidate_42",
+      "text": "'P-1': {g:'P',a:'फेफड़े ऊपर + खांसी'}, | 'P-3': {g:'P',a:'Asthma + पुरानी खांसी'}, | 'B.E.':{g:'E',a:'BP कम + हृदय शांत (नीली)'}, | 'R.E.':{g:'E',a:'ऊर्जा जागेगी (लाल)'}, | 'G.E.':{g:'E',a:'जोड़ + यूरिक + Lymph (हरी)'},"
+    },
+    {
+      "id": "candidate_61",
+      "text": "platelets:  {low:150000,high:400000,h:'Platelets',unit:'/μL'}, | }; | // ── Symptoms → Hindi ── | const SYM_HINDI = { | 'bp':'उच्च रक्तचाप', 'high bp':'उच्च रक्तचाप',"
+    },
+    {
+      "id": "candidate_63",
+      "text": "// ── Symptoms → Hindi ── | const SYM_HINDI = { | 'bp':'उच्च रक्तचाप', 'high bp':'उच्च रक्तचाप', | 'uric acid':'यूरिक एसिड अधिक', | 'jod dard':'जोड़ों का दर्द',"
+    },
+    {
+      "id": "candidate_67",
+      "text": "'jod dard':'जोड़ों का दर्द', | 'diabetes':'मधुमेह', 'sugar':'रक्त शर्करा', | 'kabz':'कब्ज', 'constipation':'कब्ज', | 'neend':'अनिद्रा', 'anxiety':'घबराहट', | 'chakkar':'चक्कर', 'vertigo':'वर्टिगो',"
+    },
+    {
+      "id": "candidate_68",
+      "text": "'diabetes':'मधुमेह', 'sugar':'रक्त शर्करा', | 'kabz':'कब्ज', 'constipation':'कब्ज', | 'neend':'अनिद्रा', 'anxiety':'घबराहट', | 'chakkar':'चक्कर', 'vertigo':'वर्टिगो', | 'kamzori':'कमज़ोरी', 'weakness':'दुर्बलता',"
+    },
+    {
+      "id": "candidate_70",
+      "text": "'neend':'अनिद्रा', 'anxiety':'घबराहट', | 'chakkar':'चक्कर', 'vertigo':'वर्टिगो', | 'kamzori':'कमज़ोरी', 'weakness':'दुर्बलता', | 'kamar dard':'कमर दर्द', 'backache':'पीठ दर्द', | 'khansi':'खांसी', 'cough':'खांसी',"
+    },
+    {
+      "id": "candidate_71",
+      "text": "'chakkar':'चक्कर', 'vertigo':'वर्टिगो', | 'kamzori':'कमज़ोरी', 'weakness':'दुर्बलता', | 'kamar dard':'कमर दर्द', 'backache':'पीठ दर्द', | 'khansi':'खांसी', 'cough':'खांसी', | 'anemia':'रक्त अल्पता', 'dhadkan':'धड़कन',"
+    },
+    {
+      "id": "candidate_72",
+      "text": "'kamzori':'कमज़ोरी', 'weakness':'दुर्बलता', | 'kamar dard':'कमर दर्द', 'backache':'पीठ दर्द', | 'khansi':'खांसी', 'cough':'खांसी', | 'anemia':'रक्त अल्पता', 'dhadkan':'धड़कन', | };"
+    },
+    {
+      "id": "candidate_77",
+      "text": "// ── Dynamic Anatomy ── | const SYM_ANATOMY = { | 'bp':    'हृदय (Cardiovascular): धमनी कठोरता, Endothelium damage।', | 'high bp':'हृदय (Cardiovascular): उच्च रक्तचाप, धमनी तनाव।', | 'uric':  'मूत्र तंत्र (Urinary): गुर्दों में यूरिक क्रिस्टल जमाव।',"
+    },
+    {
+      "id": "candidate_78",
+      "text": "const SYM_ANATOMY = { | 'bp':    'हृदय (Cardiovascular): धमनी कठोरता, Endothelium damage।', | 'high bp':'हृदय (Cardiovascular): उच्च रक्तचाप, धमनी तनाव।', | 'uric':  'मूत्र तंत्र (Urinary): गुर्दों में यूरिक क्रिस्टल जमाव।', | 'jod':   'कंकाल तंत्र: Cartilage क्षय, Synovial fluid कम।',"
+    },
+    {
+      "id": "candidate_83",
+      "text": "'sugar': 'अंतःस्रावी: Insulin resistance, Pancreatic dysfunction।', | 'kabz':  'पाचन तंत्र: आंत्र गतिशीलता कम, Toxic load बढ़ा।', | 'neend': 'तंत्रिका तंत्र: CNS असंतुलन, Melatonin कम।', | 'anxiety':'तंत्रिका तंत्र: Sympathetic over-activation।', | 'chakkar':'वेस्टिबुलर तंत्र: रक्त प्रवाह असंतुलन।',"
+    },
+    {
+      "id": "candidate_86",
+      "text": "'anxiety':'तंत्रिका तंत्र: Sympathetic over-activation।', | 'chakkar':'वेस्टिबुलर तंत्र: रक्त प्रवाह असंतुलन।', | 'kamzori':'रक्त तंत्र: HB कम, ऊर्जा उत्पादन कम।', | 'kamar dard':'मांसपेशी-कंकाल: Lumbar muscles, Disc pressure।', | };"
+    },
+    {
+      "id": "candidate_87",
+      "text": "'chakkar':'वेस्टिबुलर तंत्र: रक्त प्रवाह असंतुलन।', | 'kamzori':'रक्त तंत्र: HB कम, ऊर्जा उत्पादन कम।', | 'kamar dard':'मांसपेशी-कंकाल: Lumbar muscles, Disc pressure।', | }; | // ── Diet rules — Lab values से ──"
+    },
+    {
+      "id": "candidate_90",
+      "text": "}; | // ── Diet rules — Lab values से ── | function getDietRules(rv, bp, isHyper) { | const avoid = []; | const eat   = [];"
+    },
+    {
+      "id": "candidate_93",
+      "text": "const avoid = []; | const eat   = []; | if(bp >= 140 || isHyper) { | avoid.push('नमक — बिल्कुल कम करें (HYPER)'); | avoid.push('तली-भुनी चीजें, Fast food बंद');"
+    },
+    {
+      "id": "candidate_132",
+      "text": "} | // ── Follow-up days ── | function getFollowUp(phase, rv, bp) { | if(bp >= 180) return 3; | if(phase==='ACUTE') return 7;"
+    },
+    {
+      "id": "candidate_133",
+      "text": "// ── Follow-up days ── | function getFollowUp(phase, rv, bp) { | if(bp >= 180) return 3; | if(phase==='ACUTE') return 7; | if(phase==='SUB_ACUTE') return 15;"
+    },
+    {
+      "id": "candidate_148",
+      "text": "const { | patient_name='रोगी', age=30, gender='Male', | weight=60, bp_systolic=120, bp_diastolic=80, | pulse=72, symptoms=[], phase='ACUTE', | report_values={}, affected_organs=[],"
+    },
+    {
+      "id": "candidate_149",
+      "text": "patient_name='रोगी', age=30, gender='Male', | weight=60, bp_systolic=120, bp_diastolic=80, | pulse=72, symptoms=[], phase='ACUTE', | report_values={}, affected_organs=[], | blood_report='', mri_report='', sonography=''"
+    },
+    {
+      "id": "candidate_155",
+      "text": "const {temperament,polData,formulas, | electricity,labFindings} = cdData; | const {potency,isHyper,polarity} = polData; | // ── Helper: clean symptom text ── | const symArr = symptoms"
+    },
+    {
+      "id": "candidate_157",
+      "text": "const {potency,isHyper,polarity} = polData; | // ── Helper: clean symptom text ── | const symArr = symptoms | .map(s=>typeof s==='object'?(s.hindi||s.name||''):String(s)) | .filter(Boolean);"
+    },
+    {
+      "id": "candidate_181",
+      "text": "const rv  = report_values||{}; | // ── Diet ── | const {avoid,eat} = getDietRules(rv,bp_systolic,isHyper); | const followDays  = getFollowUp(phase,rv,bp_systolic); | // ── Electricity Info ──"
+    },
+    {
+      "id": "candidate_182",
+      "text": "// ── Diet ── | const {avoid,eat} = getDietRules(rv,bp_systolic,isHyper); | const followDays  = getFollowUp(phase,rv,bp_systolic); | // ── Electricity Info ── | const EINFO = {"
+    },
+    {
+      "id": "candidate_204",
+      "text": "A(`| **नाम** | ${patient_name} | **आयु** | ${age} वर्ष |`); | A(`| **लिंग** | ${gHi} | **भार** | ${weight} किग्रा |`); | A(`| **रक्तचाप** | ${bp_systolic}/${bp_diastolic} mmHg | **नाड़ी** | ${pulse}/मिनट |`); | A(`| **प्रकृति** | ${temperament} | **अवस्था** | ${PHASE[phase]||phase} |`); | A(`| **पोटेंसी** | ${potency} | **विद्युत** | ${electricity} |`);"
+    },
+    {
+      "id": "candidate_206",
+      "text": "A(`| **रक्तचाप** | ${bp_systolic}/${bp_diastolic} mmHg | **नाड़ी** | ${pulse}/मिनट |`); | A(`| **प्रकृति** | ${temperament} | **अवस्था** | ${PHASE[phase]||phase} |`); | A(`| **पोटेंसी** | ${potency} | **विद्युत** | ${electricity} |`); | A(''); | // ══ ALERTS — Dynamic BP ══"
+    },
+    {
+      "id": "candidate_208",
+      "text": "A(`| **पोटेंसी** | ${potency} | **विद्युत** | ${electricity} |`); | A(''); | // ══ ALERTS — Dynamic BP ══ | if(bp_systolic>=180){ | A('---');"
+    },
+    {
+      "id": "candidate_209",
+      "text": "A(''); | // ══ ALERTS — Dynamic BP ══ | if(bp_systolic>=180){ | A('---'); | A(`## 🚨 उच्च रक्तचाप संकट — ${bp_systolic}/${bp_diastolic} mmHg`);"
+    },
+    {
+      "id": "candidate_211",
+      "text": "if(bp_systolic>=180){ | A('---'); | A(`## 🚨 उच्च रक्तचाप संकट — ${bp_systolic}/${bp_diastolic} mmHg`); | A('**तत्काल ध्यान आवश्यक! नमक बिल्कुल बंद। आराम करें।**'); | A('---');"
+    },
+    {
+      "id": "candidate_214",
+      "text": "A('**तत्काल ध्यान आवश्यक! नमक बिल्कुल बंद। आराम करें।**'); | A('---'); | } else if(bp_systolic>=140){ | A(`> ⚠️ **BP ${bp_systolic}/${bp_diastolic} — उच्च। नमक तुरंत कम करें।**`); | A('');"
+    },
+    {
+      "id": "candidate_215",
+      "text": "A('---'); | } else if(bp_systolic>=140){ | A(`> ⚠️ **BP ${bp_systolic}/${bp_diastolic} — उच्च। नमक तुरंत कम करें।**`); | A(''); | } else if(bp_systolic<90){"
+    },
+    {
+      "id": "candidate_217",
+      "text": "A(`> ⚠️ **BP ${bp_systolic}/${bp_diastolic} — उच्च। नमक तुरंत कम करें।**`); | A(''); | } else if(bp_systolic<90){ | A(`> ⚠️ **BP ${bp_systolic}/${bp_diastolic} — निम्न। ORS + पानी दें।**`); | A('');"
+    },
+    {
+      "id": "candidate_218",
+      "text": "A(''); | } else if(bp_systolic<90){ | A(`> ⚠️ **BP ${bp_systolic}/${bp_diastolic} — निम्न। ORS + पानी दें।**`); | A(''); | }"
+    },
+    {
+      "id": "candidate_232",
+      "text": "}; | A(`**प्रकृति:** ${temperament} — ${TEMP_DESC[temperament]||temperament}`); | A(`**ध्रुवता:** ${isHyper?'HYPER (अति-सक्रिय)':'HYPO (निष्क्रिय)'} → **${potency}**`); | A(''); | if(symArr.length>0){"
+    },
+    {
+      "id": "candidate_305",
+      "text": "A(`**मिश्रण C (रात्रि):** \\`${fc.formatted}\\``); | A(''); | // ══ SECTION 5: POTENCY ══ | A('## 5. ⚡ पोटेंसी एवं ध्रुवता'); | A('');"
+    },
+    {
+      "id": "candidate_310",
+      "text": "A(`**${electricity} (${eI.n}):** ${MED_DB[electricity]?.a||''}`); | if(isHyper){ | A(`HYPER → ऋणात्मक **${potency}** — अति-सक्रियता शांत करेगा।`); | } else { | A(`HYPO → धनात्मक **${potency}** — निष्क्रिय ऊर्जा जागेगी।`);"
+    },
+    {
+      "id": "candidate_312",
+      "text": "A(`HYPER → ऋणात्मक **${potency}** — अति-सक्रियता शांत करेगा।`); | } else { | A(`HYPO → धनात्मक **${potency}** — निष्क्रिय ऊर्जा जागेगी।`); | } | A('');"
+    },
+    {
+      "id": "candidate_320",
+      "text": "A(`> **${dose}** — आधे कप गुनगुने पानी में — **घूंट-घूंट (Sip by Sip)**`); | A(''); | // Dynamic benefits from symptoms | let mainB='रोग शुद्धि + ऊर्जा'; | let livB ='यकृत + गुर्दा detox';"
+    },
+    {
+      "id": "candidate_323",
+      "text": "let mainB='रोग शुद्धि + ऊर्जा'; | let livB ='यकृत + गुर्दा detox'; | let digB ='पाचन + कब्ज दूर'; | let nightB='Deep healing + नींद'; | if((rv.uric_acid||0)>7||symText.includes('uric'))"
+    },
+    {
+      "id": "candidate_331",
+      "text": "if((rv.sugar_fast||0)>126||symText.includes('diabetes')) | mainB='Blood Sugar नियंत्रण + Insulin'; | if((rv.hemoglobin||0)<10||symText.includes('kamzori')) | mainB='HB बढ़ाना + रक्त निर्माण'; | if(bp_systolic>=140||symText.includes('bp'))"
+    },
+    {
+      "id": "candidate_333",
+      "text": "if((rv.hemoglobin||0)<10||symText.includes('kamzori')) | mainB='HB बढ़ाना + रक्त निर्माण'; | if(bp_systolic>=140||symText.includes('bp')) | mainB='BP नियंत्रण + हृदय शांत'; | if(bp_systolic<90)"
+    },
+    {
+      "id": "candidate_334",
+      "text": "mainB='HB बढ़ाना + रक्त निर्माण'; | if(bp_systolic>=140||symText.includes('bp')) | mainB='BP नियंत्रण + हृदय शांत'; | if(bp_systolic<90) | mainB='BP बढ़ाना + ऊर्जा';"
+    },
+    {
+      "id": "candidate_335",
+      "text": "if(bp_systolic>=140||symText.includes('bp')) | mainB='BP नियंत्रण + हृदय शांत'; | if(bp_systolic<90) | mainB='BP बढ़ाना + ऊर्जा'; | if(symText.includes('neend')||symText.includes('anxiety'))"
+    },
+    {
+      "id": "candidate_336",
+      "text": "mainB='BP नियंत्रण + हृदय शांत'; | if(bp_systolic<90) | mainB='BP बढ़ाना + ऊर्जा'; | if(symText.includes('neend')||symText.includes('anxiety')) | nightB='घबराहट दूर + गहरी नींद';"
+    },
+    {
+      "id": "candidate_337",
+      "text": "if(bp_systolic<90) | mainB='BP बढ़ाना + ऊर्जा'; | if(symText.includes('neend')||symText.includes('anxiety')) | nightB='घबराहट दूर + गहरी नींद'; | if(symText.includes('kabz')||symText.includes('pet'))"
+    },
+    {
+      "id": "candidate_340",
+      "text": "nightB='घबराहट दूर + गहरी नींद'; | if(symText.includes('kabz')||symText.includes('pet')) | digB='कब्ज दूर + पेट साफ'; | A('| ⏰ समय | 💊 मिश्रण | Potency | खुराक | ✨ लाभ |'); | A('|--------|----------|---------|-------|-------|');"
+    },
+    {
+      "id": "candidate_341",
+      "text": "if(symText.includes('kabz')||symText.includes('pet')) | digB='कब्ज दूर + पेट साफ'; | A('| ⏰ समय | 💊 मिश्रण | Potency | खुराक | ✨ लाभ |'); | A('|--------|----------|---------|-------|-------|'); | A(`| 🌅 सुबह (खाली पेट) | \\`${fa.formatted}\\` | ${potency} | ${dose} | ${mainB} |`);"
+    },
+    {
+      "id": "candidate_343",
+      "text": "A('| ⏰ समय | 💊 मिश्रण | Potency | खुराक | ✨ लाभ |'); | A('|--------|----------|---------|-------|-------|'); | A(`| 🌅 सुबह (खाली पेट) | \\`${fa.formatted}\\` | ${potency} | ${dose} | ${mainB} |`); | A(`| ☀️ दिन (भोजन पहले) | \\`${fb.formatted}\\` | ${potency} | ${dose} | ${livB} |`); | A(`| 🌇 शाम (4-5 बजे) | \\`${fa.formatted}\\` | ${potency} | ${dose} | ${mainB.split('+')[0]} |`);"
+    },
+    {
+      "id": "candidate_344",
+      "text": "A('|--------|----------|---------|-------|-------|'); | A(`| 🌅 सुबह (खाली पेट) | \\`${fa.formatted}\\` | ${potency} | ${dose} | ${mainB} |`); | A(`| ☀️ दिन (भोजन पहले) | \\`${fb.formatted}\\` | ${potency} | ${dose} | ${livB} |`); | A(`| 🌇 शाम (4-5 बजे) | \\`${fa.formatted}\\` | ${potency} | ${dose} | ${mainB.split('+')[0]} |`); | A(`| 🍽️ रात (भोजन बाद) | \\`${fb.formatted}\\` | ${potency} | ${dose} | ${digB} |`);"
+    },
+    {
+      "id": "candidate_345",
+      "text": "A(`| 🌅 सुबह (खाली पेट) | \\`${fa.formatted}\\` | ${potency} | ${dose} | ${mainB} |`); | A(`| ☀️ दिन (भोजन पहले) | \\`${fb.formatted}\\` | ${potency} | ${dose} | ${livB} |`); | A(`| 🌇 शाम (4-5 बजे) | \\`${fa.formatted}\\` | ${potency} | ${dose} | ${mainB.split('+')[0]} |`); | A(`| 🍽️ रात (भोजन बाद) | \\`${fb.formatted}\\` | ${potency} | ${dose} | ${digB} |`); | A(`| 💤 सोते समय | \\`${fc.formatted}\\` | ${fc.potency||potency} | ${dose} | ${nightB} |`);"
+    },
+    {
+      "id": "candidate_346",
+      "text": "A(`| ☀️ दिन (भोजन पहले) | \\`${fb.formatted}\\` | ${potency} | ${dose} | ${livB} |`); | A(`| 🌇 शाम (4-5 बजे) | \\`${fa.formatted}\\` | ${potency} | ${dose} | ${mainB.split('+')[0]} |`); | A(`| 🍽️ रात (भोजन बाद) | \\`${fb.formatted}\\` | ${potency} | ${dose} | ${digB} |`); | A(`| 💤 सोते समय | \\`${fc.formatted}\\` | ${fc.potency||potency} | ${dose} | ${nightB} |`); | A('');"
+    },
+    {
+      "id": "candidate_347",
+      "text": "A(`| 🌇 शाम (4-5 बजे) | \\`${fa.formatted}\\` | ${potency} | ${dose} | ${mainB.split('+')[0]} |`); | A(`| 🍽️ रात (भोजन बाद) | \\`${fb.formatted}\\` | ${potency} | ${dose} | ${digB} |`); | A(`| 💤 सोते समय | \\`${fc.formatted}\\` | ${fc.potency||potency} | ${dose} | ${nightB} |`); | A(''); | // ══ SECTION 7: MALAM — Dynamic ══"
+    },
+    {
+      "id": "candidate_358",
+      "text": "A('**विधि:** सूती कपड़ा → 10 बूंदें → 20 मिनट × 2 (सुबह + शाम)'); | A(''); | // Second malam based on symptoms | if(bp_systolic>=140&&electricity!=='B.E.'){ | A('**मलहम 2 — B.E. (BP):**');"
+    },
+    {
+      "id": "candidate_359",
+      "text": "A(''); | // Second malam based on symptoms | if(bp_systolic>=140&&electricity!=='B.E.'){ | A('**मलहम 2 — B.E. (BP):**'); | A('`B.E.  D3` → माथे + हृदय पर → Point 1, 11');"
+    },
+    {
+      "id": "candidate_360",
+      "text": "// Second malam based on symptoms | if(bp_systolic>=140&&electricity!=='B.E.'){ | A('**मलहम 2 — B.E. (BP):**'); | A('`B.E.  D3` → माथे + हृदय पर → Point 1, 11'); | } else if((symText.includes('jod')||(rv.uric_acid||0)>7)&&electricity!=='G.E.'){"
+    },
+    {
+      "id": "candidate_374",
+      "text": "A(''); | const SIDDHANT = { | Sanguine:  'A-Group रक्त शुद्ध करेगा → धमनियां स्वस्थ → BP सामान्य।', | Lymphatic: 'S-Group रस शुद्ध करेगा → लसीका स्वस्थ → विष निकासी।', | Nervous:   'F-Group तंत्रिका शांत करेगा → CNS संतुलन → लक्षण दूर।',"
+    },
+    {
+      "id": "candidate_427",
+      "text": "// ══ 5 TEST CASES ══ | const CASES = [ | // Case 1: BP Emergency — SANGUINE | { | patient_name: 'Ram Kumar',"
+    },
+    {
+      "id": "candidate_431",
+      "text": "patient_name: 'Ram Kumar', | age: 55, gender: 'Male', weight: 75, | bp_systolic: 200, bp_diastolic: 110, pulse: 95, | symptoms: [{name:'BP bahut high'},{name:'sir dard'}], | phase: 'ACUTE',"
+    },
+    {
+      "id": "candidate_432",
+      "text": "age: 55, gender: 'Male', weight: 75, | bp_systolic: 200, bp_diastolic: 110, pulse: 95, | symptoms: [{name:'BP bahut high'},{name:'sir dard'}], | phase: 'ACUTE', | report_values: {cholesterol: 240},"
+    },
+    {
+      "id": "candidate_443",
+      "text": "patient_name: 'Shyam Lal', | age: 50, gender: 'Male', weight: 85, | bp_systolic: 130, bp_diastolic: 85, pulse: 78, | symptoms: [{name:'diabetes'},{name:'bahut thakan'}], | phase: 'CHRONIC',"
+    },
+    {
+      "id": "candidate_444",
+      "text": "age: 50, gender: 'Male', weight: 85, | bp_systolic: 130, bp_diastolic: 85, pulse: 78, | symptoms: [{name:'diabetes'},{name:'bahut thakan'}], | phase: 'CHRONIC', | report_values: {sugar_fast: 280, hba1c: 8.5},"
+    },
+    {
+      "id": "candidate_455",
+      "text": "patient_name: 'Geeta Devi', | age: 45, gender: 'Female', weight: 65, | bp_systolic: 130, bp_diastolic: 85, pulse: 72, | symptoms: [{name:'jod dard'},{name:'uric acid high'}], | phase: 'CHRONIC',"
+    },
+    {
+      "id": "candidate_456",
+      "text": "age: 45, gender: 'Female', weight: 65, | bp_systolic: 130, bp_diastolic: 85, pulse: 72, | symptoms: [{name:'jod dard'},{name:'uric acid high'}], | phase: 'CHRONIC', | report_values: {uric_acid: 9.2, creatinine: 1.1},"
+    },
+    {
+      "id": "candidate_467",
+      "text": "patient_name: 'Mohan Singh', | age: 35, gender: 'Male', weight: 60, | bp_systolic: 115, bp_diastolic: 75, pulse: 88, | symptoms: [{name:'neend nahi'},{name:'anxiety'}], | phase: 'SUB_ACUTE',"
+    },
+    {
+      "id": "candidate_468",
+      "text": "age: 35, gender: 'Male', weight: 60, | bp_systolic: 115, bp_diastolic: 75, pulse: 88, | symptoms: [{name:'neend nahi'},{name:'anxiety'}], | phase: 'SUB_ACUTE', | report_values: {},"
+    },
+    {
+      "id": "candidate_475",
+      "text": "expected_elec: 'W.E.', | }, | // Case 5: Low BP + Anemia — HYPO | { | patient_name: 'Sunita Bai',"
+    },
+    {
+      "id": "candidate_479",
+      "text": "patient_name: 'Sunita Bai', | age: 28, gender: 'Female', weight: 48, | bp_systolic: 85, bp_diastolic: 55, pulse: 65, | symptoms: [{name:'kamzori'},{name:'chakkar'}], | phase: 'ACUTE',"
+    },
+    {
+      "id": "candidate_480",
+      "text": "age: 28, gender: 'Female', weight: 48, | bp_systolic: 85, bp_diastolic: 55, pulse: 65, | symptoms: [{name:'kamzori'},{name:'chakkar'}], | phase: 'ACUTE', | report_values: {hemoglobin: 8.5},"
+    },
+    {
+      "id": "candidate_527",
+      "text": "Key points: | Har section input se dynamic: | patient_name, age, bp, symptoms | lab values → diet rules | phase → follow-up days"
+    },
+    {
+      "id": "candidate_542",
+      "text": "Temperament: Sanguine ✅ | Electricity: B.E. ✅ | Formula A: A1+A2+BE D10 | Words: 700+ ✅ | Status: PASS ✅"
+    },
+    {
+      "id": "candidate_548",
+      "text": "Temperament: Lymphatic ✅ | Electricity: Y.E. ✅ | Formula A: C10+S2+S1+YE D10 | Words: 700+ ✅ | Status: PASS ✅"
+    },
+    {
+      "id": "candidate_560",
+      "text": "Temperament: Nervous ✅ | Electricity: W.E. ✅ | Formula A: F1+C2+S1+WE D10 | Words: 700+ ✅ | Status: PASS ✅"
+    }
+  ]
+}

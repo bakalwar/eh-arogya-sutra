@@ -1,0 +1,34 @@
+config:
+  target: "http://localhost:5000"
+  phases:
+    - duration: 60
+      arrivalRate: 5
+      rampTo: 50
+      name: Warm up phase
+    - duration: 120
+      arrivalRate: 50
+      name: Sustained load phase
+    - duration: 60
+      arrivalRate: 50
+      rampTo: 100
+      name: Stress phase
+  defaults:
+    headers:
+      x-api-key: "EH_TEST_KEY_2026"
+
+scenarios:
+  - name: "Symptom Search & Analysis Flow"
+    flow:
+      - get:
+          url: "/api/search/symptoms?query=fever"
+      - post:
+          url: "/api/search/analyze"
+          json:
+            patient:
+              name: "Load Test Patient"
+              age: 45
+              gender: "Male"
+            chief_complaint: "High fever and joint pain"
+            symptoms: ["fever", "joint pain", "swelling"]
+      - get:
+          url: "/api/medicines?query=S1"

@@ -1,0 +1,19 @@
+E.H. AROGYA SUTRA — Terminal mistakes (avoid red errors)
+
+1) SAHI folder path:
+   [Project Root Folder]
+   (ek 'a' — EH_Arogya, NOT EH_Arogyaa)
+
+2) App start — double-click CHALAO.bat
+   OR type only:  npm run dev
+
+3) pip / install ka OUTPUT terminal mein PASTE mat karo
+   Lines like "Requirement already satisfied" are NOT commands.
+
+4) Agar nodemon crash / port busy:
+   npm run dev:fix
+   npm run dev
+   (Ab dev:api auto port free karta hai)
+
+5) LibreTranslate (optional, alag window):
+   Double-click LIBRETRANSLATE-CHALAO.bat

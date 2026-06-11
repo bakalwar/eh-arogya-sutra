@@ -1,0 +1,1224 @@
+===== PAGE 1 =====
+⚕E.H. AROGYA SUTRA
+COMPLETE PROJECT —FINAL CURSOR PROMPT
+7 Files | Timeout Fix | 1000Words | Temperament Engine | Prescription
+
+===== PAGE 2 =====
+ABHI KI PROBLEMS AUR SOLUTIONS
+#
+Problem
+Solution (Is Document Mein)
+1
+Summary130-200words
+Strict 1000+word validation+retry
+2
+Same medicines (S/C heavy)
+Temperamentengine complete fix
+3
+2engines notsynced
+Python engine
+remove,
+Node
+single
+source
+4
+Timeout onCPU
+600000ms timeout+ num_predict 1500
+5
+Ollama bookse medicine nahi
+6 RAG queries +strict book prompt
+6
+4Tablet +2Malamnahi
+Complete prescriptionengine
+7
+Report analysis weak
+LAB_RANGES full analysis
+
+===== PAGE 3 =====
+STEP 1 —.env FILES (SABSE PEHLE)
+Yeh sabsepehle karo. Timeoutproblems solve ho jaayengi. Dono filesmeinadd karo.
+FILE: backend/.env
+# ════════════════════════════════════
+# Existing settings rakhein+
+# Yehnayi lines ADD karein:
+# ════════════════════════════════════
+# Ollama Timeouts
+OLLAMA_TIMEOUT_MS=600000
+OLLAMA_URL=http://localhost:11434
+OLLAMA_MODEL=llama3.2:3b
+# Summary Settings
+SUMMARY_MIN_WORDS=800
+SUMMARY_MAX_RETRIES=2
+OLLAMA_NUM_CTX=8192
+OLLAMA_NUM_PREDICT=2000
+# Expert Engine
+EXPERT_ENGINE_URL=http://localhost:8001
+EXPERT_ENGINE_TIMEOUT=30000
+# Rule Extraction
+EH_RULE_EXTRACT_ALLOW=0
+FILE: frontend/.env
+# Frontend Timeouts
+VITE_API_EXPERT_CLINICAL_TIMEOUT_MS=600000
+VITE_API_TIMEOUT=600000
+VITE_SUMMARY_TIMEOUT=600000
+# Existing settings rakhein
+VITE_API_BASE_URL=http://localhost:5000
+
+===== PAGE 4 =====
+STEP 2 —ehSourceOfTruthClinical.js (COMPLETE REPLACE)
+FILE: backend/services/ehSourceOfTruthClinical.js Purana code POORA delete karo. Yeh naya code paste karo. Temperament
+engine + Medicineselectionfix.
+FILE: backend/services/ehSourceOfTruthClinical.js
+// ═══════════════════════════════════════════════════
+// E.H. AROGYA SUTRA—SOURCE OFTRUTH
+// Singleengine: Temperament + Medicine +Formula
+// Replaces Pythonexpert enginedependency
+// ═══════════════════════════════════════════════════
+// ──LAB RANGES ──
+const LAB_RANGES = {
+hemoglobin: {low:12.0,high:17.0,unit:'g/dL'},
+wbc:
+{low:4000,high:11000,unit:'/μL'},
+platelets:
+{low:150000,high:400000,unit:'/μL'},
+sugar_fast: {low:70,high:100,unit:'mg/dL'},
+hba1c:
+{low:4.0,high:5.6,unit:'%'},
+creatinine: {low:0.6,high:1.2,unit:'mg/dL'},
+uric_acid:
+{low:3.5,high:7.0,unit:'mg/dL'},
+potassium:
+{low:3.5,high:5.0,unit:'mEq/L'},
+sodium:
+{low:135,high:145,unit:'mEq/L'},
+pth:
+{low:15,high:65,unit:'pg/mL'},
+vitamin_d: {low:30,high:100,unit:'ng/mL'},
+sgpt:
+{low:7,high:56,unit:'U/L'},
+sgot:
+{low:10,high:40,unit:'U/L'},
+cholesterol: {low:0,high:200,unit:'mg/dL'},
+tsh:
+{low:0.4,high:4.0,unit:'mIU/L'},
+};
+// ──MEDICINE DATABASE ──
+const MED_DB ={
+'S-1': {group:'S',temp:'L',anatomy:'लसीकातं, Immunity',action:'रसणालीशुp—म◌ु¸यआधार'},
+'S-2': {group:'S',temp:'L',anatomy:'यकृत(Liver), lपाशय',action:'यकृत+ लसीकांnथश◌ुp'},
+'S-5': {group:'S',temp:'L',anatomy:'Æवचा, जोड़, लसीका',action:'Æवचा+जोड़लसीकाशुि◌'},
+'S-6': {group:'S',temp:'L',anatomy:'गुदÌ (Kidneys)',action:'गुदÌ + यूjरकएnसडlनकास◌ी'},
+'S-10': {group:'S',temp:'L',anatomy:'पाचन, आंतË',action:'आधारऔषmध—पाचनलसीका'},
+'A-1': {group:'A',temp:'S',anatomy:'दयबायाँ, धमlनयां',action:'BP +दयधमनीlनयंण'},
+'A-2': {group:'A',temp:'S',anatomy:'दयदायाँ,nशराएं',action:'nशराएं+ नसजकड़न'},
+'A-3': {group:'A',temp:'S',anatomy:'रøकोnशकाएं',action:'HB + रøकोnशकाlनमाµण'},
+'C-1': {group:'C',temp:'M',anatomy:'सामाÊयशnø',action:'शरीरकोशnø+­बµलता®र'},
+'C-2': {group:'C',temp:'N',anatomy:'CNS, रीढ़',action:'तंि◌कातं+ रीढ़'},
+'C-4': {group:'C',temp:'M',anatomy:'ही, जोड़, PTH',action:'जोड़+ Cartilage +PTHसंत◌ुलन'},
+'C-5': {group:'C',temp:'L',anatomy:'लसीकांnथ',action:'गांठ+Lymphnode'},
+'C-6': {group:'C',temp:'M',anatomy:'गुदÌ क कोnशकाएं',action:'Creatinine+ Renal cells'},
+'C-8': {group:'C',temp:'L',anatomy:'यकृत, आंत',action:'Liver+ आंतdeep cleanse'},
+'C-10': {group:'C',temp:'M',anatomy:'अ¹Êयाशय',action:'Diabetes+ Insulincontrol'},
+'C-11': {group:'C',temp:'S',anatomy:'दयमांसपेशी',action:'Cardiac muscle strength'},
+'C-16': {group:'C',temp:'L',anatomy:'मlहलाजनन',action:'PCOD +Leucorrhoea'},
+'F-1': {group:'F',temp:'N',anatomy:'मt×तÖक,CNS',action:'तंlकाMaster Remedy'},
+'F-2': {group:'F',temp:'N',anatomy:'बुखारकË ',action:'Fever+ Temperature'},
+'L-1': {group:'L',temp:'L',anatomy:'Platelets, WBC',action:'Immunity +Platelets'},
+'P-1': {group:'P',temp:'L',anatomy:'फेफड़ेऊपर',action:'ो◌ंकाई+खांसी'},
+'P-3': {group:'P',temp:'L',anatomy:'फेफड़ेनीचे',action:'Asthma + Chronic cough'},
+'VEN-1':{group:'V',temp:'L',anatomy:'Viral infection',action:'HCV +Virus'},
+};
+// ──TEMPERAMENTENGINE (FIXED —no moreS/C heavy) ──
+functiondetectTemperament(input) {
+const { bp_systolic=120, bp_diastolic=80,
+symptoms=[], report_values={},
+pulse=72,face_color='' } =input;
+const sym=symptoms
+.map(s=>typeof s==='object'?(s.name||''):String(s))
+.join(' ').toLowerCase();
+let S_score=0, L_score=0, N_score=0;
+// BPsignals
+if(bp_systolic>=140) S_score+=5;
+if(bp_systolic<100) L_score+=3;
+
+===== PAGE 5 =====
+// Pulsesignals
+if(pulse>90) S_score+=3;
+if(pulse<60) L_score+=2;
+// Symptomsignals —Sanguine
+['high bp','heart','dhadkan','red','hot','headache',
+'sar dard','migraine','anger','gussa'].forEach(w=>{
+if(sym.includes(w)) S_score+=2;
+});
+// Symptomsignals —Lymphatic
+['sujan','swelling','ganth','pale','yellow',
+'slow','sluggish','kabz','motapa','tonsil'].forEach(w=>{
+if(sym.includes(w)) L_score+=2;
+});
+// Symptomsignals —Nervous
+['chakkar','anxiety','neend','insomnia','vertigo',
+'ghabrahat','depression','stress','dar'].forEach(w=>{
+if(sym.includes(w)) N_score+=3;
+});
+// Report signals
+if(report_values.uric_acid>7)
+L_score+=3;
+if(report_values.creatinine>1.2) L_score+=2;
+if(report_values.cholesterol>200) S_score+=3;
+if(report_values.hemoglobin<12) L_score+=2;
+if(report_values.sugar_fast>126) L_score+=2;
+if(report_values.tsh>4)
+L_score+=2;
+// Determine
+const max= Math.max(S_score, L_score, N_score);
+if(N_score>=3 &&N_score===max) return'Nervous';
+if(S_score>L_score+2) return'Sanguine';
+if(L_score>S_score+2) return'Lymphatic';
+return'Mixed';
+}
+// ──POLARITY ENGINE ──
+functiondetectPolarity(input) {
+const { bp_systolic=120, symptoms=[],
+phase='ACUTE',report_values={} } =input;
+const sym=symptoms
+.map(s=>typeof s==='object'?(s.name||''):String(s))
+.join(' ').toLowerCase();
+let pos=0, neg=0;
+if(bp_systolic>=180) pos+=8;
+elseif(bp_systolic>=140) pos+=5;
+elseif(bp_systolic<90) neg+=6;
+['sujan','fever','pain','dard','infection',
+'uric','high','jalan','swelling'].forEach(w=>{
+if(sym.includes(w)) pos+=2;
+});
+['kamzori','weakness','chakkar','pale',
+'thakan','low','anemia','numbness'].forEach(w=>{
+if(sym.includes(w)) neg+=2;
+});
+Object.entries(report_values).forEach(([k,v])=>{
+const r=LAB_RANGES[k]; if(!r||!v) return;
+if(v>r.high) pos+=3;
+if(v<r.low) neg+=3;
+});
+if(['ACUTE','SUB_ACUTE'].includes(phase)) pos+=2;
+if(['CHRONIC','DEGENERATIVE'].includes(phase)) neg+=2;
+const isHyper= pos>=neg;
+let potency='D10';
+if(isHyper){
+
+===== PAGE 6 =====
+potency=phase==='CHRONIC'?'D30':'D10';
+} else{
+potency=phase==='CHRONIC'?'D3':'D4';
+}
+return{ isHyper, polarity:isHyper?'POSITIVE':'NEGATIVE', potency };
+}
+// ──MEDICINE SELECTOR (Temperament-first, no S/C heavy) ──
+functionselectMedicines(input, temperament, polData) {
+const { symptoms=[], affected_organs=[],
+report_values={} } =input;
+const sym=symptoms
+.map(s=>typeof s==='object'?(s.name||''):String(s))
+.join(' ').toLowerCase();
+const pool={};
+const add=(m,score)=>{ pool[m]=(pool[m]||0)+score; };
+// STEP1: Temperament primary (HIGH priority)
+if(temperament==='Sanguine'){
+add('A-1',10); add('A-2',8); add('A-3',8);
+add('S-1',4); // support only
+} elseif(temperament==='Lymphatic'){
+add('S-1',10); add('S-10',8); add('S-5',6);
+add('C-5',4); // support only
+} elseif(temperament==='Nervous'){
+add('F-1',10); add('C-2',8);
+add('S-1',5); add('W.E.',6);
+} else{ // Mixed
+add('S-1',7); add('A-3',7);add('C-4',5);
+}
+// STEP2: Organ-specific
+const ORGAN_MAP={
+kidney: [['S-6',8],['C-6',7]],
+joints: [['C-4',8],['S-5',6]],
+heart:
+[['A-1',8],['A-2',6],['C-11',5]],
+liver:
+[['S-2',8],['C-8',6]],
+nervous: [['F-1',8],['C-2',6]],
+digestive:[['S-10',8],['C-8',5]],
+lung:
+[['P-1',8],['P-3',6]],
+skin:
+[['S-5',8],['C-5',5]],
+blood:
+[['A-3',8],['L-1',6]],
+endocrine:[['C-10',8],['S-4',6]],
+};
+(affected_organs||[]).forEach(org=>{
+(ORGAN_MAP[org]||[]).forEach(([m,s])=>add(m,s));
+});
+// STEP3: Report-based
+const RV=report_values||{};
+if(RV.uric_acid>7) { add('S-6',7); add('C-4',5); }
+if(RV.creatinine>1.2) { add('S-6',6); add('C-6',7); }
+if(RV.sugar_fast>126) { add('C-10',7); add('S-2',4);}
+if(RV.hemoglobin<12) { add('A-3',7); add('L-1',5); }
+if(RV.pth>65)
+{ add('C-4',8); }
+if(RV.sgpt>56)
+{ add('S-2',7); add('C-8',5); }
+if(RV.tsh>4)
+{ add('S-4',7);add('C-13',5); }
+// STEP4: Symptom-based
+const SYM_MED={
+'uric':['S-6','C-4'], 'jod':['C-4','S-5'],
+'kabz':['S-10','C-8'], 'bp':['A-1','B.E.'],
+'diabetes':['C-10','S-2'], 'chakkar':['F-1'],
+'kamzori':['A-3','L-1'], 'khansi':['P-1','P-3'],
+'twacha':['S-5'], 'neend':['F-1'],
+'liver':['S-2','C-8'], 'kidney':['S-6','C-6'],
+};
+Object.entries(SYM_MED).forEach(([kw,meds])=>{
+if(sym.includes(kw)) meds.forEach(m=>add(m,5));
+});
+// Sort +separate
+const sorted=Object.entries(pool)
+.sort(([,a],[,b])=>b-a)
+.map(([m])=>m)
+.filter(m=>!m.includes('.E.'));
+
+===== PAGE 7 =====
+const pot=polData.potency;
+return{
+formula_a: { medicines:sorted.slice(0,4), potency:pot },
+formula_b: { medicines:sorted.slice(4,7).length?sorted.slice(4,7):sorted.slice(0,3), potency:pot },
+formula_c: { medicines:sorted.slice(0,3),potency:pol=>pol==='CHRONIC'?(polData.isHyper?'D30':'D3'):pot },
+formula_d: { medicines:sorted.slice(0,3), potency:'D30' },
+all_medicines: sorted,
+pool
+};
+}
+// ──ELECTRICITY ENGINE ──
+functionselectElectricity(affected_organs, symText, isHyper,bp) {
+const sym=(symText||'').toLowerCase();
+const orgs=affected_organs||[];
+if(bp>=140||orgs.includes('heart')||sym.includes('bp'))
+return {elec:'B.E.',loc:'म◌ाथे+ दयपरCompress20 mमनट',points:'Point 1, 11'};
+if(orgs.includes('joints')||sym.includes('jod')||sym.includes('uric'))
+return {elec:'G.E.',loc:'प्रभाlवतजोड़पर20 mमनट',points:'Point 23,24'};
+if(orgs.includes('nervous')||sym.includes('chakkar')||sym.includes('neend'))
+return {elec:'W.E.',loc:'Occiput +कनपट पर',points:'Point 1, 2'};
+if(orgs.includes('lung')||sym.includes('saans')||sym.includes('khansi'))
+return {elec:'Y.E.',loc:'छ◌ातीअ +प9भाग',points:'Point 15, 16'};
+if(orgs.includes('kidney')||sym.includes('kidney')||sym.includes('gurda'))
+return {elec:'G.E.',loc:'प◌ीठ—गुदÌ केदोन×ओर',points:'Point 20, 21'};
+if(orgs.includes('skin')||sym.includes('twacha'))
+return {elec:'B.E.',loc:'प्रभाlवतÆवचापर',points:'Point 33-40'};
+if(!isHyper)
+return {elec:'R.E.',loc:'प्रभाlवतअंगपरउेजना',points:'Point 30'};
+return{elec:'B.E.',loc:'भ◌ाlवतअंगपर',points:'Point 1'};
+}
+// ──LAB ANALYSIS ──
+functionanalyzeLabReports(report_values) {
+const HINDI={hemoglobin:'हीम◌ो¹लोlबन',wbc:'WBC',
+sugar_fast:'रøशकµरा',hba1c:'HbA1c',
+creatinine:'lþएkटlनन',uric_acid:'यूjरकएnसड',
+pth:'PTH',sgpt:'SGPT',sgot:'SGOT',
+cholesterol:'कोले×	ॉल',tsh:'TSH',
+vitamin_d:'lवटाmमनD'};
+returnObject.entries(report_values||{})
+.filter(([k,v])=>v&&LAB_RANGES[k])
+.map(([k,v])=>{
+const r=LAB_RANGES[k];
+const status=v>r.high?'उच्च(HIGH) ⬆':v<r.low?'नि◌म◌्न(LOW) ⬇':'स◌ाम◌ान◌्य✅';
+const polarity=v>r.high?'POSITIVE':'NEGATIVE';
+return{
+test:HINDI[k]||k, value:v, unit:r.unit,
+status, polarity,
+normal:`${r.low}-${r.high}`,
+eh_meaning:v>r.high
+?`${HINDI[k]||k} बढ़◌ाआ—ऋणाÆमकऔषmधआवÕयक`
+:v<r.low
+?`${HINDI[k]||k} कम—धनाÆमकऔषmधआवÕयक`
+:'सामाÊयसीमामË'
+};
+});
+}
+// ──MAIN EXPORT ──
+functionbuildClinicalData(input) {
+const temperament = input.temperament || detectTemperament(input);
+const polData
+= detectPolarity(input);
+const formulas = selectMedicines(input, temperament, polData);
+const symText
+= (input.symptoms||[])
+.map(s=>typeof s==='object'?(s.name||''):String(s)).join('');
+const elec =selectElectricity(
+input.affected_organs, symText,
+polData.isHyper, input.bp_systolic||120);
+const labs = analyzeLabReports(input.report_values||{});
+return{
+temperament, polData, formulas,
+electricity:elec, labFindings:labs
+};
+}
+
+===== PAGE 8 =====
+module.exports ={
+buildClinicalData, detectTemperament,
+detectPolarity,selectMedicines,
+analyzeLabReports, selectElectricity,
+MED_DB, LAB_RANGES
+};
+
+===== PAGE 9 =====
+STEP 3 —ollamaBookDoctorSummary.js (COMPLETE REPLACE)
+FILE: backend/services/ollamaBookDoctorSummary.js Purana code POORA delete karo. Timeout fix + 1000 words + 4 Tablet + 2
+Malam. Fallback engine bhi complete hai.
+FILE: backend/services/ollamaBookDoctorSummary.js
+// ═══════════════════════════════════════════════════
+// E.H. AROGYA SUTRA—OLLAMA BOOK DOCTORSUMMARY
+// 1000+ words| 4 Tablet + 2Malam| BookRAG
+// Timeout: 600000ms| Retry: 2times
+// ═══════════════════════════════════════════════════
+const axios =require('axios');
+const path =require('path');
+const fs
+= require('fs');
+const {
+buildClinicalData, MED_DB, LAB_RANGES
+} = require('./ehSourceOfTruthClinical');
+const OLLAMA_URL
+= process.env.OLLAMA_URL|| 'http://localhost:11434';
+const MODEL
+= process.env.OLLAMA_MODEL || 'llama3.2:3b';
+const TIMEOUT
+= parseInt(process.env.OLLAMA_TIMEOUT_MS||'600000');
+const NUM_CTX
+=parseInt(process.env.OLLAMA_NUM_CTX||'8192');
+const NUM_PREDICT
+=parseInt(process.env.OLLAMA_NUM_PREDICT||'2000');
+const MIN_WORDS
+= parseInt(process.env.SUMMARY_MIN_WORDS||'800');
+const MAX_RETRIES = parseInt(process.env.SUMMARY_MAX_RETRIES||'2');
+// ──Book RAGloader──
+const INDEX_PATH= path.join(__dirname,'../data/book_chunks/local_vector_index.json');
+const CHUNKS_DIR= path.join(__dirname,'../data/book_chunks');
+let _bookIndex =null;
+functionloadBookIndex() {
+if(_bookIndex) return_bookIndex;
+try{
+_bookIndex= JSON.parse(fs.readFileSync(INDEX_PATH,'utf8'));
+return _bookIndex;
+} catch(e) { returnnull;}
+}
+functionsearchBookChunks(query, topK=8) {
+const idx= loadBookIndex();
+if(!idx) return[];
+const terms= query.toLowerCase().split(/\s+/).filter(t=>t.length>2);
+return(idx.chunks||[])
+.map(c=>{
+const cLow=(c.keywords||[]).concat(c.medicines||[]).join(' ').toLowerCase();
+const score=terms.reduce((s,t)=>s+(cLow.includes(t)?3:0),0);
+return{...c,score};
+})
+.filter(c=>c.score>0)
+.sort((a,b)=>b.score-a.score)
+.slice(0,topK);
+}
+functionloadChunk(filename) {
+try{
+return fs.readFileSync(path.join(CHUNKS_DIR,filename),'utf8');
+} catch(e) { return''; }
+}
+functiongetBookContext(queries) {
+const allChunks=[];
+const seen=new Set();
+queries.forEach(q=>{
+searchBookChunks(q,6).forEach(c=>{
+if(!seen.has(c.filename)){
+seen.add(c.filename);
+const text=loadChunk(c.filename);
+const meds=c.medicines?.length?`[${c.medicines.join(',')}]`:'';
+allChunks.push(`--- BookRef ${meds} ---\n${text.substring(0,600)}`);
+}
+
+===== PAGE 10 =====
+});
+});
+returnallChunks.join('\n\n').substring(0,10000);
+}
+// ──SystemPrompt ──
+const EH_SYSTEM= `
+आप'Expert Electro-Homeopathy Doctor AI'हÎ।
+आपएकअनुभवीEHPractitionerक◌ीतरहसोचतेहÎ।
+COUNT CESARE MATTEI केEHSIDDHANT:
+1. SANGUINE प◌्रक◌ृति◌→रक◌्तद◌ोष→A-Grouppriority
+2. LYMPHATICप◌्रक◌ृति◌→रसद◌ोष→S-Grouppriority
+3. MIXED प◌्रक◌ृति◌→द◌ोन◌ो◌ं→A+S+C Groups
+4. NERVOUS प◌्रक◌ृति◌→त◌ंत◌्रि◌क◌ा→F-Group priority
+5. HYPER/Acute →D10/D30 (ऋणाÆमकडोज़)
+6. HYPO/Chronic →D3/D4(धनाÆमकडोज़)
+BOOKVERIFICATION: <BOOK_KNOWLEDGE_BASE> मËदगई
+जानकारीसेहरmedicineकाactionverify करË।
+45 Pointsसेसटकexternal applicationpoint बताएं।
+STRICTOUTPUTRULES:
+1. शुदेवनागरीxहद —HinglishनहÂ
+2. Formula: 'S6 +C4+ A1 D10' (clean, double space)
+3. MINIMUM 1000 शÍद—कोईखंडअधूरानहÂ
+4. 4 Tablet Formulas+ 2MalamZAROOR
+5. lकताबकानाम/ पेजनंबरकभीनहÂ
+6. हरmedicineकाकारणanatomy स◌े
+FORMAT: (EXACTLY AISE LIKHNA)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🌿E.H. AROGYA SUTRA CLINIC
+इले·	ो-होÏयोपैथीl×þि◌Ëशन
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[Patient Table 2-column]
+[Alert if BP≥140]
+🔬CLINICALASSESSMENT:
+Temperament + Pathology +EHGroup
+━━SECTION 1: जांचjरपोटµ lव;◌ेषण
+| परी³ण| मान| iClत| EHअथµ |
+MRI/CT/Sonography findings
+━━SECTION 2: भाlवतअंग+Anatomy
+Organ →Anatomy →Pathology →EH Group
+━━SECTION 3:💊TABLET(4mमण)
+mमण1 —मु¸यरोग:
+✦फॉमूµला:[Med1 +Med2 +Med3 Potency]
+✦उ ेÕय: [Main disease]
+✦Anatomy: [Target organ+ action]
+✦समय: सुबहखालीपेट+ दोपहरसेपहले+ रातसेपहले
+mमण2 —यकृत/गुदाµ:
+✦फॉमूµला:[Liver+Kidney meds Potency]
+✦समय: नाÕतेकेबाद+ शाम
+mमण3 —पाचन/गैस:
+✦फॉमूµला:[Digestive Potency]
+✦समय: खानेकेबाद(2xdaily)
+mमण4 —राlशnø:
+✦फॉमूµला:[Night healing Potency]
+✦समय: सोतेसमय
+━━SECTION 4: 🧴MALAM(2 मलहम)
+मलहम1 —[Local problem]:
+
+===== PAGE 11 =====
+✦फॉमूµला:[Med + Electricity D3]
+✦BookPoint: Point XX (body location)
+✦lवmध: Step-by-step application
+✦समय: सुबह+ शाम20mमनट
+मलहम2 —[Secondary]:
+✦[Sameformat] | रातसोनेसेपहले
+━━SECTION 5: ⏰TIMINGCHART
+| समय| mमण| फॉमूµला| बू◌ंदË | लाभ|
+[6AMto 10PM —10-11 rows]
+━━SECTION 6: ⚗दवाबनानेकlवmध
+[1:9Decimal dilutionsteps]
+━━SECTION 7: EHnसांतअनुप◌ालन
+[Rakt+Ras shuddhi path +Polarityreason]
+━━SECTION 8: ✅अपेo³तसुधार
+[7din | 30 din |3 mahine]
+━━SECTION 9: 🥗आहारएवंपरहेज
+[Lab-specific diet chart]
+━━SECTION 10: ⚠सावधाlनयां+ फॉलो-अप
+[Warning signs+ next tests]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🌿E.H. AROGYA SUTRA CLINIC
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+`;
+// ──Format helper ──
+functionfmt(meds,pot){
+if(!meds||!meds.length) return '--';
+const c=(Array.isArray(meds)?meds:[meds])
+.map(m=>String(m).replace(/-/g,'').replace(/\./g,'').trim())
+.filter(Boolean);
+return`${c.join('+ ')} ${pot||'D10'}`;
+}
+// ──Count words ──
+functioncountWords(text) {
+return(text||'').split(/\s+/).filter(Boolean).length;
+}
+// ──Full Fallback (Rule-based 1000+ words) ──
+functionbuildFallbackSummary(input, cd) {
+const {age=30,gender='Male',weight=60,
+bp_systolic=120,bp_diastolic=80,pulse=72,
+symptoms=[],phase='ACUTE'} =input;
+const {temperament,polData,formulas,electricity,labFindings} = cd;
+const {potency,isHyper,polarity} =polData;
+const gHi=gender==='Male'?'प◌ु«ष':'मlहला';
+const dose=age<=12?5:age>60?7:10;
+const fa=formulas.formula_a; const fb=formulas.formula_b;
+const fc=formulas.formula_c;
+const fcPot=phase==='CHRONIC'?(isHyper?'D30':'D3'):potency;
+const faFmt=fmt(fa.medicines,potency);
+const fbFmt=fmt(fb.medicines,potency);
+const fcFmt=fmt(fc.medicines,fcPot);
+const fbOrFa=fbFmt!=='--'?fbFmt:faFmt;
+const sym=symptoms.map(s=>typeof s==='object'?(s.hindi||s.name||''):String(s)).filter(Boolean);
+const symT=sym.join(' ').toLowerCase();
+const PHASE_HI={ACUTE:'ती(0-14kदन)',SUB_ACUTE:'अधµ-तीव्र',
+CHRONIC:'जीणµ(60+ kदन)',DEGENERATIVE:'अप³यी'};
+const L=[];
+const A=(...ls)=>ls.forEach(l=>L.push(l));
+A('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+A('🌿**E.H. AROGYA SUTRACLINIC**');
+A(' **इले·	ो-होÏयोपैथीि◌s×þËशन**');
+A('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+===== PAGE 12 =====
+A('');
+A('| lववरण| जानकारी|lववरण| जानकारी|');
+A('|-------|---------|-------|---------|');
+A(`| **आयु**| ${age} वषµ| **zलग** | ${gHi} |`);
+A(`| **भार** | ${weight} lक◌ा|**नाड़ी** | ${pulse}/mमनट|`);
+A(`| **रøचाप** | ${bp_systolic}/${bp_diastolic} mmHg | **कृlत** | ${temperament} |`);
+A(`| **अवCा** | ${PHASE_HI[phase]||phase} | **पोटËसी**| ${potency} |`);
+A('');
+if(bp_systolic>=180){
+A('---');
+A('## 🚨उþरøचापसंकट—तÆकालÉय◌ान!');
+A(`**${bp_systolic}/${bp_diastolic} mmHg**`);
+A('---');
+} elseif(bp_systolic>=140){
+A('---');
+A(`## ⚠BP${bp_systolic}/${bp_diastolic} —नमकतुरंतकमकरË`);
+A('---');
+}
+A('');
+A('## 🔬CLINICAL ASSESSMENT');
+A(`**कृlत:** ${temperament} —${temperament==='Sanguine'?'रø(Blood) lवकृlतधान':temperament==='Lymphatic'?'रस(Lymph) lवकृlतधान':'रø + रसदोन×
+lवकृत'}`);
+A(`**EH समूह:** ${temperament==='Sanguine'?'A-Group (Angioitico) ाथmमक':temperament==='Lymphatic'?'S-Group (Scrofoloso) ाथmमक':'A+S+C
+Groups'}`);
+A(`**ुवता:** ${isHyper?'HYPER (अlत-सlþय)':'HYPO(lनÖþि◌य)'} →**${potency}** डोज़`);
+A('');
+A('## ━━SECTION 1: जांचjरप◌ोटµ lव;ेषण');
+if(labFindings.length>0){
+A('');
+A('|परी³ण| मान| सामान्य| iClत| EHअथµ|');
+A('|--------|-----|--------|--------|---------|');
+labFindings.forEach(f=>
+A(`| ${f.test} | ${f.value} ${f.unit} | ${f.normal} | ${f.status} | ${f.eh_meaning} |`));
+} else{
+A('jरपोटµ डेटाउपल/नही◌ं।ल³ण×केआधारपरlव;ेषणकि◌यागया।');
+}
+A('');
+A('## ━━SECTION 2: भाlवतअ◌ंग+Anatomy');
+const ORG_ANATOMY={
+'uric':'**मूतं(Urinary):** गुदÙ मËयूjरकएnसडlþ×टलजमाव।Synovial joints मËगाउट।',
+'jod':'**मांसपेशी+कंकाल(Musculoskeletal):** Cartilageक्षय, Synovial fluid कम।',
+'bp':'**दय(Cardiovascular):** धमनीकठोरता,Endotheliumdamage, रøवाहबाधा।',
+'kabz':'**पाचन(Digestive):** आं गlतशीलताकम, Toxic load, Dysbiosis।',
+'chakkar':'**तंlका(Nervous):** Vestibulardysfunction, रøवाहअसंतुलन।',
+'diabetes':'**अंतःावी(Endocrine):** Insulinresistance,Pancreatic beta cell dysfunction।',
+};
+Object.entries(ORG_ANATOMY).forEach(([kw,text])=>{
+if(symT.includes(kw)) A(text);
+});
+A('');
+A('EHnसांत: इनसभीअंग× मे◌ंरø/रसक lवकृlतमूलकारणह◌ै।');
+A('');
+A('## ━━SECTION 3: 💊TABLET (4 mमण)');
+A('');
+// Mishran1
+A('### mमण1 —मु¸यरोग(Mukhya Rog)');
+A(`**✦फॉमूµला:** \`${faFmt}\``);
+A(`**✦उ ेÕय:** ${temperament} प्रकृlतकामु¸यउपचार`);
+fa.medicines.slice(0,4).forEach(m=>{
+const info=MED_DB[m]||{action:m+' —EH formula'};
+A(` • **${m}:** ${info.action}`);
+});
+A('**✦समय:** सुबह6:00 (खालीपेट) +द◌ोपहर1:00 (खानेसेपहले) + रात8:00');
+A('**✦lवmध:** 10बूंदË +आधाकपगुनगुनापानी+Sip by Sip');
+A('');
+// Mishran2
+A('### mमण2—यकृत/ गुदµ◌ा(Liver/Kidney)');
+A(`**✦फॉमूµला:** \`${fbFmt}\``);
+A('**✦उ ेÕय:** यकृतdetox +गुदµ◌ेक शुp+ Toxin lनकासी');
+
+===== PAGE 13 =====
+fb.medicines.slice(0,3).forEach(m=>{
+const info=MED_DB[m]||{action:m};
+A(` • **${m}:** ${info.action}`);
+});
+A('**✦समय:** सुबह8:00 (नाÕतेकेब◌ाद) + शाम5:00');
+A('');
+// Mishran3
+const m3meds=formulas.all_medicines.filter(m=>
+['S-10','C-8','F-1'].includes(m)).slice(0,3);
+const m3fmt=m3meds.length?fmt(m3meds,potency):faFmt;
+A('### mमण3—पाचन/ गैस(Digestive)');
+A(`**✦फॉमूµला:** \`${m3fmt}\``);
+A('**✦उ ेÕय:** पाचनलसीकाशुp+ कÍज®र+ Metabolism');
+A('**✦समय:** दोपहर2:00 (खानेकेबाद) + रात9:00 (खानेकेबाद)');
+A('');
+// Mishran4
+A('### mमण4—राl शøि◌(Night Healing)');
+A(`**✦फॉमूµला:** \`${fcFmt}\``);
+A('**✦उ ेÕय:** रातभरdeep cellular healing +पुननमाµण');
+A('**✦समय:** रात10:00(सोतेसमय)');
+A('');
+A('## ━━SECTION 4: 🧴MALAM(2मलहम)');
+A('');
+// Malam1
+const elecShort=electricity.elec.replace(/\s*\(.*\)/,'');
+A(`### मलहम1 —${electricity.elec}`);
+A(`**✦फॉमूµला:** \`${fa.medicines[0]||'C-4'} + ${elecShort} D3(बाहरीयोगकेवल)\``);
+A(`**✦BookPoint:** ${electricity.points}`);
+A(`**✦Cान:** ${electricity.loc}`);
+A('**✦lवmध:**');
+A(' 1.सूतीकपड़ाया«ईले◌ं');
+A(' 2. 10बूंदË थोड़ेपान◌ीमËmमलाएं');
+A(' 3. कपड़ेकोoभगोकरबताएPoint पररखË');
+A(' 4. **20 mमनट** रखË —दि◌नमË**2 बार**');
+A('**✦समय:** सुबह9:00 AM +शाम6:00 PM');
+A('');
+// Malam2
+const m2elec=bp_systolic>=140?'B.E.':'G.E.';
+const m2pts=bp_systolic>=140?'Point 1, 11':'Point 23, 24';
+const m2loc=bp_systolic>=140?'माथेपर+ दयकेपास':'भ◌ाlवतजोड़पर';
+A(`### मलहम2—${m2elec} Compress`);
+A(`**✦फॉमूµला:** \`${m2elec} D3 (ब◌ाहरीयोग)\``);
+A(`**✦BookPoint:** ${m2pts}`);
+A(`**✦Cान:** ${m2loc}`);
+A('**✦समय:** रात9:30PM(सोनेसेपहले) —20mमनट');
+A('');
+A('## ━━SECTION 5: ⏰स0ूणµसमयसारणी');
+A('');
+A('> ठक**10बूंदË** आधेकपगुनगुनेपानीमË—**घूंट-घू◌ंट(Sip by Sip)** lपएं');
+A('');
+A('| समय| mमण| फॉमूµला| बूंदË | उ ेÕय|');
+A('|-----|--------|---------|-------|---------|');
+A(`| 🌅6:00 AM(खालीपेट) | mमण1 | ${faFmt} | ${dose} 💊| शुpशु¬ |`);
+A(`| ☕8:00AM (नाÕतेबाद) | mमण2 | ${fbFmt} |${dose} 💊| यकृत/गुदाµ|`);
+A(`| 🌿9:00 AM| **मलहम1** |${fa.medicines[0]||'C4'}+${elecShort} D3 | लग◌ाए◌ं🧴| ${electricity.points} |`);
+A(`| ☀1:00PM(खानेसेपहले) | mमश्रण1 | ${faFmt} | ${dose} 💊| दोपहरशुp|`);
+A(`| 🍽2:00 PM(खानेकेबाद) | mमश्रण3| ${m3fmt} |${dose} 💊| पाचन+ गैस|`);
+A(`| 🌇5:00PM| mमण2 |${fbFmt} | ${dose} 💊| शामशुp|`);
+A(`| 🌿6:00 PM| **मलहम1** | ${fa.medicines[0]||'C4'}+${elecShort} D3 | लग◌ाए◌ं🧴| ${electricity.points} |`);
+A(`| 🌙8:00PM(खानेसेपहले) | mमश्रण1 | ${faFmt} | ${dose} 💊| राllवष|`);
+A(`| 🍵9:00 PM(खानेकेबाद) | mमण3 | ${m3fmt} | ${dose} 💊| पाचन|`);
+A(`| 🩺9:30 PM| **मलहम2** | ${m2elec} D3 | लग◌ाए◌ं🧴| ${m2pts} |`);
+A(`| 💤10:00 PM(सोतेसमय) |mमण4| ${fcFmt} |${dose} 💊| Deep healing |`);
+A('');
+A('## ━━SECTION 6: ⚗दवाबनानेक lवmध');
+A('**हरmमणकेnलए(1:9Decimal Dilution):**');
+A('1. 30 ml ×वÿकाँचक श◌ीशीलË');
+A('2. हरदवाक**5-5 बूंदË**शीशीमËडालË');
+A('3. शेषभाग**Distilled Water(D.W.)**सेभरË');
+
+===== PAGE 14 =====
+A('4. **100 बारमजबूतStrokes** दË (ऊपर-नीचे)');
+A('5. तैयारmमणठंडी-अंधेर◌ीजगहरखË');
+A('⚠**नलकापानीकभीनहÂ—nसफµ D.W.**');
+A('');
+A('## ━━SECTION 7: EH nसा◌ंतअनुपालन');
+A('**काउंटमैट कामूलnसा◌ंत:**');
+A('*"सभीरोगरø(Blood) यारस(Lymph) के®lषतहोनेसेउत्प,होतेहÎ।"*');
+A('');
+if(temperament==='Sanguine'){
+A('**A-Group** रøशुpकर◌ेग◌ी→धमनि◌य◌ा◌ंस◌्वस◌्थ→BP सामाÊय');
+} elseif(temperament==='Lymphatic'){
+A('**S-Group** रसशुpकर◌ेग◌ी→लस◌ीक◌ात◌ंत◌्रस◌्वस◌्थ→lवषाølनकासी');
+} else{
+A('**A+S+C Groups** —रø+ रसदोन×कशुp+कोnशकयचि◌lकÆसा');
+}
+A(`**ुवता:** ${isHyper?'HYPER →'+potency+' (ऋणाÆमक) —अlत-सþि◌यत◌ाश◌ा◌ंत':'HYPO →'+potency+' (धनाÆमक) —lनÖþि◌यऊजाµ जागेगी'}`);
+A('');
+A('## ━━SECTION 8: ✅अपेo³तसुधार');
+A('| समयावmध| अपेo³तपjरण◌ाम|');
+A('|---------|----------------|');
+A('| **3-7kदन** | ऊजाµ वृि◌, मुखल³ण×मËारंoभकराहत|');
+A('| **15-30 kदन** | Labreports मËसुधार, सूजनकम|');
+A('| **3 महीने**| Chronicity मËउÒलेखनीयकमी|');
+const followDays=phase==='ACUTE'?7:phase==='SUB_ACUTE'?15:30;
+A(`**${followDays} kदन× मËप◌ुनःkदखाएं।**`);
+A('');
+A('## ━━SECTION 9: 🥗आहारएवंपरहेज');
+A('**🚫·यानखाएं:**');
+A('- नमककमकरË, तली-भुनीच◌ीजËबंद');
+A('- शराब, तंबाकू, शीतलपेयब◌ंद');
+const rv=input.report_values||{};
+if(rv.uric_acid>7) A('- **लालमांस, बीयर, दाल**—यूjरकएnसड');
+if(rv.sugar_fast>126) A('- **चीनी, गुड़, सफेदचावल** —Diabetes');
+if(rv.creatinine>2) A('- **अmधकोटन, डेयरी** —गुदµ◌े');
+if(rv.potassium>5.5) A('- **केला, आलू** —Potassiumhigh');
+A('**✅·याखाएं:**');
+if(isHyper){
+A('- पपीता,हरीसiÍजयाँ, दnलया,लौक');
+A('- 8-10lगलासपानी, अदरक-तुलसीचाय');
+} else{
+A('- गमµ®धहÒद, सूखेम◌ेवे,पौm=कदाल');
+}
+A('');
+A('## ━━SECTION 10: ⚠सावधाlनयां+ फॉलो-अप');
+A('**तुरंतkदखाएंयkद:**');
+if(bp_systolic>=140) A('- BP180+ होजाए');
+A('- तेजबुखार(103° F+) हो');
+A('- सांसलेनेमËकkठनाईहो');
+A('- अचानकबेहोशीहो');
+A('');
+if(rv.creatinine>1.5) A('**15 kदनबाद:**Creatinine+ KFT');
+if(rv.uric_acid>7) A('**30 kदनबाद:** Uric Acid');
+if(rv.sugar_fast>126) A('**7दि◌नबाद:** Fasting Sugar');
+A('');
+A('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+A('🌿**E.H. AROGYA SUTRACLINIC**');
+A(`*AI Confidence:${Math.min(70+labFindings.length*4,95)}%*`);
+A('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+returnL.join('\n');
+}
+// ──MAIN EXPORT ──
+async functiongenerateOllamaSummary(input) {
+const cd_data = buildClinicalData(input);
+const {temperament,polData,formulas,electricity,labFindings}=cd_data;
+const {potency,isHyper}=polData;
+const fa=formulas.formula_a; const fb=formulas.formula_b;
+const gHi=input.gender==='Male'?'पु«ष':'मlहला';
+const symList=(input.symptoms||[])
+.map(s=>typeof s==='object'?(s.name||''):String(s)).join(', ');
+const labText=labFindings
+.map(f=>`${f.test}: ${f.value} →${f.status} —${f.eh_meaning}`)
+
+===== PAGE 15 =====
+.join('\n') || 'jरपोटµ उपल/नहÂ';
+// Book RAG —6queries
+const bookCtx= getBookContext([
+'45 application points body external compress malam',
+'external compresselectricity applicationmethod',
+`temperament ${temperament} medicine groupselection`,
+`potency${input.phase} ${polData.polarity} dilution`,
+'formula preparationdilution1:9 decimal',
+`${(input.symptoms||[]).slice(0,3).map(s=>typeof s==='object'?s.name:s).join('')}`,
+]);
+const userPrompt =`
+रोगीकासंपूणµ Clinical Data:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+आयु: ${input.age} वषµ | zलग: ${gHi} | भार: ${input.weight} कि◌ा
+रøचाप: ${input.bp_systolic}/${input.bp_diastolic} mmHg |न◌ाड़ी: ${input.pulse||72}
+कृlत: ${temperament} |अवC◌ा: ${input.phase}
+ुवता: ${polData.polarity} | प◌ोटËसी: ${potency}
+मु¸यल³ण: ${symList}
+Lab: ${labText}
+अlतjरø: ${([input.blood_report,input.mri_report]
+.filter(Boolean).join(' ').substring(0,300))||'N/A'}
+भाlवतअंग: ${(input.affected_organs||[]).join(',')||'symptoms-based'}
+Rule Engine Formula:
+mमणA: ${fmt(fa.medicines,potency)}
+mमणB:${fmt(fb.medicines,potency)}
+वि◌द◌्य◌ुत: ${electricity.elec} →${electricity.loc}
+Point: ${electricity.points}
+${bookCtx?'<BOOK_KNOWLEDGE_BASE>\n'+bookCtx+'\n</BOOK_KNOWLEDGE_BASE>':''}
+TASK: Bookके´ानसे—EXACTLY format mein
+10sections, 1000+ शÍद, 4Tablet +2 Malam।
+`;
+// Try Ollama withretries
+for(let attempt=1; attempt<=MAX_RETRIES; attempt++){
+try{
+console.log(`Ollama attempt ${attempt}/${MAX_RETRIES}...`);
+const resp =await axios.post(
+`${OLLAMA_URL}/api/generate`,
+{ model:MODEL, system:EH_SYSTEM, prompt:userPrompt,
+stream:false,
+options:{temperature:0.1,num_ctx:NUM_CTX,
+num_predict:NUM_PREDICT,repeat_penalty:1.15} },
+{ timeout:TIMEOUT}
+);
+const text=resp.data.response||'';
+const wc=countWords(text);
+console.log(`Ollama words: ${wc}`);
+if(wc>=MIN_WORDS){
+return{summary:text,source:'ollama-book',wordCount:wc,ready:true};
+}
+console.log(`Too short (${wc} words), retrying...`);
+} catch(err){
+console.log(`Ollama attempt ${attempt} failed: ${err.message.substring(0,50)}`);
+}
+}
+// Full fallback
+console.log('UsingRuleEngine Fallback...');
+const fb_text=buildFallbackSummary(input,cd_data);
+return{summary:fb_text,source:'rule-engine',
+wordCount:countWords(fb_text),ready:true};
+}
+module.exports ={ generateOllamaSummary };
+
+===== PAGE 16 =====
+STEP 4 —summaryGenerate.js Route (UPDATE)
+FILE: backend/routes/summaryGenerate.jsPython enginedependency hatao. SingleNode pipeline use karo. Timeout 600000 set
+karo.
+FILE: backend/routes/summaryGenerate.js
+// ═══════════════════════════════════════════════════
+// E.H. AROGYA SUTRA—SUMMARY ROUTE
+// SingleNodepipeline—Pythonengineremoved
+// ═══════════════════════════════════════════════════
+const express= require('express');
+const router =express.Router();
+const { generateOllamaSummary } =
+require('../services/ollamaBookDoctorSummary');
+// POST/api/summary/generate
+router.post('/generate', async (req, res) => {
+// Set responsetimeout
+res.setTimeout(
+parseInt(process.env.OLLAMA_TIMEOUT_MS||'600000'));
+try{
+const input ={
+age:
+req.body.age
+|| 30,
+gender:
+req.body.gender
+|| 'Male',
+weight:
+req.body.weight
+|| 60,
+bp_systolic: req.body.bp_systolic || 120,
+bp_diastolic: req.body.bp_diastolic || 80,
+pulse:
+req.body.pulse
+||72,
+temperament: req.body.temperament || null,
+symptoms:
+req.body.symptoms
+||[],
+phase:
+req.body.phase
+|| 'ACUTE',
+blood_report: req.body.blood_report || '',
+mri_report:
+req.body.mri_report || '',
+sonography:
+req.body.sonography || '',
+report_values: req.body.report_values|| {},
+affected_organs:req.body.affected_organs||[],
+};
+console.log('Summaryrequest:', {
+age:input.age, bp:`${input.bp_systolic}/${input.bp_diastolic}`,
+symptoms:input.symptoms.length,
+});
+const result = await generateOllamaSummary(input);
+res.json({
+success:
+true,
+summary:
+result.summary,
+source:
+result.source,
+word_count: result.wordCount,
+ready:
+result.ready,
+});
+} catch(err) {
+console.error('Summaryerror:', err.message);
+res.status(500).json({
+success: false,
+error: err.message,
+});
+}
+});
+// GET /api/summary/health
+router.get('/health', (req, res) => {
+const axios= require('axios');
+axios.get(`${process.env.OLLAMA_URL||'http://localhost:11434'}/api/tags`,
+{timeout:5000})
+.then(()=>res.json({ollama:'running',status:'ok'}))
+.catch(()=>res.json({ollama:'offline',status:'warning'}));
+});
+
+===== PAGE 17 =====
+module.exports =router;
+
+===== PAGE 18 =====
+STEP 5 —SearchResult.jsx (COMPLETE REPLACE)
+FILE: frontend/src/pages/SearchResult.jsx Beautiful dark theme display. Loading indicator with progress. Demo jaisi output milegi.
+npm install react-markdown remark-gfm
+cd frontend
+npminstall react-markdown remark-gfm
+FILE: frontend/src/pages/SearchResult.jsx
+import { useLocation, useNavigate} from'react-router-dom';
+import { useState, useEffect } from'react';
+import ReactMarkdownfrom'react-markdown';
+import remarkGfmfrom'remark-gfm';
+export default functionSearchResult() {
+const location =useLocation();
+const navigate= useNavigate();
+const [summary, setSummary] = useState('');
+const [loading, setLoading] = useState(false);
+const [progress, setProgress] =useState('');
+const [source, setSource] =useState('');
+const [error, setError] = useState('');
+const result =location.state?.result;
+const input = location.state?.input;
+useEffect(() =>{
+if (!result && !input) { navigate('/search'); return;}
+if (result?.summary) {
+setSummary(result.summary);
+setSource(result.source||'');
+return;
+}
+if (input) generateSummary(input);
+}, []);
+async function generateSummary(patientInput) {
+setLoading(true);
+setError('');
+setProgress('AI lव;ेषणश◌ु¬...');
+const msgs =[
+'📋रोगीडेटाोसेसहोरहाहै...',
+'📖Book RAGसेजानकारीlनकालीजारहीहै...',
+'🧠Ollama EH Doctorसोचरहाहै...',
+'💊Formula तैयारहोरहाहै...',
+'🧴Malam+45 Points select होरह◌ेहÎ...',
+'📝1000 शÍद× क Summarynलखीज◌ारहीहै...',
+];
+let mi = 0;
+const iv = setInterval(() => {
+setProgress(msgs[mi %msgs.length]);
+mi++;
+}, 15000);
+try {
+const res= await fetch('/api/summary/generate', {
+method: 'POST',
+headers: { 'Content-Type': 'application/json'},
+body: JSON.stringify(patientInput),
+signal: AbortSignal.timeout(
+parseInt(import.meta.env.VITE_API_EXPERT_CLINICAL_TIMEOUT_MS||'600000'))
+});
+const data =await res.json();
+if (data.success) {
+setSummary(data.summary);
+setSource(data.source);
+} else {
+setError(data.error|| 'कुछगड़बड़ई');
+}
+} catch(e) {
+setError('Timeout याNetwork Error।Ollama चलरहाहै?');
+
+===== PAGE 19 =====
+} finally {
+clearInterval(iv);
+setLoading(false);
+}
+}
+const S = {
+page:{background:'#060d07',minHeight:'100vh',
+padding:'20px 24px',fontFamily:'Courier New'},
+btn:(clr='#2d6a35')=>({background:clr==='outline'?'transparent':clr,
+color:clr==='outline'?'#c9963a':'white',
+border:clr==='outline'?'1pxsolid #c9963a':'none',
+borderRadius:8,padding:'10px20px',
+fontFamily:'Courier New',fontSize:13,cursor:'pointer'}),
+};
+if (loading) return(
+<div style={{...S.page,display:'flex',flexDirection:'column',
+alignItems:'center',justifyContent:'center'}}>
+<div style={{fontSize:48,marginBottom:20}}>⚕</div>
+<div style={{color:'#c9963a',fontSize:18,fontWeight:'bold',
+fontFamily:'CourierNew',marginBottom:16}}>
+E.H. AROGYASUTRA</div>
+<div style={{color:'#4a9b54',fontSize:14,marginBottom:24,
+fontFamily:'CourierNew'}}>{progress}</div>
+<div style={{display:'flex',gap:8}}>
+{[0,1,2].map(i=>(
+<div key={i} style={{width:12,height:12,borderRadius:'50%',
+background:'#4a9b54',
+animation:`pulse 1.4s ease-in-out ${i*0.2}s infinite`}}/>
+))}
+</div>
+<div style={{color:'#555',fontSize:12,marginTop:24,
+fontFamily:'CourierNew',textAlign:'center'}}>
+CPU पर2-4 mमनटलगसकत◌ेहÎ।<br/>
+कृपयाती³ाकरË।</div>
+</div>
+);
+if (error) return (
+<div style={S.page}>
+<div style={{color:'#ff6b6b',padding:20,border:'1px solid#ff6b6b',
+borderRadius:8,marginBottom:16}}>
+❌{error}
+</div>
+<buttonstyle={S.btn()} onClick={()=>navigate('/search')}>
+←वापसजाएं
+</button>
+</div>
+);
+return(
+<div style={S.page}>
+<div style={{display:'flex',alignItems:'center',gap:12,
+marginBottom:20,paddingBottom:12,
+borderBottom:'1px solid rgba(201,150,58,0.3)'}}>
+<button style={S.btn('#1a3d1c')}
+onClick={()=>navigate('/search')}>←वापस</button>
+<span style={{color:'#c9963a',fontWeight:'bold',fontSize:14}}>
+🏥EHClinical Summary</span>
+{source&&(
+<div style={{marginLeft:'auto',fontSize:11,
+background:source.includes('ollama')?'rgba(74,155,84,0.15)':'rgba(201,150,58,0.15)',
+border:`1pxsolid${source.includes('ollama')?'#4a9b54':'#c9963a'}`,
+borderRadius:4,padding:'3px10px',
+color:source.includes('ollama')?'#4a9b54':'#c9963a'}}>
+{source.includes('ollama')?'Ollama ✅':'RuleEngine ✅'}
+</div>
+)}
+</div>
+<div style={{background:'rgba(255,255,255,0.02)',
+border:'1px solid rgba(74,155,84,0.2)',
+borderRadius:12,padding:'20px 24px'}}>
+<ReactMarkdownremarkPlugins={[remarkGfm]}
+components={{
+h1:({children})=>(<h1 style={{color:'#c9963a',fontSize:18,
+
+===== PAGE 20 =====
+borderBottom:'2pxsolidrgba(201,150,58,0.4)',
+paddingBottom:8,marginBottom:16,fontFamily:'CourierNew'}}>{children}</h1>),
+h2:({children})=>(<h2style={{color:'#4a9b54',fontSize:15,
+marginTop:24,marginBottom:8,paddingLeft:10,
+borderLeft:'3px solid #4a9b54',fontFamily:'CourierNew'}}>{children}</h2>),
+h3:({children})=>(<h3 style={{color:'#e8c46a',fontSize:13,
+marginBottom:8,fontFamily:'CourierNew'}}>{children}</h3>),
+strong:({children})=>(<strong style={{color:'#e8c46a',fontFamily:'CourierNew'}}>{children}</strong>),
+p:({children})=>(<pstyle={{color:'rgba(255,255,255,0.85)',
+fontSize:13,lineHeight:1.85,marginBottom:8,
+fontFamily:'CourierNew'}}>{children}</p>),
+li:({children})=>(<li style={{color:'rgba(255,255,255,0.8)',
+fontSize:13,lineHeight:1.75,marginBottom:4,
+fontFamily:'CourierNew'}}>{children}</li>),
+code:({children})=>(<codestyle={{background:'rgba(74,155,84,0.15)',
+color:'#6abf72',padding:'2px8px',borderRadius:4,
+fontSize:13,fontFamily:'Courier New'}}>{children}</code>),
+table:({children})=>(<div style={{overflowX:'auto',marginTop:12}}>
+<tablestyle={{width:'100%',borderCollapse:'collapse',
+fontSize:12,fontFamily:'CourierNew'}}>{children}</table></div>),
+th:({children})=>(<thstyle={{background:'#1A3D1C',color:'white',
+padding:'8px12px',textAlign:'left'}}>{children}</th>),
+td:({children})=>(<td style={{border:'1pxsolid rgba(74,155,84,0.3)',
+padding:'7px 12px',color:'rgba(255,255,255,0.8)'}}>{children}</td>),
+hr:()=>(<hrstyle={{border:'none',
+borderTop:'1pxsolidrgba(201,150,58,0.25)',margin:'20px 0'}}/>),
+}}>
+{summary ||'⚠Summaryउपल/नहÂ।'}
+</ReactMarkdown>
+</div>
+<div style={{display:'flex',gap:12,marginTop:20,flexWrap:'wrap'}}>
+<button style={S.btn()} onClick={()=>window.print()}>
+🖨Print / PDF</button>
+<button style={S.btn('outline')}
+onClick={()=>{navigator.clipboard.writeText(summary);alert('Copyहोगई!');}}>
+📋Copy</button>
+<button style={S.btn('#1a4a6b')}
+onClick={()=>navigate('/search')}>
+←नयारोगी</button>
+</div>
+</div>
+);
+}
+
+===== PAGE 21 =====
+STEP 6 —STARTUP COMMANDS
+Yeh order followkaro hamesha. Teeno terminal alag-alag kholo. Health check se verifykaro.
+# ════TERMINAL 1 ════
+ollama serve
+# Ollama: http://localhost:11434
+# ════TERMINAL 2════
+cd backend
+npmrundev
+# API:http://localhost:5000
+# ════TERMINAL 3════
+cd frontend
+npmrundev
+# UI: http://localhost:5173
+# ════HEALTHCHECK════
+# Browser mein openkaro:
+# http://localhost:5000/api/summary/health
+# Expected:{ollama:'running',status:'ok'}
+# ════TESTSUMMARY ════
+# POSThttp://localhost:5000/api/summary/generate
+# Body:
+# {
+# age:55, gender:'Male',weight:70,
+# bp_systolic:150, bp_diastolic:95,
+# temperament:'Mixed',
+# symptoms:['uric acid','jod dard','kabz'],
+# report_values:{uric_acid:8.5,creatinine:1.4},
+# affected_organs:['kidney','joints'],
+# phase:'CHRONIC'
+# }
+# Expected:
+# {success:true, word_count:900+,
+# source:'ollama-book'or'rule-engine'}
+
+===== PAGE 22 =====
+CURSOR FINAL PROMPT —COPY PASTE READY
+Yeh POORA text Cursor meinpaste karo. Step by step banao —koi galti nahi. Ekbaar sab hoga toh projectcomplete!
+===CURSOR: EHAROGYA SUTRA COMPLETE FIX ===
+Mera EH Arogya Sutra project mein
+yehproblems hain —sab fixkaro:
+1. Summary130 wordsaati hai
+2. Same medicinesharcase mein
+3. Timeout error
+4. Python engine sync nahi
+5. 4Tablet +2 Malamnahi aata
+===STEP1: .env FILES ===
+backend/.env mein ADD karo:
+OLLAMA_TIMEOUT_MS=600000
+OLLAMA_MODEL=llama3.2:3b
+SUMMARY_MIN_WORDS=800
+SUMMARY_MAX_RETRIES=2
+OLLAMA_NUM_CTX=8192
+OLLAMA_NUM_PREDICT=2000
+frontend/.env mein ADD karo:
+VITE_API_EXPERT_CLINICAL_TIMEOUT_MS=600000
+VITE_API_TIMEOUT=600000
+===STEP2: SOURCE OF TRUTH ===
+FILE: backend/services/ehSourceOfTruthClinical.js
+POORAreplacekaro [Is document ka STEP 2]
+===STEP3: SUMMARY ENGINE ===
+FILE: backend/services/ollamaBookDoctorSummary.js
+POORAreplacekaro [Is document ka STEP 3]
+===STEP4:ROUTE ===
+FILE: backend/routes/summaryGenerate.js
+POORAreplacekaro [Is document ka STEP 4]
+===STEP5: FRONTEND ===
+cd frontend && npminstall react-markdown remark-gfm
+FILE: frontend/src/pages/SearchResult.jsx
+POORAreplacekaro [Is document ka STEP 5]
+===STEP6: RESTART ===
+Terminal 1: ollama serve
+Terminal 2: cd backend && npmrundev
+Terminal 3: cd frontend && npmrundev
+===VERIFY===
+GEThttp://localhost:5000/api/summary/health
+→{ollama:'running'}
+POST/api/summary/generate
+Input: age:55, bp:150/95,
+symptoms:['uric acid','jod dard']
+phase:'CHRONIC', report_values:{uric_acid:8.5}
+Expected:
+✅4Tablet formulas
+✅2Malamwith points
+✅Timing chart (6AM-10PM)
+✅word_count: 900+
+✅source: ollama-bookorrule-engine
+✅Beautiful dark theme UI
+===END ===
+
+===== PAGE 23 =====
+Step
+File
+Kya Banega
+1
+.env (both)
+Timeout + settings fix
+2
+ehSourceOfTruthClinical.js
+Temperamentengine fix
+3
+ollamaBookDoctorSummary.js
+1000words +4 Tablet +2 Malam
+4
+summaryGenerate.js
+Route +timeout fix
+5
+SearchResult.jsx
+BeautifulUI +loading
+6
+Restart
+3terminals +health check
+E.H. AROGYASUTRA—CompleteProject | Stepby Step | Koi Galti Nahi

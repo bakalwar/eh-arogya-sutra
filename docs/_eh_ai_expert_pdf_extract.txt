@@ -1,0 +1,1314 @@
+PAGES=26
+--- PAGE 1 ---
+⚕E.H. AROGYA SUTRA
+AI EXPERT SYSTEM —CURSOR BLUEPRINT
+Python FastAPI + React.js + PostgreSQL + Ollama Llama-3
+OpenCV + Tesseract + SciSpaCy + MediaPipe
+Jagdamba Clinic, Seoni M.P. | 2026
+
+--- PAGE 2 ---
+SECTION 1: PROJECT OVERVIEW
+Goal: 100%Free, Open-Source, OfflineAI Expert SystemNo Paid API —No OpenAI, No Google Vision, No AWS Local Llama-3 AI
+se1000-word Hindi summary Dynamic formula —Databasese, hardcoded NAHI
+Tech Stack Quick Reference
+Layer
+Technology
+Purpose
+Frontend
+React.js + Vite + Tailwind
+Doctor UI, Patient Dashboard
+Backend
+Python FastAPI
+AI Engine, Rule Logic, APIs
+Database
+PostgreSQL + SQLAlchemy
+Anatomy, Medicines, Rules
+Face AI
+OpenCV + MediaPipe
+Temperament Detection FREE
+OCR
+Tesseract + PyMuPDF
+Medical Report Extraction
+NLP
+SciSpaCy en_core_sci_sm
+Medical Term Recognition
+Local AI
+Ollama + Llama-3:8b
+1000-word Summary OFFLINE
+PDF Gen
+ReportLab Python
+PrescriptionPDF
+
+--- PAGE 3 ---
+SECTION 2: DATABASE ARCHITECTURE
+STRICT RULE: NO hardcoded disease formulas! Database maps Anatomy →EH Medicines only. Python engine builds formula
+DYNAMICALLY.
+Step 1: PostgreSQL Setup
+# Terminal meinrunkarein:
+sudo apt install postgresql postgresql-contrib
+sudo systemctlstart postgresql
+sudo -u postgres createdb eh_arogya_sutra
+# Python connection test:
+pip install sqlalchemypsycopg2-binary
+Step 2: database.py
+# File: backend/database.py
+fromsqlalchemyimport create_engine
+fromsqlalchemy.ormimport sessionmaker, declarative_base
+import os
+DB_URL = os.getenv("DATABASE_URL",
+"postgresql://postgres:password@localhost/eh_arogya_sutra")
+engine = create_engine(DB_URL)
+SessionLocal =sessionmaker(autocommit=False,
+autoflush=False, bind=engine)
+Base = declarative_base()
+defget_db():
+db= SessionLocal()
+try:
+yield db
+finally:
+db.close()
+Step 3: models.py —4 Tables
+# File: backend/models.py
+fromsqlalchemyimport Column,Integer,String,Text
+fromdatabase import Base
+# TABLE 1: Anatomy Master (Page 71EHBook)
+class AnatomyMaster(Base):
+__tablename__ ="anatomy_master"
+id
+= Column(Integer, primary_key=True)
+organ_name = Column(String(100))
+organ_hindi =Column(String(100))
+system_name = Column(String(100))
+body_side =Column(String(20))
+pole
+=Column(String(20))
+# TABLE 2: EHMateria Medica
+class EhMateriaMedica(Base):
+__tablename__ ="eh_materia_medica"
+id
+=Column(Integer, primary_key=True)
+medicine_code =Column(String(20))
+group_name
+=Column(String(50))
+target_system = Column(String(100))
+target_organ =Column(String(200))
+polarity
+=Column(String(20))
+action
+= Column(Text)
+
+--- PAGE 4 ---
+# TABLE 3: ElectricityMaster
+class ElectricityMaster(Base):
+__tablename__ ="electricity_master"
+id
+= Column(Integer, primary_key=True)
+fluid_code = Column(String(10))
+fluid_name = Column(String(50))
+nature
+=Column(String(20))
+polarity = Column(String(20))
+indication =Column(Text)
+keywords = Column(Text)
+# TABLE 4: PotencyRules (Lawof Polarity)
+class PotencyRules(Base):
+__tablename__ ="potency_rules"
+id
+=Column(Integer, primary_key=True)
+condition_type = Column(String(50))
+polarity
+=Column(String(20))
+phase
+= Column(String(30))
+potency
+=Column(String(20))
+frequency
+=Column(String(100))
+Step 4: seeds.py —Database Data
+# File: backend/seeds.py
+# Run once: pythonseeds.py
+fromdatabase import engine, SessionLocal
+frommodels import Base, AnatomyMaster
+frommodels import EhMateriaMedica, ElectricityMaster, PotencyRules
+Base.metadata.create_all(bind=engine)
+db= SessionLocal()
+# ──ANATOMY DATA(EH BookPage 71) ──
+anatomy_data =[
+{"organ_name":"Brain","organ_hindi":"मt×तÖक",
+"system_name":"Nervous","body_side":"Both","pole":"Both"},
+{"organ_name":"Lungs","organ_hindi":"फेफड़े",
+"system_name":"Respiratory","body_side":"Left","pole":"Positive"},
+{"organ_name":"Heart_Left","organ_hindi":"दयबायाँ",
+"system_name":"Sanguine","body_side":"Left","pole":"Positive"},
+{"organ_name":"Heart_Right","organ_hindi":"दयदाlहना",
+"system_name":"Sanguine","body_side":"Right","pole":"Negative"},
+{"organ_name":"Liver","organ_hindi":"pजगर",
+"system_name":"Lymphatic","body_side":"Right","pole":"Negative"},
+{"organ_name":"Kidney","organ_hindi":"गुदाµ",
+"system_name":"Urinary","body_side":"Both","pole":"Both"},
+{"organ_name":"Skin","organ_hindi":"Æवचा",
+"system_name":"Lymphatic","body_side":"Left","pole":"Positive"},
+{"organ_name":"Bone","organ_hindi":"ही",
+"system_name":"Skeletal","body_side":"Both","pole":"Both"},
+{"organ_name":"Stomach","organ_hindi":"पेट",
+"system_name":"Digestive","body_side":"Both","pole":"Both"},
+{"organ_name":"Intestine","organ_hindi":"आंत",
+"system_name":"Digestive","body_side":"Both","pole":"Both"},
+]
+for a inanatomy_data:
+db.add(AnatomyMaster(**a))
+# ──EHMATERIA MEDICA──
+medica_data = [
+{"medicine_code":"S-1","group_name":"Scrofoloso",
+"target_system":"Lymphatic","target_organ":"GeneralLymph, Kidney",
+"polarity":"Negative","action":"Immunity, Lymph clean, Metabolism"},
+{"medicine_code":"S-2","group_name":"Scrofoloso",
+"target_system":"Lymphatic","target_organ":"Liver, Lymph nodes",
+"polarity":"Negative","action":"Liver detox, Bile, Glandular"},
+{"medicine_code":"S-5","group_name":"Scrofoloso",
+"target_system":"Lymphatic","target_organ":"Skin, Joints",
+"polarity":"Negative","action":"Skindisease, Jointsujan"},
+{"medicine_code":"S-6","group_name":"Scrofoloso",
+"target_system":"Urinary","target_organ":"Kidney, Urinary tract",
+
+--- PAGE 5 ---
+"polarity":"Negative","action":"Creatinine, UTI, Uric acid"},
+{"medicine_code":"A-1","group_name":"Angitico",
+"target_system":"Sanguine","target_organ":"Heart Left, Arteries",
+"polarity":"Negative","action":"High BP, Heartleft side"},
+{"medicine_code":"A-2","group_name":"Angitico",
+"target_system":"Sanguine","target_organ":"Heart Right, Veins",
+"polarity":"Negative","action":"Veins, Nas jakadan"},
+{"medicine_code":"A-3","group_name":"Angitico",
+"target_system":"Sanguine","target_organ":"Blood cells",
+"polarity":"Both","action":"RBC, WBC, Platelets, HB"},
+{"medicine_code":"P-1","group_name":"Pectorale",
+"target_system":"Respiratory","target_organ":"Lungs Upper",
+"polarity":"Negative","action":"Bronchi, Bronchitis"},
+{"medicine_code":"P-3","group_name":"Pectorale",
+"target_system":"Respiratory","target_organ":"Lungs Chronic",
+"polarity":"Negative","action":"Chronic lung, Asthma"},
+{"medicine_code":"C-4","group_name":"Canceroso",
+"target_system":"Skeletal","target_organ":"Bone, Hair, PTH",
+"polarity":"Both","action":"Osteoporosis, PTH, Calcium"},
+{"medicine_code":"C-5","group_name":"Canceroso",
+"target_system":"Lymphatic","target_organ":"Lymph nodes, Tumor",
+"polarity":"Negative","action":"Ganth, Tumor, Nodes"},
+{"medicine_code":"C-10","group_name":"Canceroso",
+"target_system":"Digestive","target_organ":"Pancreas",
+"polarity":"Both","action":"Diabetes, Insulin, Pancreas"},
+{"medicine_code":"F-1","group_name":"Febrifugo",
+"target_system":"Nervous","target_organ":"Brain, Nervous",
+"polarity":"Both","action":"Fever, Brain, Metabolism"},
+{"medicine_code":"VEN-1","group_name":"Venereo",
+"target_system":"Antiviral","target_organ":"Viral/Parasitic",
+"polarity":"Negative","action":"HCV, Viral, Parasites"},
+]
+for minmedica_data:
+db.add(EhMateriaMedica(**m))
+# ──ELECTRICITY MASTER──
+electricity_data= [
+{"fluid_code":"Y.E.","fluid_name":"YellowElectricity",
+"nature":"Negative","polarity":"POSITIVE",
+"indication":"Acute pain, fever, inflammation, high values",
+"keywords":"sujan,fever,bukhar,pain,dard,high,infection,uric"},
+{"fluid_code":"R.E.","fluid_name":"RedElectricity",
+"nature":"Positive","polarity":"NEGATIVE",
+"indication":"Weakness, chronic, lowvalues, atrophy",
+"keywords":"kamzori,weakness,low,atrophy,cold,anemia"},
+{"fluid_code":"B.E.","fluid_name":"Blue Electricity",
+"nature":"Negative","polarity":"POSITIVE",
+"indication":"Heart, BP, cardiac conditions",
+"keywords":"heart,bp,cardiac,hypertension,dhadkan"},
+{"fluid_code":"G.E.","fluid_name":"GreenElectricity",
+"nature":"Negative","polarity":"POSITIVE",
+"indication":"Joint pain, lymph, tumor, sujan",
+"keywords":"joint,jod,ganth,sujan,lymph,tumor,arthritis"},
+{"fluid_code":"W.E.","fluid_name":"White Electricity",
+"nature":"Neutral","polarity":"BOTH",
+"indication":"Brain, nervous system, mental",
+"keywords":"brain,nervous,mental,depression,memory,neend"},
+]
+for e in electricity_data:
+db.add(ElectricityMaster(**e))
+# ──POTENCY RULES ──
+potency_data =[
+{"condition_type":"Acute","polarity":"POSITIVE",
+"phase":"Acute","potency":"D6","frequency":"Har 3-4 ghante"},
+{"condition_type":"Sub-Acute","polarity":"POSITIVE",
+"phase":"Sub_Acute","potency":"D10","frequency":"3-4baar daily"},
+{"condition_type":"Chronic","polarity":"POSITIVE",
+"phase":"Chronic","potency":"D30","frequency":"2-3 baar daily"},
+{"condition_type":"Degenerative","polarity":"POSITIVE",
+"phase":"Degenerative","potency":"D10/D30","frequency":"2baar"},
+{"condition_type":"Negative-Acute","polarity":"NEGATIVE",
+"phase":"Acute","potency":"D6","frequency":"4 baar daily"},
+{"condition_type":"Negative-Chronic","polarity":"NEGATIVE",
+
+--- PAGE 6 ---
+"phase":"Chronic","potency":"D4","frequency":"3 baar daily"},
+]
+for pr inpotency_data:
+db.add(PotencyRules(**pr))
+db.commit()
+db.close()
+print("Database seed complete!")
+
+--- PAGE 7 ---
+SECTION 3: FACE ANALYSIS ENGINE (FREE)
+OpenCV + MediaPipe use karo —Koi Paid API NAHI Skin color se EH Temperament detect karta hai Lymphatic (Yellow skin) ya
+Sanguine(Red skin)
+File: backend/engines/cv_engine.py
+# pipinstallopencv-pythonmediapipe colorthief pillow
+import cv2
+import mediapipe as mp
+import numpy as np
+fromcolorthief importColorThief
+import io
+defanalyze_face(image_bytes: bytes) ->dict:
+"""
+FREE Face Analysis —No Paid API
+Returns EHTemperament fromskincolor
+"""
+nparr = np.frombuffer(image_bytes, np.uint8)
+img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+img_rgb =cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+# 1. Face Detection—MediaPipe FREE
+mp_fd=mp.solutions.face_detection
+with mp_fd.FaceDetection(min_detection_confidence=0.5) as fd:
+results
+=fd.process(img_rgb)
+face_found= bool(results.detections)
+# 2. Dominant SkinColor—ColorThief FREE
+ct =ColorThief(io.BytesIO(image_bytes))
+r, g, b =ct.get_color(quality=1)
+# 3. EH TemperamentRules
+findings =[]
+skin={}
+# Yellowskin→Lymphatic(Positive)
+if g> r andg >b andg >110:
+skin={"color":"Yellow","vitiation":"Lymphatic",
+"polarity":"POSITIVE","base_med":"S-Group"}
+findings.append({"sign":"Peeli twacha",
+"meaning":"Lymph vitiation—S-Group medicines"})
+# Red/Flushed →Sanguine (Positive)
+elif r >g *1.25and r >b:
+skin={"color":"Red","vitiation":"Sanguine",
+"polarity":"POSITIVE","base_med":"A-Group"}
+findings.append({"sign":"Laal twacha",
+"meaning":"Sanguine vitiation —A-Group medicines"})
+# Pale/White →Anemia (Negative)
+elif r >190and g> 175 and b>165:
+skin={"color":"Pale","vitiation":"Anemic",
+"polarity":"NEGATIVE","base_med":"A-3+ L-1"}
+findings.append({"sign":"Peeli/Safedtwacha",
+"meaning":"Anemia —Khoonki kami"})
+# Dark→Kidney issue
+elif r <130 andg <120and b<120:
+skin={"color":"Dark","vitiation":"Kidney",
+"polarity":"NEGATIVE","base_med":"S-6 + C-6"}
+findings.append({"sign":"Kaali twacha",
+"meaning":"Kidney stress sanket"})
+# Mixed
+
+--- PAGE 8 ---
+else:
+skin={"color":"Mixed","vitiation":"Mixed",
+"polarity":"MIXED","base_med":"S-Group"}
+return{
+"face_detected": face_found,
+"temperament": skin.get("vitiation","Unknown"),
+"skin_color":
+skin.get("color","Unknown"),
+"polarity_hint": skin.get("polarity","MIXED"),
+"base_medicine": skin.get("base_med","S-Group"),
+"findings":
+findings,
+"total_signs": len(findings),
+"confidence":
+75ifface_found else 40
+}
+
+--- PAGE 9 ---
+SECTION 4: MEDICAL OCR ENGINE (FREE)
+Tesseract OCR —PDF aur Image se text nikalo PyMuPDF —PDF pages ko process karo SciSpaCy —Medical terms identify karo
+File: backend/engines/ocr_engine.py
+# pipinstallpytesseract pymupdfscispacy
+# pipinstallhttps://s3-us-west-2.amazonaws.com/ai2-s3-scispacy/releases/v0.5.3/en_core_sci_sm-0.5.3.tar.gz
+import pytesseract
+import fitz
+fromPIL importImage
+import spacy, io, re
+nlp= spacy.load("en_core_sci_sm")
+MEDICAL_MAP ={
+"hepatomegaly": {"organ":"Liver","polarity":"POSITIVE"},
+"hepatitis": {"organ":"Liver","polarity":"POSITIVE"},
+"bronchitis": {"organ":"Lungs","polarity":"POSITIVE"},
+"nephritis":
+{"organ":"Kidney","polarity":"POSITIVE"},
+"diabetes":
+{"organ":"Pancreas","polarity":"POSITIVE"},
+"hypertension": {"organ":"Heart_Left","polarity":"POSITIVE"},
+"osteoporosis": {"organ":"Bone","polarity":"NEGATIVE"},
+"anemia":
+{"organ":"Blood","polarity":"NEGATIVE"},
+"arthritis":
+{"organ":"Joints","polarity":"POSITIVE"},
+"calculi":
+{"organ":"Kidney","polarity":"POSITIVE"},
+"atrophy":
+{"organ":"General","polarity":"NEGATIVE"},
+"inflammation": {"organ":"General","polarity":"POSITIVE"},
+}
+BLOOD_RANGES ={
+"hemoglobin": (12.0, 17.0), "wbc": (4000, 11000),
+"sugar":
+(70, 100),
+"creatinine": (0.6, 1.2),
+"uric_acid": (3.5, 7.0), "potassium": (3.5, 5.0),
+"pth":
+(15, 65),
+"hba1c": (4.0, 5.6),
+"sgpt":
+(7, 56),
+"cholesterol": (0, 200),
+}
+defextract_from_report(file_bytes: bytes,
+file_type: str) ->dict:
+text = ""
+if file_type == "pdf":
+doc =fitz.open(stream=file_bytes, filetype="pdf")
+for page indoc:
+text+= page.get_text()
+else:
+img =Image.open(io.BytesIO(file_bytes))
+text= pytesseract.image_to_string(
+img, lang="hin+eng",
+config="--psm6 --oem3")
+text_low= text.lower()
+result= {
+"pathologies": [], "organs_affected": [],
+"report_values": {}, "raw_text": text[:300]
+}
+# SciSpaCy medical termdetection
+for term, info inMEDICAL_MAP.items():
+if termintext_low:
+result["pathologies"].append({
+"term": term, **info})
+if info["organ"]not inresult["organs_affected"]:
+result["organs_affected"].append(info["organ"])
+
+--- PAGE 10 ---
+# Bloodvalue extraction
+for test, (lo, hi) inBLOOD_RANGES.items():
+pat =rf"{test.replace("_"," ")}[:\s]+([\d\.]+)"
+m=re.search(pat, text_low)
+if m:
+val =float(m.group(1))
+status = ("HIGH" ifval >hielse
+"LOW" ifval <lo else "NORMAL")
+pol = ("POSITIVE" if status =="HIGH" else
+"NEGATIVE" if status =="LOW" else "NORMAL")
+result["report_values"][test]= {
+"value": val, "status": status,
+"polarity": pol, "normal": f"{lo}-{hi}"}
+returnresult
+
+--- PAGE 11 ---
+SECTION 5: DYNAMIC RULE ENGINE
+Yeh system ka BRAIN hai. Face + OCR data leke Database query karta hai. Formula DYNAMICALLY build karta hai —No
+hardcoding!
+File: backend/engines/rule_engine.py
+fromsqlalchemy.ormimport Session
+frommodels import (AnatomyMaster, EhMateriaMedica,
+ElectricityMaster, PotencyRules)
+class DynamicRuleEngine:
+def__init__(self, db: Session):
+self.db=db
+defbuild_formula(self, data: dict) ->dict:
+# ──STEP1: Collect Inputs ──
+temperament =data.get("temperament", "Lymphatic")
+symptoms = data.get("symptoms", [])
+reports
+=data.get("report_values", {})
+organs
+= data.get("organs_affected", [])
+age
+=data.get("age", 30)
+bp_sys
+= data.get("bp_systolic", 120)
+duration = data.get("duration_days", 0)
+# ──STEP2: Determine Polarity ──
+pos, neg =0, 0
+POS_WORDS =["sujan","fever","bukhar","pain","dard",
+"swelling","high","infection","uric","hyper"]
+NEG_WORDS =["kamzori","weakness","thakan",
+"low","atrophy","pale","anemia"]
+for syminsymptoms:
+name =(sym.get("name","")).lower()
+pos += sum(2 for winPOS_WORDS if winname)
+neg +=sum(2for w inNEG_WORDSifw inname)
+if bp_sys >140: pos += 3
+if bp_sys <90: neg+= 3
+for test, d inreports.items():
+if d.get("status")== "HIGH": pos += 3
+if d.get("status")== "LOW": neg+=3
+polarity =("POSITIVE" ifpos > negelse
+"NEGATIVE" if neg >pos else "MIXED")
+# ──STEP3: Determine Phase ──
+phase =("Acute" if duration<=14 else
+"Sub_Acute" ifduration<=60else
+"Chronic" if duration<=730else
+"Degenerative")
+# ──STEP4: GetPotency fromDB ──
+pr =(self.db.query(PotencyRules)
+.filter(PotencyRules.polarity==polarity,
+PotencyRules.phase ==phase)
+.first())
+potency= pr.potencyif pr else "D10"
+# ──STEP5: BuildMedicine Pool──
+pool ={}
+# Base: Fromtemperament
+grp ="Scrofoloso" iftemperament=="Lymphatic" else "Angitico"
+
+--- PAGE 12 ---
+for min(self.db.query(EhMateriaMedica)
+.filter(EhMateriaMedica.group_name.like(f"{grp}%"))
+.limit(2).all()):
+pool[m.medicine_code] = pool.get(m.medicine_code,0) +3
+# Organ medicines fromOCR
+for organinorgans:
+for min(self.db.query(EhMateriaMedica)
+.filter(EhMateriaMedica.target_organ.ilike(f"%{organ}%"))
+.limit(2).all()):
+pool[m.medicine_code]= pool.get(m.medicine_code,0) +4
+# Report-specific medicines
+RPT_MAP ={
+"creatinine": ["S-6","C-6"],
+"uric_acid": ["S-6","S-1","C-4"],
+"sugar":
+["S-2","C-10"],
+"hemoglobin": ["A-3","L-1"],
+"pth":
+["C-4","S-1"],
+"sgpt":
+["S-2","C-8"],
+}
+for test, d inreports.items():
+if d.get("status")in["HIGH","LOW"]:
+for med inRPT_MAP.get(test, []):
+pool[med] =pool.get(med, 0) + 5
+# ──STEP6: BestElectricity ──
+sym_text= " ".join(
+s.get("name","").lower()for s insymptoms)
+best_elec =None
+for e in self.db.query(ElectricityMaster).all():
+kws =(e.keywords or "").split(",")
+if any(k.strip() insym_textfor kinkws):
+best_elec =e.fluid_code
+break
+if notbest_elec:
+best_elec ="Y.E." ifpolarity=="POSITIVE" else "R.E."
+# ──STEP7: Build 4Formulas ──
+sorted_meds = sorted(pool.items(),
+key=lambda x: x[1], reverse=True)
+codes = [m[0] for minsorted_meds]
+dose = self._get_dose(age)
+formula_a ={
+"medicines": codes[:3] +[best_elec],
+"potency": potency,
+"timing":
+"Bhojanse 30minPehle",
+"dose":
+f"{dose} boondengungune paani",
+"purpose": "Mukhya rog kaupchaar"
+}
+formula_b ={
+"medicines": (codes[3:6] or codes[:2]),
+"potency": potency,
+"timing":
+"Bhojanke 30minBaad",
+"dose":
+f"{dose} boonden",
+"purpose": "Sahayakupchaar"
+}
+formula_c ={
+"medicines": codes[:2] +[best_elec],
+"potency": ("D30" if phase=="Chronic" else potency),
+"timing":
+"RaatSone se Pehle",
+"dose":
+f"{dose} boonden",
+"purpose": "Raatbhar deephealing"
+}
+formula_d ={
+"medicines": codes[:2] +[best_elec],
+"potency": "D3(Baahri Only)",
+"timing":
+"Prabhavit jagah Compress - 20 min",
+"dose":
+"Baahri upyog- peenaNAHI",
+"purpose": "Seedha ang ko poshan"
+}
+
+--- PAGE 13 ---
+return {
+"overall_polarity": polarity,
+"phase":
+phase,
+"potency":
+potency,
+"electricity":
+best_elec,
+"formula_a":
+formula_a,
+"formula_b":
+formula_b,
+"formula_c":
+formula_c,
+"formula_d":
+formula_d,
+"confidence": min(60 +len(pool)*3, 95)
+}
+def_get_dose(self, age: int)-> int:
+if age <= 12: return5
+if age <= 18: return7
+if age <= 60: return10
+return 7
+
+--- PAGE 14 ---
+SECTION 6: OLLAMA LOCAL AI —1000-WORD SUMMARY
+Ollama + Llama-3 locally chalta hai. No Internet. No Paid API. 100% Free. Fail ho to Rule Engine fallback INSTANT deta hai.
+File: backend/engines/llm_engine.py
+# pipinstallrequests
+# ollama pullllama3.2:3b (faster)
+# ollama pullllama3:8b (better quality)
+import requests, json
+OLLAMA_URL ="http://localhost:11434/api/generate"
+MODEL
+= "llama3.2:3b"
+EH_SYSTEM= """
+Tumekexpert Electro Homoeopathy (EH) doctor ho.
+Count Cesare Mattei ke siddhantonpar kaamkarte ho.
+HAMESHA Hindi mein likhte ho.
+EH KE MOOL NIYAM:
+Sharir =Rakt (Blood) +Lymph
+POSITIVEROG: Sujan, fever, high values →NEGATIVEmedicine
+NEGATIVE ROG: Kamzori, lowvalues →POSITIVE medicine
+Hameshalikhte ho: E.H. AROGYA SUTRA CLINIC
+Patientka naamKABHINAHI likhte.
+"""
+# ──11-SECTION SYSTEMPROMPT ──
+SECTION_PROMPT = """
+Neeche digayipatient jankari se ek
+POORI1000+ SHABD ki Hindi summarylikho.
+IN 11 SECTIONS MEINLIKHO—EK BHI MISSMAT KARO:
+╔══════════════════════════════╗
+║SECTION 1: ROGIKI JANKARI ║Umra, BP, Lakshan, Face
+╠══════════════════════════════╣
+║SECTION 2: JAANCH PARINAAM ║Har test HIGH/LOW+EHarth
+╠══════════════════════════════╣
+║SECTION 3: ROG KIAWASTHA ║POSITIVE/NEGATIVE kyoon?
+╠══════════════════════════════╣
+║SECTION 4: PRABHAVIT ANG ║Kaun sa organaur kyoon
+╠══════════════════════════════╣
+║SECTION 5: HAR AUSHADHI
+║Har dawa ka kaam
+╠══════════════════════════════╣
+║SECTION 6: FORMULA KAAM
+║A, B, C, D kya karenge
+╠══════════════════════════════╣
+║SECTION 7: TABLET CHART
+║6 timing- Subah se Raat
+╠══════════════════════════════╣
+║SECTION 8: POTENCYKYOON ║D6/D10/D30 ka reason
+╠══════════════════════════════╣
+║SECTION 9: DAWABANANE
+║Step-by-stepdilution vidhi
+╠══════════════════════════════╣
+║SECTION 10: DIET +NIRDESH ║Kya khayen, kyanahi
+╠══════════════════════════════╣
+║SECTION 11: AGLI JAANCH
+║Followup plan
+╚══════════════════════════════╝
+"""
+defgenerate_summary(patient: dict, formula: dict) ->dict:
+"""
+Local Ollama se 1000-wordsummary.
+Failhoto instantfallback.
+"""
+fa =formula.get("formula_a", {})
+fb =formula.get("formula_b", {})
+
+--- PAGE 15 ---
+fa_m= " + ".join(fa.get("medicines", []))
+fb_m= " +".join(fb.get("medicines", []))
+user_prompt =f"""
+===PATIENT DATA ===
+Umra: {patient.get("age")}saal
+Ling: {patient.get("gender")}
+BP: {patient.get("bp_systolic")}/{patient.get("bp_diastolic")} mmHg
+Avadhi: {patient.get("duration_days",0)} din
+Temperament: {patient.get("temperament","Unknown")}
+===MUKHYALAKSHAN===
+{chr(10).join(f"- {s.get(chr(110)+chr(97)+chr(109)+chr(101),s)}" for s inpatient.get("symptoms",[]))}
+===JAANCHPARINAAM ===
+{json.dumps(patient.get("report_values",{}), ensure_ascii=False, indent=2)}
+===PATHOLOGY (OCR se mili)===
+{", ".join(p.get("term","") for pinpatient.get("pathologies",[]))}
+===EHFORMULA ===
+Polarity: {formula.get("overall_polarity")}
+Phase: {formula.get("phase")}
+Potency: {formula.get("potency")}
+Electricity: {formula.get("electricity")}
+FormulaA: {fa_m}
+FormulaB: {fb_m}
+{SECTION_PROMPT}
+"""
+try:
+resp= requests.post(OLLAMA_URL, json={
+"model": MODEL,
+"system": EH_SYSTEM,
+"prompt": user_prompt,
+"stream": False,
+"options": {
+"temperature": 0.15,
+"num_predict": 2500,
+"top_p": 0.9,
+"num_thread": 4
+}
+}, timeout=90)
+ai_text =resp.json().get("response", "")
+if len(ai_text)> 300:
+return {"summary": ai_text,
+"source": "ollama", "ready": True}
+except Exceptionas e:
+print(f"Ollama unavailable: {e}")
+# ──INSTANT FALLBACK ──
+return{"summary": _rule_summary(patient, formula),
+"source": "rule-engine", "ready": True}
+def_rule_summary(p: dict, f: dict)-> str:
+"""Instant rule-based summary—0 seconds"""
+pol = f.get("overall_polarity","POSITIVE")
+pot = f.get("potency","D10")
+fa =f.get("formula_a",{})
+fb =f.get("formula_b",{})
+fc =f.get("formula_c",{})
+fd =f.get("formula_d",{})
+fa_m= " + ".join(fa.get("medicines",[]))
+fb_m= " +".join(fb.get("medicines",[]))
+
+--- PAGE 16 ---
+fc_m= " + ".join(fc.get("medicines",[]))
+fd_m= " +".join(fd.get("medicines",[]))
+age =p.get("age",30)
+bp_s = p.get("bp_systolic",120)
+bp_d= p.get("bp_diastolic",80)
+syms = ", ".join(
+s.get("name",str(s)) for s inp.get("symptoms",[]))
+phase =f.get("phase","Acute")
+phase_hi ={"Acute":"Tivra","Sub_Acute":"Upa-Tivra",
+"Chronic":"Purani","Degenerative":"Apkshayee"}.get(phase,phase)
+pol_hi =("POSITIVE (Dhanaatmak—Badhne wali awastha)"
+if pol=="POSITIVE" else
+"NEGATIVE (Rinnatmak—Ghatne waliawastha)")
+lines =[]
+A= lines.append
+A("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+A("
+nचlकÆसासार(CHIKITSA SAAR)")
+A("
+E.H. AROGYA SUTRA CLINIC")
+A("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+A("")
+A("╔══════════════════════════════════════╗")
+A("║SECTION 1: ROGI KI JANKARI
+║")
+A("╚══════════════════════════════════════╝")
+A(f" Umra : {age} Saal")
+A(f" BP
+: {bp_s}/{bp_d} mmHg")
+A(f" Lakshan: {syms}")
+A(f" Avadhi : {phase_hi}")
+A("")
+A("╔══════════════════════════════════════╗")
+A("║SECTION 3: ROG KI AWASTHA
+║")
+A("╚══════════════════════════════════════╝")
+A(f" RogPrakriti: {pol_hi}")
+A("")
+if pol == "POSITIVE":
+A(" POSITIVE rogmein:")
+A("
+✓Koi cheez badh rahi hai (sujan/fever/high values)")
+A(" UPCHAAR: NEGATIVE medicine + Higher Dilution")
+A(f" Potency: {pot} (Negative)")
+A("")
+A(f" ⚠D4 KABHI NADEN—Rog aur badh jaayega!")
+else:
+A(" NEGATIVE rog mein:")
+A("
+✓Koi cheez ghat rahi hai (kamzori/lowvalues)")
+A(" UPCHAAR: POSITIVE medicine +Lower Dilution")
+A(f" Potency: {pot} (Positive)")
+A("")
+A(f" ⚠D30KABHINADEN—Aur kamzori hojaayegi!")
+A("")
+A("╔══════════════════════════════════════╗")
+A("║SECTION 6: FORMULA AURKAAM
+║")
+A("╚══════════════════════════════════════╝")
+# MISHRAN A
+A(" ─────────────────────────────────────")
+A(f" mमणA—{fa.get(chr(116)+chr(105)+chr(109)+chr(105)+chr(110)+chr(103),'Bhojanse Pehle')}")
+A(" ─────────────────────────────────────")
+A(f" Dawayein : {fa_m}")
+A(f" Potency : {fa.get(chr(112)+chr(111)+chr(116)+chr(101)+chr(110)+chr(99)+chr(121),pot)}")
+A(f" Dose
+: {fa.get(chr(100)+chr(111)+chr(115)+chr(101),'10')} boondengungune paani")
+A("")
+A(" Banane kiVidhi(1:9 anupaat):")
+meds_a =fa.get("medicines", [])
+A("
+1. 30mlsaafkaanch ki shishi lein")
+for i, minenumerate(meds_a):
+A(f"
+{i+2}. {m}ki 5 boondendaalen")
+n= len(meds_a)
+
+--- PAGE 17 ---
+A(f"
+{n+2}. Baaki hissa Distilled Water se bharein")
+A(f"
+{n+3}. 100baar mazboot strokes dein")
+A(f"
+{n+4}. Mishran Ataiyar hai!")
+A("")
+# MISHRAN B
+A(" ─────────────────────────────────────")
+A(f" mमणB—{fb.get(chr(116)+chr(105)+chr(109)+chr(105)+chr(110)+chr(103),'Bhojan ke Baad')}")
+A(" ─────────────────────────────────────")
+A(f" Dawayein : {fb_m}")
+A(f" Potency : {pot}")
+A(f" Dose
+: {fb.get(chr(100)+chr(111)+chr(115)+chr(101),'10')} boonden")
+A("")
+meds_b= fb.get("medicines", [])
+A(" Banane kiVidhi:")
+A("
+1. 30mlshishi lein")
+for i, minenumerate(meds_b):
+A(f"
+{i+2}. {m}ki 5 boonden")
+n= len(meds_b)
+A(f"
+{n+2}. D.W. bharein+ 100strokes")
+A(f"
+{n+3}. Mishran Btaiyar!")
+A("")
+A("╔══════════════════════════════════════╗")
+A("║SECTION 7: TABLET CHART
+║")
+A("╚══════════════════════════════════════╝")
+A("")
+fa_s ="+".join(meds_a[:3])if meds_a else "Formula-A"
+fb_s = "+".join(meds_b[:3])ifmeds_belse "Formula-B"
+A(" Samay
+| Mishran
+| Potency | Laabh")
+A(" ─────────────────────────────────────────────────────")
+A(f" Subah (Khali Pet) | {fa_s[:12].ljust(12)}| {pot.ljust(7)} | Metabolism")
+A(f" Nashte ke Baad
+| {fb_s[:12].ljust(12)}| {pot.ljust(7)} | Sujankam")
+A(f" Dopahar (Bhojan se) | {fa_s[:12].ljust(12)}| {pot.ljust(7)} | Toxincontrol")
+A(f" Dopahar (Bhojan ke) | {fb_s[:12].ljust(12)}| {pot.ljust(7)} | Healing")
+A(f" Raat(Bhojanse)
+| {fa_s[:12].ljust(12)} | {pot.ljust(7)}| Nikalna")
+A(f" Raat(Bhojanke)
+| {fc_m[:12].ljust(12)} | D30.ljust(7) | Deepheal")
+A("")
+A("╔══════════════════════════════════════╗")
+A("║SECTION 8: POTENCY KA CHUNAAV
+║")
+A("╚══════════════════════════════════════╝")
+A(f" ChuningayiPotency: {pot}")
+A(f" Avasta: {phase_hi}")
+A("")
+if pol == "POSITIVE":
+A(f" D6 = 6 baar 1:9 meingholigayidawa")
+A(f" D10= 10baar 1:9 meingholi gayi dawa")
+A(f" D30= 30 baar1:9 meingholigayidawa")
+A(f" Jitni zyada dilution= Utni zyada Negative")
+A("")
+A("╔══════════════════════════════════════╗")
+A("║SECTION 9: DAWABANANE KIVIDHI
+║")
+A("╚══════════════════════════════════════╝")
+A(" 1:9 anupaat (Decimal Scale):")
+A(" D4: Crude(1) +D.W.(9)= D4→100 strokes")
+A(" D5: D4(1) +D.W.(9) =D5 →100 strokes")
+A(" D6: D5(1)+ D.W.(9) =D6 →100 strokes ✅")
+A(" D10: D6 se 4baar auryahi process ✅")
+A(" D30: D10se 20 baaraur yahi process ✅")
+A("")
+A(" ✅Sirf Distilled Water use karein")
+A(" ✅Saaf kaanch ki shishi use karein")
+A(" ✅100 strokes zaroor dein")
+A(" ❌Nalka paani kabhiNAHI")
+A("")
+A("╔══════════════════════════════════════╗")
+A("║SECTION 10: DIET + NIRDESH
+║")
+A("╚══════════════════════════════════════╝")
+if pol == "POSITIVE":
+
+--- PAGE 18 ---
+A(" ✅ZAROORKHAYEN:")
+A("
+• Gunguna paani 8-10 glass")
+A("
+• Harisabziyan: palak, lauki, tori")
+A("
+• Daliya, khichdi")
+A("")
+A(" ❌NA KHAYEN:")
+A("
+• Mirch, maida, tala khana")
+A("
+• Cold drinks, ice cream")
+A("
+• Sharaab, tambaku")
+else:
+A(" ✅ZAROORKHAYEN:")
+A("
+• Garmdoodh, ghee thoda")
+A("
+• Dryfruits, khajur")
+A("
+• Dalchawalroti")
+A("")
+A(" ❌NA KHAYEN:")
+A("
+• Thanda paani, ice cream")
+A("
+• Baasi khana")
+A("")
+A("╔══════════════════════════════════════╗")
+A("║SECTION 11: AGLIJAANCH
+║")
+A("╚══════════════════════════════════════╝")
+follow ={"Acute":"7 din","Sub_Acute":"15din",
+"Chronic":"30din","Degenerative":"15din"}.get(phase,"15 din")
+A(f" • {follow} meinwapas aayen")
+A(" • Koinayi takleefhoto turant samparkkarein")
+A("")
+A(f" Vishwas Score: {f.get(chr(99)+chr(111)+chr(110)+chr(102)+chr(105)+chr(100)+chr(101)+chr(110)+chr(99)+chr(101),80)}%")
+A("")
+A("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+A("🌿E.H. AROGYA SUTRACLINIC")
+A("
+Shuddh EHmedicines ke liye samparkkaren.")
+A("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+return"\n".join(lines)
+
+--- PAGE 19 ---
+SECTION 7: FASTAPI ROUTES
+File: backend/routes/analyze.py
+fromfastapi importAPIRouter, File, UploadFile, Form, Depends
+fromsqlalchemy.ormimport Session
+fromdatabase import get_db
+fromengines.cv_engine
+import analyze_face
+fromengines.ocr_engine importextract_from_report
+fromengines.rule_engine import DynamicRuleEngine
+fromengines.llm_engine importgenerate_summary
+import json
+router =APIRouter()
+@router.post("/analyze/complete")
+asyncdef analyze_complete(
+age:
+int =Form(...),
+gender:
+str =Form(...),
+weight:
+float = Form(...),
+bp_systolic: int =Form(...),
+bp_diastolic: int =Form(...),
+duration_days:int =Form(0),
+symptoms:
+str =Form("[]"),
+face_image: UploadFile = File(None),
+report_file: UploadFile = File(None),
+db: Session=Depends(get_db)
+):
+patient ={
+"age": age, "gender": gender, "weight": weight,
+"bp_systolic": bp_systolic, "bp_diastolic": bp_diastolic,
+"duration_days": duration_days,
+"symptoms": json.loads(symptoms),
+}
+# Step1: Face Analysis
+if face_image:
+face_bytes = await face_image.read()
+face_result =analyze_face(face_bytes)
+patient.update(face_result)
+# Step2: Medical ReportOCR
+if report_file:
+report_bytes =awaitreport_file.read()
+ftype = "pdf" if report_file.filename.endswith(".pdf")else "image"
+ocr_result =extract_from_report(report_bytes, ftype)
+patient.update(ocr_result)
+# Step3: Dynamic Rule Engine
+engine =DynamicRuleEngine(db)
+formula =engine.build_formula(patient)
+# Step4: Local AI Summary(Ollama / Fallback)
+result =generate_summary(patient, formula)
+return{
+"success":
+True,
+"patient_data": patient,
+"formula":
+formula,
+"summary":
+result["summary"],
+"summary_source": result["source"],
+"confidence":
+formula.get("confidence")
+}
+@router.get("/health")
+asyncdef health():
+import requests
+
+--- PAGE 20 ---
+try:
+r =requests.get("http://localhost:11434/api/tags",timeout=2)
+ollama_status ="running"
+except:
+ollama_status ="offline"
+return{"status":"ok", "ollama": ollama_status}
+File: backend/main.py
+fromfastapi importFastAPI
+fromfastapi.middleware.cors import CORSMiddleware
+fromdatabase import engine
+frommodels import Base
+fromroutes.analyze import router as analyze_router
+import uvicorn
+Base.metadata.create_all(bind=engine)
+app =FastAPI(title="EHArogya SutraAI",version="1.0")
+app.add_middleware(CORSMiddleware,
+allow_origins=["http://localhost:5173","http://localhost:3000"],
+allow_methods=["*"], allow_headers=["*"],
+allow_credentials=True)
+app.include_router(analyze_router, prefix="/api")
+if __name__== "__main__":
+uvicorn.run("main:app", host="0.0.0.0",
+port=8000, reload=True)
+
+--- PAGE 21 ---
+SECTION 8: REACT FRONTEND —KEY FILES
+File: frontend/src/services/api.js
+import axios from"axios";
+constapi= axios.create({
+baseURL: "http://localhost:8000",
+timeout: 120000,
+});
+exportdefault api;
+File: frontend/src/pages/PatientAnalyze.jsx
+import {useState } from"react";
+import api from"../services/api";
+exportdefault functionPatientAnalyze() {
+const[form, setForm] =useState({
+age:"", gender:"Male", weight:"",
+bp_systolic:"", bp_diastolic:"",
+duration_days: 0, symptoms: []
+});
+const[face, setFace]
+= useState(null);
+const[report, setReport]= useState(null);
+const[result, setResult] =useState(null);
+const[loading,setLoading]=useState(false);
+const[symInput,setSymInput]=useState("");
+constaddSymptom= ()=> {
+if (!symInput.trim())return;
+setForm(p =>({...p,
+symptoms: [...p.symptoms,
+{name: symInput.trim(), severity:"moderate"}]
+}));
+setSymInput("");
+};
+constanalyze =async ()=> {
+setLoading(true);
+constfd =newFormData();
+Object.entries(form).forEach(([k,v])=>
+fd.append(k, typeof v==="object" ? JSON.stringify(v): v));
+if (face) fd.append("face_image", face);
+if (report)fd.append("report_file", report);
+try{
+constres =awaitapi.post("/api/analyze/complete", fd,
+{ headers:{"Content-Type":"multipart/form-data"} });
+setResult(res.data);
+} catch(e) {
+alert("Analysis failed: " +e.message);
+} finally {setLoading(false); }
+};
+constS = {
+page:{background:"#060d07", minHeight:"100vh",
+padding:24, fontFamily:"Courier New", color:"white" },
+input:{ background:"rgba(255,255,255,0.07)",
+border:"1px solid rgba(74,155,84,0.4)",
+borderRadius:6, padding:"8px 12px", color:"white",
+fontFamily:"Courier New", fontSize:13, width:"100%",
+boxSizing:"border-box", marginBottom:8 },
+btn:{background:"#2d6a35", color:"white",
+border:"none", borderRadius:8, padding:"12px 32px",
+fontFamily:"Courier New", fontSize:14,
+cursor:"pointer", width:"100%", marginTop:8},
+};
+
+--- PAGE 22 ---
+return(
+<div style={S.page}>
+<h2style={{color:"#c9963a", marginBottom:20}}>
+⚕EHPatient Analysis</h2>
+{/* Basic Info*/}
+<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+<inputstyle={S.input} placeholder="Age (Umra)"
+value={form.age} onChange={e=>setForm({...form,age:e.target.value})}/>
+<selectstyle={S.input}value={form.gender}
+onChange={e=>setForm({...form,gender:e.target.value})}>
+<option>Male</option><option>Female</option>
+</select>
+<inputstyle={S.input} placeholder="Weight (kg)"
+value={form.weight} onChange={e=>setForm({...form,weight:e.target.value})}/>
+<inputstyle={S.input} placeholder="BPSystolic (e.g. 140)"
+value={form.bp_systolic}
+onChange={e=>setForm({...form,bp_systolic:e.target.value})}/>
+<inputstyle={S.input} placeholder="BPDiastolic (e.g. 90)"
+value={form.bp_diastolic}
+onChange={e=>setForm({...form,bp_diastolic:e.target.value})}/>
+<inputstyle={S.input} placeholder="Duration(days)"
+type="number"
+onChange={e=>setForm({...form,duration_days:+e.target.value})}/>
+</div>
+{/* Symptoms */}
+<div style={{display:"flex",gap:8,marginTop:8}}>
+<inputstyle={{...S.input,marginBottom:0,flex:1}}
+placeholder="Lakshan likhein(e.g. Joddard)"
+value={symInput}
+onChange={e=>setSymInput(e.target.value)}
+onKeyDown={e=>e.key==="Enter"&&addSymptom()}/>
+<buttonstyle={{...S.btn,width:"auto",padding:"8px 16px"}}
+onClick={addSymptom}>+Add</button>
+</div>
+<div style={{marginTop:8}}>
+{form.symptoms.map((s,i)=>(
+<spankey={i}style={{background:"rgba(74,155,84,0.2)",
+border:"1px solid#4a9b54", borderRadius:4,
+padding:"2px 8px", marginRight:6, fontSize:12}}>
+{s.name}</span>
+))}
+</div>
+{/* File Uploads */}
+<div style={{marginTop:16}}>
+<label style={{color:"#6abf72",fontSize:13}}>
+📷Chehre ki Photo (Optional):</label>
+<inputtype="file" accept="image/*" style={S.input}
+onChange={e=>setFace(e.target.files[0])}/>
+<label style={{color:"#6abf72",fontSize:13}}>
+📄Medical ReportPDF/Image (Optional):</label>
+<inputtype="file" accept=".pdf,image/*" style={S.input}
+onChange={e=>setReport(e.target.files[0])}/>
+</div>
+<buttonstyle={S.btn} onClick={analyze} disabled={loading}>
+{loading? "⏳AI Analysis horahihai..." : "⚡ANALYZEKAREIN"}
+</button>
+{/* Results */}
+{result&&(
+<div style={{marginTop:24}}>
+<div style={{background:"rgba(201,150,58,0.1)",
+border:"1px solidrgba(201,150,58,0.4)",
+borderRadius:8,padding:16,marginBottom:16}}>
+<div style={{color:"#c9963a",fontWeight:"bold",marginBottom:8}}>
+⚡Formula: {result.formula?.overall_polarity}</div>
+<div style={{fontSize:12}}>
+
+--- PAGE 23 ---
+A: {result.formula?.formula_a?.medicines?.join(" + ")}</div>
+<div style={{fontSize:12,color:"#5dade2"}}>
+B: {result.formula?.formula_b?.medicines?.join(" + ")}</div>
+<div style={{fontSize:11,color:"rgba(255,255,255,0.4)",marginTop:4}}>
+Source: {result.summary_source} | Confidence: {result.confidence}%
+</div>
+</div>
+<pre style={{whiteSpace:"pre-wrap",fontFamily:"Courier New",
+fontSize:12,lineHeight:1.8,
+color:"rgba(255,255,255,0.9)",
+background:"rgba(255,255,255,0.03)",
+border:"1px solidrgba(74,155,84,0.3)",
+borderRadius:8,padding:20,margin:0}}>
+{result.summary}
+</pre>
+<buttonstyle={{...S.btn,marginTop:16,width:"auto",padding:"10px 24px"}}
+onClick={()=>window.print()}>
+🖨Print/ PDF Save</button>
+</div>
+)}
+</div>
+);
+}
+
+--- PAGE 24 ---
+SECTION 9: STARTUP COMMANDS
+Step 1: Ollama Setup (Ek Baar)
+# Ollama install karein
+curl https://ollama.ai/install.sh | sh
+# Model download(4.7GB - ekbaar)
+ollama pullllama3:8b
+# Ya faster (2GB):
+ollama pullllama3.2:3b
+# Test:
+ollama runllama3.2:3b"EH kyahai?"
+# Backgroundmein chalate raho:
+ollama serve
+Step 2: Python Backend
+cd backend
+# Sab packages install karein
+pip install fastapi uvicornsqlalchemy psycopg2-binary
+pip install opencv-pythonmediapipe colorthiefpillow
+pip install pytesseract pymupdf requests
+pip install scispacy
+pip install https://s3-us-west-2.amazonaws.com/ai2-s3-scispacy/releases/v0.5.3/en_core_sci_sm-0.5.3.tar.gz
+# Database seedkarein(ek baar)
+pythonseeds.py
+# Backend start karein
+uvicornmain:app--reload--port 8000
+# APIdocs checkkarein:
+# http://localhost:8000/docs
+Step 3: React Frontend
+cd frontend
+npminstall
+npmrundev
+# Frontend: http://localhost:5173
+
+--- PAGE 25 ---
+SECTION 10: CURSOR KO DENE WALA FINAL PROMPT
+Yeh poora prompt Cursor mein paste karein. Sab filesek saathcreateho jaayengi. Summary 11sections mein ZAROOR aayegi.
+===CURSOR PROMPT: EHAROGYASUTRAAI EXPERT SYSTEM ===
+Buildcomplete EHArogya Sutra AI Expert System.
+100%Free. No PaidAPI. All Offline.
+===FOLDER STRUCTURE ===
+eh_arogya_sutra/
+├──backend/
+│├──main.py
+│├──database.py
+│├──models.py
+│├──seeds.py
+│├──engines/
+││├──cv_engine.py # OpenCV face analysis
+││├──ocr_engine.py # Tesseract+ SciSpaCy
+││├──rule_engine.py # Dynamic formula builder
+││└──llm_engine.py #Ollama local summary
+│└──routes/
+│
+└──analyze.py
+#FastAPI routes
+└──frontend/
+└──src/
+├──services/api.js
+└──pages/PatientAnalyze.jsx
+===FILES CREATE KAREIN===
+Database: 4tables (anatomy, materia_medica,
+electricity_master, potency_rules)
+Seeddata: anatomy+ medicines + electricity+ potency
+cv_engine.py: OpenCV +MediaPipe face analysis
+ocr_engine.py: Tesseract +SciSpaCyOCR
+rule_engine.py: Dynamicformula fromDB
+llm_engine.py: Ollama +rule-basedfallback
+analyze.py: POST /api/analyze/complete
+React frontend: PatientAnalyze.jsx
+===SUMMARY RULES (MOST IMPORTANT) ===
+1. Summary INSTANT milni chahiye (0-2seconds)
+2. Ollama fail hoto Rule Engine fallbackdega
+3. SummarymeinYEH 11SECTIONS ZAROOR honge:
+SECTION 1: ROGI KI JANKARI
+SECTION 2: JAANCHPARINAAM (reports)
+SECTION 3: ROG KI AWASTHA(POSITIVE/NEGATIVEkyoon)
+SECTION 4: PRABHAVIT ANG (organs)
+SECTION 5: HARAUSHADHI KA VISTAR
+SECTION 6: FORMULA AURKAAM (A,B,C,D)
+SECTION 7: TABLET CHART (6 timings)
+SECTION 8: POTENCY KA CHUNAAV KYOON
+SECTION 9: DAWABANANE KI VIDHI (step-by-step)
+SECTION 10: VISHESHNIRDESH+ DIET
+SECTION 11: AGLI JAANCH
+4. Formula Amein STEP-BY-STEP dilutionvidhi ho:
+1. 30ml shishi lein
+2. [Dawa] ki5 boondendaalen
+3. D.W. bharein
+4. 100strokes dein
+5. TABLET CHART mein 6 timings hon:
+Subah, Nashta, Dopahar se pehle,
+Dopahar ke baad, Raat se pehle, Raatke baad
+6. EH POLARITYRULES:
+POSITIVE rog →NEGATIVE medicine (D6/D10/D30)
+
+--- PAGE 26 ---
+NEGATIVE rog→POSITIVE medicine (D4/D6)
+POSITIVE meinD4KABHI NAHI
+NEGATIVE meinD30 KABHI NAHI
+7. Summarymein HAMESHA:
+"E.H. AROGYA SUTRA CLINIC"
+Patient ka naamKABHI NAHI
+===TEST CASE ===
+Patient: Age 60, Female, 58kg
+BP: 150/95 mmHg
+Symptoms: Uric Acid, JodDard, Sujan
+Reports: uric_acid=8.5, creatinine=1.4
+Duration: 90 days
+Expected:
+- Polarity: POSITIVE
+- Potency: D30(Chronic)
+- Formula A: S-1+S-6+C-4+F-1ya similar
+- Formula B: S-5+A-2+C-5+G.E. ya similar
+- 11sections complete
+- Result0-2seconds mein
+Showme workingoutput.
+===END===
+Summary Sections Quick Reference
+#
+Section
+Content
+1
+ROGI KI JANKARI
+Age, BP, Lakshan, Face analysis
+2
+JAANCH PARINAAM
+Har test HIGH/LOW + EH arth
+3
+ROG KI AWASTHA
+POSITIVE/NEGATIVE kyoon —reasons
+4
+PRABHAVIT ANG
+Kaun sa organ+ kyoon + medicines
+5
+HAR AUSHADHI
+Har dawa ka kaam is rog mein
+6
+FORMULA KAAM
+A,B,C,D —kya kaam karenge
+7
+TABLET CHART
+6 timing chart Subah to Raat
+8
+POTENCY KYOON
+D6/D10/D30 chunne ka reason
+9
+DAWA BANANE
+Step-by-step dilution vidhi
+10
+DIET + NIRDESH
+Kya khayen, kya nahi + warnings
+11
+AGLI JAANCH
+Follow up plan + timeline
+E.H. AROGYA SUTRA —Complete AI Expert System

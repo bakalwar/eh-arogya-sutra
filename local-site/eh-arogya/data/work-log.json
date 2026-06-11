@@ -1,0 +1,587 @@
+{
+  "title": "E.H. Arogya Sutra — local work hub",
+  "updatedAt": "2026-06-08T20:51:22.021Z",
+  "autoLog": [
+    {
+      "at": "2026-06-07T09:49:20.993Z",
+      "summary": "Repo: 1 path(s) updated",
+      "paths": [
+        "backend/engines/medicine_api-1.py.BACKUP"
+      ]
+    },
+    {
+      "at": "2026-06-07T09:50:33.414Z",
+      "summary": "Repo: 9 path(s) updated",
+      "paths": [
+        "backend/db",
+        "backend/data",
+        "backend/constants",
+        "backend/services/pdfGenerator.js",
+        "frontend/src/api",
+        "frontend/src/security",
+        "frontend/src/styles",
+        "frontend/src/components"
+      ]
+    },
+    {
+      "at": "2026-06-07T09:52:08.984Z",
+      "summary": "Repo: 1 path(s) updated",
+      "paths": [
+        "frontend/src/pages/EHArogyaSutra.jsx"
+      ]
+    },
+    {
+      "at": "2026-06-07T09:53:33.200Z",
+      "summary": "Repo: 11 path(s) updated",
+      "paths": [
+        "frontend/src/pages/EHArogyaSutra.jsx",
+        "backend/migrations/add-eh-engine-results.js",
+        "backend/routes/health.js",
+        "backend/services/expertClinicalSummaryService.js",
+        "frontend/src/pages/DoctorDashboard.jsx",
+        "backend/server.js",
+        "backend/services/ehOllamaCompleteSummary.js",
+        "backend/services/ehSummary7SectionFallback.js"
+      ]
+    },
+    {
+      "at": "2026-06-07T09:59:42.313Z",
+      "summary": "Repo: 1 path(s) updated",
+      "paths": [
+        "backend/routes/searchEngine.js"
+      ]
+    },
+    {
+      "at": "2026-06-07T10:03:58.492Z",
+      "summary": "Repo: 1 path(s) updated",
+      "paths": [
+        "backend/services/localBookVectorRag.js"
+      ]
+    },
+    {
+      "at": "2026-06-07T10:05:34.073Z",
+      "summary": "Repo: 1 path(s) updated",
+      "paths": [
+        "backend/services/ehEngineService.js"
+      ]
+    },
+    {
+      "at": "2026-06-07T10:07:40.906Z",
+      "summary": "Repo: 5 path(s) updated",
+      "paths": [
+        "backend/book",
+        "backend/book/extracted",
+        "backend/book/extracted/incoming_batch",
+        "backend/book/extracted/incoming_batch/ingested",
+        "backend/data/batch_reports"
+      ]
+    },
+    {
+      "at": "2026-06-07T10:09:30.231Z",
+      "summary": "Repo: 13 path(s) updated",
+      "paths": [
+        "backend/scripts",
+        "frontend/src/assets",
+        "frontend/src/components/superadmin",
+        "frontend/src/components/website",
+        "frontend/src/data",
+        "frontend/src/hooks",
+        "frontend/src/languages",
+        "frontend/src/pages/admin"
+      ]
+    },
+    {
+      "at": "2026-06-07T10:19:21.153Z",
+      "summary": "Repo: 3 path(s) updated",
+      "paths": [
+        "backend/scripts/seed_all_medicines.py",
+        "backend/services",
+        "backend/migrations"
+      ]
+    },
+    {
+      "at": "2026-06-07T10:22:04.530Z",
+      "summary": "Repo: 1 path(s) updated",
+      "paths": [
+        "backend/engines/reasoning_engine.py"
+      ]
+    },
+    {
+      "at": "2026-06-07T10:26:18.931Z",
+      "summary": "Repo: 5 path(s) updated",
+      "paths": [
+        "backend/engines/safety_engine.py",
+        "backend/engines/polarity_engine.py",
+        "backend/engines/medicine_engine.py",
+        "backend/engines/formula_engine.py",
+        "backend/engines/diet_engine.py"
+      ]
+    },
+    {
+      "at": "2026-06-07T10:36:49.567Z",
+      "summary": "Repo: 2 path(s) updated",
+      "paths": [
+        "backend/data/dynamicEhRules.json",
+        "backend/data/dynamicEhRules.default.json"
+      ]
+    },
+    {
+      "at": "2026-06-07T10:38:14.906Z",
+      "summary": "Repo: 1 path(s) updated",
+      "paths": [
+        "backend/.env"
+      ]
+    },
+    {
+      "at": "2026-06-07T10:39:47.856Z",
+      "summary": "Repo: 1 path(s) updated",
+      "paths": [
+        "backend/engines/parcha_engine.py"
+      ]
+    },
+    {
+      "at": "2026-06-07T10:40:44.803Z",
+      "summary": "Repo: 45 path(s) updated",
+      "paths": [
+        "backend/.env.example",
+        "backend/book/extracted/incoming_batch/README.txt",
+        "backend/case_test.json",
+        "backend/case_sunita.json",
+        "backend/config",
+        "backend/data/anatomyData.js",
+        "backend/data/dynamicEhRules.candidate.json",
+        "backend/models"
+      ]
+    },
+    {
+      "at": "2026-06-07T10:42:24.836Z",
+      "summary": "Repo: 1 path(s) updated",
+      "paths": [
+        "backend/.env"
+      ]
+    },
+    {
+      "at": "2026-06-07T10:45:25.775Z",
+      "summary": "Repo: 1 path(s) updated",
+      "paths": [
+        "backend/services/ehSourceOfTruthClinical.js"
+      ]
+    },
+    {
+      "at": "2026-06-07T10:48:30.332Z",
+      "summary": "Repo: 11 path(s) updated",
+      "paths": [
+        "frontend/src/index.css",
+        "frontend/src/pages/SearchEngine.jsx",
+        "frontend/src/utils/caseFingerprint.js",
+        "frontend/src/services/faceAnalysis.js",
+        "frontend/src/styles/website.css",
+        "frontend/src/languages/en.json",
+        "frontend/src/languages/hi.json",
+        "frontend/src/styles/clinical-summary.css"
+      ]
+    },
+    {
+      "at": "2026-06-07T10:52:15.257Z",
+      "summary": "Repo: 2 path(s) updated",
+      "paths": [
+        "backend/data/medicine_knowledge_base.json",
+        "backend/data"
+      ]
+    },
+    {
+      "at": "2026-06-07T10:54:16.700Z",
+      "summary": "Repo: 1 path(s) updated",
+      "paths": [
+        "frontend/src/pages/EHArogyaSutra.jsx"
+      ]
+    },
+    {
+      "at": "2026-06-08T06:14:11.173Z",
+      "summary": "Repo: 1 path(s) updated",
+      "paths": [
+        "backend/data/medicine_knowledge_base.json"
+      ]
+    },
+    {
+      "at": "2026-06-08T07:25:15.855Z",
+      "summary": "Repo: 8 path(s) updated",
+      "paths": [
+        "backend/routes/searchEngine.js",
+        "backend/services/ehEngineService.js",
+        "backend/routes",
+        "backend/services",
+        "backend/routes/summaryGenerate.js",
+        "backend/services/ehOllamaCompleteSummary.js",
+        "backend/services/ehSourceOfTruthClinical.js",
+        "backend/services/ehSummary7SectionFallback.js"
+      ]
+    },
+    {
+      "at": "2026-06-08T07:26:32.053Z",
+      "summary": "Repo: 343 path(s) updated",
+      "paths": [
+        "backend/.env",
+        "backend/.env.example",
+        "backend/book",
+        "backend/book/extracted",
+        "backend/book/extracted/incoming_batch",
+        "backend/book/extracted/incoming_batch/ingested",
+        "backend/book/extracted/incoming_batch/README.txt",
+        "backend/book/extracted/incoming_batch/ingested/page_9009.txt"
+      ]
+    },
+    {
+      "at": "2026-06-08T07:29:37.162Z",
+      "summary": "Repo: 105 path(s) updated",
+      "paths": [
+        "frontend/src/utils",
+        "frontend/src/utils/smartSearchStorage.js",
+        "frontend/src/utils/patientDraft.js",
+        "backend/models",
+        "backend/models/postgres",
+        "backend/models/postgres/User.pg.js",
+        "backend/models/postgres/TranslationCache.pg.js",
+        "backend/models/postgres/Symptom.pg.js"
+      ]
+    },
+    {
+      "at": "2026-06-08T08:45:44.264Z",
+      "summary": "Repo: 8 path(s) updated",
+      "paths": [
+        "backend/routes/searchEngine.js",
+        "backend/routes/summaryGenerate.js",
+        "backend/services/ehEngineService.js",
+        "backend/services/ehOllamaCompleteSummary.js",
+        "backend/services/ehSourceOfTruthClinical.js",
+        "backend/services/ehSummary7SectionFallback.js",
+        "backend/routes",
+        "backend/services"
+      ]
+    },
+    {
+      "at": "2026-06-08T08:46:50.362Z",
+      "summary": "Repo: 5 path(s) updated",
+      "paths": [
+        "backend/book",
+        "backend/book/extracted",
+        "backend/book/extracted/incoming_batch",
+        "backend/book/extracted/incoming_batch/ingested",
+        "backend/book/extracted/incoming_batch/ingested/page_9009.txt"
+      ]
+    },
+    {
+      "at": "2026-06-08T09:35:15.676Z",
+      "summary": "Repo: 193 path(s) updated",
+      "paths": [
+        "backend/.env.example",
+        "backend/case_sunita.json",
+        "backend/book/extracted/incoming_batch/README.txt",
+        "backend/book/extracted/incoming_batch/ingested/page_9010.txt",
+        "backend/engines/medicine_api-1.py.BACKUP",
+        "backend/package-lock.json",
+        "backend/data/medicine_knowledge_base.json",
+        "backend/data/medicine_knowledge.json"
+      ]
+    },
+    {
+      "at": "2026-06-08T09:42:19.265Z",
+      "summary": "Repo: 1 path(s) updated",
+      "paths": [
+        "backend/migrations/add-eh-engine-results.js"
+      ]
+    },
+    {
+      "at": "2026-06-08T09:47:02.044Z",
+      "summary": "Repo: 13 path(s) updated",
+      "paths": [
+        "backend/services",
+        "backend/routes",
+        "frontend/src/pages/PatientAnalysisForm.jsx",
+        "backend/book",
+        "backend/book/extracted",
+        "backend/book/extracted/incoming_batch",
+        "backend/book/extracted/incoming_batch/ingested",
+        "backend/routes/summaryGenerate.js"
+      ]
+    },
+    {
+      "at": "2026-06-08T13:11:15.950Z",
+      "summary": "Repo: 1 path(s) updated",
+      "paths": [
+        "backend/data/medicine_knowledge_base.json"
+      ]
+    },
+    {
+      "at": "2026-06-08T13:15:11.843Z",
+      "summary": "Repo: 1 path(s) updated",
+      "paths": [
+        "frontend/src/pages/SearchResult.jsx"
+      ]
+    },
+    {
+      "at": "2026-06-08T14:13:52.565Z",
+      "summary": "Repo: 70 path(s) updated",
+      "paths": [
+        "frontend/src/App.jsx",
+        "frontend/src/index.css",
+        "frontend/src/i18n.js",
+        "frontend/src/components/SplashScreen.jsx",
+        "frontend/src/api/superAdminClient.js",
+        "frontend/src/components/FacePhotoAnalysis.jsx",
+        "frontend/src/components/AnatomyView.jsx",
+        "frontend/src/components/Layout.jsx"
+      ]
+    },
+    {
+      "at": "2026-06-08T14:15:21.528Z",
+      "summary": "Repo: 2 path(s) updated",
+      "paths": [
+        "frontend/src/pages/SearchResult.jsx",
+        "backend/server.js"
+      ]
+    },
+    {
+      "at": "2026-06-08T15:11:58.080Z",
+      "summary": "Repo: 10 path(s) updated",
+      "paths": [
+        "backend/services/ehOllamaCompleteSummary.js",
+        "backend/services",
+        "frontend/src/pages/PatientAnalysisForm.jsx",
+        "backend/services/ehEngineService.js",
+        "backend/services/ehSourceOfTruthClinical.js",
+        "backend/services/ehSummary7SectionFallback.js",
+        "backend/routes/summaryGenerate.js",
+        "backend/routes/searchEngine.js"
+      ]
+    },
+    {
+      "at": "2026-06-08T15:19:22.473Z",
+      "summary": "Repo: 71 path(s) updated",
+      "paths": [
+        "frontend/src/main.jsx",
+        "frontend/src/index.css",
+        "frontend/src/i18n.js",
+        "frontend/src/App.jsx",
+        "frontend/src/components/SplashScreen.jsx",
+        "frontend/src/api/client.js",
+        "frontend/src/components/PreviewNotice.jsx",
+        "frontend/src/components/FacePhotoAnalysis.jsx"
+      ]
+    },
+    {
+      "at": "2026-06-08T15:21:17.021Z",
+      "summary": "Repo: 66 path(s) updated",
+      "paths": [
+        "backend/uploads",
+        "backend/services/summaryStyleGuide.js",
+        "backend/services/summaryFormatHelpers.js",
+        "backend/services/summaryContextBuilder.js",
+        "backend/services/silentFactor.js",
+        "backend/services/prescriptionEngineData.js",
+        "backend/services/posologyMapper.js",
+        "backend/services/polarityEngine.js"
+      ]
+    },
+    {
+      "at": "2026-06-08T15:27:52.801Z",
+      "summary": "Repo: 86 path(s) updated",
+      "paths": [
+        "backend/.env.example",
+        "backend/book/extracted/incoming_batch/README.txt",
+        "backend/case_test.json",
+        "backend/case_sunita.json",
+        "backend/book/extracted/incoming_batch/ingested/page_9013.txt",
+        "backend/book/extracted/incoming_batch/ingested/page_9010.txt",
+        "backend/book/extracted/incoming_batch/ingested/page_9012.txt",
+        "backend/book/extracted/incoming_batch/ingested/page_9009.txt"
+      ]
+    },
+    {
+      "at": "2026-06-08T15:58:21.894Z",
+      "summary": "Repo: 1 path(s) updated",
+      "paths": [
+        "frontend/src/pages/SearchResult.jsx"
+      ]
+    },
+    {
+      "at": "2026-06-08T16:43:37.338Z",
+      "summary": "Repo: 1 path(s) updated",
+      "paths": [
+        "backend/node_modules"
+      ]
+    },
+    {
+      "at": "2026-06-08T17:00:51.344Z",
+      "summary": "Repo: 2 path(s) updated",
+      "paths": [
+        "frontend/src/pages/SearchResult.jsx",
+        "frontend/src/pages"
+      ]
+    },
+    {
+      "at": "2026-06-08T18:07:55.703Z",
+      "summary": "Repo: 12 path(s) updated",
+      "paths": [
+        "frontend/src/pages/SearchResult.jsx",
+        "frontend/src/pages",
+        "backend/services/ehOllamaCompleteSummary.js",
+        "backend/server.js",
+        "backend/services/ehEngineService.js",
+        "frontend/src/pages/PatientAnalysisForm.jsx",
+        "backend/services",
+        "backend/services/ehSourceOfTruthClinical.js"
+      ]
+    },
+    {
+      "at": "2026-06-08T18:14:53.724Z",
+      "summary": "Repo: 7 path(s) updated",
+      "paths": [
+        "frontend/src/languages/hi.json",
+        "frontend/src/languages/en.json",
+        "frontend/src/styles/website.css",
+        "frontend/src/styles/eh-arogya-mock.css",
+        "frontend/src/styles/clinical-summary.css",
+        "frontend/src/styles/clinic-profile.css",
+        "frontend/src/styles/super-admin.css"
+      ]
+    },
+    {
+      "at": "2026-06-08T19:34:47.105Z",
+      "summary": "Repo: 7 path(s) updated",
+      "paths": [
+        "frontend/src/languages/hi.json",
+        "frontend/src/languages/en.json",
+        "frontend/src/styles/website.css",
+        "frontend/src/styles/eh-arogya-mock.css",
+        "frontend/src/styles/clinical-summary.css",
+        "frontend/src/styles/clinic-profile.css",
+        "frontend/src/styles/super-admin.css"
+      ]
+    },
+    {
+      "at": "2026-06-08T19:48:12.123Z",
+      "summary": "Repo: 2 path(s) updated",
+      "paths": [
+        "frontend/src/pages/PatientAnalysisForm.jsx",
+        "frontend/src/pages/SearchResult.jsx"
+      ]
+    },
+    {
+      "at": "2026-06-08T20:12:20.977Z",
+      "summary": "Repo: 11 path(s) updated",
+      "paths": [
+        "frontend/src/components/ClinicalSummaryDisplay.jsx",
+        "backend/services/ehEngineService.js",
+        "frontend/src/components",
+        "backend/services",
+        "backend/services/ehOllamaCompleteSummary.js",
+        "backend/server.js",
+        "backend/routes/summaryGenerate.js",
+        "backend/services/ehSourceOfTruthClinical.js"
+      ]
+    },
+    {
+      "at": "2026-06-08T20:13:25.700Z",
+      "summary": "Repo: 55 path(s) updated",
+      "paths": [
+        "backend/.env.example",
+        "backend/middleware",
+        "backend/db",
+        "backend/case_test.json",
+        "backend/package.json",
+        "backend/case_sunita.json",
+        "backend/package-lock.json",
+        "backend/book"
+      ]
+    },
+    {
+      "at": "2026-06-08T20:35:33.237Z",
+      "summary": "Repo: 192 path(s) updated",
+      "paths": [
+        "backend/utils/summarySection4.js",
+        "backend/utils/summaryJsonCleaner.js",
+        "backend/utils/summaryComplaintLock.js",
+        "backend/utils/ruleExtractGate.js",
+        "backend/utils/ollamaUrl.js",
+        "backend/utils/mobile.js",
+        "backend/utils/localPrivacyGuard.js",
+        "backend/utils/ehOrganDetect.js"
+      ]
+    },
+    {
+      "at": "2026-06-08T20:48:32.346Z",
+      "summary": "Repo: 2 path(s) updated",
+      "paths": [
+        "frontend/src/pages/SearchResult.jsx",
+        "frontend/src/pages/PatientAnalysisForm.jsx"
+      ]
+    },
+    {
+      "at": "2026-06-08T20:51:22.021Z",
+      "summary": "Repo: 1 path(s) updated",
+      "paths": [
+        "frontend/src/hooks/useApiHealth.js"
+      ]
+    }
+  ],
+  "links": [
+    {
+      "label": "★ EH Smart Search (naya app)",
+      "url": "http://localhost:5173/go-search.html",
+      "note": "npm run dev — purana doctor-analysis.html mat kholein"
+    },
+    {
+      "label": "React app (Welcome → Login)",
+      "url": "http://localhost:5173/?start=1",
+      "note": "npm run dev"
+    },
+    {
+      "label": "Project status HTML",
+      "url": "http://localhost:5000/eh-arogya-docs/project-dekho.html",
+      "note": "same server — static mirror below"
+    },
+    {
+      "label": "API health",
+      "url": "http://localhost:5000/health",
+      "note": "backend running"
+    }
+  ],
+  "entries": [
+    {
+      "date": "2026-05-12",
+      "title": "Docs: AGENTS hub (SSE, agent:now, autoLog)",
+      "detail": "AGENTS.md live-hub section expanded; server startup prints SSE URL; hub UI typo Haali; .gitignore agent-now.txt."
+    },
+    {
+      "date": "2026-05-12",
+      "title": "Real-time hub (SSE + repo watcher)",
+      "detail": "/eh-arogya/api/log + /eh-arogya/api/stream; frontend/src + backend par save → live list; autoLog ~45s; agent:now / agent-now.txt = “abhi” line."
+    },
+    {
+      "date": "2026-05-12",
+      "title": "Named local URLs (same server)",
+      "detail": "http://localhost:5000/eh-arogya/ — hub; http://localhost:5000/eh-arogya-docs/ — docs. DEKHO-HUB.bat; npm run open:eh-hub."
+    },
+    {
+      "date": "2026-05-12",
+      "title": "Local hub /eh-arogya",
+      "detail": "Static hub UI + work-log; ab SSE se bina refresh update."
+    },
+    {
+      "date": "2026-05-12",
+      "title": "UI mock → React",
+      "detail": "eh-arogya-mock.css, Layout, DoctorDashboard, Welcome splash."
+    },
+    {
+      "date": "2026-05-12",
+      "title": "Routing",
+      "detail": "/welcome → /login → /dashboard; logout → /welcome; i18n keys."
+    },
+    {
+      "date": "2026-05-11",
+      "title": "Docs & preview",
+      "detail": "project-dekho.html, DEKHO.bat, project-preview.html links, AGENTS hub note."
+    }
+  ]
+}

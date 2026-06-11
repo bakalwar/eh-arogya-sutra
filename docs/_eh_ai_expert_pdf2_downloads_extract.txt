@@ -1,0 +1,1140 @@
+PAGES=19
+--- PAGE 1 ---
+⚕E.H. AROGYA SUTRA
+CDSS —COMPLETE CURSOR PROMPT
+100% Siddhant Anusar | Sundar Hindi | Count Cesare Mattei
+
+--- PAGE 2 ---
+ANATOMY + PATHOLOGY DATABASE
+Yeh data Book se liya gaya hai. Har organ ka EH Group mapping hai. Pathology se Polarity detect hogi. Summary mein anatomy
+explanation aayegi.
+backend/data/ehAnatomyPathology.js
+// ═══════════════════════════════════════════════════
+// E.H. AROGYA SUTRA—ANATOMY +PATHOLOGY DATABASE
+// Bookseliya gaya —Count CesareMattei Principles
+// ═══════════════════════════════════════════════════
+// ──ORGAN →EH GROUP MAPPING──
+const ORGAN_EH_MAP= {
+// LYMPHATIC SYSTEM
+'lymphatic_system': {
+hindi: 'लसीकातं(Lymphatic System)',
+eh_group: ['S-Group (Scrofoloso)','L-Group (Limfatico)'],
+temperament: 'Lymphatic',
+vitiation: 'रस(Lymph) lवक◌ृlत',
+polarity: 'POSITIVE',
+anatomy: 'लसीकानोड्स, Ëल◌ीहा(Spleen), थाइमस, लसीकावाहि◌काएं',
+pathology: 'ंnथय× मËस◌ूजन, गांठ, इÏयुlनट कमजोरी, वि◌षाøजमाव',
+medicines:['S-1','S-2','S-5','S-10','L-1'],
+electricity: 'G.E. (हरीlव#◌ुत)',
+location:'भाlवतलसीका◌ंnथय× पर'
+},
+// CARDIOVASCULAR
+'cardiovascular':{
+hindi: 'दयएवंरøवाlहक◌ातं(Cardiovascular)',
+eh_group: ['A-Group(Angioitico)'],
+temperament: 'Sanguine',
+vitiation: 'रø(Blood) वि◌कृlत',
+polarity: 'POSITIVE',
+anatomy: 'दय(बायाँ/दाया◌ँ), धमlनयां(Arteries), nशराएं(Veins)',
+pathology: 'उþरøचाप, धमनीकठोरता, दयक अlनयmमतता',
+medicines:['A-1','A-2','A-3'],
+electricity: 'B.E. (नीलीवि◌#ुत)',
+location:'माथेपरऔरदयक◌ेपास(बाâछाती)'
+},
+// NERVOUS SYSTEM
+'nervous_system': {
+hindi: 'तंlकातं(NervousSystem)',
+eh_group: ['F-Group (Febrifugo)','C-Group(Canceroso)'],
+temperament: 'Nervous',
+vitiation: 'रसएवंरøदोनो◌ं',
+polarity: 'POSITIVE',
+anatomy: 'मt×तÖक, रीढ़क◌ीही, पjरधीयतंlकाएं',
+pathology: 'घबराहट, अlन◌ा, माइेन, Êयूरोपैथी, च·कर',
+medicines:['F-1','F-2','C-2'],
+electricity: 'W.E.(सफेदवि◌#ुत)',
+location:'nसरकेlपछलेभाग(Occiput) औरकनपट'
+},
+// RESPIRATORY
+'respiratory': {
+hindi: ':सनतं(Respiratory System)',
+eh_group: ['P-Group(Pectorale)'],
+temperament: 'Lymphatic',
+vitiation: 'रस(Lymph) lवक◌ृlत',
+polarity: 'POSITIVE',
+anatomy: 'फेफड़े(ऊपरी/lनचल◌े),×काई, :ासनली',
+pathology: '×काइkटस, अस्थमा, सांसफूलना, खांसी',
+medicines:['P-1','P-2','P-3'],
+electricity: 'Y.E. (पीलीवि◌#ुत)',
+location:'छातीकेअ औरप9भागपर'
+},
+// DIGESTIVE
+'digestive': {
+hindi: 'पाचनतं(Digestive System)',
+eh_group: ['S-Group (Scrofoloso)','C-Group (Canceroso)'],
+temperament: 'Lymphatic',
+vitiation: 'रस(Lymph) lवक◌ृlत',
+polarity: 'POSITIVE',
+anatomy: 'यकृत(Liver),lप◌ाशय, अ¹Êयाशय, आंतË',
+pathology: 'कÍज, गैस, अपच, फैटnलवर, पीnलया',
+medicines:['S-2','S-10','C-8','C-10','C-15'],
+electricity: 'Y.E. (पीलीवि◌#ुत)',
+
+--- PAGE 3 ---
+location:'पेटकेमÉयभागपरCompress'
+},
+// URINARY
+'urinary': {
+hindi: 'मूतं(Urinary System)',
+eh_group: ['S-Group (Scrofoloso)','C-Group (Canceroso)'],
+temperament: 'Lymphatic',
+vitiation: 'रस(Lymph) lवक◌ृlत',
+polarity: 'POSITIVE',
+anatomy: 'गुदÌ (Kidneys), मूवाlहनी, मूाशय',
+pathology: 'UTI,पथरी(Calculi), Creatinine↑, Uric Acid↑',
+medicines:['S-6','C-6','C-17'],
+electricity: 'G.E. (हरीlव#◌ुत)',
+location:'पीठपरगुदÌ क◌ेCान(कमरकेदोन× ओर)'
+},
+// MUSCULOSKELETAL
+'musculoskeletal': {
+hindi: 'मांसपेशीएवंकंकालत◌ं (Musculoskeletal)',
+eh_group: ['C-Group (Canceroso)','S-Group(Scrofoloso)'],
+temperament: 'Lymphatic',
+vitiation: 'रस(Lymph) lवक◌ृlत',
+polarity: 'POSITIVE',
+anatomy: 'हlयां, जोड़(Joints), उपाiC(Cartilage), मा◌ंसपेnशयां',
+pathology: 'गkठया(Arthritis), य◌ूरि◌कएसि◌ड↑, PTH↑, ऑr×टयोपोरोnसस',
+medicines:['C-4','C-3','S-5','S-6'],
+electricity: 'G.E. (हरीlव#◌ुत)',
+location:'भाlवतजोड़पर—घुटना, कूÒहा, कंधा'
+},
+// ENDOCRINE
+'endocrine':{
+hindi: 'अंतःावीतं (EndocrineSystem)',
+eh_group: ['S-Group (Scrofoloso)','C-Group (Canceroso)'],
+temperament: 'Lymphatic',
+vitiation: 'रस(Lymph) lवक◌ृlत',
+polarity: 'POSITIVE',
+anatomy: 'थायरॉइड, पैराथायर◌ॉइड, अ¹Êयाशय(Pancreas),अmधव◌ृ·क',
+pathology: 'मधुमेह(Diabetes), थायरॉइडlवकार, PTH असंतुलन',
+medicines:['S-4','C-10','C-13'],
+electricity: 'Y.E. (पीलीवि◌#ुत)',
+location:'गले(थायरॉइड) औरपेट(Pancreas) पर'
+},
+// SKIN
+'skin': {
+hindi: 'Æवचातं(Integumentary System)',
+eh_group: ['S-Group (Scrofoloso)','C-Group (Canceroso)'],
+temperament: 'Lymphatic',
+vitiation: 'रस(Lymph) lवक◌ृlत',
+polarity: 'POSITIVE',
+anatomy: 'Æवचाकतीनपरते◌ं, बाल, नाखून, ×वेदंnथयां',
+pathology: 'एi·जमा, सोरायसि◌स, दाद, खुजली, चमµरोग',
+medicines:['S-5','C-7','C-14'],
+electricity: 'B.E. (नीलीवि◌#ुत)',
+location:'भाlवतÆवचापरसीधेCompress'
+},
+// REPRODUCTIVE
+'reproductive':{
+hindi: 'जननतं(ReproductiveSystem)',
+eh_group: ['S-Group (Scrofoloso)','C-Group (Canceroso)'],
+temperament: 'Lymphatic',
+vitiation: 'रस(Lymph) lवक◌ृlत',
+polarity: 'Mixed',
+anatomy: 'मlहला: गभाµशय, अ◌ंडाशय| पु«ष:ो×टेट, वृषण',
+pathology: 'PCOD, Òयूकोjरय◌ा, हामØनअसंतुलन',
+medicines:['S-3','C-16','S-2'],
+electricity: 'R.E. (लालlव#◌ुत)',
+location:'पेटकेlनचलेभागपर'
+},
+};
+// ──PATHOLOGY →POLARITY MAPPING ──
+const PATHOLOGY_POLARITY= {
+// HIGH VALUES = POSITIVE (HYPER)
+high_bp:
+{ polarity:'POSITIVE', potency_hint:'D10', eh_meaning:'रøकाअlत-दबाव—ऋणाÆमकऔषmधआवÕयक' },
+fever:
+{ polarity:'POSITIVE',potency_hint:'D10', eh_meaning:'तापकअmधकता—ऋणाÆमकशीतलऔषmध' },
+inflammation: { polarity:'POSITIVE',potency_hint:'D10', eh_meaning:'सूजन= Positive अवCा' },
+uric_acid_high: { polarity:'POSITIVE',potency_hint:'D10', eh_meaning:'यूjरकएnसडकवृि◌' },
+creatinine_high: { polarity:'POSITIVE', potency_hint:'D10', eh_meaning:'गुदÌ मËlवषाक्तभार' },
+wbc_high:
+{ polarity:'POSITIVE', potency_hint:'D10', eh_meaning:'संþमणक सlþयता'},
+sugar_high:
+{ polarity:'POSITIVE', potency_hint:'D10', eh_meaning:'शकµराक अmधकता' },
+pth_high:
+{ polarity:'POSITIVE', potency_hint:'D30', eh_meaning:'PTH अmधकता—ह◌ीlवकृlत' },
+
+--- PAGE 4 ---
+// LOWVALUES =NEGATIVE (HYPO)
+hb_low:
+{ polarity:'NEGATIVE', potency_hint:'D4', eh_meaning:'हीमो¹लोlबनकमी—रølनमाµणआवÕयक' },
+platelet_low: { polarity:'NEGATIVE',potency_hint:'D4', eh_meaning:'Ëलेटलेटकमी—L-1 आवÕयक' },
+low_bp:
+{ polarity:'NEGATIVE', potency_hint:'D4', eh_meaning:'रøचापकाlनÏनस्तर'},
+weakness:
+{ polarity:'NEGATIVE',potency_hint:'D4', eh_meaning:'ऊजाµक कमी—धनात्मकऔषmध'},
+atrophy:
+{ polarity:'NEGATIVE', potency_hint:'D3', eh_meaning:'ऊतक³य—पुननमµ◌ाणआवÕयक' },
+};
+// ──LAB REPORTRANGES ──
+const LAB_RANGES = {
+hemoglobin: { low:12.0, high:17.0, unit:'g/dL', hindi:'ह◌ीमो¹लोlबन' },
+wbc:
+{ low:4000, high:11000, unit:'/μL', hindi:':◌ेतरøकोnशका' },
+platelets:
+{ low:150000,high:400000,unit:'/μL', hindi:'Ëल◌ेटलेट्स' },
+sugar_fast: { low:70, high:100, unit:'mg/dL',hindi:'रøशकµ रा(Fasting)' },
+sugar_pp:
+{ low:70, high:140, unit:'mg/dL',hindi:'रøशकµ रा(PP)'},
+hba1c:
+{ low:4.0, high:5.6, unit:'%',
+hindi:'HbA1c' },
+creatinine: { low:0.6, high:1.2, unit:'mg/dL',hindi:'þि◌एkटlनन' },
+uric_acid:
+{ low:3.5, high:7.0, unit:'mg/dL',hindi:'य◌ूjरकएnसड' },
+potassium:
+{ low:3.5, high:5.0, unit:'mEq/L',hindi:'प◌ोटेnशयम' },
+sodium:
+{ low:135, high:145, unit:'mEq/L',hindi:'स◌ोlडयम' },
+pth:
+{ low:15, high:65,
+unit:'pg/mL',hindi:'प◌ैराथायरॉइडहामØन(PTH)' },
+vitamin_d: { low:30, high:100, unit:'ng/mL',hindi:'वि◌टाmमनD'},
+sgpt:
+{ low:7,
+high:56, unit:'U/L', hindi:'SGPT (यकृत)' },
+sgot:
+{ low:10, high:40,
+unit:'U/L', hindi:'SGOT(यकृत)'},
+cholesterol: { low:0,
+high:200, unit:'mg/dL',hindi:'क◌ोले×	ॉल' },
+triglycerides:{ low:0,
+high:150, unit:'mg/dL',hindi:'	◌ाइt¹लसराइड्स'},
+tsh:
+{ low:0.4, high:4.0, unit:'mIU/L',hindi:'TSH(थायरॉइड)' },
+t3:
+{ low:80, high:200, unit:'ng/dL',hindi:'T3' },
+t4:
+{ low:5.0, high:12.0, unit:'μg/dL',hindi:'T4'},
+};
+// ──MEDICINE →ANATOMY +ACTION ──
+const MEDICINE_ANATOMY = {
+'S-1':{
+name: '×þोफोलोसो-1 (Scrofoloso-1)',
+group: 'S-Group',temperament: 'Lymphatic',
+target_anatomy: 'लसीकातंत्र, पाचननली, गुदÌ, चयापचय',
+pathology_treated: 'लसीकावि◌कार, इÏयुlनटकमजोरी, lवषाक्तजमाव',
+polarity: 'Negative(ऋणात्मक)',
+action: 'रसणालीकमुख्यऔषmध।लसीकातंकोशुकरतीहै।शरीरसेlवषाøपदाथµ नि◌कालतीहै।'
+},
+'S-2': {
+name: '×þोफोलोसो-2(Scrofoloso-2)',
+group: 'S-Group',temperament: 'Lymphatic',
+target_anatomy: 'यकृत(Liver), lपाशय, लसीकांnथयां',
+pathology_treated: 'यकृतवि◌कार, lप असंतुलन, ंnथसूजन',
+polarity: 'Negative',
+action: 'यकृतऔरलसीका◌ंnथय× कशुp।lप (Bile) प्रवाहसामाÊयकरतीहै।'
+},
+'S-5':{
+name: '×þोफोलोसो-5 (Scrofoloso-5)',
+group: 'S-Group',temperament: 'Lymphatic',
+target_anatomy: 'Æवचा, जोड◌़, लसीका',
+pathology_treated: 'Æवचार◌ोग, जोड़×क सूजन, लसीका«कावट',
+polarity: 'Negative',
+action: 'Æवचाएवंजोड़× क◌ीलसीकाशुp।चमµरोगएवंज◌ोड़सूजनमËभावी।'
+},
+'S-6': {
+name: '×þोफोलोसो-6(Scrofoloso-6)',
+group: 'S-Group',temperament: 'Lymphatic',
+target_anatomy: 'गुदÌ (Kidneys), मूवाlहनी, मूाशय',
+pathology_treated: 'Creatinine↑,Uric Acid↑, UTI, गुदÌ कपथरी',
+polarity: 'Negative',
+action: 'गुदÌ एवंमूव◌ाहतं कlवशेषशुp।यूjरकएnसडlनकालतीहै।'
+},
+'S-10': {
+name: '×þोफोलोसो-10 (Scrofoloso-10)',
+group: 'S-Group',temperament: 'Lymphatic',
+target_anatomy: 'पाचननली, आ◌ंतË, उदरलसीका',
+pathology_treated: 'कÍज, ग◌ैस,आंत×मËlवषजमाव',
+polarity: 'Neutral',
+action: 'आधारऔषmध।पाचनत◌ं कलसीकाशुp।कÍज®रकरतीहै।'
+},
+'A-1': {
+name: 'एंpजkटको-1 (Angioitico-1)',
+group: 'A-Group', temperament: 'Sanguine',
+target_anatomy: 'दयकाब◌ायाँभाग, धमlनयां(Arteries)',
+pathology_treated: 'उþरक्तचाप, धमनीकठोरता, दयबायाँद◌ोष',
+polarity: 'Negative',
+
+--- PAGE 5 ---
+action: 'दयऔरधमlनय× क◌ीमुखऔषmध।रøचापlनयंि◌तकरतीहै।'
+},
+'A-2': {
+name: 'एंpजkटको-2(Angioitico-2)',
+group: 'A-Group', temperament: 'Sanguine',
+target_anatomy: 'दयकाद◌ायाँभाग, nशराएं(Veins)',
+pathology_treated: 'नस×क◌ीजकड़न, वैjरकोजवËस, दयदाया◌ँदोष',
+polarity: 'Negative',
+action: 'nशराè औरनस× कऔषmध।नसजकड़न®रकरतीहै।'
+},
+'A-3': {
+name: 'एंpजkटको-3(Angioitico-3)',
+group: 'A-Group', temperament: 'Sanguine',
+target_anatomy: 'रøकोnशक◌ाएं(RBC, WBC, Platelets)',
+pathology_treated: 'रøक◌ोशि◌क◌ावि◌क◌ार, HB↓, WBCअसंतुलन',
+polarity: 'Both',
+action: 'रøकोnशकाèक औषmध।HB बढ़ातीहै, BP lनयंि◌तकरतीहै।'
+},
+'C-4': {
+name: 'कÎ सरोसो-4(Canceroso-4)',
+group: 'C-Group', temperament: 'Mixed',
+target_anatomy: 'हlयां, ज◌ोड़उपाiC(Cartilage), बाल, PTH',
+pathology_treated: 'ऑr×टय◌ोप◌ोर◌ोसि◌स,ज◌ोड◌़दर◌्द, PTH↑, बालझड़ना',
+polarity: 'Both',
+action: 'हीएवंजोड़× क◌ीगहरीऔषmध।PTH संतुnलतकरतीह◌ै।'
+},
+'C-6': {
+name: 'कÎ सरोसो-6(Canceroso-6)',
+group: 'C-Group', temperament: 'Mixed',
+target_anatomy: 'गुदÌ कक◌ोnशकाएं(Renal cells)',
+pathology_treated: 'Creatinine↑,गुदÌ क कोnशका³lत',
+polarity: 'Negative',
+action: 'गुदÌ क कोnशकाओ◌ंक◌ीगहर◌ीऔषधि◌।Creatinine↑मËlवशेष।'
+},
+'C-10': {
+name: 'कÎ सरोसो-10(Canceroso-10)',
+group: 'C-Group', temperament: 'Mixed',
+target_anatomy: 'अ¹Êयाशय(Pancreas), इंसुnलनउÆपादककोशि◌काएं',
+pathology_treated: 'मधुमेह(Type-2), इंसुnलनlतरोध',
+polarity: 'Both',
+action: 'अ¹Êयाशयक औषmध।इंसुnलनlनयंणमËसहायक।'
+},
+'C-11': {
+name: 'कÎ सरोसो-11 (Canceroso-11)',
+group: 'C-Group', temperament: 'Sanguine',
+target_anatomy: 'दयक मा◌ंसपेnशयां, पेjरकाडयम',
+pathology_treated: 'काडयककमजोरी, दयपेशीlवकार',
+polarity: 'Both',
+action: 'दयकमांसपेnशयो◌ंक गहरीऔषmध।'
+},
+'C-16': {
+name: 'कÎ सरोसो-16(Canceroso-16)',
+group: 'C-Group', temperament: 'Lymphatic',
+target_anatomy: 'मlहलाजननअंग, गभाµशय, अंडाशय',
+pathology_treated: 'Òयूकोरि◌या, PCOD,हामØनअसंतुलन',
+polarity: 'Both',
+action: 'मlहलाजननतंत्रक lवशेषऔषmध।'
+},
+'F-1': {
+name: 'फेीफुगो-1 (Febrifugo-1)',
+group: 'F-Group', temperament: 'Mixed',
+target_anatomy: 'मt×तÖक, के◌ंयतंlकातं, चयापचयके◌ं',
+pathology_treated: 'बुखार, घबराहट, च·कर, अlना, माइ◌ेन',
+polarity: 'Both',
+action: 'तंlकातंक म◌ा×टररेमेडी।मt×तÖकअlत-सþि◌यताशांतकरतीहै।'
+},
+'L-1': {
+name: 'nल3ेkटको-1 (Limfatico-1)',
+group: 'L-Group', temperament: 'Lymphatic',
+target_anatomy: 'Ëलेटलेट्स,WBC, lतर³ाकोnशकाएं',
+pathology_treated: 'Ëलेटल◌ेटकमी, डËगू, इÏयुlनटकमजोर◌ी',
+polarity: 'Positive',
+action: 'Ëलेटलेट्सऔरति◌र³ाकोnशकाएंबढ़ातीहै।'
+},
+'P-1': {
+name: 'पे·टोरले-1 (Pectorale-1)',
+group: 'P-Group', temperament:'Lymphatic',
+target_anatomy: 'फेफड़×क◌ाऊपरीभाग, ×काई',
+pathology_treated: '×क◌ाइkटस,खांसी, छातीसंþमण',
+polarity: 'Negative',
+action: ':सनतं कलस◌ीकाशुp।खांसीऔर×काईमे◌ंराहत।'
+
+--- PAGE 6 ---
+},
+'VEN-1': {
+name: 'वेनेरेओ-1 (Venereo-1)',
+group: 'VEN-Group', temperament: 'Lymphatic',
+target_anatomy: 'वायरलसंक्रमणकË, परजीवी',
+pathology_treated: 'HCV,व◌ायरलसंþमण, परजीवीरोग',
+polarity: 'Negative',
+action: 'वायरलऔरपरजीवीस◌ंþमणरोधी।HCVमËlवशेष।'
+},
+};
+module.exports ={ ORGAN_EH_MAP, PATHOLOGY_POLARITY, LAB_RANGES, MEDICINE_ANATOMY };
+
+--- PAGE 7 ---
+OLLAMA SYSTEM PROMPT —11 SECTIONS
+Yeh poora prompt Ollama ko dena hai. Anatomy + Pathology + Book RAG sab inject hoga. 11 sections, ~1000 words, shudh Hindi.
+Ek bhi sectionchoot nahi sakta!
+MATTEI_SYSTEM_PROMPT (generateClinicalSummary.js mein)
+const MATTEI_SYSTEM_PROMPT= `
+आप'E.H. Arogyaa Sutra' i·लlनकलAI lवशेष´ हÎ।
+काउंटसेसरमैट केइले·	ोहोÏय◌ोपैथीnसांत× के
+lवशेष´ हÎ।आपकोरोगीकेVitals, ल³ण, Lab Reports,
+MRI/CT/Sonography औरkदएगएBookKnowledgeसे
+एकअÆयंतlव×तृत, ामाoणकऔरसुंदरनैदाlनकसारांश
+शुxहद मËnलखनाहै।
+══════════════════════════════════════════════
+ANATOMY एवंPATHOLOGY VERIFICATION RULE:
+══════════════════════════════════════════════
+Æयेकभाlवतअंग(Organ) क◌ीशारीjरकरचना
+(Anatomy) औररोगlवकृlत(Pathology) का
+lव×तृतवणµनBOOK_KNOWLEDGE_BASE सेकरË।
+Lab reportsमËजोभीHIGH/LOWह◌ोउसका
+EHanatomical explanation दË।
+STRICTRULES:
+1. शुदेवनागरीxहद —कोईHinglishनहÂ
+2. Formula: 'S10 +A3+ F1 + BE D10'(clean)
+3. HYPER (त◌ीव◌्र) →D10/D30 | HYPO→D3/D4
+4. lकताबकानामयापेजनंबरकभ◌ीनहÂnलखना
+5. खुराक: 'ठक10 बूंदË आधेकपगुनगुनेपानीमË
+mमलाकरघूंट-घूंटकरके(Sip by Sip) lपएं'
+6. लगभग1000शÍद—कोईखंडअध◌ूरानहÂ
+══════════════════════════════════════════════
+अlनवायµ 11-खंडसंरचना(Markdownformat मË):
+══════════════════════════════════════════════
+# 🏥इले·	ो-होÏयोपैथीi·लlनकलवि◌शेष´ ls×þËशन
+[रोगीकासुंदरMarkdownTable]
+🚨ALERT (यkदBP≥140/90)
+## 1. रोगीकाlववरणएवंरोगlनद◌ान
+Vitals, BP, Pulse, Temperament lव;ेषण।
+Temperament (Sanguine/Lymphatic/Mixed) ·य×?
+रø(Blood) यारस(Lymph) मे◌ंदोष—कारण।
+[100-120 शÍद]
+## 2. जांचjरपोटµ काlव;ेषण
+CBC, LFT, KFT—हरabnormal valueका
+EHanatomical अथµ बताएं।
+MRI/CT/Sonography findings क◌ाEHexplanation।
+[120-150शÍद]
+## 3. भाlवतअंगएवंशारीjरकरचनाlव;ेषण
+Æयेकभाlवतअंगकanatomy बताएं।
+उसअंगमËpathologyकैसेवि◌कnसतई।
+EHसमूह(Scrofoloso/Angioitico आkद) ·य×।
+[120-150शÍद]
+## 4. औषmधफॉमूµलाlनमाµण
+Formula: [S10 + A3+ F1 + BE D10]
+हरदवा·य×—anatomy + pathology से।
+'Complexa ComplexisCurantur' nसांत।
+[150-200 शÍद]
+## 5. पोटËसीकाचयनएवंवै´◌ाlनककारण
+D5/D6/D10/D30 —·य×?
+ती/जीणµअवCाऔरुवत◌ाlनयम।
+[80-100 शÍद]
+## 6. खुराकक मााऔरसमय
+
+--- PAGE 8 ---
+'ठक10 बूंदË आधेकपगुनगुन◌ेपानीमË...'
+6-समयTablet Chart (Tableformat मË)।
+[80-100 शÍद]
+## 7. बाहरीयोगएवंlव#ुतचि◌lकÆसा
+lव#ुत:BE/GE/RE/WE/YE —क◌ौनसी, ·य×।
+सटकशरीरCान—anatomically correct।
+Compress lवmध—कैसेलगाएं।
+[80-100 शÍद]
+## 8. इले·	ोहोÏयोपैथीnसा◌ंतअनुपालन
+यहफॉमूµलाLymph औरBlood क◌ैसेशुकरेगा।
+EHकेOd/Id nसांतकापालन।
+Count Mattei कामूलnसांतexplain करË।
+[80-100 शÍद]
+## 9. संभाlवतसुधारएवंjरकवरीक◌ासमय
+7kदनमË·यासुधारहोगा।
+30 kदनमË·याबदलेगा।
+3 महीनेकालÛय।
+[60-80 शÍद]
+## 10. भोजनएवंपरहेजसंबंधीनि◌दÌश
+Lab reports केअनुसारspecific diet।
+·याखाएं/ ·यानखाएं।
+[80-100 शÍद]
+## 11. महÆवपूणµसावधाlनयांएव◌ंफॉलो-अप
+Warningsigns —कबतुरंतkदख◌ाएं।
+अगलीजांचकबऔर·या।
+[60-80 शÍद]
+---
+## 💡AI णालीकायµवाह
+🌿**E.H. AROGYA SUTRA CLINIC**
+`;
+
+--- PAGE 9 ---
+COMPLETE generateClinicalSummary.js
+Yeh poora filereplace karo. Anatomy + Pathology + 11 Sections sab included. Fallback meinbhi puri 11-sectionsummary.
+FILE: backend/services/generateClinicalSummary.js
+const axios =require('axios');
+const db
+=require('../models/bookModel');
+const {
+ORGAN_EH_MAP,
+PATHOLOGY_POLARITY,
+LAB_RANGES,
+MEDICINE_ANATOMY
+} = require('../data/ehAnatomyPathology');
+let bookKnowledge= null;
+try {
+bookKnowledge =require('./bookKnowledge');
+} catch(e) {
+console.warn('Book RAG nahi mila, use DB fallback');
+}
+// ──Formula Builder──
+functionbuildFormula(medicines, potency) {
+if (!medicines || medicines.length === 0) return'--';
+const arr =Array.isArray(medicines) ? medicines
+: String(medicines).split('+').map(x=> x.trim());
+const clean= arr.map(m=>
+String(m).replace(/-/g,'').replace(/\./g,'').trim()
+).filter(Boolean);
+const pot = String(potency||'D10').split('/')[0].trim();
+return`${clean.join('+ ')} ${pot}`;
+}
+// ──PotencyEngine──
+functiongetPotency(phase, polarity) {
+if (polarity === 'POSITIVE') {
+if (phase==='ACUTE')
+return'D10';
+if (phase==='SUB_ACUTE') return 'D10';
+if (phase==='CHRONIC')
+return'D30';
+return 'D10';
+}
+return['ACUTE','SUB_ACUTE'].includes(phase) ? 'D4' : 'D3';
+}
+// ──Score-based Polarity ──
+functiondeterminePolarity(input) {
+const { bp_systolic=120, bp_diastolic=80,
+symptoms=[], phase='ACUTE',
+report_values={}, blood_report='',
+temperament='Mixed' } = input;
+let pos= 0, neg =0;
+const allText = [
+...symptoms.map(s=>typeof s==='object'?s.name:s),
+blood_report
+].join(' ').toLowerCase();
+if (bp_systolic >= 180) pos += 10;
+elseif (bp_systolic >= 140) pos+= 6;
+elseif (bp_systolic <90) neg += 7;
+['sujan','fever','bukhar','pain','dard','infection',
+'uric','high','jalan','tez','swelling'].forEach(w =>{
+if (allText.includes(w)) pos += 2;
+});
+['kamzori','weakness','chakkar','numbness',
+'atrophy','pale','low','anemia'].forEach(w=> {
+if (allText.includes(w)) neg +=2;
+});
+Object.entries(report_values).forEach(([k,v]) =>{
+
+--- PAGE 10 ---
+const r= LAB_RANGES[k];
+if (!r|| !v) return;
+if (v > r.high) pos+=4;
+if (v < r.low) neg += 4;
+});
+if (temperament ==='Sanguine') pos += 3;
+if (temperament ==='Lymphatic') pos += 2;
+const isHyper= pos >= neg;
+const polarity =isHyper?'POSITIVE': 'NEGATIVE';
+const potency =getPotency(phase, polarity);
+return{
+isHyper, polarity, potency,
+posScore: pos, negScore: neg,
+polarityState: isHyper
+?'HYPER(अlत-सlþय/ उग्रअवCा)'
+: 'HYPO (lनsÖþय/ nशथि◌लअवCा)'
+};
+}
+// ──Electricity by organ──
+functiongetElectricity(organs, isHyper, symText) {
+if (!organs|| organs.length===0) organs= ['lymphatic_system'];
+const primary = ORGAN_EH_MAP[organs[0]];
+if (primary) {
+return {
+electricity: primary.electricity,
+location:
+primary.location
+};
+}
+return{
+electricity: isHyper?'B.E. (नीलीlव#ुत)' : 'R.E. (लालlव#ुत)',
+location:'भाlवतअंगपरCompress 20 mमनट'
+};
+}
+// ──Lab Report Analysis──
+functionanalyzeLabReports(report_values) {
+const findings =[];
+Object.entries(report_values).forEach(([k,v]) =>{
+if (!v || !LAB_RANGES[k]) return;
+const r =LAB_RANGES[k];
+const nm=r.hindi || k;
+if (v > r.high) {
+findings.push({
+test: nm, value: v, unit: r.unit,
+status: 'उच◌्च(HIGH) ⬆',
+polarity: 'POSITIVE',
+normal: `${r.low}-${r.high}`,
+eh_meaning: `${nm} कव◌ृp—ऋणाÆमकऔषmधआवÕयक`
+});
+} elseif (v <r.low) {
+findings.push({
+test: nm, value: v, unit: r.unit,
+status: 'नि◌म◌्न(LOW) ⬇',
+polarity: 'NEGATIVE',
+normal: `${r.low}-${r.high}`,
+eh_meaning: `${nm} ककमी—धनाÆमकऔषmधआवÕयक`
+});
+}
+});
+returnfindings;
+}
+// ──Organ Anatomy Text ──
+functiongetOrganAnatomyText(organs) {
+if (!organs|| organs.length===0) return'';
+returnorgans.map(org =>{
+const info= ORGAN_EH_MAP[org];
+if (!info) return '';
+return `${info.hindi}:\n`+
+`शारीjरकरचना: ${info.anatomy}\n`+
+`रोगlवकृlत: ${info.pathology}\n`+
+`EH समूह: ${info.eh_group.join(', ')}\n`+
+`lव#ुत: ${info.electricity}`;
+
+--- PAGE 11 ---
+}).filter(Boolean).join('\n\n');
+}
+// ──MedicineAnatomy Reasoning──
+functiongetMedicineReasoning(medicines) {
+const arr =Array.isArray(medicines) ? medicines
+: (medicines||'').split('+').map(x=>x.trim());
+returnarr.map(med => {
+const info= MEDICINE_ANATOMY[med];
+if (!info) return `${med}: EHformula mein`;
+return `${info.name}:\n`+
+`लÛयअंग: ${info.target_anatomy}\n`+
+`रोगlवकृlत: ${info.pathology_treated}\n`+
+`कायµ:${info.action}`;
+}).join('\n\n');
+}
+// ═══════════════════════════════════════════════════
+// FALLBACK:Full 11-sectionrule-basedsummary
+// ═══════════════════════════════════════════════════
+functionbuildFallbackSummary(input, polData, elecData, formulas) {
+const { age=30,gender='Male', weight=60,
+bp_systolic=120, bp_diastolic=80, pulse=72,
+temperament='Mixed', symptoms=[], phase='ACUTE',
+report_values={}, blood_report='',
+mri_report='', sonography_report='',
+affected_organs=[] } = input;
+const { isHyper, polarityState, potency } = polData;
+const { electricity, location } =elecData;
+const gHi = gender==='Male' ? 'पु«ष' : 'मlहला';
+const dose =age<=12? 5 : age>60 ?7 : 10;
+const fa = formulas?.formula_a ||{};
+const fb =formulas?.formula_b || {};
+const faFmt = buildFormula(fa.medicines, potency);
+const fbFmt =buildFormula(fb.medicines, potency);
+const symNames= symptoms
+.map(s=>typeof s==='object'?(s.hindi||s.name||''):String(s))
+.filter(Boolean);
+const labFindings= analyzeLabReports(report_values);
+const organAnatomy =getOrganAnatomyText(affected_organs);
+const medReasoning = getMedicineReasoning(fa.medicines);
+const fbOrFa = fbFmt!=='--'? fbFmt : faFmt;
+const PHASE_HI = {
+ACUTE:'ती (0-14 kदन)', SUB_ACUTE:'अधµ-ती',
+CHRONIC:'जीणµ(60+ kदन)', DEGENERATIVE:'अप³यी'
+};
+const L =[];
+const A =(...ls) => ls.forEach(l =>L.push(l));
+// ══HEADER ══
+A('# 🏥इले·	ो-होÏयोपैथीi·लlनकलवि◌शेष´ ls×þËशन');
+A('**AI ऑफलाइनEH lवशेष´ प्रणालीाराlनमत**');
+A('');
+A('| lववरण| जानकारी|lववरण| जानकारी|');
+A('|-------|--------|-------|--------|');
+A(`| **आयु**| ${age} वषµ| **zलग** | ${gHi} |`);
+A(`| **भार** | ${weight} lक◌ा|**नाड़ी** | ${pulse}/mमनट|`);
+A(`| **रøचाप** | ${bp_systolic}/${bp_diastolic} mmHg | **कृlत** | ${temperament} |`);
+A(`| **अवCा** | ${PHASE_HI[phase]||phase} | **iClत**| ${polarityState} |`);
+A(`| **पोटËसी** | ${potency} | **lव#ुत** | ${electricity} |`);
+A('');
+// ALERT
+if (bp_systolic >= 180) {
+A('---');
+A('## 🚨nचlकÆसाचेतावनी: उþरøचापसंकट(HypertensiveCrisis)');
+A(`**रøचाप${bp_systolic}/${bp_diastolic} mmHg —तÆकालÉयानआवÕयक!**`);
+A('**हर30 mमनटमËlनगरान◌ीकरË।पूणµआराम।**');
+A('---');
+} elseif (bp_systolic >= 140) {
+A('---');
+A('## 🚨चेतावनी: उþरøचाप');
+A(`**${bp_systolic}/${bp_diastolic} mmHg—नमकऔरतनावत◌ुरंतकमकरË**`);
+A('---');
+}
+
+--- PAGE 12 ---
+A('');
+// SECTION 1
+A('---');
+A('## 1. रोगीकाlववरणएवंर◌ोगlनदान');
+A('');
+A(`${gHi} रोगी(${age} वषµ, ${weight} lका) कवतµमानअवCा**${polarityState}** है।`);
+A('');
+A(`**नाड़ीपरी³ण:** ${pulse}/mमनट—${pulse > 90 ? 'तीव्रनाड़ी(Tachycardia), HYPER स◌ंकेत' : pulse < 60 ? 'मंदनाड़◌ी(Bradycardia), HYPO संकेत' : 'सामाÊयनाड़ी'}।
+`);
+A('');
+A(`**कृlत(Temperament):** ${temperament === 'Sanguine' ? 'सांगुइन—रølवकृlतधान, A-समूहकआवÕयकता' : temperament === 'Lymphatic' ? 'nल3◌ेkटक—रस
+lवकृlतधान, S-समूहक आवÕयकता' :'mमoत—A+S दोन×सम◌ूहआवÕयक'}।`);
+A('');
+if (symNames.length> 0) {
+A('**मु¸यल³ण:**');
+symNames.slice(0,6).forEach(s=>A(`- ${s}`));
+}
+A('');
+// SECTION 2
+A('---');
+A('## 2. जांचjरपोटµ काlव;◌ेषण');
+A('');
+if (labFindings.length >0) {
+A('**योगशालापरी³ण(Lab Reports):**');
+A('');
+A('|परी³ण| मान| सामान्य| iClत| EHअथµ|');
+A('|--------|-----|--------|--------|---------|');
+labFindings.forEach(f => {
+A(`| ${f.test} | ${f.value} ${f.unit} | ${f.normal} | ${f.status} | ${f.eh_meaning} |`);
+});
+A('');
+}
+if (blood_report) {
+A('**CBC/LFT/KFTlववरण:**');
+A(blood_report.substring(0, 300));
+A('');
+}
+if (mri_report) {
+A('**MRI/CT ScanlनÖकषµ:**');
+A(mri_report.substring(0, 300));
+A('');
+}
+if (sonography_report) {
+A('**Sonography lनÖकषµ:**');
+A(sonography_report.substring(0, 200));
+A('');
+}
+// SECTION 3
+A('---');
+A('## 3. भाlवतअंगएवंशार◌ीjरकरचनाlव;ेषण');
+A('');
+if (affected_organs.length> 0&&organAnatomy) {
+A('काउंटमैट केअनुसारप्रÆयेकभाlवतअंगक');
+A('शारीjरकरचनाऔररोगlवक◌ृlत:');
+A('');
+A(organAnatomy);
+} else{
+A('रोगीकेल³ण×केआधारपरभाlवततं×क पहचानक◌ीगईहै।');
+A('इले·	ोहोÏयोपैथीमËरस(Lymph) औररø(Blood) कश◌ुp');
+A('सेसभीअंग×क nचlकÆस◌ाहोतीहै।');
+}
+A('');
+// SECTION 4
+A('---');
+A('## 4. औषmधफॉमूµलाlनमµ◌ाण');
+A('');
+A('AI ¬लइंजननेरोगीक शार◌ीjरकरचनाऔररोगlवकृlतके');
+A('आधारपरयह**क×टमफॉमूµल◌ा** तैयारlकया:');
+A('');
+if (faFmt !== '--') A(`**mमश्रणA (आंतjरक):** \`${faFmt}\``);
+if (fbFmt !=='--') A(`**mमश्रणB (आंतjरक):** \`${fbFmt}\``);
+A('');
+A('**ÆयेकऔषmधकाAnatomy-based कारण:**');
+A('');
+
+--- PAGE 13 ---
+if (medReasoning) {
+A(medReasoning);
+}
+A('');
+A('*"Complexa Complexis Curantur"—mमoतरोग, mमoतऔषmध*');
+A('');
+// SECTION 5
+A('---');
+A('## 5. पोटËसीकाचयनएवंव◌ै´ाlनककारण');
+A('');
+A(`**lनधाµjरतपोटËसी: ${potency}**`);
+A('');
+if (isHyper) {
+A(`रोगीक **HYPER(अlत-सþि◌य)** अवCामË:`);
+A('*"उअवCाकोशांतकरनेकेnलएऋणाÆमक(उþतनुता) डोज़"*');
+A(`**${potency}** रøऔररसकअlत-सlþयताकोसंतुnलतकरेगी।`);
+A('D3/D4यहाँवजत—अवC◌ाऔरबढ़सकतीथी।');
+} else{
+A('रोगीक **HYPO(lनÖþि◌य)** अवCामË:');
+A('*"nशnथलअवCाकोजगानेक◌ेnलएधनाÆमक(lनÏनतनुता) डोज◌़"*');
+A(`**${potency}** lनsÖþयअंग× मËऊजाµ वाहपुनCµ◌ाlपतकरेगी।`);
+A('D30 यहाँवजत—औरकमज◌ोरीहोती।');
+}
+A('');
+// SECTION 6
+A('---');
+A('## 6. खुराकक मााऔरसमय');
+A('');
+A(`> **सेवनlवmध:** ठक**${dose} बूंदË** आधेकपसामाÊयय◌ाहÒकेगुनगुनेपानीमËmमलाकरlनधाµjरतसमयपर**घूंट-घूंटकरके(Sip by Sip)** lपएं।`);
+A('');
+A('| समय| mमण| बूंदË | ल◌ाभ|');
+A('|-----|--------|-------|-----|');
+A(`| 🌅सुबहखालीपेट| ${faFmt} | ${dose} | चयापचयसlþय|`);
+A(`| 🥛नाÕतेकेबाद|${fbOrFa} | ${dose} | सूजनकम|`);
+A(`| ☀दोपहरसेपहले|${faFmt} | ${dose} | lवषlनकासी|`);
+A(`| 🍽दोपहरकेबाद| ${fbOrFa} | ${dose} | गहरीnचlकÆसा|`);
+A(`| 🌙रातसेपहले| ${faFmt} |${dose} |राl शुp|`);
+A(`| 💤सोतेसमय| ${fbOrFa} | ${dose} | पुननमाµण|`);
+A('');
+// SECTION 7
+A('---');
+A('## 7. बाहरीयोगएवंlव#◌ुतnचlकÆसा');
+A('');
+A(`**lव#ुत:** ${electricity} (पोटËसी: ${potency})`);
+A(`**Cान:**${location}`);
+A('');
+A('**lवmध:**');
+A(`1. ${electricity} क10 बू◌ंदË ठंडे/गमµपानीमËmमलाएं`);
+A('2. सूतीकपड़ेकोoभगोकरबत◌ाएCानपररखË');
+A('3. 20 mमनटरखË —kदनमË2बार');
+A('');
+if (electricity.includes('B.E.') || electricity.includes('न◌ीली'))
+A('**नीलीlव#ुत:** रøव◌ाlहकाèकोसंकुnचतकरBP घटातीह◌ै।');
+elseif (electricity.includes('G.E.') || electricity.includes('हरी'))
+A('**हरीlव#ुत:** लसीकास◌ूजनऔरजोड़ददµ मËतÆकालराहत।');
+elseif (electricity.includes('R.E.') || electricity.includes('लाल'))
+A('**लालlव#ुत:** lनÖþि◌यअंग× मËऊजाµवाहउ◌ेpजतकरतीहै।');
+elseif (electricity.includes('W.E.') || electricity.includes('सफेद'))
+A('**सफेदlव#ुत:** तंि◌कातंकोशांतकरनÂदलातीह◌ै।');
+elseif (electricity.includes('Y.E.') || electricity.includes('पीली'))
+A('**पीलीlव#ुत:**सूजनऔरददµ कोतेजीसेकमकरतीहै।');
+A('');
+// SECTION 8
+A('---');
+A('## 8. इले·	ोहोÏयोपैथीसि◌ांतअनुपालन');
+A('');
+A('**काउंटसेसरमैट कामूलसि◌ांत:**');
+A('*"सभीरोगरø(Blood) यारस(Lymph) के®lषतहोनेसेउत्प,होतेहÎ।"*');
+A('');
+A(`**यहफॉमूµला${temperament} कृlतकेnलए:**`);
+if (temperament ==='Sanguine') {
+A('- A-समूह(Angioitico): रøशुpऔरदयतंसþि◌यता');
+A('- रक◌्तम◌े◌ंवि◌क◌ृति◌→A-Group स◌ेश◌ुद◌्धि◌→दय+ धमlनयां×वC');
+} elseif (temperament ==='Lymphatic') {
+
+--- PAGE 14 ---
+A('- S-समूह(Scrofoloso): रसशुpऔरलसीकातंसlþयता');
+A('- रसम◌े◌ंवि◌क◌ृति◌→S-Group स◌ेश◌ुद◌्धि◌→लसीका+ अंग×वC');
+} else{
+A('- A+S समूह: रøऔररसद◌ोन×क शुpएकसाथ');
+A('- C-समूह: कोnशकय×तरपरगहरीnचlकÆसा');
+}
+A('- Od/Id nसांत: उÆसजµन(Od) औरपोषण(Id) कासंतुलन');
+A('');
+// SECTION 9
+A('---');
+A('## 9. संभाlवतसुधारएवंरि◌कवरीकासमय');
+A('');
+A('| समयावmध| संभाlवतसुधार|');
+A('|---------|--------------|');
+A(`| **7 kदन**| ऊजाµमËव◌ृp, ${isHyper ?'सूजनमËकम◌ी': '­बµलतामËसुधार'} |`);
+A(`| **30kदन** | Labreports मËसुधार, मु¸यल³ण×मËर◌ाहत|`);
+A('| **3 महीने**| Chronicity मËकमी, पुनःजांचआवÕयक|');
+const followDays= phase==='ACUTE'?'7':phase==='SUB_ACUTE'?'15':'30';
+A(`**${followDays} kदन× मËप◌ुनःkदखाएं।**`);
+A('');
+// SECTION 10
+A('---');
+A('## 10. भोजनएवंपरहेजसंब◌ंधीlनदÌश');
+A('');
+A('**🚫·यानखाएं:**');
+if (isHyper) {
+A('- नमककासेवनतुरंतआधाकरË');
+A('- तली-भुनी, बाजा¬ चीजे◌ंबंदकरË');
+A('- चाय, कॉफ, शीतलपेयब◌ंद');
+A('- शराब, तंबाकू—lबÒकुलबंद');
+} else{
+A('- ठंडापानी, आइसþम, ब◌ासीभोजन');
+A('- देररातकाखानानहÂ');
+}
+const rv = report_values || {};
+if (rv.uric_acid >7) A('- **लालमांस, बीयर, दालअmधक** —यूjरकएnसड');
+if (rv.sugar_fast > 126) A('- **चीनी, गुड़,सफेदचावल** —मधुमेहlनयंण');
+if (rv.creatinine> 2) A('- **¾यादाोटन, डेयरी** —ग◌ुदÌ हेतु');
+if (rv.potassium>5.5) A('- **केला, आलू, टमाटर** —पोटेशि◌यमउþ');
+A('');
+A('**✅·याखाएं:**');
+if (isHyper) {
+A('- पपीता,हरीसiÍजयाँ, दnलया,लौक,तोरी');
+A('- 8-10lगलासपानीlतदि◌न');
+A('- अदरक-तुलसीचाय,छाछ');
+} else{
+A('- गमµ®धहÒदसlहत, घ◌ी(कममाा)');
+A('- सूखेमेवे—बादाम,अखर◌ोट');
+A('- पौm=कदाल-चावल-रोट');
+}
+A('');
+// SECTION 11
+A('---');
+A('## 11. महÆवपूणµ सावधाlनया◌ंएवंफॉलो-अप');
+A('');
+A('**⚠इनसंकेत×परतुरंतkदखाएं:**');
+if (bp_systolic >= 140) A('- रøचापअचानक180सेऊपरजाए');
+A('- तेजबुखार(103° F सेऊपर)');
+A('- सांसलेनेमËअÆयmधककठि◌नाई');
+A('- अचानकबेहोशीयाती चक्कर');
+A('');
+A('**📋अगलीजांच:**');
+A(`- ${followDays} kदनबाद: प◌ुनःपरी³ण`);
+if (rv.creatinine> 1.5) A('- 15 kदनबाद: CreatinineऔरKFT');
+if (rv.uric_acid >7) A('- 30 kदनबाद: Uric Acid');
+if (rv.sugar_fast > 126) A('- 7kदनबाद: Fasting Sugar');
+A('');
+A('---');
+A('## 💡AI णालीकायµवाह');
+A('');
+if (bp_systolic >= 160)
+A(`- **गंभीरचेतावनी:** BP${bp_systolic}/${bp_diastolic} Emergencyपहचाना।`);
+A('- **Anatomy Analysis:** प्रभाlवतअंग× क शारीjरकरचनाक◌ाlव;ेषण।');
+A('- **Pathology Mapping:** Lab reportsसेरोगlवकृlतक EH 8ा¸या।');
+A(`- **Potency Safety:** ${potency} —${isHyper?'HYPER मËऋणाÆमक':'HYPO मËधनाÆमक'} ड◌ोज़।`);
+A('');
+
+--- PAGE 15 ---
+A('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+A('🌿**E.H. AROGYA SUTRACLINIC**');
+A('*शुSpagyric औषmध—Count CesareMattei*');
+A(`*lव:ास×कोर: ${Math.min(70+symNames.length*4,95)}%*`);
+returnL.join('\n');
+}
+// ═══════════════════════════════════════════════════
+// MAIN FUNCTION
+// ═══════════════════════════════════════════════════
+async functiongenerateClinicalSummary(input) {
+const {
+age=30,gender='Male', weight=60,
+bp_systolic=120, bp_diastolic=80, pulse=72,
+temperament='Mixed', symptoms=[], phase='ACUTE',
+blood_report='', mri_report='', sonography_report='',
+report_values={}, affected_organs=[], formulas={}
+} =input;
+// Polarity
+const polData =determinePolarity(input);
+const { potency, isHyper, polarityState} = polData;
+// Electricity
+const symText = symptoms.map(s=>typeof s==='object'?s.name:s).join(' ').toLowerCase();
+const elecData = getElectricity(affected_organs, isHyper, symText);
+// Formulas
+const fa = formulas?.formula_a ||{};
+const fb =formulas?.formula_b || {};
+const faFmt = buildFormula(fa.medicines, potency);
+const fbFmt =buildFormula(fb.medicines, potency);
+// Lab analysis
+const labFindings= analyzeLabReports(report_values);
+const organText = getOrganAnatomyText(affected_organs);
+const medReason = getMedicineReasoning(fa.medicines);
+// Report text combined
+const allReports =[blood_report, mri_report, sonography_report]
+.filter(Boolean).join('\n');
+// Book RAG
+let bookSection= '';
+if (bookKnowledge) {
+const bookResult = await bookKnowledge.getRelevantBookKnowledge({
+symptoms,formulas, report_values
+});
+if (bookResult.content) {
+bookSection= `<BOOK_KNOWLEDGE_BASE>\n${bookResult.content}\n</BOOK_KNOWLEDGE_BASE>`;
+console.log(`📚Bookchunks: ${bookResult.chunks_used}`);
+}
+}
+// DBmedicines
+let dbMeds ='';
+try{
+const meds= await db.get38MedicinesBySymptoms(symText);
+dbMeds= meds.map(m=>`- **${m.medicine_name}:** ${m.action_hindi}`).join('\n');
+} catch(e) { dbMeds =''; }
+// Ollama prompt
+const genderHi = gender==='Male'?'पु«ष':'मlहला';
+const labText =labFindings.map(f=>
+`${f.test}: ${f.value} ${f.unit} (${f.status}) —${f.eh_meaning}`
+).join('\n');
+const userPrompt =`
+रोगीकासंपूणµ i·लlनकलडेटा:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Vitals:
+आयु: ${age} वषµ | zलग: ${genderHi} | भार: ${weight} lक◌ा
+
+--- PAGE 16 ---
+रøचाप: ${bp_systolic}/${bp_diastolic} mmHg | नाड़ी: ${pulse}/mमनट
+कृlत(Temperament): ${temperament}
+अवCा: ${phase} | ुवता: ${polarityState}
+पोटËसी: ${potency} | lव#ुत: ${elecData.electricity}
+मु¸यल³ण:
+${symptoms.map(s=>typeof s==='object'?s.name:s).join(', ')}
+Lab ReportsAnalysis:
+${labText || 'jरपोटµ उपल/नहÂ'}
+Additional Reports:
+${allReports.substring(0,500) || 'उपल/नहÂ'}
+भाlवतअंगएवंAnatomy:
+${organText || 'Symptom-based analysis'}
+AI Formula:
+mमणA: ${faFmt}
+mमणB: ${(fbFmt!=='--'?fbFmt:'—')}
+Anatomy-basedMedicineReasoning:
+${medReason}
+Database Medicines:
+${dbMeds || 'DB sedata nahi mila'}
+${bookSection}
+उपरोøसम×तडेटाकेआधारपर—Anatomyऔर
+Pathology कोकË मËरखतेह◌ुए—11 अlनवायµ खंड×
+मË~1000शÍद× क lव×तृतशुद्धxहदls×þËशन
+तैयारकरË।Æयेकखंडपूणµऔरlव×तृतहो।
+`;
+try{
+const resp = await axios.post(
+'http://localhost:11434/api/generate',
+{
+model: 'llama3.2:3b',
+system: MATTEI_SYSTEM_PROMPT,
+prompt: userPrompt,
+stream: false,
+options: {
+temperature:
+0.1,
+num_ctx:
+32768,
+num_predict:
+4000,
+repeat_penalty:1.15,
+top_p:
+0.9
+}
+},
+{ timeout: 120000 }
+);
+const aiText = resp.data.response|| '';
+if (aiText.length> 500) {
+return{ summary:aiText, source:'ollama-full', potency, ready:true };
+}
+thrownewError('Too short');
+} catch(err) {
+console.log('Ollama unavailable →Full 11-sectionfallback');
+return {
+summary: buildFallbackSummary(input, polData, elecData, formulas),
+source:'rule-engine-11section',
+potency, ready: true
+};
+}
+}
+module.exports ={ generateClinicalSummary, analyzeLabReports, getOrganAnatomyText };
+
+--- PAGE 17 ---
+
+--- PAGE 18 ---
+CURSOR KO DENE WALA FINAL PROMPT
+Yeh poora prompt Cursor mein paste karo. Anatomy + Pathology + 11 Sections + Book RAG. 100%EH Siddhant ke anusar. Sundar
+Hindi summary guarantee!
+===CURSOR PROMPT: EH CDSS COMPLETE SYSTEM ===
+E.H.Arogya Sutra CDSS banana hai jisme:
+- Anatomy +Pathologydata integratedho
+- 11-section beautiful Hindi summaryaaye
+- Book RAGse 100%verified data ho
+- Lab reportska EH analysisho
+- ~1000words, shudhHindi
+===2 NEWFILES BANAO ===
+FILE 1: backend/data/ehAnatomyPathology.js
+[Isdocument ka ANATOMY DATABASE sectionka
+poora codepastekaro]
+Ismehai:
+- ORGAN_EH_MAP:10 organska EH mapping
+- PATHOLOGY_POLARITY:High/Low values →Polarity
+- LAB_RANGES: CBC,LFT, KFT sabranges
+- MEDICINE_ANATOMY: Har dawa ka anatomy reason
+FILE 2: backend/services/generateClinicalSummary.js
+[Isdocument ka COMPLETE FILE sectionka
+poora codeseREPLACE karo]
+===VERIFYKARO===
+Doctoryehdata dega:
+vitals:
+bp_systolic, bp_diastolic
+pulse, temperament
+symptoms: ['uric acid','jod dard']
+blood_report: 'Uric Acid: 8.5...'
+mri_report: 'L4-L5 disc...'
+report_values: { uric_acid:8.5 }
+affected_organs: ['urinary','musculoskeletal']
+phase: 'CHRONIC'
+Expected output (11 sections):
+# 🏥इले·	ो-होÏयोपैथीi·लlनकलि◌s×þËशन
+| Table with all vitals |
+## 1. रोगीlववरण—Temperament, BP,Pulse
+## 2. LabReports —Table withHIGH/LOW+ EH meaning
+## 3. भाlवतअंग—Anatomy +Pathology detail
+## 4. Formula —S6+C4+A3+GE D30+ hardawa reason
+## 5. Potency —D30kyoon(CHRONIC+HYPER)
+## 6. Khuraak—6-timingbeautiful table
+## 7. Baahri Prayog —GE compressdetail
+## 8. EH Siddhant —Lymph+Bloodshuddhi
+## 9. Recovery —7 din, 30din, 3mahina
+## 10. Diet —Lab-specific restrictions
+## 11. Follow-up —Warning signs +next tests
+## 💡AI Workflow
+🌿E.H. AROGYA SUTRA CLINIC
+===TEST===
+node-e"
+const {generateClinicalSummary} =
+require('./backend/services/generateClinicalSummary');
+generateClinicalSummary({
+age:55,gender:'Male', weight:70,
+bp_systolic:150, bp_diastolic:95, pulse:88,
+temperament:'Mixed',
+symptoms:['uric acidbadha hua','jod dard'],
+
+--- PAGE 19 ---
+blood_report:'Uric Acid: 8.5, Creatinine: 1.4',
+report_values:{ uric_acid:8.5, creatinine:1.4 },
+affected_organs:['urinary','musculoskeletal'],
+phase:'CHRONIC',
+formulas:{
+formula_a:{medicines:['S-6','C-4','A-3']},
+formula_b:{medicines:['S-1','F-1','G.E.']}
+}
+}).then(r => console.log(r.summary));
+"
+===END ===
+11 Sections Quick Reference
+#
+Section Name
+Content
+1
+रोगीlववरण
+BP+Pulse+Temperament+Diagnosis
+2
+जांचjरपोटµ
+LabTable: HIGH/LOW+EH Meaning
+3
+भाlवतअंग
+Anatomy +Pathology detail
+4
+Formula
+Har dawa ka anatomy-based reason
+5
+Potency
+D10/D30/D3—scientific reason
+6
+Khuraak
+6-timing table +Sip bySip
+7
+BaahriPrayog
+Electricity+ exactbody location
+8
+EH Siddhant
+Lymph+Bloodshuddhiexplanation
+9
+Recovery
+7 din, 30 din, 3mahinatimeline
+10
+Diet
+Lab-specific foodchart
+11
+Follow-up
+Warningsigns + next tests
+E.H. AROGYASUTRA —Anatomy + Pathology +11 Sections | 100% Siddhant

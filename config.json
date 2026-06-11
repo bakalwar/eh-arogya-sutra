@@ -1,0 +1,36 @@
+{
+  "app": {
+    "name": "E.H. Arogya Sutra App",
+    "version": "1.0.0",
+    "description": "Clinical Decision Support System for Ayurveda & Homeopathy"
+  },
+  "server": {
+    "port": 3000,
+    "host": "localhost"
+  },
+  "frontend": {
+    "port": 5173,
+    "buildDir": "dist"
+  },
+  "database": {
+    "type": "mongodb",
+    "fallback": "postgresql"
+  },
+  "features": {
+    "multiLanguage": true,
+    "pwa": true,
+    "offlineSupport": false
+  },
+  "security": {
+    "jwtExpiry": "24h",
+    "rateLimit": {
+      "windowMs": 900000,
+      "max": 100
+    }
+  },
+  "integrations": {
+    "twilio": true,
+    "stripe": true,
+    "pdfKit": true
+  }
+}

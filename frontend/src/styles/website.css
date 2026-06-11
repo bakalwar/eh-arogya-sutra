@@ -1,0 +1,211 @@
+.site-root {
+  --site-bg: #060d07;
+  --site-surface: #0b1a0d;
+  --site-gold: #c9963a;
+  --site-gold-light: #e8c46a;
+  --site-green: #2d6a35;
+  --site-mint: #4a9b54;
+  background: var(--site-bg);
+  color: rgba(255, 255, 255, 0.85);
+  min-height: 100dvh;
+  font-family: 'DM Sans', 'Noto Sans Devanagari', system-ui, sans-serif;
+}
+
+.site-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  height: 64px;
+  background: rgba(6, 13, 7, 0.95);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(201, 150, 58, 0.15);
+}
+
+.site-hero {
+  min-height: 100dvh;
+  padding-top: 64px;
+  background: radial-gradient(ellipse at 50% 30%, rgba(45, 106, 53, 0.15) 0%, #060d07 65%);
+  position: relative;
+  overflow: hidden;
+}
+
+.site-hero-shimmer {
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #c9963a, #e8c46a, #c9963a, transparent);
+}
+
+.site-particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.site-particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #e8c46a;
+  opacity: 0.35;
+  animation: site-float 6s ease-in-out infinite;
+}
+
+@keyframes site-float {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 0.2;
+  }
+  50% {
+    transform: translateY(-18px) scale(1.2);
+    opacity: 0.55;
+  }
+}
+
+.site-logo-pop {
+  animation: site-logo-pop 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes site-logo-pop {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.site-logo-glow {
+  animation: site-glow 3s ease-in-out infinite;
+}
+
+@keyframes site-glow {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 12px rgba(201, 150, 58, 0.35));
+  }
+  50% {
+    filter: drop-shadow(0 0 28px rgba(232, 196, 106, 0.55));
+  }
+}
+
+.site-fade-up {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: site-fade-up 0.7s ease forwards;
+}
+
+@keyframes site-fade-up {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.site-delay-1 {
+  animation-delay: 0.2s;
+}
+.site-delay-2 {
+  animation-delay: 0.4s;
+}
+.site-delay-3 {
+  animation-delay: 0.6s;
+}
+.site-delay-4 {
+  animation-delay: 0.8s;
+}
+.site-delay-5 {
+  animation-delay: 1s;
+}
+
+.site-feature-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 24px;
+  transition: all 0.3s ease;
+}
+
+.site-feature-card:hover {
+  transform: translateY(-4px);
+  background: rgba(45, 106, 53, 0.1);
+  border-color: rgba(74, 155, 84, 0.3);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.site-pricing-pro {
+  background: linear-gradient(135deg, rgba(201, 150, 58, 0.12), rgba(201, 150, 58, 0.06));
+  border: 2px solid rgba(201, 150, 58, 0.4);
+  transform: scale(1.05);
+}
+
+.site-faq-item.open {
+  border-left: 3px solid #c9963a;
+  background: rgba(201, 150, 58, 0.04);
+}
+
+@media (max-width: 768px) {
+  .site-pricing-pro {
+    transform: none;
+    order: -1;
+  }
+}
+
+/* Count Mattei portrait — gold rotating ring (outer spins, photo counter-rotates) */
+.site-mattei-spin {
+  border-radius: 50%;
+  padding: 4px;
+  background: conic-gradient(
+    from 0deg,
+    #c9963a,
+    #fff8e7,
+    #e8c46a,
+    #c9963a,
+    #4a9b54,
+    #2d6a35,
+    #c9963a,
+    #fff4d4,
+    #c9963a
+  );
+  box-shadow:
+    0 0 28px rgba(201, 150, 58, 0.35),
+    inset 0 0 12px rgba(232, 196, 106, 0.15);
+  animation: site-mattei-ring-rotate 16s linear infinite;
+}
+
+.site-mattei-photo {
+  background: radial-gradient(circle at 40% 25%, rgba(60, 80, 55, 0.35), #0a120b);
+  animation: site-mattei-photo-counter 16s linear infinite;
+}
+
+@keyframes site-mattei-ring-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes site-mattei-photo-counter {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+.site-splash {
+  font-family: 'DM Sans', 'Noto Sans Devanagari', system-ui, sans-serif;
+}
+
+.site-nav .site-mattei-spin {
+  padding: 2px;
+  box-shadow: 0 0 14px rgba(201, 150, 58, 0.25);
+  animation-duration: 20s;
+}
+
+.site-nav .site-mattei-photo {
+  animation-duration: 20s;
+}
+
