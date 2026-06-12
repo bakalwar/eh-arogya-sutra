@@ -3,13 +3,11 @@
 /**
  * Smart Search summary — EH API v3 only:
  * 14,000 fuzzy diseases + 9 Rule Engines (summary_engine.py).
- * No book RAG / Ollama book pipeline.
+ * No rule-engine / template / book / Ollama fallbacks.
  */
 const { caseDataToSummaryInput } = require('./summaryCaseAdapter');
 const { callExpertAnalyze, EXPERT_BASE } = require('./ehExpertClient');
 const { mapEhApiV3PrescribeToApp } = require('./pdfExpertMapper');
-const { buildFallbackSummary } = require('./ehSummary7SectionFallback');
-const { buildClinicalData } = require('./ehSourceOfTruthClinical');
 const {
   EH_SUMMARY_PY,
   EH_API_PY,
@@ -21,19 +19,36 @@ const { getSummaryWordTargets } = require('../config/environment');
 const MODEL_PREF = 'eh-api-9engine-v3';
 const TARGET_WORDS = getSummaryWordTargets().targetWords;
 
+const REJECTED_SUMMARY_MARKERS = [
+  /^error generating summary/i,
+  /^eh prescription\s*—/i,
+  /rule-engine fallback/i,
+  /node rule-engine/i,
+  /template-fallback/i,
+  /clinicalfallbackseven/i,
+  /eh api offline/i,
+  /⚠️\s*eh api summary/i
+];
+
 function wordCount(text) {
   return (text || '').split(/\s+/).filter(Boolean).length;
 }
 
-function extractCachedSummary(caseData = {}) {
+function extractEhApiSummary(payload = {}) {
   return String(
-    caseData.clinical_summary ||
-      caseData.summary ||
-      caseData.eh_analysis?.clinical_summary ||
-      caseData.eh_analysis?.parcha ||
-      caseData.expert?.clinical_summary ||
+    payload.clinical_summary ||
+      payload.summary ||
+      payload.parcha ||
+      payload.eh_analysis?.clinical_summary ||
+      payload.eh_analysis?.parcha ||
       ''
   ).trim();
+}
+
+function isRejectedSummaryText(text) {
+  const s = String(text || '').trim();
+  if (!s) return true;
+  return REJECTED_SUMMARY_MARKERS.some((re) => re.test(s));
 }
 
 /** caseData → EH API /api/v3/prescribe body */
@@ -95,7 +110,7 @@ function formatEhApiResult(summary, caseData, mapped = {}, extra = {}) {
     seven_sections: true,
     summary_layout: 'eh_api_professional_summary',
     summary_section_count: SUMMARY_SECTION_COUNT,
-    summary_engine: 'summary_engine.py',
+    summary_engine: EH_SUMMARY_PY,
     summary_engine_version: SUMMARY_ENGINE_VERSION,
     book_rag_chars: 0,
     bookPassagesUsed: 0,
@@ -109,14 +124,8 @@ function formatEhApiResult(summary, caseData, mapped = {}, extra = {}) {
   };
 }
 
-/** Primary: POST eh-api /api/v3/prescribe (14k diseases + 9 engines) */
+/** POST eh_api.py /api/v3/prescribe — always live EH API output */
 async function buildEhApiNineEngineSummary(caseData = {}) {
-  const cached = extractCachedSummary(caseData);
-  if (cached) {
-    console.log('[EH SUMMARY] Cached 9-Rule-Engine summary (%d chars)', cached.length);
-    return formatEhApiResult(cached, caseData, caseData);
-  }
-
   const caseInput = caseDataToPrescribeInput(caseData);
   if (!caseInput.chief_complaint && !caseInput.symptoms) {
     const err = new Error('Symptoms / chief complaint required for EH API summary');
@@ -136,9 +145,11 @@ async function buildEhApiNineEngineSummary(caseData = {}) {
   }
 
   const mapped = mapEhApiV3PrescribeToApp(py, caseInput);
-  const summary = extractCachedSummary(mapped);
-  if (!summary) {
-    const err = new Error('EH API returned empty clinical_summary');
+  const summary = extractEhApiSummary(mapped) || extractEhApiSummary(py);
+  if (isRejectedSummaryText(summary)) {
+    const err = new Error(
+      'EH API returned invalid or empty clinical_summary — rule-engine / template output rejected'
+    );
     err.statusCode = 502;
     throw err;
   }
@@ -148,59 +159,12 @@ async function buildEhApiNineEngineSummary(caseData = {}) {
   });
 }
 
-async function buildEhApiSummaryWithFallback(caseData = {}) {
-  try {
-    return await buildEhApiNineEngineSummary(caseData);
-  } catch (err) {
-    console.warn('[EH SUMMARY] EH API path failed:', err.message);
-
-    if (process.env.EH_ALLOW_TEMPLATE_FALLBACK === '1') {
-      const summaryInput = caseDataToSummaryInput(caseData);
-      const cd = buildClinicalData(summaryInput);
-      const raw = buildFallbackSummary(summaryInput, cd, caseData.eh_analysis || null);
-      return {
-        summary: `> *EH API offline — Node rule-engine fallback (not book RAG)*\n\n${raw}`,
-        summary_json: null,
-        model: 'clinicalFallbackSeven',
-        wordCount: wordCount(raw),
-        targetWords: TARGET_WORDS,
-        source: 'clinicalFallbackSeven-fallback',
-        summary_engine: 'clinicalFallbackSeven.js',
-        summary_engine_version: SUMMARY_ENGINE_VERSION,
-        seven_sections: true,
-        summary_via: 'template-fallback',
-        fallback_reason: err.message
-      };
-    }
-
-    return {
-      summary:
-        `# ⚠️ EH API Summary — 9 Rule Engines\n\n` +
-        `**त्रुटि:** ${err.message}\n\n` +
-        `1. Expert engine चलाएं: npm run expert-engine (${EXPERT_BASE})\n` +
-        '2. npm run dev restart\n' +
-        `3. Dubara Analyze / सारांश\n\n` +
-        `*Book / Ollama pipeline उपयोग नहीं होता — केवल EH API + 14,000 rog database.*`,
-      summary_json: { ehApiError: true },
-      model: MODEL_PREF,
-      wordCount: 0,
-      targetWords: TARGET_WORDS,
-      source: 'eh-api-error',
-      summary_engine: 'summary_engine.py',
-      summary_engine_version: SUMMARY_ENGINE_VERSION,
-      seven_sections: false,
-      summary_via: 'error',
-      fallback_reason: err.message
-    };
-  }
-}
-
 async function generateExpertClinicalSummary(caseData) {
-  return buildEhApiSummaryWithFallback(caseData);
+  return buildEhApiNineEngineSummary(caseData);
 }
 
 async function buildClinicalSummaryForCase(caseData) {
-  return buildEhApiSummaryWithFallback(caseData);
+  return buildEhApiNineEngineSummary(caseData);
 }
 
 module.exports = {

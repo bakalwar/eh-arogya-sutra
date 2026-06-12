@@ -30,8 +30,7 @@ function ehSummaryJson(result) {
       summary_engine: result.summary_engine || 'summary_engine.py',
       engine_result: result.engine_result || null,
       pipeline: 'eh-api-14k-diseases-9-rule-engines',
-      note: result.fallback_reason || null,
-      language: 'hi'
+      language: 'en'
     }
   };
 }

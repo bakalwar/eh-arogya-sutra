@@ -747,22 +747,7 @@ def _build_tablet_formula(mixtures: list, polarity: str,
         )
         return data["formula"]
     except Exception as e:
-        print(f"[tablet] CDSS fallback: {e}")
-        if not mixtures:
-            return f"No formula available — {dilution}"
-        first_mix = mixtures[0]
-        meds = first_mix.get("medicines", [])
-        tab_meds = [m for m in meds if m][:3]
-        if not tab_meds:
-            formula_str = first_mix.get("formula", "")
-            parts = re.split(r'[+\-—]', formula_str)
-            tab_meds = [p.strip() for p in parts
-                        if p.strip() and not p.strip().startswith('D')
-                        and len(p.strip()) <= 8][:3]
-        elec = first_mix.get("electricity", "WE")
-        if elec and elec not in tab_meds:
-            tab_meds.append(elec)
-        return " + ".join(tab_meds[:4]) + f"  —  {dilution}"
+        raise RuntimeError(f"tablet_synthesis CDSS failed: {e}") from e
 
 
 def _build_tablet_tiers(
@@ -794,12 +779,7 @@ def _build_tablet_tiers(
             tiers[1] = f"After Food  : {med} — Post-meal acid-regulating tablet for gastric irritation"
         return tiers
     except Exception as e:
-        print(f"[tablet] tier fallback: {e}")
-        return [
-            "Before Food : S1 — Constitutional support",
-            "After Food  : C10 — Tissue support",
-            "Night Dose  : L1 — Drainage support",
-        ]
+        raise RuntimeError(f"tablet tier synthesis failed: {e}") from e
 
 
 def _build_external_formula(mixtures: list,

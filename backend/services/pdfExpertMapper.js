@@ -44,12 +44,12 @@ function mapExpertToApp(expert, patient = {}) {
     ehAi: {
       dilution: expert.potency,
       phase: expert.phase,
-      engine: 'node-rule-engine-fallback'
+      engine: 'eh-api-9engine-v3'
     },
     faceAnalysis: patient.faceAnalysis || null,
     combinedReports: patient.combinedReports || null,
     inputMeta: {
-      engine: 'node-rule-engine-fallback'
+      engine: 'eh_api.py'
     },
     clinical_summary: expert.clinical_summary || expert.summary || expert.parcha || '',
     summary: expert.clinical_summary || expert.summary || expert.parcha || '',

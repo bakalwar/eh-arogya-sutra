@@ -43,14 +43,6 @@ const config = {
   version: 3,
   routes: [
     { src: '/health', dest: `${railwayApi}/health` },
-    {
-      src: '/api/summary/eh-api',
-      dest: `${railwayApi}/api/summary/generate`
-    },
-    {
-      src: '/api/summary/eh-engine',
-      dest: `${railwayApi}/api/summary/generate`
-    },
     { src: '/api/(.*)', dest: `${railwayApi}/api/$1` },
     { src: '/uploads/(.*)', dest: `${railwayApi}/uploads/$1` },
     { handle: 'filesystem' },

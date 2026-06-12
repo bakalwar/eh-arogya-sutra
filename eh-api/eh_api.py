@@ -38,14 +38,9 @@ from sqlalchemy.orm import sessionmaker, Session
 from pydantic import BaseModel, Field
 from models import Base, Medicine, Disease, PotencyRule, ApiKey, Consultation, engine, SessionLocal, init_db
 
-# New professional summary engine
-try:
-    from summary_engine import build_professional_summary
-    SUMMARY_ENGINE_V2 = True
-    print("[STARTUP] Professional Summary Engine v2 loaded.")
-except ImportError as e:
-    SUMMARY_ENGINE_V2 = False
-    print(f"[WARNING] Summary engine not found: {e}")
+# Professional summary engine — required (no legacy string fallback)
+from summary_engine import build_professional_summary
+print("[STARTUP] Professional Summary Engine (summary_engine.py) loaded.")
 
 init_db()
 
@@ -287,80 +282,70 @@ def prescribe(req: PrescribeReq,
     print(f"[DEBUG] Final Active Systems (Ordered): {active_systems}")
     print(f"[DEBUG] Base Meds from DB: {base_meds}")
 
-    # Run 9 engines
     try:
         prakriti = detect_prakriti(req.symptoms, req.bp_systolic)
         polarity = detect_polarity(req.symptoms, req.bp_systolic, req.age, req.bp_diastolic)
         print(f"[DEBUG] Detected Polarity: {polarity}")
         potency  = select_potency(polarity, req.condition, req.age, req.symptoms)
-        print(f"DEBUG: Calling build_formula from eh_api.py with 7 args")
         mixtures = build_formula(db, active_systems, polarity, prakriti,
                                  potency, req.symptoms, base_meds)
-        
-        # Update active_systems from mixtures (in case build_formula added support systems)
         final_systems = [m['system'] for m in mixtures]
-
         safety   = safety_check(polarity, potency["dilution"])
         dosage   = calc_dosage(req.age, polarity, req.condition)
         diet     = build_diet(polarity, final_systems)
-        
-        # Save to DB first to get ID
-        c = Consultation(
-            api_key_hash=key_hash, patient_name=req.patient_name,
-            age=req.age, gender=req.gender,
-            bp_systolic=req.bp_systolic, bp_diastolic=req.bp_diastolic,
-            symptoms_input=req.symptoms, prakriti=prakriti,
-            polarity=polarity, potency=potency["dilution"],
-            formula_json=json.dumps([m["formula"] for m in mixtures]),
-            safety_status=safety["status"],
-        )
-        db.add(c); db.commit(); db.refresh(c)
-
-        if SUMMARY_ENGINE_V2:
-            summary_data = build_professional_summary(
-                patient={
-                    "patient_name": req.patient_name,
-                    "age":          req.age,
-                    "gender":       req.gender,
-                    "bp_systolic":  req.bp_systolic,
-                    "bp_diastolic": req.bp_diastolic,
-                    "symptoms":     req.symptoms,
-                },
-                prakriti        = prakriti,
-                polarity        = polarity,
-                condition       = req.condition,
-                active_systems  = final_systems,
-                mixtures        = mixtures,
-                dosage          = {
-                    **dosage,
-                    "dilution": potency.get("dilution","D6"),
-                },
-                safety          = safety,
-                diet            = diet,
-                report_lab      = [],
-                report_imaging  = [],
-                prescription_id = c.id if hasattr(c,'id') else None,
-            )
-            summary = summary_data["summary"]
-            engine_result = summary_data["engine_result"]
-        else:
-            # Fallback agar import fail ho
-            summary = (
-                f"EH Prescription — {req.patient_name} | "
-                f"Polarity: {polarity} | Potency: "
-                f"{potency.get('dilution','—')} | "
-                f"Systems: {', '.join(active_systems)}"
-            )
-            engine_result = {
-                "mixtures": mixtures,
-                "diet": diet
-            }
     except Exception as e:
         import traceback
-        print(f"ERROR in engines: {str(e)}")
         traceback.print_exc()
-        summary = f"Error generating summary: {str(e)}"
-        engine_result = {"mixtures": mixtures, "diet": diet}
+        raise HTTPException(500, f"EH clinical engines failed: {e}")
+
+    c = Consultation(
+        api_key_hash=key_hash, patient_name=req.patient_name,
+        age=req.age, gender=req.gender,
+        bp_systolic=req.bp_systolic, bp_diastolic=req.bp_diastolic,
+        symptoms_input=req.symptoms, prakriti=prakriti,
+        polarity=polarity, potency=potency["dilution"],
+        formula_json=json.dumps([m["formula"] for m in mixtures]),
+        safety_status=safety["status"],
+    )
+    db.add(c)
+    db.commit()
+    db.refresh(c)
+
+    try:
+        summary_data = build_professional_summary(
+            patient={
+                "patient_name": req.patient_name,
+                "age":          req.age,
+                "gender":       req.gender,
+                "bp_systolic":  req.bp_systolic,
+                "bp_diastolic": req.bp_diastolic,
+                "symptoms":     req.symptoms,
+            },
+            prakriti        = prakriti,
+            polarity        = polarity,
+            condition       = req.condition,
+            active_systems  = final_systems,
+            mixtures        = mixtures,
+            dosage          = {
+                **dosage,
+                "dilution": potency.get("dilution", "D6"),
+            },
+            safety          = safety,
+            diet            = diet,
+            report_lab      = [],
+            report_imaging  = [],
+            prescription_id = c.id,
+        )
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(500, f"summary_engine.py failed: {e}")
+
+    summary = str(summary_data.get("summary") or "").strip()
+    if not summary or summary.lower().startswith("error generating summary"):
+        raise HTTPException(502, "Empty or invalid clinical_summary from summary_engine.py")
+
+    engine_result = summary_data.get("engine_result") or {}
 
     return {
         "status":          "success",
