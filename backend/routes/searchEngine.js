@@ -46,8 +46,9 @@ function useNodeEngineOnly() {
   return process.env.EH_NODE_SINGLE_ENGINE === '1';
 }
 
+/** Default OFF — only EH API (eh_api.py + 9 engines). Set EH_EXPERT_FALLBACK_NODE=1 to enable Node rule engine. */
 function allowNodeExpertFallback() {
-  return process.env.EH_EXPERT_FALLBACK_NODE !== '0';
+  return process.env.EH_EXPERT_FALLBACK_NODE === '1';
 }
 
 function parseJsonField(raw, fallback) {
@@ -290,39 +291,55 @@ router.post(
       }
     }
 
-    let data;
-    if (expert.status === 'success' || expert.clinical_analysis) {
-      data = mapEhApiV3PrescribeToApp(expert, {
-        name,
-        ...caseInput,
-        faceAnalysis: body.face_analysis || body.faceAnalysis,
-        combinedReports:
-          body.combined_reports ||
-          body.combinedReports ||
-          (reportParts.length
-            ? { raw_text: reportParts.join('\n\n'), found_values: Object.entries(reportValues).map(([k, v]) => ({ test_key: k, value: v })) }
-            : null)
+    const isEhApi =
+      expert.status === 'success' || expert.ok || expert.clinical_analysis;
+    if (!isEhApi && !useNodeEngineOnly()) {
+      return res.status(502).json({
+        success: false,
+        message:
+          expert.detail ||
+          expert.message ||
+          'EH API (9 Rule Engines) failed — npm run expert-engine chalayein'
       });
-    } else {
-      data = mapExpertToApp(expert, {
-        name,
-        ...caseInput,
-        faceAnalysis: body.face_analysis || body.faceAnalysis,
-        combinedReports:
-          body.combined_reports ||
-          body.combinedReports ||
-          (reportParts.length
-            ? { raw_text: reportParts.join('\n\n'), found_values: Object.entries(reportValues).map(([k, v]) => ({ test_key: k, value: v })) }
-            : null)
-      });
-      data = enrichCaseWithSourceOfTruth(data);
     }
+
+    const data = isEhApi
+      ? mapEhApiV3PrescribeToApp(expert, {
+          name,
+          ...caseInput,
+          faceAnalysis: body.face_analysis || body.faceAnalysis,
+          combinedReports:
+            body.combined_reports ||
+            body.combinedReports ||
+            (reportParts.length
+              ? {
+                  raw_text: reportParts.join('\n\n'),
+                  found_values: Object.entries(reportValues).map(([k, v]) => ({ test_key: k, value: v }))
+                }
+              : null)
+        })
+      : enrichCaseWithSourceOfTruth(
+          mapExpertToApp(expert, {
+            name,
+            ...caseInput,
+            faceAnalysis: body.face_analysis || body.faceAnalysis,
+            combinedReports:
+              body.combined_reports ||
+              body.combinedReports ||
+              (reportParts.length
+                ? {
+                    raw_text: reportParts.join('\n\n'),
+                    found_values: Object.entries(reportValues).map(([k, v]) => ({ test_key: k, value: v }))
+                  }
+                : null)
+          })
+        );
 
     res.json({
       success: true,
       data,
-      eh_engine_online: expert.status === 'success' || expert.ok !== false,
-      pipeline: expert.status === 'success' ? 'eh-api-9engine-prescribe' : 'node-fallback'
+      eh_engine_online: isEhApi,
+      pipeline: isEhApi ? 'eh-api-9engine-prescribe' : 'node-rule-engine-v4'
     });
   })
 );

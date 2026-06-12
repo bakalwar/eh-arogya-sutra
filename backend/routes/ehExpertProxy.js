@@ -1,14 +1,20 @@
 'use strict';
 
 /**
- * Proxy to Python EH Expert Engine (eh_api.py on EH_EXPERT_ENGINE_URL).
- * POST body = Python CaseInput (see eh-expert-engine/app/schemas.py).
+ * Proxy to eh_api.py (9 Rule Engines + summary_engine.py) on EH_API_URL / port 8005.
  */
 const express = require('express');
 const axios = require('axios');
 const multer = require('multer');
 const { asyncHandler } = require('../utils/asyncHandler');
-const { callExpertAnalyzeFace, callExpertOcrReport, callExpertAnalyzeComplete } = require('../services/ehExpertClient');
+const {
+  callExpertAnalyzeFace,
+  callExpertOcrReport,
+  callExpertAnalyzeComplete,
+  EXPERT_BASE
+} = require('../services/ehExpertClient');
+const { analyzeWithEHEngines, summaryWithEHEngines } = require('../services/ehEngineService');
+const { mapEhApiV3PrescribeToApp } = require('../services/pdfExpertMapper');
 const { buildExpertCompleteFormData } = require('../utils/buildExpertCompleteFormData');
 
 const upload = multer({
@@ -24,11 +30,7 @@ const uploadComplete = multer({
   { name: 'report_file', maxCount: 1 }
 ]);
 
-const { analyzeWithEHEngines } = require('../services/ehEngineService');
-
 const router = express.Router();
-
-const EXPERT_BASE = (process.env.EH_EXPERT_ENGINE_URL || 'http://127.0.0.1:8005').replace(/\/$/, '');
 const EXPERT_TIMEOUT_MS = Number(process.env.EH_EXPERT_TIMEOUT_MS) || 90000;
 
 function caseInputToPatientData(caseInput) {
@@ -50,28 +52,33 @@ function caseInputToPatientData(caseInput) {
   };
 }
 
-function mapEhApiToExpertUi(rawData) {
-  const prakriti = rawData.prakriti?.prakriti || 'Mixed';
+function caseInputToCaseData(caseInput) {
+  const c = caseInput || {};
+  const symptoms =
+    c.symptoms_text ||
+    c.chief_complaint ||
+    c.chiefComplaint ||
+    (Array.isArray(c.symptoms) ? c.symptoms.map((s) => (typeof s === 'object' ? s.name : s)).join(', ') : '') ||
+    '';
   return {
-    ...rawData,
-    temperament: prakriti,
-    reasoning_trace: [
-      `EH API v3 — ${prakriti} temperament`,
-      `Polarity: ${rawData.polarity?.polarity || 'MIXED'}`,
-      `Potency: ${rawData.potency?.potency || 'D10'}`,
-      `Systems: ${(rawData.active_systems || []).join(', ') || 'GENERAL'}`
-    ],
-    potency: rawData.potency?.potency || 'D10',
-    parcha: rawData.parcha || rawData.clinical_summary || '',
-    clinical_summary: rawData.clinical_summary || rawData.parcha || '',
-    pipeline: 'eh-api-9engine-v3'
+    patient: {
+      name: c.patient_name || c.name || 'Patient',
+      age: c.age ?? 30,
+      gender: c.gender || 'Male',
+      chiefComplaint: symptoms,
+      bp_systolic: c.bp_systolic ?? c.bpSystolic,
+      bp_diastolic: c.bp_diastolic ?? c.bpDiastolic
+    },
+    analysis: {
+      chief_complaint: symptoms,
+      phase: c.phase || c.condition || 'chronic'
+    },
+    chief_complaint: symptoms
   };
 }
 
 /**
- * POST /api/expert/analyze
- * Body: full CaseInput OR { case: CaseInput }
- * Routes to Python EH API /api/v3/prescribe (port 8005)
+ * POST /api/expert/analyze → eh_api.py /api/v3/prescribe (9 Rule Engines)
  */
 router.post(
   '/analyze',
@@ -86,66 +93,67 @@ router.post(
       return res.status(400).json({ success: false, message: 'symptoms or chief_complaint required' });
     }
 
-    const result = await analyzeWithEHEngines(patientData);
-    if (!result.success) {
-      const code = result.fallback ? 503 : 502;
-      return res.status(code).json({
+    try {
+      const result = await analyzeWithEHEngines(patientData);
+      return res.json({ success: true, data: result.data, pipeline: 'eh-api-9engine-v3' });
+    } catch (err) {
+      return res.status(err.statusCode || 502).json({
         success: false,
-        message: result.error || 'EH API analyze failed',
+        message: err.message || 'EH API analyze failed',
         expert_url: EXPERT_BASE
       });
     }
-
-    return res.json({ success: true, data: mapEhApiToExpertUi(result.data) });
   })
 );
 
 /**
- * POST /api/expert/summary
- * Body: { case: CaseInput, language?: "hi"|"en"|"both" }
+ * POST /api/expert/summary → eh_api.py /api/summary/eh-api
  */
 router.post(
   '/summary',
   asyncHandler(async (req, res) => {
     const body = req.body || {};
-    if (!body.case) {
-      return res.status(400).json({ success: false, message: 'case required' });
+    const caseInput = body.case || body.caseData || body;
+    if (!caseInput || typeof caseInput !== 'object') {
+      return res.status(400).json({ success: false, message: 'case or caseData required' });
     }
 
     try {
-      const payload = {
-        case: body.case,
-        language: body.language || 'hi'
-      };
-      const { data, status } = await axios.post(`${EXPERT_BASE}/v1/expert/summary`, payload, {
-        timeout: Math.max(EXPERT_TIMEOUT_MS, 120000),
-        headers: { 'Content-Type': 'application/json' },
-        validateStatus: () => true
+      const caseData = body.caseData ? caseInput : caseInputToCaseData(caseInput);
+      const result = await summaryWithEHEngines(caseData);
+      const mapped = mapEhApiV3PrescribeToApp(
+        {
+          status: 'success',
+          clinical_summary: result.data.clinical_summary,
+          clinical_analysis: {
+            prakriti: result.data.prakriti?.prakriti,
+            polarity: result.data.polarity?.polarity,
+            potency: result.data.potency?.potency,
+            active_systems: result.data.active_systems
+          },
+          mixtures: result.data.mixtures,
+          engine_result: result.data.engine_result
+        },
+        caseData.patient || {}
+      );
+      return res.json({
+        success: true,
+        data: {
+          ...result.data,
+          summary: mapped.summary || result.data.clinical_summary,
+          pipeline: 'eh-api-14k-diseases-9-rule-engines'
+        }
       });
-
-      if (status >= 400) {
-        return res.status(502).json({
-          success: false,
-          message: data?.detail || `Expert summary HTTP ${status}`,
-          data
-        });
-      }
-
-      return res.json({ success: data?.ok !== false, data });
     } catch (err) {
-      const code = err.code || '';
-      const msg =
-        code === 'ECONNREFUSED' || code === 'ENOTFOUND'
-          ? `EH Expert Engine band hai — npm run expert-engine (${EXPERT_BASE})`
-          : err.message || 'Expert summary proxy error';
-      return res.status(503).json({ success: false, message: msg });
+      return res.status(err.statusCode || 502).json({
+        success: false,
+        message: err.message || 'EH API summary failed',
+        expert_url: `${EXPERT_BASE}/api/summary/eh-api`
+      });
     }
   })
 );
 
-/**
- * POST /api/expert/analyze-face — multipart image → MediaPipe face analysis
- */
 router.post(
   '/analyze-face',
   upload.single('file'),
@@ -167,9 +175,6 @@ router.post(
   })
 );
 
-/**
- * POST /api/expert/ocr-report — PDF/image → pathologies + labs + organs
- */
 router.post(
   '/ocr-report',
   upload.single('file'),
@@ -194,9 +199,6 @@ router.post(
   })
 );
 
-/**
- * POST /api/expert/analyze-complete — face + report + formula + 11-section summary (one shot)
- */
 router.post(
   '/analyze-complete',
   uploadComplete,
@@ -226,19 +228,21 @@ router.post(
   })
 );
 
-/**
- * GET /api/expert/health — pass-through to Python /health
- */
 router.get(
   '/health',
   asyncHandler(async (_req, res) => {
     try {
       const { data } = await axios.get(`${EXPERT_BASE}/health`, { timeout: 5000 });
-      return res.json({ success: true, expert_url: EXPERT_BASE, upstream: data });
+      return res.json({
+        success: true,
+        expert_url: EXPERT_BASE,
+        summary_route: `${EXPERT_BASE}/api/summary/eh-api`,
+        upstream: data
+      });
     } catch (err) {
       return res.status(503).json({
         success: false,
-        message: err.code === 'ECONNREFUSED' ? 'Expert engine not running' : err.message,
+        message: err.code === 'ECONNREFUSED' ? 'EH API not running — npm run expert-engine' : err.message,
         expert_url: EXPERT_BASE
       });
     }
