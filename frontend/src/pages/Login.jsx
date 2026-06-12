@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import client from '../api/client';
@@ -6,68 +6,24 @@ import CaduceusLogo from '../components/website/CaduceusLogo';
 import { setSession, clearSession } from '../security/tokenManager';
 import { setLanguage } from '../i18n';
 
-function OtpBoxes({ value, onChange, disabled }) {
-  const refs = useRef([]);
-
-  function handleChange(index, digit) {
-    const d = digit.replace(/\D/g, '').slice(-1);
-    const chars = value.padEnd(6, ' ').split('').slice(0, 6);
-    chars[index] = d || '';
-    const next = chars.join('').replace(/\s/g, '');
-    onChange(next);
-    if (d && index < 5) refs.current[index + 1]?.focus();
-  }
-
-  function handleKeyDown(index, e) {
-    if (e.key === 'Backspace' && !value[index] && index > 0) {
-      refs.current[index - 1]?.focus();
-    }
-  }
-
-  return (
-    <div className="flex justify-center gap-2" role="group" aria-label="OTP">
-      {[0, 1, 2, 3, 4, 5].map((i) => (
-        <input
-          key={i}
-          ref={(el) => {
-            refs.current[i] = el;
-          }}
-          id={`otp-${i}`}
-          type="text"
-          inputMode="numeric"
-          maxLength={1}
-          disabled={disabled}
-          value={value[i] || ''}
-          className="h-12 w-10 rounded-lg border border-white/15 bg-white/5 text-center text-xl text-white outline-none ring-emerald-500/40 focus:ring-2"
-          onChange={(e) => handleChange(i, e.target.value)}
-          onKeyDown={(e) => handleKeyDown(i, e)}
-        />
-      ))}
-    </div>
-  );
-}
-
 export default function Login() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [step, setStep] = useState('password');
-  const [form, setForm] = useState({ mobile: '', password: '', otp: '', totp: '' });
-  const [challengeId, setChallengeId] = useState('');
-  const [userId, setUserId] = useState('');
-  const [mobileHint, setMobileHint] = useState('');
-  const [otpDevConsole, setOtpDevConsole] = useState(false);
-  const [otpMessage, setOtpMessage] = useState('');
-  const [devOtp, setDevOtp] = useState('');
+  const [form, setForm] = useState({ mobile: '', password: '' });
   const [err, setErr] = useState('');
   const [loading, setLoading] = useState(false);
   const [booted, setBooted] = useState(false);
+  const [adminPhone, setAdminPhone] = useState('9098791989');
 
   useEffect(() => {
     document.title = `${t('nav.login')} — E.H. Arogya Sutra`;
     const fresh = searchParams.get('start') === '1' || searchParams.get('fresh') === '1';
     if (fresh) clearSession();
     setBooted(true);
+    client.get('/api/branding').then(({ data }) => {
+      if (data?.data?.clinicPhone) setAdminPhone(String(data.data.clinicPhone).replace(/\D/g, '').slice(-10) || data.data.clinicPhone);
+    }).catch(() => {});
   }, [t, searchParams]);
 
   if (!booted) return null;
@@ -86,6 +42,21 @@ export default function Login() {
     else setErr(msg || e2.message || t('login.errGeneric'));
   }
 
+  function redirectAfterLogin(user) {
+    const role = user?.role;
+    if (user?.mustChangePassword) {
+      navigate('/change-password', { replace: true });
+      return;
+    }
+    const dest =
+      role === 'super_admin'
+        ? '/super-admin/overview'
+        : role === 'admin'
+          ? '/admin'
+          : '/dashboard';
+    navigate(dest, { replace: true });
+  }
+
   async function handleLogin(e) {
     e?.preventDefault();
     setErr('');
@@ -95,78 +66,11 @@ export default function Login() {
         mobile: form.mobile,
         password: form.password
       });
-      if (data.success && data.requires2fa) {
-        setUserId(data.userId);
-        setStep('2fa');
-      } else if (data.success && data.requiresOtp && data.challengeId) {
-        setChallengeId(data.challengeId);
-        setMobileHint(data.mobileHint || data.emailHint || '');
-        setOtpDevConsole(!!data.otpDevConsole);
-        setOtpMessage(data.message || '');
-        const code = data.devOtp ? String(data.devOtp) : '';
-        setDevOtp(code);
-        setForm((f) => ({ ...f, otp: code }));
-        setStep('otp');
+      if (data.success && (data.accessToken || data.token)) {
+        setSession(data.accessToken || data.token, data.user, data.refreshToken);
+        redirectAfterLogin(data.user);
       } else {
         setErr(data.message || 'Login failed');
-      }
-    } catch (e2) {
-      handleApiError(e2);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleVerifyOtp(e) {
-    e?.preventDefault();
-    setErr('');
-    setLoading(true);
-    try {
-      const { data } = await client.post('/api/auth/verify-otp', {
-        challengeId,
-        otp: form.otp.trim()
-      });
-      if (data.success && (data.accessToken || data.token)) {
-        setSession(data.accessToken || data.token, data.user, data.refreshToken);
-        const role = data.user?.role;
-        const dest =
-          role === 'super_admin'
-            ? '/super-admin/overview'
-            : role === 'admin'
-              ? '/admin'
-              : '/dashboard';
-        navigate(dest, { replace: true });
-      } else {
-        setErr(data.message || 'Verification failed');
-      }
-    } catch (e2) {
-      handleApiError(e2);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleVerify2fa(e) {
-    e?.preventDefault();
-    setErr('');
-    setLoading(true);
-    try {
-      const { data } = await client.post('/api/auth/verify-2fa', {
-        userId,
-        token: form.totp.trim()
-      });
-      if (data.success && (data.accessToken || data.token)) {
-        setSession(data.accessToken || data.token, data.user, data.refreshToken);
-        const role = data.user?.role;
-        const dest =
-          role === 'super_admin'
-            ? '/super-admin/overview'
-            : role === 'admin'
-              ? '/admin'
-              : '/dashboard';
-        navigate(dest, { replace: true });
-      } else {
-        setErr(data.message || 'Verification failed');
       }
     } catch (e2) {
       handleApiError(e2);
@@ -193,141 +97,55 @@ export default function Login() {
           </p>
         )}
 
-        <div className="mt-6 space-y-5">
-          {step === 'password' && (
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div>
-                <label className="mb-1 block text-xs uppercase tracking-wider text-white/45">{t('login.mobile')}</label>
-                <input
-                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none ring-emerald-500/40 focus:ring-2"
-                  type="tel"
-                  inputMode="numeric"
-                  placeholder="10-digit mobile"
-                  maxLength={10}
-                  value={form.mobile}
-                  onChange={(e) => setForm({ ...form, mobile: e.target.value.replace(/\D/g, '') })}
-                  required
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-xs uppercase tracking-wider text-white/45">{t('login.password')}</label>
-                <input
-                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none ring-emerald-500/40 focus:ring-2"
-                  type="password"
-                  placeholder="Password dalein"
-                  minLength={6}
-                  value={form.password}
-                  onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  onKeyDown={(e) => e.key === 'Enter' && handleLogin(e)}
-                  required
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full rounded-xl bg-gradient-to-r from-[#2d6a35] to-[#4a9b54] py-3 font-semibold text-white disabled:opacity-50"
-              >
-                {loading ? 'Verify ho raha hai…' : 'LOGIN →'}
-              </button>
-              <p className="text-center text-[11px] text-white/40">{t('login.hint')}</p>
-              <div className="flex flex-col gap-2 text-center text-xs">
-                <Link to="/register" className="text-[#c9963a]/90 underline">
-                  Naye Doctor? Register Karen
-                </Link>
-                <Link to="/website" className="text-white/40 underline">
-                  ← Public website
-                </Link>
-              </div>
-            </form>
-          )}
-
-          {step === 'otp' && (
-            <div className="space-y-4">
-              <p className="text-center text-sm text-white/60">
-                OTP aapke mobile par bheja gaya — {mobileHint || form.mobile}
-              </p>
-              {otpMessage && <p className="text-center text-xs text-white/45">{otpMessage}</p>}
-
-              {devOtp && (
-                <div className="rounded-lg border border-emerald-500/40 bg-emerald-500/15 px-4 py-3 text-center text-sm text-emerald-100">
-                  <span className="block text-[10px] font-bold uppercase tracking-wider text-emerald-300/90">
-                    🔧 Development Mode
-                  </span>
-                  Your OTP: <strong className="font-mono text-lg tracking-widest text-white">{devOtp}</strong>
-                  <button
-                    type="button"
-                    className="mt-2 block w-full rounded-lg border border-emerald-400/30 py-1 text-xs"
-                    onClick={() => setForm((f) => ({ ...f, otp: devOtp }))}
-                  >
-                    Auto Fill
-                  </button>
-                </div>
-              )}
-
-              {otpDevConsole && !devOtp && (
-                <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-center text-xs text-amber-100">
-                  OTP server terminal mein hai — <strong>npm run dev:fix</strong> then <strong>npm run dev</strong>
-                </p>
-              )}
-
-              <form onSubmit={handleVerifyOtp} className="space-y-4">
-                <OtpBoxes value={form.otp} onChange={(otp) => setForm((f) => ({ ...f, otp }))} disabled={loading} />
-                <button
-                  type="submit"
-                  disabled={loading || form.otp.length < 6}
-                  className="w-full rounded-xl bg-gradient-to-r from-[#2d6a35] to-[#4a9b54] py-3 font-semibold text-white disabled:opacity-50"
-                >
-                  {loading ? 'Verify ho raha hai…' : 'VERIFY & LOGIN →'}
-                </button>
-              </form>
-
-              <button
-                type="button"
-                className="w-full text-xs text-white/45 underline"
-                onClick={() => {
-                  setStep('password');
-                  setForm((f) => ({ ...f, otp: '' }));
-                  setDevOtp('');
-                  setErr('');
-                }}
-              >
-                ← Password page par wapas
-              </button>
-            </div>
-          )}
-
-          {step === '2fa' && (
-            <div className="space-y-4">
-              <p className="text-center text-sm text-white/60">
-                2FA Verification Required
-              </p>
-              <p className="text-center text-xs text-white/45">Enter the 6-digit code from your authenticator app.</p>
-
-              <form onSubmit={handleVerify2fa} className="space-y-4">
-                <OtpBoxes value={form.totp} onChange={(totp) => setForm((f) => ({ ...f, totp }))} disabled={loading} />
-                <button
-                  type="submit"
-                  disabled={loading || form.totp.length < 6}
-                  className="w-full rounded-xl bg-gradient-to-r from-[#2d6a35] to-[#4a9b54] py-3 font-semibold text-white disabled:opacity-50"
-                >
-                  {loading ? 'Verifying...' : 'VERIFY & LOGIN →'}
-                </button>
-              </form>
-
-              <button
-                type="button"
-                className="w-full text-xs text-white/45 underline"
-                onClick={() => {
-                  setStep('password');
-                  setForm((f) => ({ ...f, totp: '' }));
-                  setErr('');
-                }}
-              >
-                ← Back to Password
-              </button>
-            </div>
-          )}
-        </div>
+        <form onSubmit={handleLogin} className="mt-6 space-y-4">
+          <div>
+            <label className="mb-1 block text-xs uppercase tracking-wider text-white/45">{t('login.mobile')}</label>
+            <input
+              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none ring-emerald-500/40 focus:ring-2"
+              type="tel"
+              inputMode="numeric"
+              placeholder="10-digit mobile"
+              maxLength={10}
+              value={form.mobile}
+              onChange={(e) => setForm({ ...form, mobile: e.target.value.replace(/\D/g, '') })}
+              required
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs uppercase tracking-wider text-white/45">{t('login.password')}</label>
+            <input
+              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none ring-emerald-500/40 focus:ring-2"
+              type="password"
+              placeholder="Password dalein"
+              minLength={6}
+              value={form.password}
+              onChange={(e) => setForm({ ...form, password: e.target.value })}
+              required
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full rounded-xl bg-gradient-to-r from-[#2d6a35] to-[#4a9b54] py-3 font-semibold text-white disabled:opacity-50"
+          >
+            {loading ? 'Login ho raha hai…' : 'LOGIN →'}
+          </button>
+          <p className="text-center text-[11px] text-white/40">{t('login.hint')}</p>
+          <p className="text-center text-xs text-white/45">
+            {t('login.forgotPassword')}{' '}
+            <a href={`tel:${adminPhone}`} className="text-[#c9963a]/90 underline">
+              {adminPhone}
+            </a>
+          </p>
+          <div className="flex flex-col gap-2 text-center text-xs">
+            <Link to="/register" className="text-[#c9963a]/90 underline">
+              Naye Doctor? Admin se register karayein
+            </Link>
+            <Link to="/website" className="text-white/40 underline">
+              ← Public website
+            </Link>
+          </div>
+        </form>
 
         <div className="mt-6 flex justify-center gap-2">
           <button type="button" className="text-xs text-white/40 underline" onClick={() => setLanguage('hi')}>

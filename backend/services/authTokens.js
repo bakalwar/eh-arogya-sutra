@@ -2,7 +2,7 @@ const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const { getPostgresModels } = require('../db/postgres.init');
 
-const ACCESS_EXPIRE = process.env.JWT_ACCESS_EXPIRE || '15m';
+const ACCESS_EXPIRE = process.env.JWT_ACCESS_EXPIRE || '24h';
 const REFRESH_EXPIRE = process.env.JWT_REFRESH_EXPIRE || '7d';
 const ACCESS_SECRET = process.env.JWT_SECRET || 'dev-secret';
 const REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET || 'dev-refresh-secret';

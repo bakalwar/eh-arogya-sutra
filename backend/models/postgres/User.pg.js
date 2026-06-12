@@ -36,6 +36,7 @@ function defineUserPg(sequelize) {
       failed_login_attempts: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
       locked_until: { type: DataTypes.DATE, allowNull: true },
       totp_secret: { type: DataTypes.STRING(64), allowNull: true },
+      must_change_password: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
       full_name: { type: DataTypes.STRING(200), allowNull: true },
       date_of_birth: { type: DataTypes.DATEONLY, allowNull: true },
       gender: { type: DataTypes.STRING(20), allowNull: true },

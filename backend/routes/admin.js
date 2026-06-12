@@ -52,6 +52,29 @@ router.get(
   })
 );
 
+router.post(
+  '/doctors',
+  auditAction('admin.doctor.create'),
+  asyncHandler(async (req, res) => {
+    try {
+      const result = await adminService.createDoctor(req.body || {});
+      res.status(201).json({ success: true, ...result });
+    } catch (e) {
+      const status = e.status || 500;
+      res.status(status).json({ success: false, message: e.message || 'Failed to create doctor' });
+    }
+  })
+);
+
+router.get(
+  '/doctors/:id/login-history',
+  asyncHandler(async (req, res) => {
+    const data = await adminService.getDoctorLoginHistory(req.params.id, req.query.limit);
+    if (!data) return res.status(404).json({ success: false, message: 'Doctor not found' });
+    res.json({ success: true, data });
+  })
+);
+
 router.get(
   '/doctors/:id',
   asyncHandler(async (req, res) => {
@@ -102,7 +125,7 @@ router.post(
   '/doctors/:id/reset-password',
   auditAction('admin.doctor.reset_password'),
   asyncHandler(async (req, res) => {
-    const result = await adminService.resetDoctorPassword(req.params.id, req.body?.password);
+    const result = await adminService.resetDoctorPassword(req.params.id);
     if (!result) return res.status(404).json({ success: false, message: 'Doctor not found' });
     res.json({ success: true, ...result });
   })

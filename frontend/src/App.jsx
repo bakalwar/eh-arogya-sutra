@@ -24,7 +24,7 @@ import DoctorManagement from './pages/admin/DoctorManagement';
 import SubscriptionManager from './pages/admin/SubscriptionManager';
 import RevenueAnalytics from './pages/admin/RevenueAnalytics';
 import SystemSettings from './pages/admin/SystemSettings';
-import AdminLogin from './pages/admin/AdminLogin';
+import ChangePassword from './pages/ChangePassword';
 import AdminShell from './components/admin/AdminShell';
 import SuperAdmin from './pages/SuperAdmin';
 import SuperAdminLogin from './pages/superadmin/SuperAdminLogin';
@@ -35,8 +35,10 @@ import {
   SuperAdminPublicRoute,
   SuperAdminEntryRedirect,
   AdminOnlyRoute,
-  AdminPublicRoute
+  AdminPublicRoute,
+  ChangePasswordRoute
 } from './security/routeGuards';
+import AdminLogin from './pages/admin/AdminLogin';
 
 export default function App() {
   return (
@@ -61,6 +63,15 @@ export default function App() {
             <PublicRoute>
               <Register />
             </PublicRoute>
+          }
+        />
+
+        <Route
+          path="/change-password"
+          element={
+            <ChangePasswordRoute>
+              <ChangePassword />
+            </ChangePasswordRoute>
           }
         />
 

@@ -134,7 +134,9 @@ See .env.example for full notes.
       password_hash,
       email: demoEmail,
       failed_login_attempts: 0,
-      locked_until: null
+      locked_until: null,
+      must_change_password: false,
+      totp_secret: null
     }
   });
 
@@ -147,7 +149,9 @@ See .env.example for full notes.
       password_hash,
       email: demoEmail,
       failed_login_attempts: 0,
-      locked_until: null
+      locked_until: null,
+      must_change_password: false,
+      totp_secret: null
     });
     console.log(`Updated demo doctor (${demoMobile}) — password reset, email ${demoEmail}`);
   }
@@ -179,7 +183,9 @@ See .env.example for full notes.
       password_hash: adminHash,
       email: adminEmail,
       failed_login_attempts: 0,
-      locked_until: null
+      locked_until: null,
+      must_change_password: false,
+      totp_secret: null
     });
     console.log(`Updated admin (${adminMobile}) — password reset`);
   }

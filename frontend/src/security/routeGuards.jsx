@@ -1,9 +1,27 @@
 import { Navigate, Outlet } from 'react-router-dom';
 import { isAuthenticated, isSuperAdmin, isAdminRole, getCurrentUser } from './tokenManager';
 
+function mustChangePassword() {
+  return !!getCurrentUser()?.mustChangePassword;
+}
+
 export function ProtectedRoute({ children }) {
   if (!isAuthenticated()) {
     return <Navigate to="/login" replace />;
+  }
+  if (mustChangePassword()) {
+    return <Navigate to="/change-password" replace />;
+  }
+  return children;
+}
+
+/** Authenticated but password change required — only this page allowed */
+export function ChangePasswordRoute({ children }) {
+  if (!isAuthenticated()) {
+    return <Navigate to="/login" replace />;
+  }
+  if (!mustChangePassword()) {
+    return <Navigate to="/dashboard" replace />;
   }
   return children;
 }
@@ -17,7 +35,10 @@ function defaultHomeForUser() {
 
 export function PublicRoute({ children }) {
   if (isSuperAdmin()) return <Navigate to="/super-admin/overview" replace />;
-  if (isAuthenticated()) return <Navigate to={defaultHomeForUser()} replace />;
+  if (isAuthenticated()) {
+    if (mustChangePassword()) return <Navigate to="/change-password" replace />;
+    return <Navigate to={defaultHomeForUser()} replace />;
+  }
   return children;
 }
 

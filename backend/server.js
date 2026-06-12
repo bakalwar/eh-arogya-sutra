@@ -119,7 +119,6 @@ const authLoginLimiter = rateLimit({
   legacyHeaders: false
 });
 app.use('/api/auth/login', authLoginLimiter);
-app.use('/api/auth/verify-otp', authLoginLimiter);
 
 // CORS configuration
 const defaultOrigins = [

@@ -32,7 +32,6 @@ function isAuthUrl(url) {
   const u = String(url || '');
   return (
     u.includes('/api/auth/login') ||
-    u.includes('/api/auth/verify-otp') ||
     u.includes('/api/auth/refresh') ||
     u.includes('/api/super-admin/login')
   );

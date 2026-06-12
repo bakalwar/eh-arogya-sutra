@@ -7,6 +7,8 @@ const { getPostgresModels } = require('../utils/dataSource');
 const { sequelize } = require('../db/sequelize');
 const { getPostgresHealth, pingPostgres } = require('../db/postgres.init');
 const { checkEHEngineHealth } = require('./ehEngineService');
+const { generateTempPassword } = require('../utils/passwordGen');
+const { normalizeMobile } = require('../utils/mobile');
 const {
   getSetting,
   setSetting,
@@ -106,9 +108,9 @@ async function getDoctorDetail(id) {
     PatientPg.count({ where: { doctor_id: id } }),
     PrescriptionPg.count({ where: { doctor_id: id } }),
     AuditLogPg.findAll({
-      where: { user_id: id, action: { [Op.like]: 'login.%' } },
+      where: { user_id: id, action: 'login.success' },
       order: [['created_at', 'DESC']],
-      limit: 5
+      limit: 20
     }),
     sequelize.query(
       `SELECT * FROM subscriptions WHERE doctor_id = :id ORDER BY created_at DESC LIMIT 10`,
@@ -135,8 +137,8 @@ async function getDoctorDetail(id) {
     subscriptionHistory: subscriptions,
     loginHistory: loginHistory.map((l) => ({
       time: l.get('created_at'),
-      action: l.get('action'),
-      ip: l.get('meta')?.ip
+      ip: l.get('meta')?.ip || '—',
+      method: l.get('meta')?.method || 'password'
     })),
     patientCount,
     prescriptionCount
@@ -170,13 +172,89 @@ async function deleteDoctor(id) {
   return true;
 }
 
-async function resetDoctorPassword(id, newPassword = 'Reset@123456') {
+async function resetDoctorPassword(id) {
   const { UserPg } = getPostgresModels();
   const user = await UserPg.findByPk(id);
   if (!user || user.get('role') !== 'doctor') return null;
-  const password_hash = await bcrypt.hash(String(newPassword), 10);
-  await user.update({ password_hash, failed_login_attempts: 0, locked_until: null });
-  return { message: 'Password reset successful' };
+  const password = generateTempPassword(8);
+  const password_hash = await bcrypt.hash(password, 10);
+  await user.update({
+    password_hash,
+    must_change_password: true,
+    failed_login_attempts: 0,
+    locked_until: null
+  });
+  return {
+    message: 'Password reset. Share this once with the doctor via WhatsApp or call.',
+    password,
+    mobile: user.get('mobile')
+  };
+}
+
+async function createDoctor({ name, mobile, city, license }) {
+  const { UserPg } = getPostgresModels();
+  const mobileNorm = normalizeMobile(mobile);
+  if (!mobileNorm || mobileNorm.length !== 10) {
+    const err = new Error('Valid 10-digit mobile required.');
+    err.status = 400;
+    throw err;
+  }
+  if (!name || !String(name).trim()) {
+    const err = new Error('Doctor name is required.');
+    err.status = 400;
+    throw err;
+  }
+
+  const existing = await UserPg.findOne({ where: { mobile: mobileNorm } });
+  if (existing) {
+    const err = new Error('Mobile number already registered.');
+    err.status = 409;
+    throw err;
+  }
+
+  const password = generateTempPassword(8);
+  const password_hash = await bcrypt.hash(password, 10);
+  const trialEnds = new Date();
+  trialEnds.setDate(trialEnds.getDate() + 14);
+
+  const user = await UserPg.create({
+    name: String(name).trim(),
+    full_name: String(name).trim(),
+    mobile: mobileNorm,
+    role: 'doctor',
+    password_hash,
+    must_change_password: true,
+    clinic_address_city: city ? String(city).trim() : null,
+    address_city: city ? String(city).trim() : null,
+    registration_number: license ? String(license).trim() : null,
+    subscription_status: 'trial',
+    trial_ends_at: trialEnds,
+    profile_completed: false
+  });
+
+  return {
+    doctor: doctorToApi(user),
+    password,
+    message: 'Doctor created. Share this password once via WhatsApp or call — doctor must change it on first login.'
+  };
+}
+
+async function getDoctorLoginHistory(id, limit = 30) {
+  const { UserPg, AuditLogPg } = getPostgresModels();
+  const user = await UserPg.findByPk(id);
+  if (!user || user.get('role') !== 'doctor') return null;
+
+  const logs = await AuditLogPg.findAll({
+    where: { user_id: id, action: 'login.success' },
+    order: [['created_at', 'DESC']],
+    limit: Math.min(Number(limit) || 30, 100)
+  });
+
+  return logs.map((l) => ({
+    time: l.get('created_at'),
+    ip: l.get('meta')?.ip || '—',
+    method: l.get('meta')?.method || 'password'
+  }));
 }
 
 async function getActivityLog(limit = 10) {
@@ -403,6 +481,8 @@ module.exports = {
   changeDoctorPlan,
   deleteDoctor,
   resetDoctorPassword,
+  createDoctor,
+  getDoctorLoginHistory,
   getActivityLog,
   getRevenueAnalytics,
   listCoupons,

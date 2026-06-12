@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="EH CDSS">
+  <rect width="512" height="512" rx="96" fill="#0e1a0f"/>
+  <circle cx="256" cy="256" r="180" fill="none" stroke="#c9963a" stroke-width="8" opacity="0.5"/>
+  <line x1="256" y1="96" x2="256" y2="416" stroke="#c9963a" stroke-width="12" stroke-linecap="round"/>
+  <path d="M256 120 C200 100 120 130 110 180 C150 150 220 160 256 190" fill="#4a9b54" opacity="0.9"/>
+  <path d="M256 120 C312 100 392 130 402 180 C362 150 292 160 256 190" fill="#4a9b54" opacity="0.9"/>
+  <text x="256" y="460" text-anchor="middle" fill="#e8c46a" font-family="system-ui,sans-serif" font-size="44" font-weight="700">EH</text>
+</svg>
