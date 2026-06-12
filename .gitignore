@@ -144,3 +144,5 @@ yarn.lock
 .vercel/README.txt
 .vercel/repo.json
 .vercel/.env*.local
+.vercel/output/
+frontend/.vercel/output/

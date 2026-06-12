@@ -17,6 +17,7 @@
     "dev:restart": "node scripts/free-ports.js && node scripts/dev-start.js",
     "build:web": "npm run build --prefix frontend",
     "build": "npm run build:web",
+    "deploy:vercel": "node scripts/deploy-vercel-prod.js",
     "test": "jest",
     "test:unit": "jest tests/unit",
     "test:integration": "jest tests/integration",
