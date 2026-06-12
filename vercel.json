@@ -19,6 +19,14 @@
       "destination": "https://eh-arogya-api-production.up.railway.app/health"
     },
     {
+      "source": "/api/summary/eh-api",
+      "destination": "https://eh-arogya-api-production.up.railway.app/api/summary/generate"
+    },
+    {
+      "source": "/api/summary/eh-engine",
+      "destination": "https://eh-arogya-api-production.up.railway.app/api/summary/generate"
+    },
+    {
       "source": "/api/(.*)",
       "destination": "https://eh-arogya-api-production.up.railway.app/api/$1"
     },

@@ -34,12 +34,25 @@ for (const name of fs.readdirSync(dist)) {
   fs.cpSync(src, dest, { recursive: true });
 }
 
+const railwayApi =
+  JSON.parse(
+    fs.readFileSync(path.join(root, 'config', 'railway-production.json'), 'utf8')
+  ).apiUrl.replace(/\/$/, '');
+
 const config = {
   version: 3,
   routes: [
-    { src: '/health', dest: 'https://eh-arogya-api-production.up.railway.app/health' },
-    { src: '/api/(.*)', dest: 'https://eh-arogya-api-production.up.railway.app/api/$1' },
-    { src: '/uploads/(.*)', dest: 'https://eh-arogya-api-production.up.railway.app/uploads/$1' },
+    { src: '/health', dest: `${railwayApi}/health` },
+    {
+      src: '/api/summary/eh-api',
+      dest: `${railwayApi}/api/summary/generate`
+    },
+    {
+      src: '/api/summary/eh-engine',
+      dest: `${railwayApi}/api/summary/generate`
+    },
+    { src: '/api/(.*)', dest: `${railwayApi}/api/$1` },
+    { src: '/uploads/(.*)', dest: `${railwayApi}/uploads/$1` },
     { handle: 'filesystem' },
     { src: '/(.*)', dest: '/index.html' }
   ],

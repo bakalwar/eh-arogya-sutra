@@ -1,0 +1,4 @@
+{
+  "apiUrl": "https://eh-arogya-api-production.up.railway.app",
+  "comment": "Single source for Vercel rewrites + deploy script. Railway Node backend (Express)."
+}
