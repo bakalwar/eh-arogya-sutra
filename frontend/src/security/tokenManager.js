@@ -2,7 +2,11 @@ const ACCESS = 'eh_token';
 const REFRESH = 'eh_refresh';
 const USER = 'eh_user';
 
-const API_BASE = () => import.meta.env.VITE_API_BASE || '';
+function authApiUrl(path) {
+  if (import.meta.env.PROD && typeof window !== 'undefined') return path;
+  const base = (import.meta.env.VITE_API_BASE || import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+  return base ? `${base}${path}` : path;
+}
 
 let refreshPromise = null;
 
@@ -125,7 +129,7 @@ export async function refreshAccessToken() {
   }
 
   if (!refreshPromise) {
-    refreshPromise = fetch(`${API_BASE()}/api/auth/refresh`, {
+    refreshPromise = fetch(authApiUrl('/api/auth/refresh'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ refreshToken: refresh })

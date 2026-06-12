@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import client from '../api/client';
 import CaduceusLogo from '../components/website/CaduceusLogo';
 import { setSession, clearSession } from '../security/tokenManager';
 import { setLanguage } from '../i18n';
+import { parseLoginResponse, homePathForUser } from '../utils/authLogin';
 
 export default function Login() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [form, setForm] = useState({ mobile: '', password: '' });
   const [err, setErr] = useState('');
@@ -22,7 +22,9 @@ export default function Login() {
     if (fresh) clearSession();
     setBooted(true);
     client.get('/api/branding').then(({ data }) => {
-      if (data?.data?.clinicPhone) setAdminPhone(String(data.data.clinicPhone).replace(/\D/g, '').slice(-10) || data.data.clinicPhone);
+      if (data?.data?.clinicPhone) {
+        setAdminPhone(String(data.data.clinicPhone).replace(/\D/g, '').slice(-10) || data.data.clinicPhone);
+      }
     }).catch(() => {});
   }, [t, searchParams]);
 
@@ -42,21 +44,6 @@ export default function Login() {
     else setErr(msg || e2.message || t('login.errGeneric'));
   }
 
-  function redirectAfterLogin(user) {
-    const role = user?.role;
-    if (user?.mustChangePassword) {
-      navigate('/change-password', { replace: true });
-      return;
-    }
-    const dest =
-      role === 'super_admin'
-        ? '/super-admin/overview'
-        : role === 'admin'
-          ? '/admin'
-          : '/dashboard';
-    navigate(dest, { replace: true });
-  }
-
   async function handleLogin(e) {
     e?.preventDefault();
     setErr('');
@@ -66,12 +53,13 @@ export default function Login() {
         mobile: form.mobile,
         password: form.password
       });
-      if (data.success && (data.accessToken || data.token)) {
-        setSession(data.accessToken || data.token, data.user, data.refreshToken);
-        redirectAfterLogin(data.user);
-      } else {
-        setErr(data.message || 'Login failed');
+      const result = parseLoginResponse(data);
+      if (result.ok) {
+        setSession(result.accessToken, result.user, result.refreshToken);
+        window.location.assign(homePathForUser(result.user));
+        return;
       }
+      setErr(result.error);
     } catch (e2) {
       handleApiError(e2);
     } finally {

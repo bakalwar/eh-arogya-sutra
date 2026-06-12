@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import client from '../../api/client';
 import { setSession } from '../../security/tokenManager';
+import { parseLoginResponse, homePathForUser } from '../../utils/authLogin';
 import '../../styles/admin-panel.css';
 
 function isPlatformAdmin(role) {
@@ -9,7 +9,6 @@ function isPlatformAdmin(role) {
 }
 
 export default function AdminLogin() {
-  const navigate = useNavigate();
   const [form, setForm] = useState({ mobile: '', password: '' });
   const [err, setErr] = useState('');
   const [loading, setLoading] = useState(false);
@@ -23,16 +22,17 @@ export default function AdminLogin() {
         mobile: form.mobile,
         password: form.password
       });
-      if (data.success && (data.accessToken || data.token) && data.user) {
-        if (!isPlatformAdmin(data.user.role)) {
+      const result = parseLoginResponse(data);
+      if (result.ok) {
+        if (result.user.role !== 'admin' && result.user.role !== 'super_admin') {
           setErr('Doctor accounts cannot access admin panel.');
           return;
         }
-        setSession(data.accessToken || data.token, data.user, data.refreshToken);
-        navigate('/admin', { replace: true });
+        setSession(result.accessToken, result.user, result.refreshToken);
+        window.location.assign(homePathForUser(result.user));
         return;
       }
-      setErr(data.message || 'Login failed');
+      setErr(result.error);
     } catch (e2) {
       setErr(e2.response?.data?.message || 'Login failed');
     } finally {
