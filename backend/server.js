@@ -39,6 +39,7 @@ const profileRoutes = require('./routes/profile');
 const superAdminRoutes = require('./routes/superAdmin');
 const translationRoutes = require('./routes/translation');
 const summaryGenerateRoutes = require('./routes/summaryGenerate');
+const { EXPERT_BASE } = require('./services/ehExpertClient');
 const summaryOllamaBookRoutes = require('./routes/summaryOllamaBook');
 const ehExpertProxyRoutes = require('./routes/ehExpertProxy');
 const subscriptionRoutes = require('./routes/subscription');
@@ -206,7 +207,16 @@ app.get('/health', async (req, res) => {
   });
 });
 
-// API routes
+// API routes — summary first (POST /api/summary/eh-api → Python EH API)
+app.post(
+  '/api/summary/eh-api',
+  summaryLimiter,
+  requireAuth,
+  asyncHandler(summaryGenerateRoutes.runEhEngineSummary)
+);
+app.use('/api/summary', summaryLimiter, summaryGenerateRoutes);
+app.use('/api/summary/ollama-book', summaryLimiter, summaryOllamaBookRoutes);
+
 app.use('/api/auth', auditMiddleware('auth.action'), authRoutes);
 app.use('/api/patients', verifyHmacSignature, doctorRateLimiter, patientRoutes);
 app.use('/api/medicines', doctorRateLimiter, medicineRoutes);
@@ -223,15 +233,6 @@ app.use('/api/profile', profileRoutes);
 app.use('/api/super-admin', superAdminRoutes);
 app.use('/api/translate', translationRoutes);
 app.use('/api/eh-engine', healthRoutes);
-/** EH clinical summary — explicit route + router (Node → Python /api/summary/eh-api) */
-app.post(
-  '/api/summary/eh-api',
-  summaryLimiter,
-  requireAuth,
-  asyncHandler(summaryGenerateRoutes.runEhEngineSummary)
-);
-app.use('/api/summary', summaryLimiter, summaryGenerateRoutes);
-app.use('/api/summary/ollama-book', summaryLimiter, summaryOllamaBookRoutes);
 app.use('/api/expert', ehExpertProxyRoutes);
 app.use('/api/subscription', subscriptionRoutes);
 app.use('/api/referral', referralRoutes);
@@ -367,6 +368,7 @@ const startServer = async () => {
  Local: http://localhost:${PORT}${networkLines.join('')}
  Environment: ${process.env.NODE_ENV || 'development'}
  App (dev):  ${viteDevUrl}/go-search.html  |  API: /api${pgLine}
+ EH Python:  ${EXPERT_BASE}  |  summary: POST /api/summary/eh-api
  Local hub:  http://localhost:${PORT}/eh-arogya/
  SSE stream: http://localhost:${PORT}/eh-arogya/api/stream
  Docs HTML:  http://localhost:${PORT}/eh-arogya-docs/project-dekho.html

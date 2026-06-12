@@ -101,9 +101,7 @@ router.get(
   })
 );
 
-/**
- * POST /api/summary/eh-api — Node Express → Python EH API /api/summary/eh-api
- */
+/** Node Express → Python EH API /api/summary/eh-api (+ prescribe fallback) */
 async function runEhEngineSummary(req, res) {
   const raw = req.body || {};
   const caseData = normalizeSummaryCaseData(raw.caseData || raw);

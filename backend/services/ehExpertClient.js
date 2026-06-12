@@ -1,9 +1,17 @@
 'use strict';
 
 const axios = require('axios');
+const { resolveEhPythonApiBase } = require('../config/resolveEhApiBase');
 
-const EXPERT_BASE = (process.env.EH_API_URL || process.env.EH_EXPERT_ENGINE_URL || 'http://127.0.0.1:8005').replace(/\/$/, '');
+const EXPERT_BASE = resolveEhPythonApiBase();
 const EXPERT_TIMEOUT_MS = Number(process.env.EH_EXPERT_TIMEOUT_MS) || 90000;
+
+function ehApiHeaders() {
+  return {
+    'Content-Type': 'application/json',
+    'x-api-key': process.env.EH_API_KEY || 'EH_TEST_KEY_2026'
+  };
+}
 
 /** CaseInput → EH API v3 /api/v3/prescribe body (9 Rule Engines + 14k fuzzy diseases) */
 function caseInputToPrescribeBody(caseInput) {
@@ -30,9 +38,59 @@ function caseInputToPrescribeBody(caseInput) {
   };
 }
 
+function caseDataToPrescribeBody(caseData = {}) {
+  const patient = caseData.patient || {};
+  const analysis = caseData.analysis || {};
+  const parts = [];
+  if (patient.chiefComplaint) parts.push(patient.chiefComplaint);
+  if (analysis.chief_complaint) parts.push(analysis.chief_complaint);
+  if (caseData.chief_complaint) parts.push(caseData.chief_complaint);
+  if (caseData.chiefComplaint) parts.push(caseData.chiefComplaint);
+  (patient.symptoms || []).forEach((s) => {
+    if (s) parts.push(typeof s === 'object' ? s.name || s.hindi || '' : String(s));
+  });
+  const symptomsText = parts.filter(Boolean).join(', ');
+  const phase = String(analysis.phase || patient.condition || caseData.phase || 'chronic')
+    .toLowerCase()
+    .replace(/-/g, '_');
+  const condition = ['acute', 'sub_acute', 'chronic', 'degenerative'].includes(phase) ? phase : 'chronic';
+  return {
+    patient_name: patient.name || caseData.name || caseData.patient_name || 'Patient',
+    age: patient.age ?? caseData.age ?? 30,
+    gender: patient.gender || caseData.gender || 'Male',
+    bp_systolic: patient.bp_systolic ?? caseData.bp_systolic ?? 120,
+    bp_diastolic: patient.bp_diastolic ?? caseData.bp_diastolic ?? 80,
+    symptoms: symptomsText,
+    condition,
+    disease_names: caseData.disease_names || []
+  };
+}
+
+async function postEhApi(path, body, timeoutMs) {
+  const { data, status } = await axios.post(`${EXPERT_BASE}${path}`, body, {
+    timeout: timeoutMs,
+    headers: ehApiHeaders(),
+    validateStatus: () => true
+  });
+
+  if (status >= 400) {
+    const detail =
+      typeof data?.detail === 'string'
+        ? data.detail
+        : data?.message || `EH API HTTP ${status} ${path}`;
+    const err = new Error(detail);
+    err.statusCode = status;
+    throw err;
+  }
+
+  return {
+    ok: data?.status === 'success',
+    ...data
+  };
+}
+
 /**
- * POST { caseData } → Python EH API /api/summary/eh-api (14k diseases + summary_engine.py)
- * @param {Record<string, unknown>} caseData
+ * POST { caseData } → Python /api/summary/eh-api (preferred)
  */
 async function callEhApiSummary(caseData) {
   const timeout = Math.max(
@@ -40,39 +98,13 @@ async function callEhApiSummary(caseData) {
     Number(process.env.EH_SUMMARY_TIMEOUT_MS) || 120000
   );
   try {
-    const { data, status } = await axios.post(
-      `${EXPERT_BASE}/api/summary/eh-api`,
-      { caseData },
-      {
-        timeout,
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': process.env.EH_API_KEY || 'EH_TEST_KEY_2026'
-        },
-        validateStatus: () => true
-      }
-    );
-
-    if (status >= 400) {
-      const detail =
-        typeof data?.detail === 'string'
-          ? data.detail
-          : data?.message || `EH API summary HTTP ${status}`;
-      const err = new Error(detail);
-      err.statusCode = status >= 500 ? 502 : status;
-      throw err;
-    }
-
-    return {
-      ok: data?.status === 'success',
-      ...data
-    };
+    return await postEhApi('/api/summary/eh-api', { caseData }, timeout);
   } catch (e) {
     if (e.statusCode) throw e;
     const code = e.code || '';
     if (code === 'ECONNREFUSED' || code === 'ENOTFOUND') {
       const err = new Error(
-        `EH Python API unreachable — set EH_API_URL to Railway Python service (${EXPERT_BASE})`
+        `EH Python API unreachable at ${EXPERT_BASE} — set EH_API_URL / EH_PYTHON_API_URL on Railway`
       );
       err.statusCode = 503;
       throw err;
@@ -82,42 +114,18 @@ async function callEhApiSummary(caseData) {
 }
 
 /**
- * POST CaseInput to EH API v3 prescribe → 9 Rule Engines + English summary
- * @param {Record<string, unknown>} caseInput
+ * POST → /api/v3/prescribe (same 9-engine pipeline; used if summary path missing on Python)
  */
 async function callExpertAnalyze(caseInput) {
   const payload = caseInputToPrescribeBody(caseInput);
   try {
-    const { data, status } = await axios.post(`${EXPERT_BASE}/api/v3/prescribe`, payload, {
-      timeout: EXPERT_TIMEOUT_MS,
-      headers: { 
-        'Content-Type': 'application/json',
-        'x-api-key': process.env.EH_API_KEY || 'EH_TEST_KEY_2026'
-      },
-      validateStatus: () => true
-    });
-
-    if (status >= 400) {
-      const err = new Error(
-        typeof data?.detail === 'string'
-          ? data.detail
-          : data?.message || `Expert engine HTTP ${status}`
-      );
-      err.statusCode = status >= 500 ? 502 : status;
-      throw err;
-    }
-
-    // Map to old format if needed, or just return
-    return {
-      ok: data.status === 'success',
-      ...data
-    };
+    return await postEhApi('/api/v3/prescribe', payload, EXPERT_TIMEOUT_MS);
   } catch (e) {
     if (e.statusCode) throw e;
     const code = e.code || '';
     if (code === 'ECONNREFUSED' || code === 'ENOTFOUND') {
       const err = new Error(
-        `EH Expert Engine band hai — alag terminal mein npm run expert-engine (${EXPERT_BASE})`
+        `EH Expert Engine band hai — npm run expert-engine (${EXPERT_BASE})`
       );
       err.statusCode = 503;
       throw err;
@@ -127,23 +135,30 @@ async function callExpertAnalyze(caseInput) {
 }
 
 /**
- * POST multipart face image → FaceAnalyzeResponse JSON.
- * @param {Buffer|import('stream').Readable} imageBuffer
- * @param {string} [filename]
+ * Summary: try /api/summary/eh-api, then /api/v3/prescribe (same engines + summary_engine)
  */
+async function callEhApiSummaryWithPrescribeFallback(caseData) {
+  try {
+    return await callEhApiSummary(caseData);
+  } catch (e) {
+    if (e.statusCode === 404) {
+      console.warn('[EH API] /api/summary/eh-api 404 — fallback /api/v3/prescribe');
+      const body = caseDataToPrescribeBody(caseData);
+      return await callExpertAnalyze(body);
+    }
+    throw e;
+  }
+}
+
 async function callExpertAnalyzeFace(imageBuffer, filename = 'face.jpg') {
   const form = new FormData();
   form.append('file', new Blob([imageBuffer], { type: 'image/jpeg' }), filename);
 
   try {
-    // eh-api might not have a dedicated face endpoint, but we can use analyze-report or similar
-    // For now, let's keep it pointing to a likely endpoint if it exists
     const res = await fetch(`${EXPERT_BASE}/api/v3/analyze-report?file_type=image`, {
       method: 'POST',
       body: form,
-      headers: {
-        'x-api-key': process.env.EH_API_KEY || 'EH_TEST_KEY_2026'
-      },
+      headers: ehApiHeaders(),
       signal: AbortSignal.timeout(Math.min(EXPERT_TIMEOUT_MS, 60000))
     });
     const data = await res.json().catch(() => ({}));
@@ -165,12 +180,6 @@ async function callExpertAnalyzeFace(imageBuffer, filename = 'face.jpg') {
   }
 }
 
-/**
- * POST report file → structured OCR (pathologies, labs, organs).
- * @param {Buffer} fileBuffer
- * @param {'pdf'|'image'} fileType
- * @param {string} [filename]
- */
 async function callExpertOcrReport(fileBuffer, fileType = 'image', filename = 'report.jpg') {
   const form = new FormData();
   const mime = fileType === 'pdf' ? 'application/pdf' : 'image/jpeg';
@@ -182,9 +191,7 @@ async function callExpertOcrReport(fileBuffer, fileType = 'image', filename = 'r
     const res = await fetch(url.toString(), {
       method: 'POST',
       body: form,
-      headers: {
-        'x-api-key': process.env.EH_API_KEY || 'EH_TEST_KEY_2026'
-      },
+      headers: ehApiHeaders(),
       signal: AbortSignal.timeout(Math.min(EXPERT_TIMEOUT_MS, 120000))
     });
     const data = await res.json().catch(() => ({}));
@@ -206,21 +213,13 @@ async function callExpertOcrReport(fileBuffer, fileType = 'image', filename = 'r
   }
 }
 
-/**
- * Multipart complete analyze — face + report + formula + summary.
- * @param {FormData} formData — built by route (fields + files)
- */
 async function callExpertAnalyzeComplete(formData) {
   const timeout = Math.max(EXPERT_TIMEOUT_MS, 300000);
   try {
-    // eh-api uses /api/v3/prescribe for complete analysis if data is passed
-    // but for multipart, we might need a specific endpoint or use analyze-report
     const res = await fetch(`${EXPERT_BASE}/api/v3/analyze-report`, {
       method: 'POST',
       body: formData,
-      headers: {
-        'x-api-key': process.env.EH_API_KEY || 'EH_TEST_KEY_2026'
-      },
+      headers: ehApiHeaders(),
       signal: AbortSignal.timeout(timeout)
     });
     const data = await res.json().catch(() => ({}));
@@ -242,11 +241,6 @@ async function callExpertAnalyzeComplete(formData) {
   }
 }
 
-/**
- * POST CaseInput → 11-section clinical summary (Python llm_engine / Ollama).
- * @param {Record<string, unknown>} caseInput
- * @param {{ prompt_style?: string, use_multistep_summary?: boolean }} [opts]
- */
 async function callExpertSummary(caseInput, opts = {}) {
   const timeout = Math.max(
     EXPERT_TIMEOUT_MS,
@@ -259,28 +253,13 @@ async function callExpertSummary(caseInput, opts = {}) {
     use_multistep_summary: !!opts.use_multistep_summary
   };
   try {
-    const { data, status } = await axios.post(`${EXPERT_BASE}/api/v3/prescribe`, payload, {
-      timeout,
-      headers: { 
-        'Content-Type': 'application/json',
-        'x-api-key': process.env.EH_API_KEY || 'EH_TEST_KEY_2026'
-      },
-      validateStatus: () => true
-    });
-    if (status >= 400) {
-      const err = new Error(data?.detail || data?.error || `Expert summary HTTP ${status}`);
-      err.statusCode = status >= 500 ? 502 : status;
-      throw err;
-    }
-    if (!data?.clinical_summary || !String(data.clinical_summary || '').trim()) {
-      const err = new Error(data?.error || 'Expert summary empty');
+    const py = await postEhApi('/api/v3/prescribe', payload, timeout);
+    if (!py?.clinical_summary || !String(py.clinical_summary || '').trim()) {
+      const err = new Error(py?.error || 'Expert summary empty');
       err.statusCode = 502;
       throw err;
     }
-    return {
-      ok: true,
-      summary: data.clinical_summary
-    };
+    return { ok: true, summary: py.clinical_summary };
   } catch (e) {
     if (e.statusCode) throw e;
     const code = e.code || '';
@@ -295,12 +274,14 @@ async function callExpertSummary(caseInput, opts = {}) {
 
 module.exports = {
   callEhApiSummary,
+  callEhApiSummaryWithPrescribeFallback,
   callExpertAnalyze,
   callExpertAnalyzeFace,
   callExpertOcrReport,
   callExpertAnalyzeComplete,
   callExpertSummary,
   caseInputToPrescribeBody,
+  caseDataToPrescribeBody,
   EXPERT_BASE,
   EXPERT_TIMEOUT_MS
 };

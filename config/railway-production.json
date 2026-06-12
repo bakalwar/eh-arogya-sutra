@@ -1,4 +1,5 @@
 {
   "apiUrl": "https://eh-arogya-api-production.up.railway.app",
-  "comment": "Single source for Vercel rewrites + deploy script. Railway Node backend (Express)."
+  "pythonApiUrl": "http://127.0.0.1:8005",
+  "comment": "apiUrl = Node (Vercel rewrites). pythonApiUrl = local eh_api.py; on Railway set EH_PYTHON_API_URL to Python service public URL (NOT https://railway.app)."
 }

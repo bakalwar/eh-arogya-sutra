@@ -4,7 +4,7 @@
  * Smart Search summary — proxies to Python EH API POST /api/summary/eh-api only.
  * 14,000 fuzzy diseases + 9 Rule Engines (summary_engine.py). No Node/rule-engine fallbacks.
  */
-const { callEhApiSummary, EXPERT_BASE } = require('./ehExpertClient');
+const { callEhApiSummaryWithPrescribeFallback, EXPERT_BASE } = require('./ehExpertClient');
 const { mapEhApiV3PrescribeToApp } = require('./pdfExpertMapper');
 const {
   EH_SUMMARY_PY,
@@ -97,7 +97,7 @@ async function buildEhApiNineEngineSummary(caseData = {}) {
     EXPERT_BASE
   );
 
-  const py = await callEhApiSummary(caseData);
+  const py = await callEhApiSummaryWithPrescribeFallback(caseData);
   if (!py.ok && py.status !== 'success') {
     const err = new Error(py.detail || py.message || 'EH API /api/summary/eh-api failed');
     err.statusCode = 502;
