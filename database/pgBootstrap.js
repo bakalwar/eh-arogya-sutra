@@ -6,8 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const bcrypt = require('bcryptjs');
 
-const SQL_FILES = [
-  path.join(__dirname, 'schema.sql'),
+const MIGRATION_FILES = [
   path.join(__dirname, 'migrations', '001_patients_cdss_columns.sql'),
   path.join(__dirname, 'migrations', '002_eh_library_symptoms.sql'),
   path.join(__dirname, 'migrations', '003_auth_jwt_otp.sql'),
@@ -23,8 +22,11 @@ const SQL_FILES = [
   path.join(__dirname, 'migrations', '013_eh_expert_knowledge_graph.sql'),
   path.join(__dirname, 'migrations', '014_eh_materia_medica.sql'),
   path.join(__dirname, 'migrations', '015_demo_doctor_role_doctor.sql'),
-  path.join(__dirname, 'migrations', '016_subscription_referral_columns.sql')
+  path.join(__dirname, 'migrations', '016_subscription_referral_columns.sql'),
+  path.join(__dirname, 'migrations', '017_password_only_auth.sql')
 ];
+
+const SQL_FILES = [path.join(__dirname, 'schema.sql'), ...MIGRATION_FILES];
 
 async function usersTableExists(sequelize) {
   const [rows] = await sequelize.query(
@@ -35,6 +37,14 @@ async function usersTableExists(sequelize) {
 
 async function applySchemaFiles(sequelize) {
   for (const file of SQL_FILES) {
+    if (!fs.existsSync(file)) continue;
+    const sql = fs.readFileSync(file, 'utf8');
+    await sequelize.query(sql);
+  }
+}
+
+async function applyMigrationFiles(sequelize) {
+  for (const file of MIGRATION_FILES) {
     if (!fs.existsSync(file)) continue;
     const sql = fs.readFileSync(file, 'utf8');
     await sequelize.query(sql);
@@ -94,9 +104,11 @@ async function ensurePostgresReady(sequelize, models) {
       throw new Error('users table still missing after schema apply');
     }
     console.log('[postgres] Schema applied.');
+  } else {
+    await applyMigrationFiles(sequelize);
   }
 
   await ensureDemoDoctor(sequelize, models);
 }
 
-module.exports = { ensurePostgresReady, usersTableExists, applySchemaFiles };
+module.exports = { ensurePostgresReady, usersTableExists, applySchemaFiles, applyMigrationFiles };
