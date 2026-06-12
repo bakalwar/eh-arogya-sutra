@@ -96,6 +96,13 @@ async function ensureDemoDoctor(sequelize, models) {
  * @param {ReturnType<import('../backend/models/postgres').initModels>} models
  */
 async function ensurePostgresReady(sequelize, models) {
+  if (models && models.UserPg) {
+    await ensureDemoDoctor(sequelize, models);
+  }
+}
+
+/** Schema + migrations only — run before Sequelize models init. */
+async function ensurePostgresSchema(sequelize) {
   const hasUsers = await usersTableExists(sequelize);
   if (!hasUsers) {
     console.log('[postgres] users table missing — applying schema.sql (+ migrations)...');
@@ -107,8 +114,6 @@ async function ensurePostgresReady(sequelize, models) {
   } else {
     await applyMigrationFiles(sequelize);
   }
-
-  await ensureDemoDoctor(sequelize, models);
 }
 
-module.exports = { ensurePostgresReady, usersTableExists, applySchemaFiles, applyMigrationFiles };
+module.exports = { ensurePostgresReady, ensurePostgresSchema, usersTableExists, applySchemaFiles, applyMigrationFiles };

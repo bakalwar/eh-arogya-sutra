@@ -5,7 +5,7 @@ const {
   normalizeDirectDatabaseUrl,
   connectModels
 } = require('./sequelize');
-const { ensurePostgresReady } = require('../../database/pgBootstrap');
+const { ensurePostgresReady, ensurePostgresSchema } = require('../../database/pgBootstrap');
 
 /** @type {ReturnType<typeof connectModels> | {}} */
 let models = {};
@@ -40,8 +40,14 @@ async function connectPostgres() {
 
   try {
     await sequelize.authenticate();
+    const autoBootstrap =
+      process.env.PG_AUTO_BOOTSTRAP === '1' ||
+      (process.env.NODE_ENV !== 'production' && process.env.PG_AUTO_BOOTSTRAP !== '0');
+    if (autoBootstrap) {
+      await ensurePostgresSchema(sequelize);
+    }
     models = connectModels();
-    if (process.env.PG_AUTO_BOOTSTRAP === '1' || (process.env.NODE_ENV !== 'production' && process.env.PG_AUTO_BOOTSTRAP !== '0')) {
+    if (autoBootstrap) {
       await ensurePostgresReady(sequelize, models);
     }
     pgState.connected = true;
