@@ -31,6 +31,57 @@ function caseInputToPrescribeBody(caseInput) {
 }
 
 /**
+ * POST { caseData } → Python EH API /api/summary/eh-api (14k diseases + summary_engine.py)
+ * @param {Record<string, unknown>} caseData
+ */
+async function callEhApiSummary(caseData) {
+  const timeout = Math.max(
+    EXPERT_TIMEOUT_MS,
+    Number(process.env.EH_SUMMARY_TIMEOUT_MS) || 120000
+  );
+  try {
+    const { data, status } = await axios.post(
+      `${EXPERT_BASE}/api/summary/eh-api`,
+      { caseData },
+      {
+        timeout,
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': process.env.EH_API_KEY || 'EH_TEST_KEY_2026'
+        },
+        validateStatus: () => true
+      }
+    );
+
+    if (status >= 400) {
+      const detail =
+        typeof data?.detail === 'string'
+          ? data.detail
+          : data?.message || `EH API summary HTTP ${status}`;
+      const err = new Error(detail);
+      err.statusCode = status >= 500 ? 502 : status;
+      throw err;
+    }
+
+    return {
+      ok: data?.status === 'success',
+      ...data
+    };
+  } catch (e) {
+    if (e.statusCode) throw e;
+    const code = e.code || '';
+    if (code === 'ECONNREFUSED' || code === 'ENOTFOUND') {
+      const err = new Error(
+        `EH Python API unreachable — set EH_API_URL to Railway Python service (${EXPERT_BASE})`
+      );
+      err.statusCode = 503;
+      throw err;
+    }
+    throw e;
+  }
+}
+
+/**
  * POST CaseInput to EH API v3 prescribe → 9 Rule Engines + English summary
  * @param {Record<string, unknown>} caseInput
  */
@@ -243,6 +294,7 @@ async function callExpertSummary(caseInput, opts = {}) {
 }
 
 module.exports = {
+  callEhApiSummary,
   callExpertAnalyze,
   callExpertAnalyzeFace,
   callExpertOcrReport,

@@ -30,6 +30,7 @@ function ehSummaryJson(result) {
       summary_engine: result.summary_engine || 'summary_engine.py',
       engine_result: result.engine_result || null,
       pipeline: 'eh-api-14k-diseases-9-rule-engines',
+      python_proxy: `${EXPERT_BASE}/api/summary/eh-api`,
       language: 'en'
     }
   };
@@ -41,13 +42,13 @@ router.get('/routes', (_req, res) => {
     success: true,
     data: {
       primary: 'POST /api/summary/eh-api',
+      node_handler: 'POST /api/summary/eh-api → proxy Python /api/summary/eh-api',
+      python_url: `${EXPERT_BASE}/api/summary/eh-api`,
       aliases: [
         'POST /api/summary/generate',
         'POST /api/summary/expert-clinical',
         'POST /api/summary/eh-engine'
       ],
-      node_backend: 'port 5000 (Express)',
-      python_eh_api: 'port 8005 — /api/v3/prescribe only (NOT /api/summary/*)',
       body: '{ caseData: { patient, analysis, eh_analysis, ... } }'
     }
   });
@@ -64,19 +65,20 @@ router.get('/engine-version', (_req, res) => {
       sections: 7,
       file: 'summary_engine.py',
       api_file: 'eh_api.py',
-      pipeline: 'eh-api-14k-diseases-9-rule-engines'
+      pipeline: 'eh-api-14k-diseases-9-rule-engines',
+      python_proxy: `${EXPERT_BASE}/api/summary/eh-api`
     }
   });
 });
 
-/** GET /api/summary/stack-status — EH API only (no book/Ollama) */
+/** GET /api/summary/stack-status — EH API only */
 router.get(
   '/stack-status',
   asyncHandler(async (_req, res) => {
     let expertOk = false;
     try {
       const { data } = await axios.get(`${EXPERT_BASE}/health`, { timeout: 5000 });
-      expertOk = !!data?.ok || data?.status === 'ok';
+      expertOk = !!data?.ok || data?.status === 'ok' || data?.status === 'online';
     } catch {
       expertOk = false;
     }
@@ -85,6 +87,7 @@ router.get(
       data: {
         expert_ok: expertOk,
         expert_url: EXPERT_BASE,
+        summary_route: `${EXPERT_BASE}/api/summary/eh-api`,
         summary_engine: 'summary_engine.py',
         api_engine: 'eh_api.py',
         summary_mode: 'eh-api-9engine',
@@ -92,15 +95,18 @@ router.get(
         rule_engines: 9,
         label: expertOk
           ? 'EH API ✓ · 14k diseases + 9 Rule Engines (eh_api.py)'
-          : 'Expert engine — npm run expert-engine'
+          : 'EH Python API offline — check EH_API_URL on Railway'
       }
     });
   })
 );
 
-/** EH API summary — shared handler */
+/**
+ * POST /api/summary/eh-api — Node Express → Python EH API /api/summary/eh-api
+ */
 async function runEhEngineSummary(req, res) {
-  const caseData = normalizeSummaryCaseData(req.body);
+  const raw = req.body || {};
+  const caseData = normalizeSummaryCaseData(raw.caseData || raw);
   if (!hasSummaryPayload(caseData)) {
     return res.status(400).json({
       success: false,
@@ -114,19 +120,16 @@ async function runEhEngineSummary(req, res) {
   res.json(ehSummaryJson(result));
 }
 
-/** GET — avoid silent 404 when opened in browser; summary is POST-only */
+/** GET — POST-only; return 405 not 404 */
 router.get('/eh-api', (_req, res) => {
   res.status(405).json({
     success: false,
     message:
-      'Use POST /api/summary/eh-api with JSON { caseData } on Node backend (port 5000). ' +
-      'eh_api.py (port 8005) uses /api/v3/prescribe — not this path.'
+      'Use POST /api/summary/eh-api with JSON { caseData }. Node proxies to Python ' +
+      `${EXPERT_BASE}/api/summary/eh-api`
   });
 });
 
-/**
- * POST /api/summary/eh-api — Node BFF → eh_api.py /api/v3/prescribe + summary_engine.py
- */
 router.post('/eh-api', requireAuth, asyncHandler(runEhEngineSummary));
 
 /** Aliases (same handler) */
@@ -143,6 +146,7 @@ router.get('/health', async (_req, res) => {
       eh_api: 'running',
       engine: 'eh_api.py',
       summary_engine: 'summary_engine.py',
+      summary_route: `${EXPERT_BASE}/api/summary/eh-api`,
       status: 'ok',
       detail: data
     });
@@ -152,7 +156,7 @@ router.get('/health', async (_req, res) => {
       eh_api: 'offline',
       engine: 'eh_api.py',
       status: 'warning',
-      message: 'npm run expert-engine'
+      message: 'Set EH_API_URL to Python Railway service URL'
     });
   }
 });

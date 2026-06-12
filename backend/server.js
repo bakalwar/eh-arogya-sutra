@@ -223,7 +223,7 @@ app.use('/api/profile', profileRoutes);
 app.use('/api/super-admin', superAdminRoutes);
 app.use('/api/translate', translationRoutes);
 app.use('/api/eh-engine', healthRoutes);
-/** EH clinical summary — Node :5000 (proxies to eh_api.py :8005 /api/v3/prescribe) */
+/** EH clinical summary — explicit route + router (Node → Python /api/summary/eh-api) */
 app.post(
   '/api/summary/eh-api',
   summaryLimiter,

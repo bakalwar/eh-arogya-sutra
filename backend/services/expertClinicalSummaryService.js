@@ -1,12 +1,10 @@
 'use strict';
 
 /**
- * Smart Search summary — EH API v3 only:
- * 14,000 fuzzy diseases + 9 Rule Engines (summary_engine.py).
- * No rule-engine / template / book / Ollama fallbacks.
+ * Smart Search summary — proxies to Python EH API POST /api/summary/eh-api only.
+ * 14,000 fuzzy diseases + 9 Rule Engines (summary_engine.py). No Node/rule-engine fallbacks.
  */
-const { caseDataToSummaryInput } = require('./summaryCaseAdapter');
-const { callExpertAnalyze, EXPERT_BASE } = require('./ehExpertClient');
+const { callEhApiSummary, EXPERT_BASE } = require('./ehExpertClient');
 const { mapEhApiV3PrescribeToApp } = require('./pdfExpertMapper');
 const {
   EH_SUMMARY_PY,
@@ -51,38 +49,6 @@ function isRejectedSummaryText(text) {
   return REJECTED_SUMMARY_MARKERS.some((re) => re.test(s));
 }
 
-/** caseData → EH API /api/v3/prescribe body */
-function caseDataToPrescribeInput(caseData = {}) {
-  const patient = caseData.patient || {};
-  const analysis = caseData.analysis || {};
-  const parts = [];
-  if (patient.chiefComplaint) parts.push(patient.chiefComplaint);
-  if (analysis.chief_complaint) parts.push(analysis.chief_complaint);
-  if (caseData.chief_complaint) parts.push(caseData.chief_complaint);
-  if (caseData.chiefComplaint) parts.push(caseData.chiefComplaint);
-  (patient.symptoms || []).forEach((s) => {
-    if (s) parts.push(typeof s === 'object' ? s.name || s.hindi || '' : String(s));
-  });
-
-  const symptomsText = parts.filter(Boolean).join(', ');
-  const phase = String(analysis.phase || patient.condition || caseData.phase || 'chronic')
-    .toLowerCase()
-    .replace(/-/g, '_');
-  const condition = ['acute', 'sub_acute', 'chronic', 'degenerative'].includes(phase) ? phase : 'chronic';
-
-  return {
-    patient_name: patient.name || caseData.name || caseData.patient_name || 'Patient',
-    age: patient.age ?? caseData.age ?? 30,
-    gender: patient.gender || caseData.gender || 'Male',
-    bp_systolic: patient.bp_systolic ?? caseData.bp_systolic ?? 120,
-    bp_diastolic: patient.bp_diastolic ?? caseData.bp_diastolic ?? 80,
-    chief_complaint: symptomsText,
-    symptoms: symptomsText,
-    phase,
-    condition
-  };
-}
-
 function formatEhApiResult(summary, caseData, mapped = {}, extra = {}) {
   return {
     summary,
@@ -124,31 +90,25 @@ function formatEhApiResult(summary, caseData, mapped = {}, extra = {}) {
   };
 }
 
-/** POST eh_api.py /api/v3/prescribe — always live EH API output */
+/** Node BFF → Python POST /api/summary/eh-api */
 async function buildEhApiNineEngineSummary(caseData = {}) {
-  const caseInput = caseDataToPrescribeInput(caseData);
-  if (!caseInput.chief_complaint && !caseInput.symptoms) {
-    const err = new Error('Symptoms / chief complaint required for EH API summary');
-    err.statusCode = 400;
-    throw err;
-  }
-
   console.log(
-    '[EH SUMMARY] EH API v3 prescribe — 14k diseases + 9 Rule Engines (%s)',
+    '[EH SUMMARY] Proxy → %s/api/summary/eh-api (14k diseases + 9 Rule Engines)',
     EXPERT_BASE
   );
-  const py = await callExpertAnalyze(caseInput);
+
+  const py = await callEhApiSummary(caseData);
   if (!py.ok && py.status !== 'success') {
-    const err = new Error(py.detail || py.message || 'EH API prescribe failed');
+    const err = new Error(py.detail || py.message || 'EH API /api/summary/eh-api failed');
     err.statusCode = 502;
     throw err;
   }
 
-  const mapped = mapEhApiV3PrescribeToApp(py, caseInput);
+  const mapped = mapEhApiV3PrescribeToApp(py, caseData.patient || caseData);
   const summary = extractEhApiSummary(mapped) || extractEhApiSummary(py);
   if (isRejectedSummaryText(summary)) {
     const err = new Error(
-      'EH API returned invalid or empty clinical_summary — rule-engine / template output rejected'
+      'EH API returned invalid or empty clinical_summary from /api/summary/eh-api'
     );
     err.statusCode = 502;
     throw err;

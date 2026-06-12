@@ -28,7 +28,7 @@ print(f"DEBUG: __file__ = {__file__}")
 print(f"DEBUG: os.getcwd() = {os.getcwd()}")
 from datetime import datetime
 from typing import List, Optional
-from fastapi import FastAPI, Depends, HTTPException, Security, UploadFile, File, Form
+from fastapi import FastAPI, Depends, HTTPException, Security, UploadFile, File, Form, Body
 from fastapi.security.api_key import APIKeyHeader
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import (create_engine, Column, Integer,
@@ -192,6 +192,161 @@ class RegisterReq(BaseModel):
     doctor_name: str = Field(example="Dr. Sharma")
     email:       str = Field(example="doctor@clinic.com")
 
+
+def _case_data_to_prescribe_req(case: dict) -> PrescribeReq:
+    """Node Smart Search caseData → PrescribeReq (14k diseases + 9 engines)."""
+    case = case or {}
+    patient = case.get("patient") or {}
+    analysis = case.get("analysis") or {}
+    parts = []
+    if patient.get("chiefComplaint"):
+        parts.append(str(patient.get("chiefComplaint")))
+    if analysis.get("chief_complaint"):
+        parts.append(str(analysis.get("chief_complaint")))
+    if case.get("chief_complaint"):
+        parts.append(str(case.get("chief_complaint")))
+    if case.get("chiefComplaint"):
+        parts.append(str(case.get("chiefComplaint")))
+    for s in patient.get("symptoms") or []:
+        if s:
+            parts.append(s.get("name") if isinstance(s, dict) else str(s))
+    symptoms_text = ", ".join([p for p in parts if p]).strip()
+    phase = str(
+        analysis.get("phase") or patient.get("condition") or case.get("phase") or "chronic"
+    ).lower().replace("-", "_")
+    condition = phase if phase in ("acute", "sub_acute", "chronic", "degenerative") else "chronic"
+    return PrescribeReq(
+        patient_name=patient.get("name") or case.get("name") or case.get("patient_name") or "Patient",
+        age=int(patient.get("age") or case.get("age") or 30),
+        gender=patient.get("gender") or case.get("gender") or "Male",
+        bp_systolic=int(patient.get("bp_systolic") or case.get("bp_systolic") or 120),
+        bp_diastolic=int(patient.get("bp_diastolic") or case.get("bp_diastolic") or 80),
+        symptoms=symptoms_text,
+        condition=condition,
+        disease_names=case.get("disease_names") or [],
+    )
+
+
+def _run_prescribe_pipeline(req: PrescribeReq, db: Session, key_hash: str) -> dict:
+    from clinical_engines import (
+        detect_active_systems, detect_prakriti, detect_polarity,
+        select_potency, build_formula, safety_check, calc_dosage,
+        build_diet, detect_diseases_and_meds
+    )
+
+    active_systems = detect_active_systems(req.symptoms, req.bp_systolic)
+    db_analysis = detect_diseases_and_meds(db, req.symptoms, req.disease_names)
+    db_systems = db_analysis["systems"]
+    base_meds = db_analysis["meds"]
+
+    for s in db_systems:
+        if s not in active_systems:
+            active_systems.append(s)
+
+    if req.gender.lower() == "male" and "GYNE" in active_systems:
+        active_systems.remove("GYNE")
+
+    active_systems = list(dict.fromkeys(active_systems))[:4]
+
+    try:
+        prakriti = detect_prakriti(req.symptoms, req.bp_systolic)
+        polarity = detect_polarity(req.symptoms, req.bp_systolic, req.age, req.bp_diastolic)
+        potency = select_potency(polarity, req.condition, req.age, req.symptoms)
+        mixtures = build_formula(db, active_systems, polarity, prakriti,
+                                 potency, req.symptoms, base_meds)
+        final_systems = [m["system"] for m in mixtures]
+        safety = safety_check(polarity, potency["dilution"])
+        dosage = calc_dosage(req.age, polarity, req.condition)
+        diet = build_diet(polarity, final_systems)
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(500, f"EH clinical engines failed: {e}")
+
+    c = Consultation(
+        api_key_hash=key_hash, patient_name=req.patient_name,
+        age=req.age, gender=req.gender,
+        bp_systolic=req.bp_systolic, bp_diastolic=req.bp_diastolic,
+        symptoms_input=req.symptoms, prakriti=prakriti,
+        polarity=polarity, potency=potency["dilution"],
+        formula_json=json.dumps([m["formula"] for m in mixtures]),
+        safety_status=safety["status"],
+    )
+    db.add(c)
+    db.commit()
+    db.refresh(c)
+
+    try:
+        summary_data = build_professional_summary(
+            patient={
+                "patient_name": req.patient_name,
+                "age": req.age,
+                "gender": req.gender,
+                "bp_systolic": req.bp_systolic,
+                "bp_diastolic": req.bp_diastolic,
+                "symptoms": req.symptoms,
+            },
+            prakriti=prakriti,
+            polarity=polarity,
+            condition=req.condition,
+            active_systems=final_systems,
+            mixtures=mixtures,
+            dosage={**dosage, "dilution": potency.get("dilution", "D6")},
+            safety=safety,
+            diet=diet,
+            report_lab=[],
+            report_imaging=[],
+            prescription_id=c.id,
+        )
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(500, f"summary_engine.py failed: {e}")
+
+    summary = str(summary_data.get("summary") or "").strip()
+    if not summary or summary.lower().startswith("error generating summary"):
+        raise HTTPException(502, "Empty or invalid clinical_summary from summary_engine.py")
+
+    engine_result = summary_data.get("engine_result") or {}
+
+    return {
+        "status": "success",
+        "prescription_id": c.id,
+        "generated_at": datetime.utcnow().isoformat(),
+        "patient": {
+            "name": req.patient_name,
+            "age": req.age,
+            "gender": req.gender,
+            "bp": f"{req.bp_systolic}/{req.bp_diastolic} mmHg",
+            "condition": req.condition,
+        },
+        "clinical_analysis": {
+            "prakriti": prakriti,
+            "polarity": polarity,
+            "phase": req.condition,
+            "potency": potency["dilution"],
+            "potency_type": potency["type"],
+            "potency_note": potency.get("note", ""),
+            "active_systems": active_systems,
+        },
+        "mixtures": mixtures,
+        "dosage": dosage,
+        "safety": safety,
+        "diet": diet,
+        "clinical_summary": summary,
+        "engine_result": engine_result,
+        "summary_via": "summary_engine.py",
+        "pipeline": "eh-api-14k-diseases-9-rule-engines",
+        "important_rules": [
+            "Never mix different mixtures in same glass.",
+            "Always use warm water — never cold.",
+            "Wait 15 minutes after taking medicine.",
+            "Do not stop medicine midway.",
+            f"Antidote: {safety['antidote']}",
+        ],
+    }
+
+
 # ─── ENDPOINTS ──────────────────────────────────────
 @app.get("/api/health", tags=["System"],
          summary="System health check — no API key needed")
@@ -253,134 +408,34 @@ def register(req: RegisterReq, db: Session = Depends(get_db)):
 def prescribe(req: PrescribeReq,
               db: Session = Depends(get_db),
               key_hash: str = Depends(verify_api_key)):
+    return _run_prescribe_pipeline(req, db, key_hash)
 
-    # ── 9 EH RULE ENGINES CALL ───────────────────────────────
-    from clinical_engines import (
-        detect_active_systems, detect_prakriti, detect_polarity, 
-        select_potency, build_formula, safety_check, calc_dosage, 
-        build_diet, detect_diseases_and_meds
+
+@app.get("/api/summary/eh-api", tags=["Clinical Summary"],
+         summary="Summary route info (POST only)")
+def summary_eh_api_get():
+    raise HTTPException(
+        405,
+        "Use POST /api/summary/eh-api with JSON { caseData } on EH Python API (eh_api.py).",
     )
 
-    # 1. Detect active systems from symptoms (Primary - Rule-based)
-    active_systems = detect_active_systems(req.symptoms, req.bp_systolic)
-    
-    # 2. Detect diseases and suggested meds from DB (Secondary - Fuzzy)
-    db_analysis = detect_diseases_and_meds(db, req.symptoms, req.disease_names)
-    db_systems = db_analysis["systems"]
-    base_meds = db_analysis["meds"]
 
-    # Merge systems, keeping Rule-based ones first
-    for s in db_systems:
-        if s not in active_systems:
-            active_systems.append(s)
-            
-    # Gender check for GYNE (Mandatory)
-    if req.gender.lower() == "male" and "GYNE" in active_systems:
-        active_systems.remove("GYNE")
-    
-    active_systems = list(dict.fromkeys(active_systems))[:4]
-    print(f"[DEBUG] Final Active Systems (Ordered): {active_systems}")
-    print(f"[DEBUG] Base Meds from DB: {base_meds}")
-
-    try:
-        prakriti = detect_prakriti(req.symptoms, req.bp_systolic)
-        polarity = detect_polarity(req.symptoms, req.bp_systolic, req.age, req.bp_diastolic)
-        print(f"[DEBUG] Detected Polarity: {polarity}")
-        potency  = select_potency(polarity, req.condition, req.age, req.symptoms)
-        mixtures = build_formula(db, active_systems, polarity, prakriti,
-                                 potency, req.symptoms, base_meds)
-        final_systems = [m['system'] for m in mixtures]
-        safety   = safety_check(polarity, potency["dilution"])
-        dosage   = calc_dosage(req.age, polarity, req.condition)
-        diet     = build_diet(polarity, final_systems)
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        raise HTTPException(500, f"EH clinical engines failed: {e}")
-
-    c = Consultation(
-        api_key_hash=key_hash, patient_name=req.patient_name,
-        age=req.age, gender=req.gender,
-        bp_systolic=req.bp_systolic, bp_diastolic=req.bp_diastolic,
-        symptoms_input=req.symptoms, prakriti=prakriti,
-        polarity=polarity, potency=potency["dilution"],
-        formula_json=json.dumps([m["formula"] for m in mixtures]),
-        safety_status=safety["status"],
-    )
-    db.add(c)
-    db.commit()
-    db.refresh(c)
-
-    try:
-        summary_data = build_professional_summary(
-            patient={
-                "patient_name": req.patient_name,
-                "age":          req.age,
-                "gender":       req.gender,
-                "bp_systolic":  req.bp_systolic,
-                "bp_diastolic": req.bp_diastolic,
-                "symptoms":     req.symptoms,
-            },
-            prakriti        = prakriti,
-            polarity        = polarity,
-            condition       = req.condition,
-            active_systems  = final_systems,
-            mixtures        = mixtures,
-            dosage          = {
-                **dosage,
-                "dilution": potency.get("dilution", "D6"),
-            },
-            safety          = safety,
-            diet            = diet,
-            report_lab      = [],
-            report_imaging  = [],
-            prescription_id = c.id,
-        )
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        raise HTTPException(500, f"summary_engine.py failed: {e}")
-
-    summary = str(summary_data.get("summary") or "").strip()
-    if not summary or summary.lower().startswith("error generating summary"):
-        raise HTTPException(502, "Empty or invalid clinical_summary from summary_engine.py")
-
-    engine_result = summary_data.get("engine_result") or {}
-
-    return {
-        "status":          "success",
-        "prescription_id": c.id,
-        "generated_at":    datetime.utcnow().isoformat(),
-        "patient": {
-            "name":      req.patient_name,
-            "age":       req.age,
-            "gender":    req.gender,
-            "bp":        f"{req.bp_systolic}/{req.bp_diastolic} mmHg",
-            "condition": req.condition,
-        },
-        "clinical_analysis": {
-            "prakriti":       prakriti,
-            "polarity":       polarity,
-            "phase":          req.condition,
-            "potency":        potency["dilution"],
-            "potency_type":   potency["type"],
-            "potency_note":   potency.get("note",""),
-            "active_systems": active_systems,
-        },
-        "mixtures":         mixtures,
-        "dosage":           dosage,
-        "safety":           safety,
-        "diet":             diet,
-        "clinical_summary": summary,
-        "engine_result":    engine_result,
-        "important_rules": [
-            "Never mix different mixtures in same glass.",
-            "Always use warm water — never cold.",
-            "Wait 15 minutes after taking medicine.",
-            "Do not stop medicine midway.",
-            f"Antidote: {safety['antidote']}",
-        ],
-    }
+@app.post("/api/summary/eh-api", tags=["Clinical Summary"],
+          summary="Clinical summary — 14k diseases + 9 Rule Engines (summary_engine.py)")
+def summary_eh_api(
+    body: dict = Body(...),
+    db: Session = Depends(get_db),
+    key_hash: str = Depends(verify_api_key),
+):
+    if not body or not isinstance(body, dict):
+        raise HTTPException(400, "JSON body required: { caseData: { patient, analysis, ... } }")
+    case = body.get("caseData") if isinstance(body.get("caseData"), dict) else body
+    if not case:
+        raise HTTPException(400, "caseData missing — send symptoms / eh_analysis from Analyze Case")
+    req = _case_data_to_prescribe_req(case)
+    if not (req.symptoms or "").strip():
+        raise HTTPException(400, "Symptoms / chief complaint required for EH API summary")
+    return _run_prescribe_pipeline(req, db, key_hash)
 
 
 @app.get("/api/v3/prescription/{pid}", tags=["Clinical Engine"],
