@@ -1,23 +1,33 @@
 import axios from 'axios';
 import { getValidToken, clearSession } from '../security/tokenManager';
 import { resolveApiBase } from './resolveApiBase';
+import { SUMMARY_EH_API_PATH, SUMMARY_EH_API_ALIASES } from './summaryEndpoints';
 
 /** Default API calls (login, lists, save) */
 export const DEFAULT_REQUEST_TIMEOUT_MS = 30000;
 
-/** Ollama / long reports — backend can take several minutes (must override instance 30s default) */
+/** Long API calls — reports, search analyze */
 export const LONG_REQUEST_TIMEOUT_MS =
-  Number(import.meta.env.VITE_API_LONG_TIMEOUT_MS) || 300000;
+  Number(import.meta.env.VITE_API_LONG_TIMEOUT_MS) ||
+  Number(import.meta.env.VITE_API_TIMEOUT) ||
+  Number(import.meta.env.VITE_SUMMARY_TIMEOUT) ||
+  300000;
 
-/** Step 3.4 Ollama+book summary — CPU par 4–8 min; must exceed Vite proxy (vite.config.js) */
+/** EH API clinical summary — can take several minutes; must exceed Vite proxy (vite.config.js) */
 export const EXPERT_CLINICAL_TIMEOUT_MS =
-  Number(import.meta.env.VITE_API_EXPERT_CLINICAL_TIMEOUT_MS) || 600000;
+  Number(import.meta.env.VITE_API_EXPERT_CLINICAL_TIMEOUT_MS) ||
+  Number(import.meta.env.VITE_SUMMARY_TIMEOUT) ||
+  Number(import.meta.env.VITE_API_TIMEOUT) ||
+  600000;
+
+const SUMMARY_TIMEOUT_PATHS = [
+  SUMMARY_EH_API_PATH,
+  ...SUMMARY_EH_API_ALIASES,
+  '/api/summary/expert-clinical'
+];
 
 const LONG_TIMEOUT_PATHS = [
-  '/api/summary/eh-api',
-  '/api/summary/eh-engine',
-  '/api/summary/generate',
-  '/api/summary/expert-clinical',
+  ...SUMMARY_TIMEOUT_PATHS,
   '/api/reports/analyze',
   '/api/expert/analyze',
   '/api/expert/summary',
@@ -57,7 +67,7 @@ function redirectToLogin() {
 client.interceptors.request.use(async (config) => {
   const url = String(config.url || '');
   /* Instance default is 30s — axios merges it before interceptor, so ?? would never bump to long */
-  if (url.includes('/api/summary/expert-clinical')) {
+  if (SUMMARY_TIMEOUT_PATHS.some((p) => url.includes(p))) {
     config.timeout = EXPERT_CLINICAL_TIMEOUT_MS;
   } else if (LONG_TIMEOUT_PATHS.some((p) => url.includes(p))) {
     config.timeout = LONG_REQUEST_TIMEOUT_MS;
@@ -124,13 +134,12 @@ client.interceptors.response.use(
         err.message =
           'Request time out — Ollama सारांश अभी भी चल रहा हो सकता है। `ollama serve` चलाएं, 5–8 मिनट रुककर «Dubara सारांश» दबाएं। frontend/.env: `VITE_API_EXPERT_CLINICAL_TIMEOUT_MS=720000` फिर Vite restart (`npm run dev:web`).';
       } else if (
-        reqUrl.includes('/api/summary/eh-api') ||
-        reqUrl.includes('/api/summary/eh-engine') ||
-        reqUrl.includes('/api/summary/generate') ||
+        reqUrl.includes(SUMMARY_EH_API_PATH) ||
+        SUMMARY_EH_API_ALIASES.some((p) => reqUrl.includes(p)) ||
         reqUrl.includes('/api/expert/summary')
       ) {
         err.message =
-          'Request time out — Ollama summary 2–4 min tak lag sakti hai. Thodi der baad dubara try karein; `ollama serve` chal raha ho. `.env`: `VITE_API_LONG_TIMEOUT_MS` badha sakte hain.';
+          'Request time out — EH API summary 2–5 min tak lag sakti hai. `npm run expert-engine` chal raha ho, thodi der baad «Dubara सारांश» dubara try karein. `.env`: `VITE_API_EXPERT_CLINICAL_TIMEOUT_MS` badha sakte hain.';
       } else if (reqUrl.includes('/api/expert/analyze')) {
         err.message =
           'Request time out — EH Expert Engine (Python) check karein: alag terminal mein `npm run expert-engine`, phir dubara try karein.';

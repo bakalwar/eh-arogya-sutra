@@ -45,6 +45,8 @@ const subscriptionRoutes = require('./routes/subscription');
 const referralRoutes = require('./routes/referral');
 
 // Import middleware
+const { asyncHandler } = require('./utils/asyncHandler');
+const { requireAuth } = require('./middleware/requireAuth');
 const { errorHandler } = require('./middleware/errorHandler');
 const { notFound } = require('./middleware/notFound');
 const { auditMiddleware } = require('./middleware/auditLog');
@@ -126,12 +128,18 @@ const defaultOrigins = [
   'http://localhost:5173',
   'http://localhost:5174',
   'http://localhost:5175',
+  'http://localhost:5176',
+  'http://localhost:5177',
   'http://localhost:5178',
+  'http://localhost:5179',
   'http://localhost:3000',
   'http://127.0.0.1:5173',
   'http://127.0.0.1:5174',
   'http://127.0.0.1:5175',
+  'http://127.0.0.1:5176',
+  'http://127.0.0.1:5177',
   'http://127.0.0.1:5178',
+  'http://127.0.0.1:5179',
   'http://127.0.0.1:3000',
   'https://eh-arogya-sutra.vercel.app',
   'https://staging.arogyasutra.com',
@@ -215,6 +223,13 @@ app.use('/api/profile', profileRoutes);
 app.use('/api/super-admin', superAdminRoutes);
 app.use('/api/translate', translationRoutes);
 app.use('/api/eh-engine', healthRoutes);
+/** EH clinical summary — Node :5000 (proxies to eh_api.py :8005 /api/v3/prescribe) */
+app.post(
+  '/api/summary/eh-api',
+  summaryLimiter,
+  requireAuth,
+  asyncHandler(summaryGenerateRoutes.runEhEngineSummary)
+);
 app.use('/api/summary', summaryLimiter, summaryGenerateRoutes);
 app.use('/api/summary/ollama-book', summaryLimiter, summaryOllamaBookRoutes);
 app.use('/api/expert', ehExpertProxyRoutes);
@@ -244,7 +259,7 @@ const webDistIndex = path.join(webDist, 'index.html');
 const webLegacy = path.join(__dirname, '../frontend-legacy');
 const webLegacyIndex = path.join(webLegacy, 'index.html');
 const isDev = (process.env.NODE_ENV || 'development') !== 'production';
-const viteDevUrl = (process.env.EH_VITE_DEV_URL || 'http://localhost:5173').replace(/\/$/, '');
+const viteDevUrl = (process.env.EH_VITE_DEV_URL || 'http://localhost:5178').replace(/\/$/, '');
 
 // Purane static HTML — redirect to naya React Search (go-search clears PWA cache)
 const legacyHtmlPaths = [

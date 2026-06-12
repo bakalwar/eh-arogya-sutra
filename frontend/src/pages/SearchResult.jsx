@@ -15,6 +15,7 @@ import {
   ChevronLeft
 } from 'lucide-react';
 import client from '../api/client';
+import { SUMMARY_EH_API_PATH } from '../api/summaryEndpoints';
 import ClinicalSummaryDisplay from '../components/ClinicalSummaryDisplay';
 import EHPrescription_Jagamba from '../components/EHPrescription_Jagamba';
 import { getUser } from '../security/tokenManager';
@@ -95,7 +96,7 @@ export default function SearchResult() {
 
     try {
       // EH API v3 — 14k diseases + 9 Rule Engines (summary_engine.py), not book/Ollama
-      const res = await client.post('/api/summary/eh-api', { caseData });
+      const res = await client.post(SUMMARY_EH_API_PATH, { caseData });
       if (!res.data?.success) {
         throw new Error(res.data?.message || 'Summary generation failed');
       }

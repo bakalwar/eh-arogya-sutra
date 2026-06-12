@@ -4,7 +4,12 @@ const USER = 'eh_user';
 
 function authApiUrl(path) {
   if (import.meta.env.PROD && typeof window !== 'undefined') return path;
-  const base = (import.meta.env.VITE_API_BASE || import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+  const fromEnv = (import.meta.env.VITE_API_BASE || import.meta.env.VITE_API_URL || '').replace(
+    /\/$/,
+    ''
+  );
+  // Python :8005 has no /api/summary/* — use Vite proxy → Node :5000
+  const base = !fromEnv || /:8005\b/.test(fromEnv) ? '' : fromEnv;
   return base ? `${base}${path}` : path;
 }
 

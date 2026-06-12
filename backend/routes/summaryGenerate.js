@@ -36,6 +36,24 @@ function ehSummaryJson(result) {
   };
 }
 
+/** GET /api/summary/routes — route map (debug 404s) */
+router.get('/routes', (_req, res) => {
+  res.json({
+    success: true,
+    data: {
+      primary: 'POST /api/summary/eh-api',
+      aliases: [
+        'POST /api/summary/generate',
+        'POST /api/summary/expert-clinical',
+        'POST /api/summary/eh-engine'
+      ],
+      node_backend: 'port 5000 (Express)',
+      python_eh_api: 'port 8005 — /api/v3/prescribe only (NOT /api/summary/*)',
+      body: '{ caseData: { patient, analysis, eh_analysis, ... } }'
+    }
+  });
+});
+
 /** GET /api/summary/engine-version */
 router.get('/engine-version', (_req, res) => {
   const { SUMMARY_ENGINE_VERSION } = require('../constants/clinicalSummaryVersion');
@@ -97,12 +115,22 @@ async function runEhEngineSummary(req, res) {
   res.json(ehSummaryJson(result));
 }
 
+/** GET — avoid silent 404 when opened in browser; summary is POST-only */
+router.get('/eh-api', (_req, res) => {
+  res.status(405).json({
+    success: false,
+    message:
+      'Use POST /api/summary/eh-api with JSON { caseData } on Node backend (port 5000). ' +
+      'eh_api.py (port 8005) uses /api/v3/prescribe — not this path.'
+  });
+});
+
 /**
- * POST /api/summary/eh-api — PRIMARY: eh_api.py + summary_engine.py (14k diseases, 9 engines)
+ * POST /api/summary/eh-api — Node BFF → eh_api.py /api/v3/prescribe + summary_engine.py
  */
 router.post('/eh-api', requireAuth, asyncHandler(runEhEngineSummary));
 
-/** Aliases */
+/** Aliases (same handler) */
 router.post('/eh-engine', requireAuth, asyncHandler(runEhEngineSummary));
 router.post('/generate', requireAuth, asyncHandler(runEhEngineSummary));
 router.post('/expert-clinical', requireAuth, asyncHandler(runEhEngineSummary));
@@ -131,3 +159,4 @@ router.get('/health', async (_req, res) => {
 });
 
 module.exports = router;
+module.exports.runEhEngineSummary = runEhEngineSummary;
