@@ -83,7 +83,7 @@ BP: ${input.bp_systolic}/${input.bp_diastolic}, नाड़ी: ${input.pulse |
 लक्षण: ${symList}
 Lab: ${labText}
 अंग: ${(input.affected_organs || cd.affected_organs || ehInfo?.active_systems || []).join(', ')}
-EH AI Expert (FastAPI):
+EH AI Expert (eh_api.py + summary_engine.py):
 मिश्रण A (दवा + विद्युत): ${apiMedsA}
 मिश्रण B: ${apiMedsB}
 मिश्रण C: ${apiMedsC}

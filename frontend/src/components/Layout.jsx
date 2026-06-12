@@ -36,7 +36,7 @@ export default function Layout() {
     if (path.startsWith('/patient')) return 'Patient Records';
     if (path.startsWith('/search')) return 'Smart Search';
     if (path.startsWith('/prescription')) return 'EH Prescription';
-    if (path.startsWith('/reports')) return 'Lab Analysis';
+    if (path.startsWith('/report-analysis') || path.startsWith('/reports')) return 'Report Analyzer';
     if (path.startsWith('/admin')) return 'Admin Control';
     if (path.startsWith('/profile')) return 'Clinic Profile';
     if (path.startsWith('/payment')) return 'Billing & Plans';

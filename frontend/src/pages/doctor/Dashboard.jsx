@@ -49,7 +49,7 @@ export default function DoctorDashboard() {
               <PlusSquare className="w-4 h-4" /> New Analysis
             </NavLink>
             <NavLink to="/report-analysis" className="btn-gold-outline no-underline h-[36px] min-h-0">
-              <FlaskConical className="w-4 h-4" /> Analyze Report
+              <FlaskConical className="w-4 h-4" /> Report Analyzer
             </NavLink>
           </div>
 
@@ -80,7 +80,7 @@ export default function DoctorDashboard() {
         <h2 className="section-label">QUICK ACTIONS</h2>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <QuickAction icon={Search} label="Symptom Search" onClick={() => navigate('/search')} />
-          <QuickAction icon={FlaskConical} label="Upload Report" onClick={() => navigate('/report-analysis')} />
+          <QuickAction icon={FlaskConical} label="Report Analyzer" onClick={() => navigate('/report-analysis')} />
           <QuickAction icon={FileText} label="New Prescription" onClick={() => navigate('/prescription')} />
           <QuickAction icon={UserPlus} label="Add Patient" onClick={() => navigate('/patient')} />
         </div>

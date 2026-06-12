@@ -129,7 +129,8 @@ export default function App() {
           <Route path="/search" element={<PatientAnalysisForm />} />
           <Route path="/search/result" element={<SearchResult />} />
           <Route path="/formula-maker" element={<Navigate to="/search" replace />} />
-          <Route path="/reports" element={<ReportAnalysis />} />
+          <Route path="/reports" element={<Navigate to="/report-analysis" replace />} />
+          <Route path="/reports/manual" element={<ReportAnalysis />} />
           <Route path="/report-analysis" element={<ReportAnalyzer />} />
           <Route path="/prescription" element={<Prescription />} />
           <Route path="/patient" element={<PatientPortal />} />

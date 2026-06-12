@@ -18,7 +18,14 @@ import client from '../api/client';
 import ClinicalSummaryDisplay from '../components/ClinicalSummaryDisplay';
 import EHPrescription_Jagamba from '../components/EHPrescription_Jagamba';
 import { getUser } from '../security/tokenManager';
-import { loadSmartSearchResult } from '../utils/smartSearchStorage';
+import { loadSmartSearchResult, saveSmartSearchResult } from '../utils/smartSearchStorage';
+import {
+  extractClinicalSummary,
+  normalizeCaseDataForSummary,
+  buildClientFallbackSummary,
+  normalizeEngineVia,
+  formatEngineViaLabel
+} from '../utils/summaryCaseData';
 
 // DESIGN TOKENS
 const COLORS = {
@@ -56,33 +63,99 @@ export default function SearchResult() {
   const [engineResult, setEngineResult] = useState(null);
   const [showPrescription, setShowPrescription] = useState(false);
 
+  function applyEngineResult(pData) {
+    setEngineResult(
+      pData.engine_result ||
+        pData.eh_analysis?.engine_result ||
+        (pData.mixtures?.length
+          ? {
+              mixtures: pData.mixtures,
+              diet: pData.eh_analysis?.diet || pData.diet,
+              dosage: pData.eh_analysis?.dosage || pData.dosage
+            }
+          : null)
+    );
+  }
+
+  const fetchSummary = async (pData) => {
+    setLoading(true);
+    setErr('');
+    setProgressMsg('E.H. Complete Engine — Clinical summary ban rahi hai…');
+
+    const caseData = normalizeCaseDataForSummary(pData);
+    const cached = extractClinicalSummary(caseData);
+    if (cached?.trim()) {
+      setSummary(cached);
+      setSummaryVia(normalizeEngineVia(caseData.summary_via || caseData.via));
+      setSummarySource(caseData.summary_source || 'EH API — 14k diseases + 9 Rule Engines');
+      applyEngineResult(caseData);
+      setLoading(false);
+      return;
+    }
+
+    try {
+      // EH API v3 — 14k diseases + 9 Rule Engines (summary_engine.py), not book/Ollama
+      const res = await client.post('/api/summary/eh-api', { caseData });
+      if (!res.data?.success) {
+        throw new Error(res.data?.message || 'Summary generation failed');
+      }
+
+      const d = res.data.data || {};
+      const text = d.summary || '';
+      if (!text.trim()) {
+        throw new Error('Empty summary from server');
+      }
+
+      setSummary(text);
+      setSummarySource(d.source || d.summary_engine || 'AI Engine');
+      setSummaryVia(normalizeEngineVia(d.summary_via || d.via));
+      if (d.engine_result) setEngineResult(d.engine_result);
+
+      try {
+        saveSmartSearchResult({
+          ...pData,
+          ...caseData,
+          clinical_summary: text,
+          summary: text,
+          summary_source: d.source,
+          summary_via: d.summary_via
+        });
+      } catch {
+        /* sessionStorage optional */
+      }
+    } catch (e) {
+      console.error('Summary Gen Error:', e);
+      const fallback = buildClientFallbackSummary(caseData);
+      setSummary(fallback);
+      setSummarySource('client-fallback');
+      setSummaryVia('offline');
+      setErr(
+        'Summary API fail: ' +
+          (e.response?.data?.message || e.response?.data?.error || e.message) +
+          ' — analyze formulas ऊपर दिख रहे हैं।'
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     const fetchResult = async () => {
       if (!id) {
         const localData = loadSmartSearchResult();
         if (localData) {
-          const summaryText =
-            localData.clinical_summary ||
-            localData.summary ||
-            localData.eh_analysis?.clinical_summary ||
-            localData.eh_analysis?.parcha ||
-            '';
+          const summaryText = extractClinicalSummary(localData);
           setData(localData);
-          setSummary(summaryText);
-          setSummaryVia(localData.summary_via || localData.via || 'fastapi');
-          setSummarySource(localData.summary_source || 'EH API — 9 Rule Engines');
-          setEngineResult(
-            localData.engine_result ||
-              (localData.mixtures?.length
-                ? {
-                    mixtures: localData.mixtures,
-                    diet: localData.eh_analysis?.diet || localData.diet,
-                    dosage: localData.eh_analysis?.dosage || localData.dosage
-                  }
-                : null)
-          );
-          setLoading(false);
-          window.scrollTo({ top: 0, behavior: 'smooth' });
+          applyEngineResult(localData);
+          if (summaryText?.trim()) {
+            setSummary(summaryText);
+            setSummaryVia(normalizeEngineVia(localData.summary_via || localData.via));
+            setSummarySource(localData.summary_source || 'EH API — 14k diseases + 9 Rule Engines');
+            setLoading(false);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          } else {
+            await fetchSummary(localData);
+          }
         } else {
           setErr('No analysis result found. Pehle /search par Analyze Case chalayein.');
           setLoading(false);
@@ -93,13 +166,15 @@ export default function SearchResult() {
       try {
         const res = await client.get(`/api/prescriptions/${id}`);
         setData(res.data);
-        if (res.data.clinical_summary) {
-          setSummary(res.data.clinical_summary);
+        applyEngineResult(res.data);
+        const dbSummary = res.data.clinical_summary || extractClinicalSummary(res.data);
+        if (dbSummary?.trim()) {
+          setSummary(dbSummary);
           setSummaryVia('db');
           setSummarySource('Database');
           setLoading(false);
         } else {
-          fetchSummary(res.data);
+          await fetchSummary(res.data);
         }
       } catch (e) {
         setErr('Result load fail: ' + (e.response?.data?.error || e.message));
@@ -108,32 +183,6 @@ export default function SearchResult() {
     };
     fetchResult();
   }, [id]);
-
-  const fetchSummary = async (pData) => {
-    setLoading(true);
-    setErr('');
-    setProgressMsg('E.H. Complete Engine — Analyzing symptoms & reports…');
-    
-    try {
-      const res = await client.post('/api/summary/generate', {
-        id: pData._id,
-        patientName: pData.patient?.name || pData.name || 'Patient',
-        symptoms: pData.chief_complaint || '',
-        reports: pData.reports || [],
-        eh_analysis: pData.eh_analysis
-      });
-
-      setSummary(res.data.summary);
-      setSummarySource(res.data.source || 'AI Engine');
-      setSummaryVia(res.data.via || 'fastapi');
-      setEngineResult(res.data.engine_result || null);
-    } catch (e) {
-      console.error('Summary Gen Error:', e);
-      setErr('Summary gen fail: ' + (e.response?.data?.error || e.message));
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const savePrescription = async () => {
     if (!summary) return;
@@ -235,7 +284,7 @@ export default function SearchResult() {
             <div className="h-full bg-gradient-to-r from-gold to-green transition-all duration-1000" style={{ width: `${conf}%` }} />
           </div>
           <p className="text-[10px] opacity-30 italic">
-            Engine: {summarySource} • {summaryVia === 'fastapi' ? 'Real-time 9 Rule Engine Logic' : 'AI-Enhanced Clinical Summary'}
+            Engine: {summarySource} • {formatEngineViaLabel(summaryVia)}
           </p>
         </div>
 
@@ -275,7 +324,7 @@ export default function SearchResult() {
                 <AlertCircle className="w-12 h-12 mx-auto opacity-20" />
                 <p className="text-sm opacity-40 uppercase tracking-widest">Summary could not be generated</p>
                 <button onClick={() => data && fetchSummary(data)} className="px-6 py-2 rounded-full border border-gold text-gold text-[10px] font-bold uppercase tracking-widest hover:bg-gold/10 transition-all">
-                  Retry Analysis
+                  Dubara सारांश
                 </button>
               </div>
             )}

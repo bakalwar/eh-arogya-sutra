@@ -96,7 +96,13 @@ function isValidDenseEngineSummary(text) {
   return /इलेक्ट्रो|क्लिनिकल|विशेषज्ञ|माटेई|होम्योपैथी/i.test(s);
 }
 
+/** User-facing engine labels — Python modules (not "FastAPI") */
+const EH_SUMMARY_PY = 'summary_engine.py';
+const EH_API_PY = 'eh_api.py';
+
 module.exports = {
+  EH_SUMMARY_PY,
+  EH_API_PY,
   SUMMARY_ENGINE_VERSION,
   SUMMARY_LAYOUT_SEVEN_LOCKED,
   SUMMARY_SECTION_COUNT,

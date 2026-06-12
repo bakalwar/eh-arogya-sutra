@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import Fuse from 'fuse.js';
 import { 
   User, 
@@ -8,15 +8,13 @@ import {
   Stethoscope, 
   Droplets, 
   Clock, 
-  Upload, 
-  Trash2, 
+  FlaskConical,
   Plus, 
   Zap, 
   ShieldCheck, 
   ArrowRight,
   Heart,
-  AlertCircle,
-  FileText
+  AlertCircle
 } from 'lucide-react';
 import client from '../api/client';
 import { clearSmartSearchResult, saveSmartSearchResult } from '../utils/smartSearchStorage';
@@ -69,7 +67,6 @@ export default function PatientAnalysisForm() {
   const [phase, setPhase] = useState('ACUTE');
   const [temperament, setTemperament] = useState('');
   const [organs, setOrgans] = useState([]);
-  const [selectedFiles, setSelectedFiles] = useState([]);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   const [allSymptoms, setAllSymptoms] = useState([]);
@@ -158,10 +155,6 @@ export default function PatientAnalysisForm() {
     formData.append('phase', phase);
     formData.append('duration_days', duration);
     formData.append('condition', phase.toLowerCase());
-
-    if (selectedFiles.length > 0) {
-      formData.append('report_file', selectedFiles[0]);
-    }
 
     try {
       const res = await client.post('/api/search/analyze-complete', formData, {
@@ -382,38 +375,25 @@ export default function PatientAnalysisForm() {
               </div>
             </div>
 
-            {/* Report Upload */}
-            <div className="p-8 rounded-3xl border space-y-6" style={{ backgroundColor: COLORS.surface, borderColor: COLORS.border }}>
+            {/* Report Analyzer — PDF / photo upload lives here */}
+            <Link
+              to="/report-analysis"
+              className="block p-8 rounded-3xl border space-y-4 no-underline transition-all hover:border-gold/30 hover:bg-white/[0.02]"
+              style={{ backgroundColor: COLORS.surface, borderColor: COLORS.border }}
+            >
               <h2 className="text-xs font-bold uppercase tracking-[0.3em] opacity-40 flex items-center gap-2">
-                <Upload className="w-4 h-4" /> Medical Reports
+                <FlaskConical className="w-4 h-4" /> Report Analyzer
               </h2>
-              <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed rounded-2xl cursor-pointer hover:bg-white/[0.02] transition-all"
-                     style={{ borderColor: COLORS.border }}>
-                <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                  <FileText className="w-8 h-8 mb-3 opacity-20" />
-                  <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">Upload Files</p>
-                </div>
-                <input 
-                  type="file" 
-                  multiple 
-                  className="hidden" 
-                  onChange={(e) => setSelectedFiles(prev => [...prev, ...Array.from(e.target.files)])}
-                />
-              </label>
-              
-              {selectedFiles.length > 0 && (
-                <div className="space-y-2">
-                  {selectedFiles.map((f, i) => (
-                    <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-black/20 border border-white/5">
-                      <span className="text-[10px] font-mono truncate max-w-[150px] opacity-60">{f.name}</span>
-                      <button onClick={() => setSelectedFiles(prev => prev.filter((_, idx) => idx !== i))}>
-                        <Trash2 className="w-3 h-3 text-red-500 opacity-40 hover:opacity-100" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+              <p className="text-sm opacity-50 leading-relaxed">
+                Medical report PDF ya photo upload karein — OCR + lab values auto-read.
+              </p>
+              <span
+                className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest"
+                style={{ color: COLORS.gold }}
+              >
+                Open Report Analyzer <ArrowRight className="w-4 h-4" />
+              </span>
+            </Link>
 
             {/* Submit Button */}
             <button

@@ -149,8 +149,8 @@ function mapEhApiV3PrescribeToApp(py, patient = {}) {
     clinical_summary: summary,
     summary,
     summary_source: 'EH API — 9 Rule Engines (English)',
-    summary_via: 'fastapi',
-    via: 'fastapi'
+    summary_via: 'summary_engine.py',
+    via: 'eh_api.py'
   };
 }
 
@@ -247,7 +247,8 @@ function mapCompleteAnalyzeToApp(py) {
     data.clinical_summary = py.clinical_summary || py.parcha;
     data.summary = py.clinical_summary || py.parcha;
     data.summary_source = 'EH API — 9 Rule Engines (English)';
-    data.summary_via = 'fastapi';
+    data.summary_via = 'summary_engine.py';
+    data.via = 'eh_api.py';
   }
 
   const { SUMMARY_ENGINE_VERSION } = require('../constants/clinicalSummaryVersion');

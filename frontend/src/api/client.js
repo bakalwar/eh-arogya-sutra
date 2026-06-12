@@ -14,7 +14,10 @@ export const EXPERT_CLINICAL_TIMEOUT_MS =
   Number(import.meta.env.VITE_API_EXPERT_CLINICAL_TIMEOUT_MS) || 600000;
 
 const LONG_TIMEOUT_PATHS = [
+  '/api/summary/eh-api',
+  '/api/summary/eh-engine',
   '/api/summary/generate',
+  '/api/summary/expert-clinical',
   '/api/reports/analyze',
   '/api/expert/analyze',
   '/api/expert/summary',
@@ -58,6 +61,13 @@ client.interceptors.request.use(async (config) => {
     config.timeout = EXPERT_CLINICAL_TIMEOUT_MS;
   } else if (LONG_TIMEOUT_PATHS.some((p) => url.includes(p))) {
     config.timeout = LONG_REQUEST_TIMEOUT_MS;
+  }
+  /* Let the browser set multipart boundary — default application/json breaks file uploads */
+  if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
+    if (config.headers) {
+      delete config.headers['Content-Type'];
+      delete config.headers['content-type'];
+    }
   }
   if (!isAuthUrl(config.url)) {
     const token = await getValidToken();
@@ -113,7 +123,12 @@ client.interceptors.response.use(
       if (reqUrl.includes('/api/summary/expert-clinical')) {
         err.message =
           'Request time out — Ollama सारांश अभी भी चल रहा हो सकता है। `ollama serve` चलाएं, 5–8 मिनट रुककर «Dubara सारांश» दबाएं। frontend/.env: `VITE_API_EXPERT_CLINICAL_TIMEOUT_MS=720000` फिर Vite restart (`npm run dev:web`).';
-      } else if (reqUrl.includes('/api/summary/generate') || reqUrl.includes('/api/expert/summary')) {
+      } else if (
+        reqUrl.includes('/api/summary/eh-api') ||
+        reqUrl.includes('/api/summary/eh-engine') ||
+        reqUrl.includes('/api/summary/generate') ||
+        reqUrl.includes('/api/expert/summary')
+      ) {
         err.message =
           'Request time out — Ollama summary 2–4 min tak lag sakti hai. Thodi der baad dubara try karein; `ollama serve` chal raha ho. `.env`: `VITE_API_LONG_TIMEOUT_MS` badha sakte hain.';
       } else if (reqUrl.includes('/api/expert/analyze')) {

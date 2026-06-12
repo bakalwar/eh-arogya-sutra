@@ -155,7 +155,7 @@ function buildFallbackSummary(input = {}, cdData = {}, ehEngineData = null) {
   const L = [];
   const A = (...ls) => ls.forEach((l) => L.push(l));
 
-  const engineLabel = ehInfo ? '9 Rule Engines (FastAPI)' : 'Rule-engine fallback (Ollama नहीं)';
+  const engineLabel = ehInfo ? '9 Rule Engines (eh_api.py + summary_engine.py)' : 'Rule-engine fallback (Ollama नहीं)';
   const confidence = ehInfo ? 95 : (cdData.confidence || 70);
 
   A('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');

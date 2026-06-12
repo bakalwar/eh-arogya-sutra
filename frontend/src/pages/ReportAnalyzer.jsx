@@ -168,22 +168,32 @@ const ReportAnalyzer = () => {
     setError(null);
     try {
       const formData = new FormData();
-      
-      // Add images
-      patientData.images.forEach(img => {
-        formData.append('files', img.file);
-      });
 
-      // Add patient data
+      const chiefComplaint = [
+        patientData.symptoms.join(', '),
+        patientData.labText ? `Lab: ${patientData.labText}` : ''
+      ]
+        .filter(Boolean)
+        .join(' | ');
+
+      // Backend multer expects report_file (PDF / image)
+      const reportFile = patientData.images[0]?.file;
+      if (reportFile) {
+        formData.append('report_file', reportFile);
+      }
+
       formData.append('patient_name', patientData.name || 'Patient');
       formData.append('age', patientData.age || 40);
       formData.append('gender', patientData.gender || 'Male');
       formData.append('bp_systolic', patientData.bp_systolic || 120);
       formData.append('bp_diastolic', patientData.bp_diastolic || 80);
-      formData.append('symptoms', patientData.symptoms.join(', ') + (patientData.labText ? ` | Lab: ${patientData.labText}` : ''));
+      if (chiefComplaint) {
+        formData.append('chief_complaint', chiefComplaint);
+        formData.append('symptoms', chiefComplaint);
+      }
       formData.append('condition', 'chronic');
 
-      // Call Node backend instead of FastAPI directly
+      // Node backend → eh_api.py (9 Rule Engines)
       const response = await client.post('/api/search/analyze-complete', formData, {
         timeout: 300000
       });

@@ -865,7 +865,7 @@ function enrichCaseWithSourceOfTruth(caseData = {}) {
   let finalConfidence = Math.min(baseConf + labBoost + scoreBoost, 98);
 
   if (ehInfo && ehInfo.mixtures) {
-    engineName = 'EH AI Expert (FastAPI)';
+    engineName = 'EH AI Expert (eh_api.py)';
     finalConfidence = 95;
     formulas = {
       formula_a: {
@@ -947,7 +947,7 @@ function enrichCaseWithSourceOfTruth(caseData = {}) {
       confidence: finalConfidence,
       engine: engineName,
       reasoning_trace: ehInfo ? [
-        'EH AI Expert (FastAPI) Analysis:',
+        'EH AI Expert (eh_api.py) Analysis:',
         `प्रकृति: ${ehInfo.prakriti?.prakriti_hindi || '—'}`,
         `ध्रुवता: ${ehInfo.polarity?.polarity || '—'} → ${ehInfo.potency?.potency || '—'}`,
         `अंग: ${ehInfo.active_systems?.join(', ') || '—'}`,

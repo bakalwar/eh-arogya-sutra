@@ -1,7 +1,7 @@
 'use strict';
 
 /**
- * Proxy to Python EH Expert Engine (FastAPI on EH_EXPERT_ENGINE_URL).
+ * Proxy to Python EH Expert Engine (eh_api.py on EH_EXPERT_ENGINE_URL).
  * POST body = Python CaseInput (see eh-expert-engine/app/schemas.py).
  */
 const express = require('express');

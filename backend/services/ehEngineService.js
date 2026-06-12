@@ -1,6 +1,6 @@
 /**
  * EH Engine Service
- * Node.js se Python FastAPI (9 Rule Engines) ko call karta hai
+ * Node.js se eh_api.py (9 Rule Engines + summary_engine.py) ko call karta hai
  */
 
 const EH_API_URL = process.env.EH_API_URL || 'http://localhost:8005';
@@ -36,7 +36,7 @@ const analyzeWithEHEngines = async (patientData) => {
 
     const rawData = await response.json();
     
-    // Map FastAPI v3.1 response to App-compatible format
+    // Map eh_api.py v3.1 response to App-compatible format
     const mappedData = {
       prakriti: { 
         prakriti: rawData.clinical_analysis?.prakriti || 'Mixed',

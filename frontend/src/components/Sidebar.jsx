@@ -111,7 +111,7 @@ export default function Sidebar({ isOpen, onClose, logout }) {
             <div className="space-y-1">
               <p className="px-6 text-[9px] font-heading font-bold uppercase tracking-[0.3em] text-[var(--gold)] opacity-40 mb-3">Clinical Tools</p>
               <NavItem to="/search" icon={Search} label="Symptom Search" />
-              <NavItem to="/reports" icon={FlaskConical} label="Lab Reports" />
+              <NavItem to="/report-analysis" icon={FlaskConical} label="Report Analyzer" />
               <NavItem to="/books" icon={BookOpen} label="EH Library" />
               <NavItem to="/videos" icon={Video} label="Video Tutorials" />
             </div>
