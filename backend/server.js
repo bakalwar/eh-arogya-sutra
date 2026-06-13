@@ -158,6 +158,11 @@ const corsOptions = {
     if (!origin) return callback(null, true);
     if (allowed.includes(origin)) return callback(null, true);
 
+    // Vercel preview + production deployments (*.vercel.app)
+    if (/^https:\/\/[a-z0-9-]+(?:-[a-z0-9-]+)*\.vercel\.app$/i.test(origin)) {
+      return callback(null, true);
+    }
+
     const isLocalDev =
       process.env.EH_LOCAL_DEV === '1' ||
       (process.env.NODE_ENV || 'development') !== 'production';

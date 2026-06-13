@@ -17,6 +17,14 @@ export function resolveNodeApiBase(): string {
   return (process.env.NEXT_PUBLIC_NODE_API_URL || LOCAL_NODE).replace(/\/$/, '');
 }
 
+/** Browser → Railway direct (file uploads, bypass Vercel 4.5MB + multipart proxy limits). */
+export function resolvePublicNodeApiBase(): string {
+  const configured = (process.env.NEXT_PUBLIC_NODE_API_URL || '').replace(/\/$/, '');
+  if (configured) return configured;
+  if (appEnv === 'local') return LOCAL_NODE;
+  return 'https://eh-arogya-api-production.up.railway.app';
+}
+
 export function resolvePythonApiBase(): string {
   if (typeof window !== 'undefined') {
     return '';

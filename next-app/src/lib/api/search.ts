@@ -1,4 +1,7 @@
-import { apiRequest } from '@/lib/api/client';
+import { apiRequest, ApiError } from '@/lib/api/client';
+import { appEnv, resolvePublicNodeApiBase } from '@/lib/api/config';
+import { postToNodeApiDirect } from '@/lib/api/directNodeFetch';
+import { getValidToken } from '@/lib/session/tokenManager';
 
 export interface SymptomItem {
   name: string;
@@ -75,13 +78,57 @@ export async function analyzeCaseComplete(form: FormData): Promise<AnalyzeResult
       phase: String(form.get('phase') || 'ACUTE'),
       condition: String(form.get('condition') || ''),
     };
-    return apiRequest<AnalyzeResult>('/api/search/analyze', {
-      method: 'POST',
-      body,
-      timeoutMs: 300_000,
-    });
+    return postAnalyzeJson(body);
   }
 
+  return analyzeWithFiles(form);
+}
+
+async function postAnalyzeJson(body: Record<string, unknown>): Promise<AnalyzeResult> {
+  if (typeof window !== 'undefined' && appEnv === 'production') {
+    const directBase = resolvePublicNodeApiBase();
+    if (directBase) {
+      try {
+        const token = await getValidToken();
+        const res = await fetch(`${directBase}/api/search/analyze`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify(body),
+          credentials: 'omit',
+        });
+        const data = (await res.json().catch(() => null)) as AnalyzeResult | null;
+        if (res.ok && data) return data;
+        if (data?.message) throw new ApiError(data.message, res.status, data);
+      } catch (e) {
+        if (e instanceof ApiError && e.status !== 0) throw e;
+        console.warn('[search] Direct analyze failed, trying Vercel proxy:', e);
+      }
+    }
+  }
+
+  return apiRequest<AnalyzeResult>('/api/search/analyze', {
+    method: 'POST',
+    body,
+    timeoutMs: 300_000,
+  });
+}
+
+async function analyzeWithFiles(form: FormData): Promise<AnalyzeResult> {
+  if (typeof window !== 'undefined' && appEnv === 'production') {
+    try {
+      return await postToNodeApiDirect<AnalyzeResult>(
+        '/api/search/analyze-complete',
+        form,
+        300_000
+      );
+    } catch (e) {
+      if (e instanceof ApiError && e.status !== 0) throw e;
+      console.warn('[search] Direct Railway upload failed, trying Vercel proxy:', e);
+    }
+  }
   return apiRequest<AnalyzeResult>('/api/search/analyze-complete', {
     method: 'POST',
     body: form,
