@@ -35,6 +35,14 @@ function hashToken(raw: string) {
   return createHash('sha256').update(raw).digest('hex');
 }
 
+export function verifyAccessToken(token: string) {
+  return jwt.verify(token, ACCESS_SECRET) as jwt.JwtPayload & {
+    id?: string;
+    role?: string;
+    type?: string;
+  };
+}
+
 export function signAccessToken(user: AuthUserRow) {
   return jwt.sign(
     { id: String(user.id), role: user.role || 'doctor', type: 'access' },

@@ -8,13 +8,19 @@ export async function proxyAuthToNode(request: NextRequest, tail: string) {
   const headers = new Headers();
   const contentType = request.headers.get('content-type');
   if (contentType) headers.set('content-type', contentType);
+  const authorization = request.headers.get('authorization');
+  if (authorization) headers.set('authorization', authorization);
 
-  const upstream = await fetch(target, {
+  const init: RequestInit = {
     method: request.method,
     headers,
-    body: await request.text(),
     cache: 'no-store',
-  });
+  };
+  if (request.method !== 'GET' && request.method !== 'HEAD') {
+    init.body = await request.text();
+  }
+
+  const upstream = await fetch(target, init);
 
   const body = await upstream.text();
   return new NextResponse(body, {

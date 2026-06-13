@@ -1,5 +1,4 @@
 const crypto = require('crypto');
-const { verifyAccessToken } = require('../services/authTokens');
 
 const HMAC_SECRET = process.env.HMAC_SECRET || 'eh-arogya-sutra-hmac-secret-2026';
 
@@ -14,18 +13,10 @@ function verifyHmacSignature(req, res, next) {
     return next();
   }
 
+  // Browser / JWT clients — HMAC not used; requireAuth validates downstream.
   const authHeader = String(req.headers.authorization || '');
-  if (authHeader.startsWith('Bearer ')) {
-    const token = authHeader.slice(7).trim();
-    try {
-      const payload = verifyAccessToken(token);
-      if (!payload.type || payload.type === 'access') {
-        req.user = req.user || { id: payload.id, role: payload.role };
-        return next();
-      }
-    } catch {
-      /* fall through to HMAC or 401 below */
-    }
+  if (authHeader.startsWith('Bearer ') && authHeader.length > 15) {
+    return next();
   }
 
   const signature = req.headers['x-api-signature'];

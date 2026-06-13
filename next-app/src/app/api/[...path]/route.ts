@@ -40,8 +40,8 @@ async function proxyToNode(request: NextRequest, segments: string[]) {
 
 async function handle(request: NextRequest, ctx: RouteCtx) {
   const { path } = await ctx.params;
-  // Auth is handled by dedicated routes (direct DB or local Node fallback).
-  if (path[0] === 'auth') {
+  // Auth + patients handled by dedicated Next.js routes (direct DB or local Node fallback).
+  if (path[0] === 'auth' || path[0] === 'patients') {
     return NextResponse.json(
       { success: false, message: `Route not found: /api/${path.join('/')}` },
       { status: 404 }
