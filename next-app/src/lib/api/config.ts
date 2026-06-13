@@ -5,7 +5,9 @@
 const LOCAL_NODE = 'http://127.0.0.1:5000';
 const LOCAL_PYTHON = 'http://127.0.0.1:8005';
 
-export const appEnv = process.env.NEXT_PUBLIC_APP_ENV || 'local';
+export const appEnv =
+  process.env.NEXT_PUBLIC_APP_ENV ||
+  (process.env.NODE_ENV === 'production' ? 'production' : 'local');
 
 export function resolveNodeApiBase(): string {
   if (typeof window !== 'undefined') {

@@ -1,15 +1,31 @@
 const crypto = require('crypto');
+const { verifyAccessToken } = require('../services/authTokens');
 
 const HMAC_SECRET = process.env.HMAC_SECRET || 'eh-arogya-sutra-hmac-secret-2026';
 
 /**
  * Middleware to verify HMAC signature of the request.
  * Header: x-api-signature
+ *
+ * Browser clients use JWT (Authorization: Bearer) — HMAC is for server-to-server only.
  */
 function verifyHmacSignature(req, res, next) {
-  // Skip HMAC check in development if disabled
-  if (process.env.NODE_ENV === 'development' && process.env.DISABLE_HMAC === '1') {
+  if (process.env.DISABLE_HMAC === '1') {
     return next();
+  }
+
+  const authHeader = String(req.headers.authorization || '');
+  if (authHeader.startsWith('Bearer ')) {
+    const token = authHeader.slice(7).trim();
+    try {
+      const payload = verifyAccessToken(token);
+      if (!payload.type || payload.type === 'access') {
+        req.user = req.user || { id: payload.id, role: payload.role };
+        return next();
+      }
+    } catch {
+      /* fall through to HMAC or 401 below */
+    }
   }
 
   const signature = req.headers['x-api-signature'];

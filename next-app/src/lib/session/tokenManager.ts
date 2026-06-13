@@ -5,12 +5,40 @@ const REFRESH = 'eh_refresh';
 const USER = 'eh_user';
 const LOCAL_AUTH_FLAG = 'eh_local_auth';
 
-/** Cookie flags for HTTP LAN testing — no Secure flag on local dev */
-const COOKIE_BASE = 'path=/; SameSite=Lax';
 const ACCESS_MAX_AGE = 60 * 60 * 24;
 const REFRESH_MAX_AGE = 60 * 60 * 24 * 7;
 
 let refreshPromise: Promise<string | null> | null = null;
+
+/** Cookie flags — Secure on HTTPS (Vercel production) */
+function cookieSuffix() {
+  if (typeof window !== 'undefined' && window.location.protocol === 'https:') {
+    return '; Secure';
+  }
+  return '';
+}
+
+function setSessionCookie(name: string, value: string, maxAgeSec: number) {
+  if (typeof document === 'undefined') return;
+  document.cookie = `${name}=${encodeURIComponent(value)}; path=/; SameSite=Lax; max-age=${maxAgeSec}${cookieSuffix()}`;
+}
+
+function getSessionCookie(name: string): string | null {
+  if (typeof document === 'undefined') return null;
+  const prefix = `${name}=`;
+  for (const part of document.cookie.split(';')) {
+    const trimmed = part.trim();
+    if (trimmed.startsWith(prefix)) {
+      return decodeURIComponent(trimmed.slice(prefix.length));
+    }
+  }
+  return null;
+}
+
+function deleteSessionCookie(name: string) {
+  if (typeof document === 'undefined') return;
+  document.cookie = `${name}=; path=/; SameSite=Lax; max-age=0${cookieSuffix()}`;
+}
 
 export function isLocalDevMode() {
   return appEnv === 'local' || process.env.NODE_ENV === 'development';
@@ -29,28 +57,6 @@ export function isLanHost() {
 
 export function isLocalLanDev() {
   return isLocalDevMode() && isLanHost();
-}
-
-function setSessionCookie(name: string, value: string, maxAgeSec: number) {
-  if (typeof document === 'undefined') return;
-  document.cookie = `${name}=${encodeURIComponent(value)}; ${COOKIE_BASE}; max-age=${maxAgeSec}`;
-}
-
-function getSessionCookie(name: string): string | null {
-  if (typeof document === 'undefined') return null;
-  const prefix = `${name}=`;
-  for (const part of document.cookie.split(';')) {
-    const trimmed = part.trim();
-    if (trimmed.startsWith(prefix)) {
-      return decodeURIComponent(trimmed.slice(prefix.length));
-    }
-  }
-  return null;
-}
-
-function deleteSessionCookie(name: string) {
-  if (typeof document === 'undefined') return;
-  document.cookie = `${name}=; ${COOKIE_BASE}; max-age=0`;
 }
 
 function readStorage(key: string): string | null {

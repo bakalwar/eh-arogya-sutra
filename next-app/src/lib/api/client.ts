@@ -30,7 +30,11 @@ function timeoutForPath(path: string): number {
 }
 
 function isAuthUrl(path: string) {
-  return path.includes('/api/auth/login') || path.includes('/api/auth/refresh');
+  return (
+    path.includes('/api/auth/login') ||
+    path.includes('/api/auth/signup') ||
+    path.includes('/api/auth/refresh')
+  );
 }
 
 export interface ApiRequestOptions {
@@ -86,7 +90,10 @@ export async function apiRequest<T = unknown>(
           return apiRequest<T>(path, options, true);
         }
       }
-      if (!hasLocalDevAuthGrace()) {
+      const msg = (data as { message?: string })?.message || '';
+      const isSignatureOnly =
+        msg.includes('Missing API signature') || msg.includes('Invalid API signature');
+      if (!hasLocalDevAuthGrace() && !isSignatureOnly) {
         clearSession();
         if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/login')) {
           window.location.href = '/login';

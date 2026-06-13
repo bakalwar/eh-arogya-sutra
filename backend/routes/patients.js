@@ -1,12 +1,14 @@
 const express = require('express');
 const { personalFactorFromName } = require('../services/mulank');
 const { requirePatientsDb } = require('../middleware/requireDb');
+const { requireAuth } = require('../middleware/requireAuth');
 const { asyncHandler } = require('../utils/asyncHandler');
 const { getPostgresModels } = require('../utils/dataSource');
 
 const router = express.Router();
 
 router.use(requirePatientsDb);
+router.use(requireAuth);
 
 function patientToApi(pgRow) {
   const u = pgRow.get({ plain: true });
