@@ -1,6 +1,4 @@
-import { apiRequest, ApiError } from '@/lib/api/client';
-import { appEnv, resolvePublicNodeApiBase } from '@/lib/api/config';
-import { getValidToken } from '@/lib/session/tokenManager';
+import { apiRequest } from '@/lib/api/client';
 import { normalizeCaseDataForSummary } from '@/lib/summaryCaseData';
 
 export interface SummaryResponse {
@@ -35,64 +33,18 @@ function validateSummaryResponse(res: SummaryResponse): SummaryResponse {
   return res;
 }
 
-async function fetchSummaryViaDirectRailway(
-  body: { caseData: Record<string, unknown> }
-): Promise<SummaryResponse | null> {
-  const directBase = resolvePublicNodeApiBase();
-  const token = await getValidToken();
-  if (!directBase || !token) return null;
-
-  const upstream = await fetch(`${directBase}/api/summary/eh-api`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(body),
-    credentials: 'omit',
-  });
-
-  const data = (await upstream.json().catch(() => null)) as SummaryResponse | null;
-  if (upstream.ok && data?.success) return data;
-
-  // 401/403 on direct Railway — JWT host mismatch; let caller try Vercel trusted proxy.
-  if (upstream.status === 401 || upstream.status === 403) return null;
-
-  if (data?.message) throw new ApiError(data.message, upstream.status, data);
-  return null;
-}
-
 /**
- * Clinical summary — Vercel validates JWT → trusted proxy → Railway → EH API 9 Rule Engines + summary_engine.py.
+ * Clinical summary — production → Railway Node (NEXT_PUBLIC_NODE_API_URL) → EH API 9 Rule Engines.
  */
 export async function postClinicalSummary(caseData: Record<string, unknown>) {
   const body = { caseData: normalizeCaseDataForSummary(caseData) };
-
-  // Primary: same-origin Vercel route (trusted x-eh-proxy-* headers — no Invalid token).
-  try {
-    const res = await apiRequest<SummaryResponse>('/api/summary/eh-api', {
-      method: 'POST',
-      body,
-      timeoutMs: 600_000,
-      auth: true,
-    });
-    return validateSummaryResponse(res);
-  } catch (vercelErr) {
-    const retryable =
-      vercelErr instanceof ApiError &&
-      (vercelErr.status === 502 || vercelErr.status === 503 || vercelErr.status === 504 || vercelErr.status === 0);
-
-    if (typeof window !== 'undefined' && appEnv === 'production' && retryable) {
-      try {
-        const direct = await fetchSummaryViaDirectRailway(body);
-        if (direct) return validateSummaryResponse(direct);
-      } catch (directErr) {
-        console.warn('[summary] Direct Railway fallback failed:', directErr);
-      }
-    }
-
-    throw vercelErr instanceof Error ? vercelErr : new Error('Summary generation failed');
-  }
+  const res = await apiRequest<SummaryResponse>('/api/summary/eh-api', {
+    method: 'POST',
+    body,
+    timeoutMs: 600_000,
+    auth: true,
+  });
+  return validateSummaryResponse(res);
 }
 
 /** True when analyze payload has no full EH summary_engine output yet. */

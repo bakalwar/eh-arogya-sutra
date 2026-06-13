@@ -25,7 +25,7 @@ export function resolvePublicNodeApiBase(): string {
   return 'https://eh-arogya-api-production.up.railway.app';
 }
 
-export const RAILWAY_NODE_API_PREFIXES = ['/api/search/', '/api/v3/'] as const;
+export const RAILWAY_NODE_API_PREFIXES = ['/api/search/', '/api/v3/', '/api/summary/'] as const;
 
 export function usesRailwayNodeApi(path: string): boolean {
   const normalized = path.startsWith('/') ? path : `/${path}`;
