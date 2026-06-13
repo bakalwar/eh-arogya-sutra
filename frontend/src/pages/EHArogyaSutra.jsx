@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
+import { resolveApiBase } from "../api/resolveApiBase";
 
 // ─── CONFIG ───────────────────────────────────────────────────────────────
-const BASE_URL = "http://localhost:5000";
+const BASE_URL = resolveApiBase() || "";
 
 // ─── ELECTRICITIES ────────────────────────────────────────────────────────
 const ELEC = {

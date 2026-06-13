@@ -1,0 +1,17 @@
+{
+  "mode": "local",
+  "comment": "Next.js :3001 primary UI — Node :5000 orchestrates Python EH API :8005",
+  "nodeApiUrl": "http://127.0.0.1:5000",
+  "pythonApiUrl": "http://127.0.0.1:8005",
+  "nextDevUrl": "http://127.0.0.1:3001",
+  "primaryUi": "next",
+  "corsOrigins": [
+    "http://localhost:3001",
+    "http://127.0.0.1:3001",
+    "http://localhost:5000",
+    "http://127.0.0.1:5000"
+  ],
+  "blockCloudDeploy": true,
+  "ehApiOnly": true,
+  "legacyViteDisabled": true
+}

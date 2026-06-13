@@ -77,18 +77,22 @@ function mapEhApiV3PrescribeToApp(py, patient = {}) {
     formulas[String.fromCharCode(65 + i)] = m.formula || m.formula_obj?.full || '';
   });
 
+  const reportAnalysis = py.report_analysis || null;
+  const labFindings = reportAnalysis?.lab_findings || py.lab_findings || [];
+
   const ehAnalysis = {
     prakriti: { prakriti },
     polarity: { polarity },
     potency: { potency, potency_type: ca.potency_type, note: ca.potency_note },
     mixtures,
-    active_systems: ca.active_systems || [],
+    active_systems: ca.active_systems || ca.report_systems || [],
     safety: py.safety || {},
     dosage: py.dosage || {},
     diet: py.diet || {},
     parcha: summary,
     clinical_summary: summary,
-    engine_result: py.engine_result || null
+    engine_result: py.engine_result || null,
+    report_analysis: reportAnalysis
   };
 
   return {
@@ -150,19 +154,22 @@ function mapEhApiV3PrescribeToApp(py, patient = {}) {
     summary,
     summary_source: 'EH API — 9 Rule Engines (English)',
     summary_via: 'summary_engine.py',
-    via: 'eh_api.py'
+    via: 'eh_api.py',
+    report_analysis: reportAnalysis,
+    lab_findings: labFindings,
+    pipeline: py.pipeline || 'eh-api-9engine-v3'
   };
 }
 
 function mapCompleteAnalyzeToApp(py) {
-  if (!py || py.success === false) {
-    const err = py?.error || py?.expert?.error || 'Expert analyze failed';
+  if (!py || py.success === false || py.status === 'error') {
+    const err = py?.error || py?.message || py?.expert?.error || 'Expert analyze failed';
     return {
       success: false,
       message: err,
       data: {
         expert: { ok: false, error: err },
-        patient: py?.patient_data || {}
+        patient: py?.patient_data || py?.patient || {}
       }
     };
   }
@@ -202,9 +209,15 @@ function mapCompleteAnalyzeToApp(py) {
         : null
     };
     const data = mapEhApiV3PrescribeToApp(py, patient);
+    data.analysis_mode = py.analysis_mode;
+    data.faceAnalysis = patient.faceAnalysis;
     const { SUMMARY_ENGINE_VERSION } = require('../constants/clinicalSummaryVersion');
     data.summary_engine_version = SUMMARY_ENGINE_VERSION;
-    return { success: true, data, pipeline: 'eh-api-9engine-analyze-report' };
+    return {
+      success: true,
+      data,
+      pipeline: py.pipeline || 'eh-api-9engine-analyze-report',
+    };
   }
 
   const pd = py.patient_data || {};

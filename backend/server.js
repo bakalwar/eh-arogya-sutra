@@ -30,7 +30,6 @@ const reportRoutes = require('./routes/reports');
 const prescriptionRoutes = require('./routes/prescriptions');
 const adminRoutes = require('./routes/admin');
 const paymentRoutes = require('./routes/payment');
-const searchRoutes = require('./routes/search');
 const smartSearchRoutes = require('./routes/searchEngine');
 const auditRoutes = require('./routes/audit');
 const symptomCheckerRoutes = require('./routes/symptomChecker');
@@ -40,7 +39,6 @@ const superAdminRoutes = require('./routes/superAdmin');
 const translationRoutes = require('./routes/translation');
 const summaryGenerateRoutes = require('./routes/summaryGenerate');
 const { EXPERT_BASE } = require('./services/ehExpertClient');
-const summaryOllamaBookRoutes = require('./routes/summaryOllamaBook');
 const ehExpertProxyRoutes = require('./routes/ehExpertProxy');
 const subscriptionRoutes = require('./routes/subscription');
 const referralRoutes = require('./routes/referral');
@@ -142,6 +140,8 @@ const defaultOrigins = [
   'http://127.0.0.1:5178',
   'http://127.0.0.1:5179',
   'http://127.0.0.1:3000',
+  'http://localhost:3001',
+  'http://127.0.0.1:3001',
   'https://eh-arogya-sutra.vercel.app',
   'https://staging.arogyasutra.com',
   'https://app.arogyasutra.com'
@@ -150,18 +150,37 @@ if (process.env.FRONTEND_URL) {
   defaultOrigins.push(process.env.FRONTEND_URL.replace(/\/$/, ''));
 }
 const corsOptions = {
-  origin: process.env.CORS_ORIGIN
-    ? process.env.CORS_ORIGIN.split(',').map((s) => s.trim())
-    : defaultOrigins,
+  origin(origin, callback) {
+    const allowed = process.env.CORS_ORIGIN
+      ? process.env.CORS_ORIGIN.split(',').map((s) => s.trim()).filter(Boolean)
+      : defaultOrigins;
+
+    if (!origin) return callback(null, true);
+    if (allowed.includes(origin)) return callback(null, true);
+
+    const isLocalDev =
+      process.env.EH_LOCAL_DEV === '1' ||
+      (process.env.NODE_ENV || 'development') !== 'production';
+    if (
+      isLocalDev &&
+      /^https?:\/\/(localhost|127\.0\.0\.1|192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3})(:\d+)?$/i.test(
+        origin
+      )
+    ) {
+      return callback(null, true);
+    }
+
+    callback(new Error(`CORS blocked: ${origin}`));
+  },
   credentials: true,
-  optionsSuccessStatus: 200
+  optionsSuccessStatus: 200,
 };
 
 app.use(cors(corsOptions));
 
-// Body parsing middleware
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+// Body parsing middleware — large clinical PDFs / imaging (local + production)
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Compression middleware
 app.use(
@@ -195,6 +214,12 @@ app.get('/health', async (req, res) => {
     environment: process.env.NODE_ENV,
     appEnv: process.env.APP_ENV || process.env.NODE_ENV,
     deployEnv: process.env.EH_DEPLOY_ENV || null,
+    deploy: {
+      commit: process.env.RAILWAY_GIT_COMMIT_SHA || process.env.VERCEL_GIT_COMMIT_SHA || null,
+      branch: process.env.RAILWAY_GIT_BRANCH || process.env.VERCEL_GIT_COMMIT_REF || null,
+      summaryEhApiRoute: true,
+      expertBase: EXPERT_BASE
+    },
     summaryDenseMode: process.env.EH_SUMMARY_DENSE_MODE !== '0',
     database: {
       dialect: 'postgresql',
@@ -215,7 +240,6 @@ app.post(
   asyncHandler(summaryGenerateRoutes.runEhEngineSummary)
 );
 app.use('/api/summary', summaryLimiter, summaryGenerateRoutes);
-app.use('/api/summary/ollama-book', summaryLimiter, summaryOllamaBookRoutes);
 
 app.use('/api/auth', auditMiddleware('auth.action'), authRoutes);
 app.use('/api/patients', verifyHmacSignature, doctorRateLimiter, patientRoutes);
@@ -225,7 +249,6 @@ app.use('/api/prescriptions', verifyHmacSignature, doctorRateLimiter, prescripti
 app.use('/api/admin', auditMiddleware('admin.action'), adminRoutes);
 app.use('/api/payment', verifyHmacSignature, auditMiddleware('payment.action'), paymentRoutes);
 app.use('/api/search', smartSearchRoutes);
-app.use('/api/search', searchRoutes);
 app.use('/api/audit', auditRoutes);
 app.use('/api/symptom-checker', symptomCheckerRoutes);
 app.use('/api/branding', brandingRoutes);
@@ -257,10 +280,12 @@ if (fs.existsSync(docsRoot)) {
 // SPA: dev → live Vite (5173); production → frontend/dist build
 const webDist = path.join(__dirname, '../frontend/dist');
 const webDistIndex = path.join(webDist, 'index.html');
-const webLegacy = path.join(__dirname, '../frontend-legacy');
-const webLegacyIndex = path.join(webLegacy, 'index.html');
 const isDev = (process.env.NODE_ENV || 'development') !== 'production';
-const viteDevUrl = (process.env.EH_VITE_DEV_URL || 'http://localhost:5178').replace(/\/$/, '');
+const appDevUrl = (
+  process.env.EH_NEXT_DEV_URL ||
+  process.env.EH_VITE_DEV_URL ||
+  'http://localhost:3001'
+).replace(/\/$/, '');
 
 // Purane static HTML — redirect to naya React Search (go-search clears PWA cache)
 const legacyHtmlPaths = [
@@ -272,10 +297,11 @@ const legacyHtmlPaths = [
 legacyHtmlPaths.forEach((legacyPath) => {
   app.get(legacyPath, (req, res) => {
     const qs = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
-    const target = isDev
-      ? `${viteDevUrl}/go-search.html${qs || '?upgraded=1'}`
-      : `/go-search.html${qs || '?upgraded=1'}`;
-    res.redirect(302, target);
+    if (isDev) {
+      res.redirect(302, qs ? `${appDevUrl}${qs}` : appDevUrl);
+      return;
+    }
+    res.redirect(302, qs ? `/${qs.replace(/^\?/, '')}` : '/');
   });
 });
 
@@ -304,22 +330,18 @@ if (isDev) {
   // Port 5000 = API only in dev — stale frontend/dist was showing the OLD app
   app.get('*', (req, res, next) => {
     if (!isSpaBrowserRequest(req)) return next();
-    return res.redirect(302, `${viteDevUrl}${req.originalUrl}`);
+    return res.redirect(302, `${appDevUrl}${req.originalUrl}`);
   });
 } else if (fs.existsSync(webDistIndex)) {
   app.use(express.static(webDist));
   app.get('*', spaFallback(webDistIndex));
-} else if (false && fs.existsSync(webLegacyIndex)) {
-  // Legacy folder disabled — always use React app at port 5173
-  app.use(express.static(webLegacy));
-  app.get('*', spaFallback(webLegacyIndex));
 } else {
   app.get('/', (req, res) => {
     res.status(503).type('html').send(`<!DOCTYPE html><html><body style="font-family:sans-serif;padding:2rem">
       <h1>EH CDSS</h1>
       <p>Web UI not built. Run one of:</p>
       <ul>
-        <li><strong>Development:</strong> <code>npm run dev</code> then open <strong>http://localhost:5173/</strong></li>
+        <li><strong>Development:</strong> <code>npm run dev</code> then open <strong>http://localhost:3001/</strong></li>
         <li><strong>Production:</strong> <code>npm run build:web</code> then <code>npm start</code></li>
       </ul>
     </body></html>`);
@@ -367,7 +389,7 @@ const startServer = async () => {
  Server running on port: ${PORT}
  Local: http://localhost:${PORT}${networkLines.join('')}
  Environment: ${process.env.NODE_ENV || 'development'}
- App (dev):  ${viteDevUrl}/go-search.html  |  API: /api${pgLine}
+ App (dev):  ${appDevUrl}/  |  API: /api${pgLine}
  EH Python:  ${EXPERT_BASE}  |  summary: POST /api/summary/eh-api
  Local hub:  http://localhost:${PORT}/eh-arogya/
  SSE stream: http://localhost:${PORT}/eh-arogya/api/stream

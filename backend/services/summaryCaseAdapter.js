@@ -1,6 +1,5 @@
 'use strict';
 
-const { buildLocalExpertFallback } = require('./localExpertFallback');
 const { detectAffectedOrgans } = require('../utils/ehOrganDetect');
 
 /** Smart-search caseData → generateClinicalSummary input */
@@ -56,22 +55,7 @@ function caseDataToSummaryInput(caseData = {}) {
   };
 
   const faMeds = formulas.formula_a?.medicines;
-  const useTemplatePool = process.env.EH_ALLOW_TEMPLATE_FALLBACK === '1';
-  if ((!Array.isArray(faMeds) || faMeds.length === 0) && useTemplatePool) {
-    const offline = buildLocalExpertFallback({
-      patientIntake: analysis.patient_intake || patient,
-      chiefComplaint: analysis.chief_complaint || patient.chiefComplaint || '',
-      symptoms: (patient.symptoms || []).map((s) =>
-        typeof s === 'object' ? s : { name: String(s) }
-      ),
-      ehBase: {
-        bp_systolic: bpSys,
-        bp_diastolic: bpDia,
-        query: analysis.chief_complaint || patient.chiefComplaint || ''
-      }
-    });
-    formulas = offline.formulas;
-  } else if (!Array.isArray(faMeds) || faMeds.length === 0) {
+  if (!Array.isArray(faMeds) || faMeds.length === 0) {
     formulas = {
       formula_a: { medicines: [] },
       formula_b: { medicines: [] },

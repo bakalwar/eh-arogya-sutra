@@ -2,7 +2,6 @@ node_modules
 frontend/node_modules
 frontend/dist
 .vercel
-eh-api
 eh-expert-engine
 local-site
 uploads

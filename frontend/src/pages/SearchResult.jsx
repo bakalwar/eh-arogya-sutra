@@ -204,9 +204,9 @@ export default function SearchResult() {
 
   if (loading && !summary && !err) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center p-4 text-center" style={{ backgroundColor: COLORS.bg }}>
-        <div className="h-12 w-12 animate-spin rounded-full border-4 border-gold border-t-transparent"></div>
-        <p className="mt-6 text-lg font-bold text-gold uppercase tracking-widest animate-pulse">
+      <div className="flex min-h-[50vh] flex-col items-center justify-center p-4 text-center">
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-gold border-t-transparent" />
+        <p className="mt-6 animate-pulse text-base font-bold uppercase tracking-widest text-gold md:text-lg">
           {progressMsg || '9 Rule Engines — Clinical summary ban rahi hai…'}
         </p>
       </div>
@@ -221,8 +221,8 @@ export default function SearchResult() {
   const mixtures = data?.mixtures || expert.mixtures || [];
 
   return (
-    <div className="min-h-screen p-6 md:p-10 font-sans" style={{ backgroundColor: COLORS.bg, color: COLORS.text }}>
-      <div className="max-w-5xl mx-auto space-y-10">
+    <div className="w-full font-sans text-white">
+      <div className="mx-auto w-full max-w-7xl space-y-8 md:space-y-10">
 
         {err && (
           <div className="p-4 rounded-2xl border flex items-center gap-3 text-red-400 text-sm"
@@ -233,16 +233,16 @@ export default function SearchResult() {
         )}
         
         {/* Header */}
-        <header className="flex flex-wrap items-center justify-between gap-6">
-          <div className="flex items-center gap-4">
-            <button onClick={() => navigate('/search')} className="p-3 rounded-full border border-white/10 hover:bg-white/5 transition-all">
-              <ChevronLeft className="w-5 h-5 text-gold" />
+        <header className="flex flex-wrap items-start justify-between gap-4 md:gap-6">
+          <div className="flex min-w-0 flex-1 items-center gap-3 md:gap-4">
+            <button type="button" onClick={() => navigate('/search')} className="shrink-0 rounded-full border border-white/10 p-2.5 transition-all hover:bg-white/5 md:p-3">
+              <ChevronLeft className="h-5 w-5 text-gold" />
             </button>
-            <div>
-              <h1 className="mt-1 text-2xl font-serif font-bold tracking-tight flex items-center gap-3" style={{ fontFamily: 'Cinzel, serif' }}>
+            <div className="min-w-0">
+              <h1 className="mt-1 flex items-center gap-3 font-serif text-xl font-bold tracking-tight md:text-2xl lg:text-3xl" style={{ fontFamily: 'Cinzel, serif' }}>
                 {data?.patient?.name || 'Patient Analysis'}
               </h1>
-              <p className="text-xs opacity-40 uppercase tracking-widest mt-1">
+              <p className="mt-1 text-[10px] uppercase tracking-widest opacity-40 md:text-xs">
                 {data?.patient?.age} Yrs • {data?.patient?.gender} • {new Date().toLocaleDateString()}
               </p>
             </div>
@@ -256,14 +256,14 @@ export default function SearchResult() {
         </header>
 
         {/* Clinical Markers Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-6">
           {[
             { label: 'Polarity', value: pol, icon: Activity, color: COLORS.gold },
             { label: 'Phase', value: pickText(expert.phase || data?.analysis?.phase, 'CHRONIC'), icon: Clock, color: COLORS.blue },
             { label: 'Potency', value: potency, icon: Zap, color: COLORS.green },
             { label: 'Electricity', value: electricity, icon: Sparkles, color: COLORS.gold }
           ].map((item, i) => (
-            <div key={i} className="p-6 rounded-2xl border space-y-3" style={{ backgroundColor: COLORS.surface, borderColor: COLORS.border }}>
+            <div key={i} className="space-y-2 rounded-xl border p-4 md:space-y-3 md:rounded-2xl md:p-6" style={{ backgroundColor: COLORS.surface, borderColor: COLORS.border }}>
               <div className="flex items-center justify-between">
                 <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">{item.label}</p>
                 <item.icon className="w-4 h-4" style={{ color: item.color }} />
@@ -293,12 +293,18 @@ export default function SearchResult() {
         {mixtures.length > 0 && (
           <div className="p-8 rounded-3xl border space-y-4" style={{ backgroundColor: COLORS.surface, borderColor: COLORS.border }}>
             <h2 className="text-xs font-bold uppercase tracking-[0.3em] opacity-40">Prescription Formulas</h2>
-            <div className="grid gap-3 md:grid-cols-3">
+            <div className="flex w-full flex-col gap-3">
               {mixtures.map((m, i) => (
-                <div key={i} className="p-4 rounded-xl border border-green/20 bg-green/5">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-gold mb-2">{m.label || `Mixture ${String.fromCharCode(65 + i)}`}</p>
-                  <p className="text-sm font-mono text-green-400">{m.formula || m.formula_obj?.full || '—'}</p>
-                  <p className="text-[10px] opacity-40 mt-2 uppercase">{m.system_key || m.system || ''}</p>
+                <div key={i} className="w-full rounded-2xl border border-green/20 bg-green/5 px-4 py-3.5 md:px-5 md:py-4">
+                  <p className="text-sm leading-relaxed text-white/90 md:text-[15px]">
+                    <span className="font-bold text-[#6abf72]">{m.label || `Mixture ${String.fromCharCode(65 + i)}`}</span>
+                    {m.system_key || m.system ? (
+                      <span className="text-white/75"> — {(m.system_key || m.system).toString()}</span>
+                    ) : null}
+                    {(m.formula || m.formula_obj?.full) && (
+                      <span className="text-white/85"> (Formula: {m.formula || m.formula_obj?.full})</span>
+                    )}
+                  </p>
                 </div>
               ))}
             </div>
@@ -306,20 +312,18 @@ export default function SearchResult() {
         )}
 
         {/* Summary Document */}
-        <div className="rounded-3xl border overflow-hidden shadow-2xl" style={{ backgroundColor: COLORS.surface, borderColor: COLORS.border }}>
-          <div className="px-8 py-5 border-b flex items-center justify-between" style={{ borderColor: COLORS.border, backgroundColor: 'rgba(255,255,255,0.02)' }}>
+        <div className="w-full overflow-hidden rounded-2xl border shadow-2xl md:rounded-3xl" style={{ backgroundColor: COLORS.surface, borderColor: COLORS.border }}>
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-4 md:px-8 md:py-5" style={{ borderColor: COLORS.border, backgroundColor: 'rgba(255,255,255,0.02)' }}>
             <h3 className="text-xs font-bold uppercase tracking-[0.3em] opacity-60">Clinical Summary Output</h3>
-            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-green/10 border border-green/20">
-              <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+            <div className="flex items-center gap-2 rounded-full border border-green/20 bg-green/10 px-3 py-1">
+              <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-green-500" />
               <span className="text-[9px] font-bold uppercase tracking-widest text-green-500">Verified by CDSS</span>
             </div>
           </div>
-          
-          <div className="p-8 md:p-12">
+
+          <div className="w-full px-3 py-5 sm:px-6 md:px-8 md:py-10 lg:px-10">
             {summary ? (
-              <div className="prose prose-invert max-w-none">
-                <ClinicalSummaryDisplay summary={summary} />
-              </div>
+              <ClinicalSummaryDisplay summary={summary} />
             ) : (
               <div className="py-20 text-center space-y-4">
                 <AlertCircle className="w-12 h-12 mx-auto opacity-20" />

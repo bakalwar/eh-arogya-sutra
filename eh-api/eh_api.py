@@ -28,7 +28,7 @@ print(f"DEBUG: __file__ = {__file__}")
 print(f"DEBUG: os.getcwd() = {os.getcwd()}")
 from datetime import datetime
 from typing import List, Optional
-from fastapi import FastAPI, Depends, HTTPException, Security, UploadFile, File, Form, Body
+from fastapi import FastAPI, Depends, HTTPException, Security, UploadFile, File, Form, Body, Request
 from fastapi.security.api_key import APIKeyHeader
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import (create_engine, Column, Integer,
@@ -542,7 +542,13 @@ from report_analyzer import analyze_report_endpoint
 
 @app.post("/api/v3/analyze-report", tags=["Report Analysis"])
 async def analyze_reports(
-    files:        Optional[List[UploadFile]] = File(None),
+    request: Request,
+    files:         Optional[List[UploadFile]] = File(None),
+    report_file:   Optional[List[UploadFile]] = File(None),
+    report_files:  Optional[List[UploadFile]] = File(None),
+    body_photos:   Optional[List[UploadFile]] = File(None),
+    body_photo:    Optional[List[UploadFile]] = File(None),
+    face_image:    Optional[List[UploadFile]] = File(None),
     patient_name: str  = Form("Patient"),
     age:          int  = Form(40),
     gender:       str  = Form("Male"),
@@ -550,14 +556,57 @@ async def analyze_reports(
     bp_diastolic: int  = Form(80),
     symptoms:     str  = Form(""),
     condition:    str  = Form("chronic"),
+    analysis_mode: str  = Form("auto"),
+    output_mode: str  = Form("full"),
     db:           Session = Depends(get_db),
     key_hash:     str = Depends(verify_api_key),
 ):
+    report_uploads: List[UploadFile] = []
+    body_uploads: List[UploadFile] = []
+    for batch in (files, report_file, report_files):
+        if batch:
+            report_uploads.extend(batch)
+    for batch in (body_photos, body_photo, face_image):
+        if batch:
+            body_uploads.extend(batch)
+    qp_mode = (request.query_params.get("output_mode") or "").strip()
+    effective_output_mode = qp_mode or output_mode
     return await analyze_report_endpoint(
-        files, patient_name, age, gender,
-        bp_systolic, bp_diastolic, symptoms,
-        condition, db, key_hash
+        files=None,
+        report_files=report_uploads or None,
+        body_photos=body_uploads or None,
+        patient_name=patient_name,
+        age=age,
+        gender=gender,
+        bp_systolic=bp_systolic,
+        bp_diastolic=bp_diastolic,
+        symptoms=symptoms,
+        condition=condition,
+        analysis_mode=analysis_mode,
+        output_mode=effective_output_mode,
+        db=db,
+        key_hash=key_hash,
     )
+
+
+from organ_info import get_organ_info
+from pydantic import BaseModel
+
+
+class OrganInfoRequest(BaseModel):
+    systems: List[str] = []
+
+
+@app.post("/api/v3/organ-info", tags=["Report Analysis"])
+async def organ_info(
+    body: OrganInfoRequest,
+    key_hash: str = Depends(verify_api_key),
+):
+    return {
+        "status": "success",
+        "systems": get_organ_info(body.systems or []),
+        "pipeline": "eh-api-organ-info",
+    }
 
 
 if __name__ == "__main__":

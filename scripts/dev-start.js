@@ -1,7 +1,19 @@
 ﻿const { spawn } = require('child_process');
 const path = require('path');
+const { readLocalDevConfig } = require('./local-dev-guard');
 
-console.log('Starting E.H. Arogya Sutra Development Environment...');
+const cfg = readLocalDevConfig();
+process.env.EH_LOCAL_DEV = process.env.EH_LOCAL_DEV || '1';
+process.env.APP_ENV = process.env.APP_ENV || 'local';
+process.env.EH_VITE_DEV_URL = process.env.EH_VITE_DEV_URL || cfg.viteDevUrl;
+process.env.EH_EXPERT_ENGINE_URL = process.env.EH_EXPERT_ENGINE_URL || cfg.pythonApiUrl;
+process.env.EH_PYTHON_API_URL = process.env.EH_PYTHON_API_URL || cfg.pythonApiUrl;
+process.env.EH_API_URL = process.env.EH_API_URL || cfg.pythonApiUrl;
+
+console.log('Starting E.H. Arogya Sutra Development Environment (local mode)...');
+console.log(`  Node API:   ${cfg.nodeApiUrl}`);
+console.log(`  Python API: ${cfg.pythonApiUrl}`);
+console.log(`  Vite UI:    ${cfg.viteDevUrl}`);
 
 // Function to start a process and pipe output
 function startProcess(name, command, args, options = {}) {

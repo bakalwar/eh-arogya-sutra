@@ -10,25 +10,16 @@ const { asyncHandler } = require('../utils/asyncHandler');
 const {
   callExpertAnalyzeFace,
   callExpertOcrReport,
-  callExpertAnalyzeComplete,
   EXPERT_BASE
 } = require('../services/ehExpertClient');
 const { analyzeWithEHEngines, summaryWithEHEngines } = require('../services/ehEngineService');
 const { mapEhApiV3PrescribeToApp } = require('../services/pdfExpertMapper');
-const { buildExpertCompleteFormData } = require('../utils/buildExpertCompleteFormData');
+const { multerLimits } = require('../config/uploadLimits');
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 12 * 1024 * 1024 }
+  limits: multerLimits,
 });
-
-const uploadComplete = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 12 * 1024 * 1024 }
-}).fields([
-  { name: 'face_image', maxCount: 1 },
-  { name: 'report_file', maxCount: 1 }
-]);
 
 const router = express.Router();
 const EXPERT_TIMEOUT_MS = Number(process.env.EH_EXPERT_TIMEOUT_MS) || 90000;
@@ -201,31 +192,15 @@ router.post(
 
 router.post(
   '/analyze-complete',
-  uploadComplete,
-  asyncHandler(async (req, res) => {
-    const b = req.body || {};
-    const hasFace = req.files?.face_image?.[0];
-    const hasReport = req.files?.report_file?.[0];
-    const chief = (b.chief_complaint || b.chiefComplaint || '').trim();
-    if (!chief && !hasFace && !hasReport) {
-      return res.status(400).json({
-        success: false,
-        message: 'chief_complaint, face_image, or report_file required'
-      });
-    }
-    try {
-      const fd = buildExpertCompleteFormData(req);
-      const data = await callExpertAnalyzeComplete(fd);
-      return res.json({ success: data?.success !== false, data });
-    } catch (err) {
-      const code = err.statusCode || (err.code === 'ECONNREFUSED' ? 503 : 502);
-      return res.status(code).json({
-        success: false,
-        message: err.message || 'Complete analyze failed',
-        expert_url: EXPERT_BASE
-      });
-    }
-  })
+  (_req, res) => {
+    res.status(410).json({
+      success: false,
+      message:
+        'Removed — use POST /api/search/analyze-complete (Node :5000 → Python :8005 /api/v3/analyze-report)',
+      pipeline: 'eh-api-required',
+      canonical: '/api/search/analyze-complete'
+    });
+  }
 );
 
 router.get(

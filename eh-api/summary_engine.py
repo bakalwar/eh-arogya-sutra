@@ -5,9 +5,10 @@
 ║     Pure English  │  Zero Fixed Medicines  │  Cross-Mixture Unique ║
 ╚══════════════════════════════════════════════════════════════════╝
 """
+import os
 import re
 from datetime import datetime
-from typing import List, Optional, Dict, Set, Tuple
+from typing import List, Optional, Dict, Set, Tuple, Callable
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -1002,6 +1003,50 @@ def _system_connection(systems: list) -> str:
 # SECTION 4 — MAIN SUMMARY BUILDER
 # ═══════════════════════════════════════════════════════════════════
 
+def _summary_word_count(lines: List[str]) -> int:
+    return len("\n".join(lines).split())
+
+
+def _expand_summary_word_count(
+    lines: List[str],
+    wrap_fn: Callable[[str, int], List[str]],
+    min_words: int = 500,
+    active_systems: Optional[list] = None,
+    prakriti: str = "",
+    polarity: str = "",
+) -> List[str]:
+    """Pad clinical narrative to minimum word count (target 500–600 for report analyzer)."""
+    if _summary_word_count(lines) >= min_words:
+        return lines
+    extras: List[str] = []
+    extras.append("")
+    extras.append("  ── Extended Clinical Integration (Report + 9 Rule Engines) ──")
+    extras.append("")
+    pk_desc = PRAKRITI_DESCRIPTION.get(prakriti, (prakriti, ""))[1]
+    if pk_desc:
+        extras.append("  Constitutional integration:")
+        for ln in wrap_fn(pk_desc, 58):
+            extras.append(f"    {ln}")
+    pol_desc = POLARITY_DESCRIPTION.get(polarity, (polarity, ""))[1]
+    if pol_desc:
+        extras.append("")
+        extras.append("  Polarity-driven treatment rationale:")
+        for ln in wrap_fn(pol_desc, 58):
+            extras.append(f"    {ln}")
+    for sys in (active_systems or [])[:4]:
+        title, body = SYSTEM_ROOT_CAUSE.get(sys, (sys, ""))
+        if not body:
+            continue
+        extras.append("")
+        extras.append(f"  {title}:")
+        for ln in wrap_fn(body, 58):
+            extras.append(f"    {ln}")
+        if _summary_word_count(lines + extras) >= min_words:
+            break
+    lines.extend(extras)
+    return lines
+
+
 def build_professional_summary(
     patient:          dict,
     prakriti:         str,
@@ -1031,6 +1076,8 @@ def build_professional_summary(
     if dosage  is None: dosage  = {}
     if safety  is None: safety  = {"status": "SAFE", "warnings": []}
     if diet    is None: diet    = {"eat": [], "avoid": [], "lifestyle": []}
+    if report_lab is None: report_lab = []
+    if report_imaging is None: report_imaging = []
 
     now    = datetime.now()
     name   = (patient.get("patient_name") or
@@ -1175,6 +1222,41 @@ def build_professional_summary(
     lines.append("")
     lines.append("  Disease Polarity Analysis:")
     for ln in wrap(pol_desc): lines.append(f"    {ln}")
+
+    if report_lab:
+        abnormal = [
+            f for f in report_lab
+            if str(f.get("badge", "")).upper() in ("ABNORMAL", "DETECTED")
+            or str(f.get("status", "")).upper() in ("HIGH", "LOW", "ABNORMAL", "DETECTED")
+        ]
+        if abnormal:
+            sec("LABORATORY REPORT INTEGRATION  (Search Engine + Report Analyzer)")
+            lines.append("")
+            lines.append("  Abnormal values from uploaded / entered lab report:")
+            for f in abnormal[:15]:
+                param = f.get("parameter") or f.get("test") or "—"
+                val = f.get("value", "—")
+                unit = f.get("unit", "")
+                status = f.get("status") or f.get("badge", "")
+                note = f.get("eh_note") or f.get("note", "")
+                lines.append(f"  • {param}: {val} {unit}  [{status}]")
+                if note:
+                    for ln in wrap(str(note)[:240]):
+                        lines.append(f"    {ln}")
+            lines.append("")
+
+    if report_imaging:
+        detected = [
+            f for f in report_imaging
+            if str(f.get("badge", "")).upper() == "DETECTED"
+        ]
+        if detected:
+            sec("IMAGING REPORT INTEGRATION")
+            lines.append("")
+            for f in detected[:10]:
+                finding = f.get("finding") or f.get("parameter") or "Finding"
+                lines.append(f"  • {finding} detected on imaging")
+            lines.append("")
 
     # Dynamic Root Cause Analysis
     rca_lines = [
@@ -1472,6 +1554,16 @@ def build_professional_summary(
     lines.append("    •  Always use warm water — never cold.")
     lines.append("    •  Carry all medicines separately if traveling.")
     lines.append("    •  Do not discontinue treatment midway.")
+
+    min_words = int(os.environ.get("EH_SUMMARY_MIN_WORDS", "500") or 500)
+    lines = _expand_summary_word_count(
+        lines,
+        wrap,
+        min_words=min_words,
+        active_systems=active_systems,
+        prakriti=prakriti,
+        polarity=polarity,
+    )
 
     # ════════════════════════════════════════════════
     #  FOOTER

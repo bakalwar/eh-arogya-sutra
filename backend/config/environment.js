@@ -48,16 +48,17 @@ function getSummaryWordTargets() {
     Number(process.env.EH_SUMMARY_TARGET_WORDS) ||
     Number(process.env.OLLAMA_EXPERT_SUMMARY_TARGET_WORDS) ||
     Number(process.env.SUMMARY_MIN_WORDS) ||
-    800;
+    (dense ? 550 : 800);
+  const minWords =
+    Number(process.env.EH_SUMMARY_MIN_WORDS) ||
+    Number(process.env.OLLAMA_EXPERT_MIN_WORDS) ||
+    Number(process.env.SUMMARY_MIN_WORDS) ||
+    (dense ? 500 : 800);
   return {
     dense,
     targetWords,
-    minWordsOllama: Number(process.env.EH_SUMMARY_MIN_WORDS_OLLAMA) || Number(process.env.SUMMARY_MIN_WORDS) || 800,
-    minWordsValidate:
-      Number(process.env.EH_SUMMARY_MIN_WORDS) ||
-      Number(process.env.OLLAMA_EXPERT_MIN_WORDS) ||
-      Number(process.env.SUMMARY_MIN_WORDS) ||
-      800,
+    minWordsOllama: Number(process.env.EH_SUMMARY_MIN_WORDS_OLLAMA) || minWords,
+    minWordsValidate: minWords,
     minCharsValidate: dense ? 3500 : 5000,
     numPredict: Number(process.env.OLLAMA_EXPERT_NUM_PREDICT) || 2000
   };

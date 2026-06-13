@@ -1,10 +1,14 @@
 #!/usr/bin/env node
 /**
  * Production deploy — always build fresh frontend/dist, never stale .vercel/output from git.
+ * Blocked when EH_LOCAL_DEV=1 or APP_ENV=local.
  */
 const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
+const { assertNotLocalDev } = require('./local-dev-guard');
+
+assertNotLocalDev('Vercel production deploy');
 
 const root = path.join(__dirname, '..');
 

@@ -1,0 +1,270 @@
+'use client';
+
+import { useMemo } from 'react';
+
+function cleanLine(raw: unknown) {
+  if (raw == null) return '';
+  return String(raw)
+    .replace(/^[│\s]+/, '')
+    .replace(/[│\s]+$/, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function isDivider(line: string) {
+  const t = line.trim();
+  return /^[═─]{4,}$/.test(t) || /^[\s│]*[─]{8,}[\s│]*$/.test(line);
+}
+
+function parseStageHeader(line: string) {
+  const t = cleanLine(line);
+  const m = t.match(/^STAGE\s+(\d+)\s*(?:[─\-–—]+\s*)?(.+)?$/i);
+  if (!m) return null;
+  const num = parseInt(m[1], 10);
+  const rest = (m[2] || '').replace(/^[─\-–—]+\s*/, '').trim();
+  return { num, title: rest ? `STAGE ${num} — ${rest}` : `STAGE ${num}` };
+}
+
+function extractField(lines: string[], field: string) {
+  const re = new RegExp(`^${field}\\s*:`, 'i');
+  for (const line of lines) {
+    if (re.test(line)) return line.split(':').slice(1).join(':').trim();
+  }
+  return '';
+}
+
+type FormulaMessage = {
+  type: 'formula';
+  label: string;
+  context: string;
+  formula: string;
+  details: string[];
+  narrative: string[];
+};
+
+type ChatMessage =
+  | { type: 'stage'; title: string }
+  | FormulaMessage
+  | { type: 'meta' | 'highlight' | 'warning' | 'schedule' | 'diet' | 'subheading' | 'rule' | 'system' | 'footer' | 'bubble' | 'text'; text: string; variant?: string };
+
+function boxToFormulaMessage(lines: string[]): FormulaMessage | null {
+  const cleaned = lines.map(cleanLine).filter(Boolean);
+  if (!cleaned.length) return null;
+
+  const first = cleaned[0];
+  let label = '';
+  if (/MIXTURE\s+[A-D]/i.test(first)) {
+    label = first.match(/MIXTURE\s+[A-D]/i)![0].toUpperCase();
+  } else if (/OIL\s+FORMULA/i.test(first)) {
+    label = 'OIL FORMULA';
+  }
+
+  const formula = extractField(cleaned, 'Formula');
+  const timing = extractField(cleaned, 'Timing');
+  const dose = extractField(cleaned, 'Dose');
+  const frequency = extractField(cleaned, 'Frequency');
+  const method = extractField(cleaned, 'Method');
+  const water = extractField(cleaned, 'Water');
+  const apply = extractField(cleaned, 'Apply on') || extractField(cleaned, 'Apply');
+
+  let context = first
+    .replace(/^MIXTURE\s+[A-D]\s*[─\-–—]\s*/i, '')
+    .replace(/^OIL\s+FORMULA\s*[─\-–—]\s*/i, '')
+    .replace(/\s{2,}Oral\s*│.*/i, '')
+    .replace(/\s{2,}Globules\s*│.*/i, '')
+    .replace(/\s{2,}External\s*│.*/i, '')
+    .trim();
+
+  const oralMatch = first.match(/Oral\s*│\s*(D\d+)/i);
+  const globMatch = first.match(/Globules\s*│\s*(D\d+)/i);
+  const extMatch = first.match(/External\s*│\s*(D\d+)/i);
+  const potency = oralMatch?.[1] || globMatch?.[1] || extMatch?.[1] || '';
+  if (potency && !context.includes(potency)) {
+    context = context ? `${context} ${potency}` : potency;
+  }
+
+  const details = [timing, dose, frequency, method, water, apply].filter(Boolean);
+  const narrative = cleaned
+    .filter(
+      (l) =>
+        !/^(Formula|Timing|Dose|Frequency|Method|Water|Apply|Note)\s*:/i.test(l) &&
+        !/^MIXTURE|^OIL FORMULA/i.test(l) &&
+        !/^─+$/.test(l) &&
+        !/^Active Symptom/i.test(l)
+    )
+    .filter((l) => l.length > 20)
+    .slice(0, 4);
+
+  if (!label) return null;
+  return { type: 'formula', label, context, formula, details, narrative };
+}
+
+function classifyLine(text: string): ChatMessage | null {
+  if (!text) return null;
+  if (text.includes('EH AROGYA SUTRA') && /CLINICAL|PRESCRIPTION/i.test(text)) {
+    return { type: 'system', text };
+  }
+  if (/^(Patient|Date|BP|Systems|Ref)\s*:/i.test(text)) return { type: 'meta', text };
+  if (/^(Temperament|Polarity|Potency|Safety Status|Next Appointment)\s*:/i.test(text)) {
+    return { type: 'highlight', text };
+  }
+  if (/^(MORNING|AFTERNOON|EVENING|NIGHT|BEDTIME)/i.test(text)) {
+    return { type: 'schedule', text };
+  }
+  if (text.startsWith('⚠') || text.startsWith('IMPORTANT') || /GOLDEN RULE|AGGRAVATION|ELEVATED/i.test(text)) {
+    return { type: 'warning', text };
+  }
+  if (text.startsWith('✓') || text.startsWith('✗')) return { type: 'diet', text };
+  if (/^Rule\s+\d+/i.test(text)) return { type: 'rule', text };
+  if (/INTEGRATION|VERIFICATION/i.test(text) && text.length < 80) {
+    return { type: 'subheading', text };
+  }
+  return { type: 'text', text };
+}
+
+function parseSummaryToMessages(summary: string): ChatMessage[] {
+  if (!summary?.trim()) return [];
+  const messages: ChatMessage[] = [];
+  let inBox = false;
+  let boxLines: string[] = [];
+  let inFooter = false;
+
+  const flushBox = () => {
+    if (!boxLines.length) return;
+    const formula = boxToFormulaMessage(boxLines);
+    if (formula) messages.push(formula);
+    else {
+      const text = boxLines.map(cleanLine).filter(Boolean).join(' · ');
+      if (text) messages.push({ type: 'bubble', text, variant: 'info' });
+    }
+    boxLines = [];
+    inBox = false;
+  };
+
+  const pushText = (line: string) => {
+    const cleaned = cleanLine(line);
+    if (!cleaned || isDivider(line)) return;
+    if (/^Generated by EH Arogya Sutra/i.test(cleaned)) {
+      inFooter = true;
+      messages.push({ type: 'footer', text: cleaned });
+      return;
+    }
+    if (inFooter) {
+      messages.push({ type: 'footer', text: cleaned });
+      return;
+    }
+    if (cleaned.includes('┌') || cleaned.includes('├')) {
+      inBox = true;
+      return;
+    }
+    if (inBox) {
+      if (cleaned.includes('└')) {
+        flushBox();
+        return;
+      }
+      boxLines.push(cleaned);
+      return;
+    }
+    const stage = parseStageHeader(cleaned);
+    if (stage) {
+      messages.push({ type: 'stage', title: stage.title });
+      return;
+    }
+    const msg = classifyLine(cleaned);
+    if (msg) messages.push(msg);
+  };
+
+  for (const raw of summary.split('\n')) pushText(raw);
+  flushBox();
+  return messages;
+}
+
+function MessageRow({ message }: { message: ChatMessage }) {
+  switch (message.type) {
+    case 'stage':
+      return (
+        <div className="eh-chat-stage">
+          <span>{message.title}</span>
+        </div>
+      );
+    case 'formula':
+      return (
+        <div className="eh-chat-bubble formula">
+          <p>
+            <span className="eh-chat-formula-label">{message.label}</span>
+            {message.context ? <span> — {message.context}</span> : null}
+            {message.formula ? <span> (Formula: {message.formula})</span> : null}
+          </p>
+          {message.details.length > 0 && (
+            <p className="eh-chat-formula-details">{message.details.join(' · ')}</p>
+          )}
+          {message.narrative.map((line, i) => (
+            <p key={i} className="eh-chat-formula-details">
+              {line}
+            </p>
+          ))}
+        </div>
+      );
+    case 'meta':
+      return <div className="eh-chat-bubble meta">{message.text}</div>;
+    case 'highlight':
+      return (
+        <div className="eh-chat-bubble meta" style={{ color: '#e8c46a', fontWeight: 500 }}>
+          {message.text}
+        </div>
+      );
+    case 'schedule': {
+      const parts = message.text.split('→').map((s) => s.trim());
+      return (
+        <div className="eh-chat-bubble schedule">
+          <span style={{ fontWeight: 700, textTransform: 'uppercase', color: '#e8c46a' }}>
+            {parts[0]}
+          </span>
+          {parts[1] ? (
+            <>
+              <span style={{ margin: '0 8px', color: '#4a9b54' }}>→</span>
+              <span>{parts[1]}</span>
+            </>
+          ) : null}
+        </div>
+      );
+    }
+    case 'warning':
+      return <div className="eh-chat-bubble warning">{message.text}</div>;
+    case 'diet':
+      return (
+        <div className={`eh-chat-bubble ${message.text.startsWith('✓') ? 'diet-ok' : 'diet-no'}`}>
+          {message.text}
+        </div>
+      );
+    case 'subheading':
+      return <p className="eh-chat-subheading">{message.text}</p>;
+    case 'rule':
+      return (
+        <div className="eh-chat-bubble" style={{ fontFamily: 'monospace', fontSize: 12, color: 'rgba(255,255,255,0.55)' }}>
+          {message.text}
+        </div>
+      );
+    case 'system':
+      return <div className="eh-chat-bubble brand">{message.text}</div>;
+    case 'footer':
+      return <p className="eh-chat-footer">{message.text}</p>;
+    case 'bubble':
+    case 'text':
+    default:
+      if (!('text' in message) || !message.text?.trim()) return null;
+      return <div className="eh-chat-bubble">{message.text}</div>;
+  }
+}
+
+export default function ClinicalSummaryDisplay({ summary }: { summary: string }) {
+  const messages = useMemo(() => parseSummaryToMessages(summary), [summary]);
+  if (!summary?.trim() || !messages.length) return null;
+  return (
+    <div className="eh-chat-thread">
+      {messages.map((msg, i) => (
+        <MessageRow key={`${msg.type}-${i}`} message={msg} />
+      ))}
+    </div>
+  );
+}

@@ -1,311 +1,372 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 
-// DESIGN TOKENS (Match with global theme)
-const C = {
-  bg:      '#080f09', // Dark Forest
-  bgCard:  '#0c160d',
-  bgBox:   'rgba(201, 150, 58, 0.05)',
-  border:  'rgba(201, 150, 58, 0.1)',
-  green:   '#4a9b54',
-  gold:    '#c9963a',
-  orange:  '#e67e22',
-  red:     '#e74c3c',
-  blue:    '#5dade2',
-  purple:  '#a569bd',
-  gray:    'rgba(255, 255, 255, 0.5)',
-  white:   '#ffffff',
-  dim:     'rgba(255, 255, 255, 0.3)',
-};
+function cleanLine(raw) {
+  if (raw == null) return '';
+  return String(raw)
+    .replace(/^[│\s]+/, '')
+    .replace(/[│\s]+$/, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
 
-function Line({ text }) {
-  const t = text || '';
+function isDivider(line) {
+  const t = line.trim();
+  return /^[═─]{4,}$/.test(t) || /^[\s│]*[─]{8,}[\s│]*$/.test(line);
+}
 
-  // Header lines
-  if (t.includes('EH AROGYA SUTRA')) return (
-    <div style={{
-      textAlign:'center', color:C.gold,
-      fontWeight:800, fontSize:16,
-      letterSpacing:4, padding:'10px 0',
-      fontFamily: 'Cinzel, serif',
-      textTransform: 'uppercase'
-    }}>{t}</div>
-  );
+function parseStageHeader(line) {
+  const t = cleanLine(line);
+  const m = t.match(/^STAGE\s+(\d+)\s*(?:[─\-–—]+\s*)?(.+)?$/i);
+  if (!m) return null;
+  const num = parseInt(m[1], 10);
+  const rest = (m[2] || '').replace(/^[─\-–—]+\s*/, '').trim();
+  return { num, title: rest ? `STAGE ${num} — ${rest}` : `STAGE ${num}` };
+}
 
-  // Divider ═══
-  if (/^═+$/.test(t.trim())) return (
-    <div style={{
-      borderTop:`1px solid ${C.gold}`,
-      margin:'12px 0', opacity:0.2
-    }}/>
-  );
+function extractField(lines, field) {
+  const re = new RegExp(`^${field}\\s*:`, 'i');
+  for (const line of lines) {
+    if (re.test(line)) return line.split(':').slice(1).join(':').trim();
+  }
+  return '';
+}
 
-  // Box top/bottom ┌ └
-  if (t.includes('┌') || t.includes('└')) return (
-    <div style={{ color:C.border, fontSize:11, opacity: 0.5 }}>{t}</div>
-  );
+/** Turn ASCII box lines into one conversational formula string. */
+function boxToFormulaMessage(lines) {
+  const cleaned = lines.map(cleanLine).filter(Boolean);
+  if (!cleaned.length) return null;
 
-  // Box separator ├
-  if (t.includes('├')) return (
-    <div style={{
-      borderTop:`1px solid ${C.border}`,
-      margin:'4px 0', opacity: 0.5
-    }}/>
-  );
-
-  // Box line │ with formula
-  if (t.trim().startsWith('│')) {
-    const inner = t.replace(/│/g,'').trim();
-
-    // Formula line
-    if (inner.startsWith('Formula')) return (
-      <div style={{
-        background: 'rgba(74, 155, 84, 0.05)',
-        border:`1px solid rgba(74, 155, 84, 0.2)`,
-        borderRadius:8, padding:'8px 15px',
-        margin:'5px 10px',
-        color: C.green, fontWeight:700,
-        fontSize:14,
-        fontFamily: 'Fira Code, monospace'
-      }}>{inner}</div>
-    );
-
-    // MIXTURE header
-    if (inner.startsWith('MIXTURE') || inner.startsWith('OIL')) return (
-      <div style={{
-        color:C.gold, fontWeight:800,
-        fontSize:15, padding:'6px 12px',
-        background:'rgba(201, 150, 58, 0.08)', borderRadius:6,
-        margin:'4px 10px',
-        fontFamily: 'Cinzel, serif',
-        letterSpacing: 1
-      }}>{inner}</div>
-    );
-
-    // Labels
-    if (inner.startsWith('Timing') ||
-        inner.startsWith('Dose') ||
-        inner.startsWith('Frequency') ||
-        inner.startsWith('Method') ||
-        inner.startsWith('Water') ||
-        inner.startsWith('Apply') ||
-        inner.startsWith('Note')) return (
-      <div style={{
-        color:C.blue, fontSize:12,
-        padding:'3px 20px',
-        fontWeight: 500
-      }}>{inner}</div>
-    );
-
-    // IMPORTANT warning
-    if (inner.startsWith('IMPORTANT')) return (
-      <div style={{
-        color:C.orange, fontWeight:700,
-        fontSize:12, padding:'4px 20px',
-        background: 'rgba(230, 126, 34, 0.05)',
-        borderRadius: 4,
-        margin: '2px 10px'
-      }}>⚠ {inner}</div>
-    );
-
-    // Separator ────
-    if (/^─+$/.test(inner)) return (
-      <div style={{
-        borderTop:`1px dashed ${C.border}`,
-        margin:'5px 10px',
-        opacity: 0.3
-      }}/>
-    );
-
-    // Action text (inside box)
-    if (inner && inner.length > 10) return (
-      <div style={{
-        color:C.gray, fontSize:12,
-        padding:'2px 20px', lineHeight:1.7,
-      }}>{inner}</div>
-    );
-
-    return <div style={{height:6}}/>;
+  const first = cleaned[0];
+  let label = '';
+  if (/MIXTURE\s+[A-D]/i.test(first)) {
+    label = first.match(/MIXTURE\s+[A-D]/i)[0].toUpperCase();
+  } else if (/OIL\s+FORMULA/i.test(first)) {
+    label = 'OIL FORMULA';
+  } else if (/MIXTURE\s+D/i.test(first)) {
+    label = 'MIXTURE D';
   }
 
-  // Patient info lines
-  if (t.trim().startsWith('Patient') ||
-      t.trim().startsWith('Date') ||
-      t.trim().startsWith('BP') ||
-      t.trim().startsWith('Systems')) return (
-    <div style={{
-      color:C.white, fontSize:13,
-      padding:'3px 0',
-      display: 'flex',
-      gap: '8px'
-    }}>
-      <span style={{color:C.dim, fontWeight: 700, textTransform: 'uppercase', fontSize: 10, letterSpacing: 1, minWidth: 80}}>{t.split(':')[0]}:</span>
-      <span style={{color:C.white,fontWeight:600}}>{t.split(':').slice(1).join(':')}</span>
-    </div>
-  );
+  const formula = extractField(cleaned, 'Formula');
+  const timing = extractField(cleaned, 'Timing');
+  const dose = extractField(cleaned, 'Dose');
+  const frequency = extractField(cleaned, 'Frequency');
+  const method = extractField(cleaned, 'Method');
+  const water = extractField(cleaned, 'Water');
+  const apply = extractField(cleaned, 'Apply on') || extractField(cleaned, 'Apply');
 
-  // ELEVATED / WARNING
-  if (t.includes('ELEVATED') || t.includes('⚠')) return (
-    <div style={{color:C.red,fontSize:12,padding:'4px 0', fontWeight: 600}}>{t}</div>
-  );
+  let context = first
+    .replace(/^MIXTURE\s+[A-D]\s*[─\-–—]\s*/i, '')
+    .replace(/^OIL\s+FORMULA\s*[─\-–—]\s*/i, '')
+    .replace(/\s{2,}Oral\s*│.*/i, '')
+    .replace(/\s{2,}Globules\s*│.*/i, '')
+    .replace(/\s{2,}External\s*│.*/i, '')
+    .trim();
 
-  // Stage headers
-  if (t.trim().startsWith('STAGE')) return (
-    <div style={{
-      color:C.gold, fontWeight:800,
-      fontSize:14, marginTop:15,
-      marginBottom: 8,
-      borderLeft:`4px solid ${C.gold}`,
-      paddingLeft:12,
-      fontFamily: 'Cinzel, serif',
-      letterSpacing: 2
-    }}>{t.trim()}</div>
-  );
+  const oralMatch = first.match(/Oral\s*│\s*(D\d+)/i);
+  const globMatch = first.match(/Globules\s*│\s*(D\d+)/i);
+  const extMatch = first.match(/External\s*│\s*(D\d+)/i);
+  const potency = oralMatch?.[1] || globMatch?.[1] || extMatch?.[1] || '';
+  if (potency && !context.includes(potency)) {
+    context = context ? `${context} ${potency}` : potency;
+  }
 
-  // Schedule lines (MORNING / AFTERNOON etc.)
-  if (t.trim().match(/^(MORNING|AFTERNOON|EVENING|NIGHT|BEDTIME)/)) return (
-    <div style={{
-      display:'flex', gap:12,
-      color:C.white, fontSize:13,
-      padding:'4px 0',
-      alignItems: 'center'
-    }}>
-      <span style={{
-        color:C.gold, fontWeight:800,
-        minWidth:120,
-        fontSize: 11,
-        letterSpacing: 1
-      }}>{t.split('→')[0]}</span>
-      <span style={{color:C.green, opacity: 0.5}}>→</span>
-      <span style={{color:C.white, fontWeight: 500}}>{t.split('→')[1]}</span>
-    </div>
-  );
+  const details = [timing, dose, frequency, method, water, apply].filter(Boolean);
 
-  // Eat ✓
-  if (t.trim().startsWith('✓')) return (
-    <div style={{
-      color:C.green, fontSize:12,
-      padding:'2px 12px',
-      fontWeight: 500
-    }}>{t}</div>
-  );
+  const narrative = cleaned
+    .filter(
+      (l) =>
+        !/^(Formula|Timing|Dose|Frequency|Method|Water|Apply|Note)\s*:/i.test(l) &&
+        !/^MIXTURE|^OIL FORMULA/i.test(l) &&
+        !/^─+$/.test(l) &&
+        !/^Active Symptom/i.test(l)
+    )
+    .filter((l) => l.length > 20);
 
-  // Avoid ✗
-  if (t.trim().startsWith('✗')) return (
-    <div style={{
-      color:C.red, fontSize:12,
-      padding:'2px 12px',
-      fontWeight: 500
-    }}>{t}</div>
-  );
+  if (!label) {
+    return null;
+  }
 
-  // Bullet •
-  if (t.trim().startsWith('•')) return (
-    <div style={{
-      color:C.gray, fontSize:12,
-      padding:'2px 12px',
-      lineHeight: 1.6
-    }}>{t}</div>
-  );
+  return {
+    type: 'formula',
+    label: label || 'Prescription',
+    context,
+    formula,
+    details,
+    narrative: narrative.slice(0, 4),
+  };
+}
 
-  // Arrow →
-  if (t.trim().startsWith('→')) return (
-    <div style={{
-      color:C.blue, fontSize:12,
-      padding:'2px 12px',
-      fontWeight: 500
-    }}>{t}</div>
-  );
+function classifyLine(text) {
+  const t = text || '';
+  if (!t) return null;
 
-  // Warning ⚠
-  if (t.trim().startsWith('⚠')) return (
-    <div style={{
-      color:C.orange, fontSize:12,
-      padding:'6px 15px',
-      background:'rgba(230, 126, 34, 0.08)',
-      borderRadius:8, margin:'5px 0',
-      fontWeight: 600
-    }}>{t}</div>
-  );
+  if (t.includes('EH AROGYA SUTRA') && /CLINICAL|PRESCRIPTION/i.test(t)) {
+    return { type: 'system', text: t, variant: 'brand' };
+  }
 
-  // GOLDEN RULE
-  if (t.includes('GOLDEN RULE') || t.includes('AGGRAVATION')) return (
-    <div style={{
-      color:C.orange, fontWeight:800,
-      fontSize:13, padding:'8px 0',
-      textTransform: 'uppercase',
-      letterSpacing: 1
-    }}>{t}</div>
-  );
+  if (/^(Patient|Date|BP|Systems|Ref)\s*:/i.test(t)) {
+    return { type: 'meta', text: t };
+  }
 
-  // Safety SAFE
-  if (t.includes('SAFE')) return (
-    <div style={{
-      color:C.green, fontWeight:800,
-      fontSize:13,
-      textTransform: 'uppercase',
-      letterSpacing: 1
-    }}>{t}</div>
-  );
+  if (/^(Temperament|Polarity|Potency|Safety Status|Next Appointment)\s*:/i.test(t)) {
+    return { type: 'highlight', text: t };
+  }
 
-  // POSITIVE / NEGATIVE / MIXED
-  if (t.includes('POSITIVE') || t.includes('NEGATIVE')) return (
-    <div style={{
-      color: t.includes('POSITIVE') ? C.orange : C.blue,
-      fontSize:13, padding:'4px 0',
-      fontWeight: 700,
-      letterSpacing: 1
-    }}>{t}</div>
-  );
+  if (/^(MORNING|AFTERNOON|EVENING|NIGHT|BEDTIME)/i.test(t)) {
+    return { type: 'schedule', text: t };
+  }
 
-  // Temperament / Polarity / Potency labels
-  if (t.trim().startsWith('Temperament') ||
-      t.trim().startsWith('Polarity') ||
-      t.trim().startsWith('Potency')) return (
-    <div style={{
-      color:C.white, fontSize:13,
-      padding:'4px 0',
-      display: 'flex',
-      gap: '12px',
-      alignItems: 'center'
-    }}>
-      <span style={{color:C.dim, minWidth:120, fontWeight: 700, textTransform: 'uppercase', fontSize: 10, letterSpacing: 1}}>
-        {t.split(':')[0]}:
+  if (t.startsWith('⚠') || t.startsWith('IMPORTANT') || /GOLDEN RULE|AGGRAVATION|ELEVATED/i.test(t)) {
+    return { type: 'warning', text: t };
+  }
+
+  if (t.startsWith('✓') || t.startsWith('✗')) {
+    return { type: 'diet', text: t };
+  }
+
+  if (/^Rule\s+\d+/i.test(t)) {
+    return { type: 'rule', text: t };
+  }
+
+  if (/INTEGRATION|VERIFICATION/i.test(t) && t.length < 80) {
+    return { type: 'subheading', text: t };
+  }
+
+  return { type: 'text', text: t };
+}
+
+function parseSummaryToMessages(summary) {
+  if (!summary?.trim()) return [];
+
+  const messages = [];
+  let inBox = false;
+  let boxLines = [];
+  let inFooter = false;
+
+  const flushBox = () => {
+    if (!boxLines.length) return;
+    const formula = boxToFormulaMessage(boxLines);
+    if (formula) {
+      messages.push(formula);
+    } else {
+      const text = boxLines.map(cleanLine).filter(Boolean).join(' · ');
+      if (text) messages.push({ type: 'bubble', variant: 'info', text });
+    }
+    boxLines = [];
+    inBox = false;
+  };
+
+  const pushText = (line) => {
+    const cleaned = cleanLine(line);
+    if (!cleaned || isDivider(line)) return;
+
+    if (/^Generated by EH Arogya Sutra/i.test(cleaned)) {
+      inFooter = true;
+      messages.push({ type: 'footer', text: cleaned });
+      return;
+    }
+    if (inFooter) {
+      messages.push({ type: 'footer', text: cleaned });
+      return;
+    }
+
+    if (cleaned.includes('┌') || cleaned.includes('├')) {
+      inBox = true;
+      return;
+    }
+    if (inBox) {
+      if (cleaned.includes('└')) {
+        flushBox();
+        return;
+      }
+      boxLines.push(cleaned);
+      return;
+    }
+
+    const stage = parseStageHeader(cleaned);
+    if (stage) {
+      messages.push({ type: 'stage', title: stage.title });
+      return;
+    }
+
+    const msg = classifyLine(cleaned);
+    if (msg) messages.push(msg);
+  };
+
+  for (const raw of summary.split('\n')) {
+    pushText(raw);
+  }
+  flushBox();
+
+  return messages;
+}
+
+function StageDivider({ title }) {
+  return (
+    <div className="flex w-full items-center gap-3 py-2 md:py-3">
+      <div className="h-px flex-1 bg-[#c9963a]/20" />
+      <span className="shrink-0 px-2 text-center font-serif text-[11px] font-bold uppercase leading-snug tracking-wide text-[#e8c46a]/90 md:text-xs">
+        {title}
       </span>
-      <span style={{color:C.gold, fontWeight:700, fontSize: 14, fontFamily: 'Cinzel, serif'}}>
-        {t.split(':').slice(1).join(':')}
-      </span>
+      <div className="h-px flex-1 bg-[#c9963a]/20" />
     </div>
   );
+}
 
-  // Default text
-  if (t.trim()) return (
-    <div style={{
-      color:C.gray, fontSize:12,
-      padding:'2px 0', lineHeight:1.7,
-    }}>{t}</div>
+function ChatBubble({ children, variant = 'default', className = '' }) {
+  const styles = {
+    default: 'bg-[#0f1f10]/95 border-white/10',
+    formula: 'bg-[#4a9b54]/08 border-[#4a9b54]/25',
+    meta: 'bg-[#c9963a]/06 border-[#c9963a]/18',
+    warning: 'bg-orange-500/08 border-orange-500/25',
+    schedule: 'bg-[#0b1a0d] border-[#c9963a]/15',
+    diet: 'bg-[#0f1f10]/80 border-white/8',
+    brand: 'bg-gradient-to-br from-[#0f1f10] to-[#080f09] border-[#c9963a]/25',
+  };
+
+  return (
+    <div
+      className={`w-full rounded-2xl rounded-tl-md border px-4 py-3.5 shadow-sm shadow-black/20 md:rounded-3xl md:px-5 md:py-4 ${styles[variant] || styles.default} ${className}`}
+    >
+      {children}
+    </div>
   );
+}
 
-  return <div style={{height:6}}/>;
+function MessageRow({ message }) {
+  switch (message.type) {
+    case 'stage':
+      return <StageDivider title={message.title} />;
+
+    case 'formula':
+      return (
+        <ChatBubble variant="formula">
+          <p className="text-sm leading-relaxed text-white/92 md:text-[15px] md:leading-relaxed">
+            <span className="font-bold text-[#6abf72]">{message.label}</span>
+            {message.context ? <span className="text-white/90"> — {message.context}</span> : null}
+            {message.formula ? (
+              <span className="text-white/85"> (Formula: {message.formula})</span>
+            ) : null}
+          </p>
+          {message.details.length > 0 && (
+            <p className="mt-2.5 text-xs leading-relaxed text-white/55 md:text-sm">
+              {message.details.join(' · ')}
+            </p>
+          )}
+          {message.narrative?.map((line, i) => (
+            <p key={i} className="mt-2 text-xs leading-relaxed text-white/45 md:text-sm">
+              {line}
+            </p>
+          ))}
+        </ChatBubble>
+      );
+
+    case 'meta':
+      return (
+        <ChatBubble variant="meta">
+          <p className="text-sm leading-relaxed text-white/85 md:text-[15px]">{message.text}</p>
+        </ChatBubble>
+      );
+
+    case 'highlight':
+      return (
+        <ChatBubble variant="meta">
+          <p className="text-sm font-medium leading-relaxed text-[#e8c46a] md:text-[15px]">{message.text}</p>
+        </ChatBubble>
+      );
+
+    case 'schedule': {
+      const parts = message.text.split('→').map((s) => s.trim());
+      return (
+        <ChatBubble variant="schedule">
+          <p className="text-sm leading-relaxed text-white/90 md:text-[15px]">
+            <span className="font-bold uppercase tracking-wide text-[#e8c46a]">{parts[0]}</span>
+            {parts[1] ? (
+              <>
+                <span className="mx-2 text-[#4a9b54]">→</span>
+                <span>{parts[1]}</span>
+              </>
+            ) : null}
+          </p>
+        </ChatBubble>
+      );
+    }
+
+    case 'warning':
+      return (
+        <ChatBubble variant="warning">
+          <p className="text-sm leading-relaxed text-orange-200/95 md:text-[15px]">{message.text}</p>
+        </ChatBubble>
+      );
+
+    case 'diet':
+      return (
+        <ChatBubble variant="diet">
+          <p
+            className={`text-sm leading-relaxed md:text-[15px] ${message.text.startsWith('✓') ? 'text-[#6abf72]' : 'text-red-400'}`}
+          >
+            {message.text}
+          </p>
+        </ChatBubble>
+      );
+
+    case 'subheading':
+      return (
+        <p className="w-full px-1 py-1 text-[11px] font-bold uppercase tracking-widest text-white/40 md:text-xs">
+          {message.text}
+        </p>
+      );
+
+    case 'rule':
+      return (
+        <ChatBubble variant="default">
+          <p className="font-mono text-xs leading-relaxed text-white/55 md:text-sm">{message.text}</p>
+        </ChatBubble>
+      );
+
+    case 'system':
+      return (
+        <ChatBubble variant="brand">
+          <p className="text-center font-serif text-sm font-bold uppercase tracking-[0.2em] text-[#e8c46a] md:text-base">
+            {message.text}
+          </p>
+        </ChatBubble>
+      );
+
+    case 'footer':
+      return (
+        <p className="w-full py-2 text-center text-[10px] uppercase tracking-widest text-white/25 md:text-xs">
+          {message.text}
+        </p>
+      );
+
+    case 'bubble':
+      return (
+        <ChatBubble variant={message.variant === 'info' ? 'default' : message.variant}>
+          <p className="text-sm leading-relaxed text-white/75 md:text-[15px]">{message.text}</p>
+        </ChatBubble>
+      );
+
+    case 'text':
+    default:
+      if (!message.text?.trim()) return null;
+      return (
+        <ChatBubble variant="default">
+          <p className="text-sm leading-relaxed text-white/70 md:text-[15px]">{message.text}</p>
+        </ChatBubble>
+      );
+  }
 }
 
 export default function ClinicalSummaryDisplay({ summary }) {
-  if (!summary) return null;
+  const messages = useMemo(() => parseSummaryToMessages(summary), [summary]);
 
-  const lines = summary.split('\n');
+  if (!summary?.trim() || !messages.length) return null;
 
   return (
-    <div style={{
-      background:   C.bg,
-      border:       `1px solid ${C.border}`,
-      borderRadius: 24,
-      padding:      '30px',
-      fontFamily:   'DM Sans, sans-serif',
-      marginTop:    12,
-      overflowX:    'auto',
-      boxShadow:    'inset 0 0 40px rgba(0,0,0,0.5)'
-    }}>
-      {lines.map((line, i) => (
-        <Line key={i} text={line}/>
+    <div className="flex w-full flex-col gap-3 md:gap-4">
+      {messages.map((msg, i) => (
+        <MessageRow key={`${msg.type}-${i}`} message={msg} />
       ))}
     </div>
   );

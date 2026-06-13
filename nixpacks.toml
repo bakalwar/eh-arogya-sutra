@@ -1,11 +1,16 @@
 [phases.setup]
-nixPkgs = ["nodejs_20", "npm-10_x"]
+nixPkgs = ["nodejs_20", "npm-10_x", "python311"]
 
 [phases.install]
-cmds = ["npm ci --legacy-peer-deps"]
+cmds = [
+  "npm ci --legacy-peer-deps",
+  "python3 -m venv /app/eh-venv",
+  "/app/eh-venv/bin/pip install -r /app/eh-api/requirements-core.txt",
+  "/app/eh-venv/bin/pip install -r /app/numerology-api/requirements.txt"
+]
 
 [phases.build]
-cmds = ["echo 'Backend API — skip frontend build'"]
+cmds = ["echo 'Backend API + EH Python — skip frontend build'"]
 
 [start]
-cmd = "node backend/server.js"
+cmd = "node scripts/start-railway.js"

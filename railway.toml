@@ -2,7 +2,7 @@
 builder = "NIXPACKS"
 
 [deploy]
-startCommand = "node backend/server.js"
-releaseCommand = "node database/apply-schema.js"
+startCommand = "node scripts/start-railway.js"
+releaseCommand = "node scripts/railway-release.js"
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 3

@@ -1,16 +1,31 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { createRequire } from 'module';
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const require = createRequire(import.meta.url);
+const LOCAL_NODE = 'http://127.0.0.1:5000';
+const LOCAL_PYTHON = 'http://127.0.0.1:8005';
 
 // EH CDSS — PWA for installable web + Play Store (TWA) packaging
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, __dirname, '');
-  // Must match backend listen port (backend: PORT in .env, default 5000). Set in frontend/.env as VITE_API_PROXY_TARGET if yours differs.
-  const apiProxyTarget = (env.VITE_API_PROXY_TARGET || 'http://127.0.0.1:5000').replace(/\/$/, '');
+  const isLocal =
+    mode === 'development' ||
+    env.VITE_APP_ENV === 'local' ||
+    env.EH_LOCAL_DEV === '1';
+
+  const apiProxyTarget = (env.VITE_API_PROXY_TARGET || LOCAL_NODE).replace(/\/$/, '');
+  const pythonProxyTarget = (env.VITE_PYTHON_API_URL || LOCAL_PYTHON).replace(/\/$/, '');
+
+  if (isLocal && /railway\.app|vercel\.app/i.test(`${apiProxyTarget}${pythonProxyTarget}`)) {
+    throw new Error(
+      '[local-dev] VITE_API_PROXY_TARGET / VITE_PYTHON_API_URL must point to localhost in development.'
+    );
+  }
 
   /* Dev proxy must outlive long Ollama summary calls (browser axios may wait 7+ min) */
   const longMs = Number(env.VITE_API_LONG_TIMEOUT_MS) || 300000;
@@ -26,6 +41,14 @@ export default defineConfig(({ mode }) => {
     proxyTimeout: apiProxyTimeoutMs
   };
 
+  const proxyToPython = {
+    target: pythonProxyTarget,
+    changeOrigin: true,
+    secure: false,
+    timeout: apiProxyTimeoutMs,
+    proxyTimeout: apiProxyTimeoutMs
+  };
+
   const legacyHtmlPaths = [
     '/doctor-analysis.html',
     '/demo-search.html',
@@ -33,9 +56,25 @@ export default defineConfig(({ mode }) => {
     '/autologin.html'
   ];
 
+  const vitePort = Number(process.env.VITE_PORT) || 5178;
+
   return {
     plugins: [
       react(),
+      {
+        name: 'eh-mobile-dev-banner',
+        configureServer(server) {
+          server.httpServer?.once('listening', () => {
+            try {
+              const { printMobileDevBanner } = require('../scripts/network-urls.js');
+              const port = server.config.server?.port || 5178;
+              printMobileDevBanner({ vite: port, api: 5000, python: 8005, next: 3001 });
+            } catch {
+              /* optional */
+            }
+          });
+        },
+      },
       {
         name: 'eh-legacy-html-redirect',
         configureServer(server) {
@@ -43,7 +82,13 @@ export default defineConfig(({ mode }) => {
             const p = (req.url || '').split('?')[0];
             if (legacyHtmlPaths.includes(p)) {
               res.statusCode = 302;
-              res.setHeader('Location', '/go-search.html?upgraded=1');
+              res.setHeader('Location', '/');
+              res.end();
+              return;
+            }
+            if (p === '/go-search.html') {
+              res.statusCode = 302;
+              res.setHeader('Location', '/');
               res.end();
               return;
             }
@@ -104,16 +149,30 @@ export default defineConfig(({ mode }) => {
       })
     ],
     server: {
+      /** Bind all interfaces — LAN / mobile access (mandatory) */
       host: '0.0.0.0',
-      port: Number(process.env.VITE_PORT) || 5178,
-      strictPort: false,
-      open: '/clear.html',
+      port: vitePort,
+      strictPort: true,
+      allowedHosts: isLocal ? true : undefined,
+      cors: true,
+      hmr: {
+        /** Client uses the same host as the page (localhost or LAN IP) */
+        port: vitePort,
+        clientPort: vitePort,
+      },
       proxy: {
+        '/api/v3': proxyToPython,
         '/api': proxyToApi,
         '/uploads': proxyToApi,
         '/health': proxyToApi,
         '/eh-arogya': proxyToApi
       }
+    },
+    preview: {
+      host: '0.0.0.0',
+      port: vitePort,
+      strictPort: false,
+      allowedHosts: isLocal ? true : undefined,
     },
     build: {
       minify: 'terser',

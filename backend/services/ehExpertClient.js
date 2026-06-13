@@ -13,6 +13,13 @@ function ehApiHeaders() {
   };
 }
 
+/** Multipart / FormData — never set Content-Type (fetch adds boundary). */
+function ehApiMultipartHeaders() {
+  return {
+    'x-api-key': process.env.EH_API_KEY || 'EH_TEST_KEY_2026'
+  };
+}
+
 /** CaseInput → EH API v3 /api/v3/prescribe body (9 Rule Engines + 14k fuzzy diseases) */
 function caseInputToPrescribeBody(caseInput) {
   const c = caseInput || {};
@@ -158,7 +165,7 @@ async function callExpertAnalyzeFace(imageBuffer, filename = 'face.jpg') {
     const res = await fetch(`${EXPERT_BASE}/api/v3/analyze-report?file_type=image`, {
       method: 'POST',
       body: form,
-      headers: ehApiHeaders(),
+      headers: ehApiMultipartHeaders(),
       signal: AbortSignal.timeout(Math.min(EXPERT_TIMEOUT_MS, 60000))
     });
     const data = await res.json().catch(() => ({}));
@@ -191,7 +198,7 @@ async function callExpertOcrReport(fileBuffer, fileType = 'image', filename = 'r
     const res = await fetch(url.toString(), {
       method: 'POST',
       body: form,
-      headers: ehApiHeaders(),
+      headers: ehApiMultipartHeaders(),
       signal: AbortSignal.timeout(Math.min(EXPERT_TIMEOUT_MS, 120000))
     });
     const data = await res.json().catch(() => ({}));
@@ -213,13 +220,21 @@ async function callExpertOcrReport(fileBuffer, fileType = 'image', filename = 'r
   }
 }
 
-async function callExpertAnalyzeComplete(formData) {
+async function callExpertAnalyzeComplete(formData, options = {}) {
   const timeout = Math.max(EXPERT_TIMEOUT_MS, 300000);
+  const clinicalOnly = options.clinicalOnly === true;
+  if (clinicalOnly) {
+    formData.set('output_mode', 'clinical_only');
+  }
+  const url = new URL(`${EXPERT_BASE}/api/v3/analyze-report`);
+  if (clinicalOnly) {
+    url.searchParams.set('output_mode', 'clinical_only');
+  }
   try {
-    const res = await fetch(`${EXPERT_BASE}/api/v3/analyze-report`, {
+    const res = await fetch(url.toString(), {
       method: 'POST',
       body: formData,
-      headers: ehApiHeaders(),
+      headers: ehApiMultipartHeaders(),
       signal: AbortSignal.timeout(timeout)
     });
     const data = await res.json().catch(() => ({}));
@@ -239,6 +254,11 @@ async function callExpertAnalyzeComplete(formData) {
     }
     throw e;
   }
+}
+
+async function callExpertAnalyzeCompleteClinical(formData) {
+  formData.set('output_mode', 'clinical_only');
+  return callExpertAnalyzeComplete(formData, { clinicalOnly: true });
 }
 
 async function callExpertSummary(caseInput, opts = {}) {
@@ -279,7 +299,10 @@ module.exports = {
   callExpertAnalyzeFace,
   callExpertOcrReport,
   callExpertAnalyzeComplete,
+  callExpertAnalyzeCompleteClinical,
   callExpertSummary,
+  ehApiHeaders,
+  ehApiMultipartHeaders,
   caseInputToPrescribeBody,
   caseDataToPrescribeBody,
   EXPERT_BASE,

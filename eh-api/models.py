@@ -73,7 +73,8 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "data", "eh_arogya.db")
 os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
 
-db_url = f"sqlite:///{DB_PATH.replace('\\', '/')}"
+db_path_normalized = DB_PATH.replace("\\", "/")
+db_url = f"sqlite:///{db_path_normalized}"
 engine = create_engine(db_url, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
 

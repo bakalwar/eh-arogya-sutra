@@ -1,11 +1,37 @@
 'use strict';
 
 /**
- * Build FormData for Python POST /v1/expert/analyze-complete from Express multer request.
+ * Build FormData for Python POST /api/v3/analyze-report (dual-mode pipeline).
  */
-function buildExpertCompleteFormData(req) {
+function collectFiles(req, keys) {
+  const out = [];
+  for (const key of keys) {
+    const batch = req.files?.[key];
+    if (Array.isArray(batch)) out.push(...batch);
+  }
+  return out;
+}
+
+function resolveAnalysisMode(req) {
+  const explicit = (req.body?.analysis_mode || req.body?.analysisMode || '').trim();
+  if (explicit && explicit !== 'auto') return explicit;
+
+  const hasReports = collectFiles(req, ['report_files', 'report_file', 'files']).length > 0;
+  const hasBody = collectFiles(req, ['body_photos', 'body_photo', 'face_image']).length > 0;
+
+  if (hasBody && !hasReports) return 'photo_temperament';
+  if (hasReports && !hasBody) return 'medical_report_ocr';
+  if (hasReports && hasBody) return 'combined';
+  return 'auto';
+}
+
+function buildExpertCompleteFormData(req, options = {}) {
   const fd = new FormData();
   const b = req.body || {};
+  const mode = resolveAnalysisMode(req);
+  const clinicalOnly =
+    options.clinicalOnly === true ||
+    String(b.output_mode || b.outputMode || '').toLowerCase() === 'clinical_only';
 
   const append = (key, val) => {
     if (val !== undefined && val !== null && val !== '') fd.append(key, String(val));
@@ -24,12 +50,20 @@ function buildExpertCompleteFormData(req) {
     typeof b.symptoms === 'string' ? b.symptoms : JSON.stringify(b.symptoms || [])
   );
   append('phase', b.phase);
+  append('condition', b.condition || b.phase || 'chronic');
   append('temperament', b.temperament);
   append('pulse', b.pulse);
   append('mobile', b.mobile);
   append('blood_report', b.blood_report);
   append('mri_report', b.mri_report);
   append('sonography', b.sonography);
+  append('analysis_mode', mode);
+  if (clinicalOnly) {
+    fd.set('output_mode', 'clinical_only');
+  } else {
+    append('output_mode', b.output_mode || b.outputMode || 'full');
+  }
+
   if (b.affected_organs) {
     append(
       'affected_organs',
@@ -42,35 +76,42 @@ function buildExpertCompleteFormData(req) {
       typeof b.report_values === 'string' ? b.report_values : JSON.stringify(b.report_values)
     );
   }
-  fd.append('include_summary', 'false');
 
-  const faceFile = req.files?.face_image?.[0] || (req.file?.fieldname === 'face_image' ? req.file : null);
-  const reportFile =
-    req.files?.report_file?.[0] || (req.file?.fieldname === 'report_file' ? req.file : null);
+  const reports = collectFiles(req, ['report_files', 'report_file']);
+  const bodies = collectFiles(req, ['body_photos', 'body_photo', 'face_image']);
 
-  const faces = req.files?.face_image || (faceFile ? [faceFile] : []);
-  const reports = req.files?.report_file || (reportFile ? [reportFile] : []);
-
-  faces.forEach((f) => {
-    if (f?.buffer?.length) {
-      fd.append(
-        'face_image',
-        new Blob([f.buffer], { type: f.mimetype || 'image/jpeg' }),
-        f.originalname || 'face.jpg'
-      );
-    }
-  });
   reports.forEach((f) => {
     if (f?.buffer?.length) {
-      fd.append(
-        'report_file',
-        new Blob([f.buffer], { type: f.mimetype || 'application/octet-stream' }),
-        f.originalname || 'report.pdf'
-      );
+      const blob = new Blob([f.buffer], { type: f.mimetype || 'application/octet-stream' });
+      const name = f.originalname || 'report.pdf';
+      fd.append('report_files', blob, name);
+      fd.append('files', blob, name);
+    }
+  });
+
+  bodies.forEach((f) => {
+    if (f?.buffer?.length) {
+      const blob = new Blob([f.buffer], { type: f.mimetype || 'image/jpeg' });
+      const name = f.originalname || 'body-photo.jpg';
+      fd.append('body_photos', blob, name);
+      fd.append('face_image', blob, name);
     }
   });
 
   return fd;
 }
 
-module.exports = { buildExpertCompleteFormData };
+function hasUploadedReports(req) {
+  return collectFiles(req, ['report_files', 'report_file', 'files']).length > 0;
+}
+
+function hasUploadedBodyPhotos(req) {
+  return collectFiles(req, ['body_photos', 'body_photo', 'face_image']).length > 0;
+}
+
+module.exports = {
+  buildExpertCompleteFormData,
+  hasUploadedReports,
+  hasUploadedBodyPhotos,
+  resolveAnalysisMode,
+};

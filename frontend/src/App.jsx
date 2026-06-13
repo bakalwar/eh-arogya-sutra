@@ -65,6 +65,7 @@ export default function App() {
             </PublicRoute>
           }
         />
+        <Route path="/signup" element={<Navigate to="/register" replace />} />
 
         <Route
           path="/change-password"

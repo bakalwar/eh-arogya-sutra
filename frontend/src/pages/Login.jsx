@@ -127,7 +127,7 @@ export default function Login() {
           </p>
           <div className="flex flex-col gap-2 text-center text-xs">
             <Link to="/register" className="text-[#c9963a]/90 underline">
-              Naye Doctor? Admin se register karayein
+              Don&apos;t have an account? Sign up
             </Link>
             <Link to="/website" className="text-white/40 underline">
               ← Public website
