@@ -1,5 +1,6 @@
 import { createHmac } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
+import { verifyAccessToken } from '@/lib/auth/tokens';
 import { resolveNodeProxyBase } from '@/lib/api/nodeProxyBase';
 
 function signBodyHmac(body: string): string | null {
@@ -8,9 +9,13 @@ function signBodyHmac(body: string): string | null {
   return createHmac('sha256', secret).update(body).digest('hex');
 }
 
+function resolveProxySecret(): string {
+  return String(process.env.EH_INTERNAL_PROXY_SECRET || process.env.JWT_SECRET || '').trim();
+}
+
 /**
  * Proxy browser API calls to Railway Node backend.
- * Forwards Authorization; adds server-side HMAC when configured (legacy Railway).
+ * Validates JWT on Vercel, then forwards trusted user headers so Railway auth succeeds.
  */
 export async function proxyToUpstream(request: NextRequest, apiPath: string) {
   const base = resolveNodeProxyBase();
@@ -21,7 +26,24 @@ export async function proxyToUpstream(request: NextRequest, apiPath: string) {
   if (contentType) headers.set('content-type', contentType);
 
   const authorization = request.headers.get('authorization');
-  if (authorization) headers.set('authorization', authorization);
+  const proxySecret = resolveProxySecret();
+
+  if (authorization?.startsWith('Bearer ')) {
+    headers.set('authorization', authorization);
+    const token = authorization.slice(7).trim();
+    if (proxySecret) {
+      try {
+        const payload = verifyAccessToken(token);
+        if (payload.id) {
+          headers.set('x-eh-proxy-secret', proxySecret);
+          headers.set('x-eh-user-id', String(payload.id));
+          headers.set('x-eh-user-role', String(payload.role || 'doctor'));
+        }
+      } catch {
+        /* Railway may still accept Bearer directly when secrets match */
+      }
+    }
+  }
 
   const refresh = request.headers.get('x-refresh-token');
   if (refresh) headers.set('x-refresh-token', refresh);

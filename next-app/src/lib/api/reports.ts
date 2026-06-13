@@ -212,7 +212,7 @@ export async function runReportAnalysis(input: {
   const analysis = res.data;
   if (!res.success || !analysis?.clinicalReport?.overall_clinical_impression) {
     console.error('[reports] invalid response:', res);
-    throw new Error('Analysis failed — please try again.');
+    throw new Error(res.message || 'Analysis failed — please try again.');
   }
 
   assertClinicalAnalysisResponse(res, analysis);

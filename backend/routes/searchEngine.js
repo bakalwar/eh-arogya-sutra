@@ -155,7 +155,7 @@ router.post(
       console.error('[clinical-analysis]', err);
       return res.status(err.statusCode || 502).json({
         success: false,
-        message: 'Analysis failed — please try again.',
+        message: err?.message || 'Analysis failed — please try again.',
         eh_engine_online: false,
       });
     }
