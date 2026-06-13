@@ -4,7 +4,7 @@ import { createRequire } from 'module';
 import { fileURLToPath } from 'url';
 
 const require = createRequire(import.meta.url);
-const { getLanIPv4 } = require('../scripts/network-urls.js') as {
+const { getLanIPv4 } = require('./rules/network-rule.js') as {
   getLanIPv4: () => string | null;
 };
 
