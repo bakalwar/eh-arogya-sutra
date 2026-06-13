@@ -4,13 +4,14 @@ const ACCESS = 'eh_token';
 const REFRESH = 'eh_refresh';
 const USER = 'eh_user';
 const LOCAL_AUTH_FLAG = 'eh_local_auth';
+/** Small cookie for middleware — JWT stays in localStorage (avoids 4KB / encoding issues). */
+const SESSION_MARKER = 'eh_has_session';
 
 const ACCESS_MAX_AGE = 60 * 60 * 24;
 const REFRESH_MAX_AGE = 60 * 60 * 24 * 7;
 
 let refreshPromise: Promise<string | null> | null = null;
 
-/** Cookie flags — Secure on HTTPS (Vercel production) */
 function cookieSuffix() {
   if (typeof window !== 'undefined' && window.location.protocol === 'https:') {
     return '; Secure';
@@ -71,7 +72,7 @@ function writeStorage(key: string, value: string) {
   try {
     localStorage.setItem(key, value);
   } catch {
-    /* LAN / private mode — cookies remain primary */
+    /* private mode */
   }
 }
 
@@ -96,14 +97,15 @@ function decodeJwtPayload(token: string) {
   }
 }
 
+/** Primary: localStorage. Fallback: legacy cookie migration. */
 export function getToken() {
   if (typeof window === 'undefined') return null;
-  return getSessionCookie(ACCESS) || readStorage(ACCESS);
+  return readStorage(ACCESS) || getSessionCookie(ACCESS);
 }
 
 export function getRefreshToken() {
   if (typeof window === 'undefined') return null;
-  return getSessionCookie(REFRESH) || readStorage(REFRESH);
+  return readStorage(REFRESH) || getSessionCookie(REFRESH);
 }
 
 export interface SessionUser {
@@ -117,7 +119,7 @@ export interface SessionUser {
 
 export function getCurrentUser(): SessionUser | null {
   if (typeof window === 'undefined') return null;
-  const raw = getSessionCookie(USER) || readStorage(USER);
+  const raw = readStorage(USER) || getSessionCookie(USER);
   if (!raw) return null;
   try {
     return JSON.parse(raw) as SessionUser;
@@ -140,19 +142,11 @@ export function saveTokens(
 ) {
   if (typeof window === 'undefined') return;
 
-  if (accessToken) {
-    writeStorage(ACCESS, accessToken);
-    setSessionCookie(ACCESS, accessToken, ACCESS_MAX_AGE);
-  }
-  if (refreshToken) {
-    writeStorage(REFRESH, refreshToken);
-    setSessionCookie(REFRESH, refreshToken, REFRESH_MAX_AGE);
-  }
-  if (user) {
-    const userJson = JSON.stringify(user);
-    writeStorage(USER, userJson);
-    setSessionCookie(USER, userJson, REFRESH_MAX_AGE);
-  }
+  if (accessToken) writeStorage(ACCESS, accessToken);
+  if (refreshToken) writeStorage(REFRESH, refreshToken);
+  if (user) writeStorage(USER, JSON.stringify(user));
+
+  setSessionCookie(SESSION_MARKER, '1', REFRESH_MAX_AGE);
 
   if (isLocalLanDev()) {
     writeStorage(LOCAL_AUTH_FLAG, '1');
@@ -162,19 +156,20 @@ export function saveTokens(
 
 export function setAccessToken(token: string) {
   writeStorage(ACCESS, token);
-  setSessionCookie(ACCESS, token, ACCESS_MAX_AGE);
+  setSessionCookie(SESSION_MARKER, '1', REFRESH_MAX_AGE);
 }
 
 export function clearSession() {
   if (typeof window === 'undefined') return;
   for (const key of [ACCESS, REFRESH, USER, LOCAL_AUTH_FLAG]) {
     removeStorage(key);
-    deleteSessionCookie(key);
+  }
+  for (const name of [SESSION_MARKER, ACCESS, REFRESH, USER, LOCAL_AUTH_FLAG]) {
+    deleteSessionCookie(name);
   }
 }
 
 export function isAuthenticated() {
-  const user = getCurrentUser();
   const access = getToken();
   const refresh = getRefreshToken();
 
@@ -183,21 +178,19 @@ export function isAuthenticated() {
   if (access) {
     const p = decodeJwtPayload(access);
     if (p && typeof p.exp === 'number' && Date.now() / 1000 < p.exp) return true;
+    if (!p && access.length > 20) return true;
   }
 
   if (refresh) return true;
 
-  if (hasLocalDevAuthGrace() && user && access) return true;
+  if (hasLocalDevAuthGrace() && getCurrentUser()) return true;
 
   return false;
 }
 
 export async function refreshAccessToken(): Promise<string | null> {
   const refresh = getRefreshToken();
-  if (!refresh) {
-    if (!hasLocalDevAuthGrace()) clearSession();
-    return null;
-  }
+  if (!refresh) return null;
 
   if (!refreshPromise) {
     refreshPromise = fetch('/api/auth/refresh', {
@@ -207,23 +200,16 @@ export async function refreshAccessToken(): Promise<string | null> {
       body: JSON.stringify({ refreshToken: refresh }),
     })
       .then(async (res) => {
-        if (!res.ok) {
-          if (!hasLocalDevAuthGrace()) clearSession();
-          return hasLocalDevAuthGrace() ? getToken() : null;
-        }
+        if (!res.ok) return null;
         const data = await res.json();
         const token = data.accessToken || data.token;
         if (token) {
           setAccessToken(token);
           return token as string;
         }
-        if (!hasLocalDevAuthGrace()) clearSession();
         return null;
       })
-      .catch(() => {
-        if (!hasLocalDevAuthGrace()) clearSession();
-        return hasLocalDevAuthGrace() ? getToken() : null;
-      })
+      .catch(() => null)
       .finally(() => {
         refreshPromise = null;
       });
@@ -240,12 +226,9 @@ export async function getValidToken(): Promise<string | null> {
     const p = decodeJwtPayload(access);
     if (p && typeof p.exp === 'number') {
       const expiresIn = p.exp - Date.now() / 1000;
-      if (expiresIn > 120) return access;
-    } else if (isLocalLanDev() && refresh) {
-      return refreshAccessToken();
-    } else if (!p && !isLocalLanDev()) {
-      clearSession();
-      return null;
+      if (expiresIn > 60) return access;
+    } else if (access.length > 20) {
+      return access;
     }
   }
 
@@ -256,7 +239,6 @@ export async function getValidToken(): Promise<string | null> {
   return null;
 }
 
-/** AuthGate + middleware — async verify with LAN local-dev grace */
 export async function verifySession(): Promise<boolean> {
   if (isAuthenticated()) return true;
 
@@ -266,18 +248,13 @@ export async function verifySession(): Promise<boolean> {
     if (token) return true;
   }
 
-  if (hasLocalDevAuthGrace() && getCurrentUser()) {
-    const access = getToken();
-    if (access || refresh) return true;
-  }
-
-  return false;
+  return isAuthenticated();
 }
 
-/** Cookie names for middleware (server-readable session marks) */
 export const SESSION_COOKIE_NAMES = {
   access: ACCESS,
   refresh: REFRESH,
   user: USER,
   localAuth: LOCAL_AUTH_FLAG,
+  sessionMarker: SESSION_MARKER,
 } as const;

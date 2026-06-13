@@ -1,38 +1,28 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { appEnv } from '@/lib/api/config';
-import {
-  hasLocalDevAuthGrace,
-  isAuthenticated,
-  isLocalLanDev,
-  verifySession,
-} from '@/lib/session/tokenManager';
+import { isAuthenticated, verifySession } from '@/lib/session/tokenManager';
 
-/** Local dev: skip blocking session probe — dashboard mounts immediately (LAN/mobile safe). */
-const isLocalApp =
-  appEnv === 'local' ||
-  process.env.NODE_ENV === 'development';
+const isLocalApp = appEnv === 'local';
 
 export default function AuthGate({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [ready, setReady] = useState(isLocalApp);
-  const [checking, setChecking] = useState(!isLocalApp);
+  const checkedRef = useRef(isLocalApp);
 
   useEffect(() => {
-    if (isLocalApp) return;
+    if (isLocalApp || checkedRef.current) return;
 
     let cancelled = false;
 
-    async function runCheck(attempt = 0) {
-      setChecking(true);
-
+    async function runCheck() {
       if (isAuthenticated()) {
         if (!cancelled) {
+          checkedRef.current = true;
           setReady(true);
-          setChecking(false);
         }
         return;
       }
@@ -41,44 +31,22 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
       if (cancelled) return;
 
       if (ok) {
+        checkedRef.current = true;
         setReady(true);
-        setChecking(false);
         return;
       }
 
-      if (isLocalLanDev() && attempt < 2) {
-        await new Promise((r) => window.setTimeout(r, 350));
-        if (!cancelled) return runCheck(attempt + 1);
-        return;
-      }
-
-      if (hasLocalDevAuthGrace() && isLocalLanDev()) {
-        setReady(true);
-        setChecking(false);
-        return;
-      }
-
-      setReady(false);
-      setChecking(false);
       router.replace(`/login?next=${encodeURIComponent(pathname || '/overview')}`);
     }
 
     runCheck();
 
-    const onFocus = () => {
-      if (!ready && (isAuthenticated() || hasLocalDevAuthGrace())) {
-        setReady(true);
-      }
-    };
-    window.addEventListener('focus', onFocus);
-
     return () => {
       cancelled = true;
-      window.removeEventListener('focus', onFocus);
     };
-  }, [router, pathname, ready]);
+  }, [router, pathname]);
 
-  if (!isLocalApp && (checking || !ready)) {
+  if (!isLocalApp && !ready) {
     return (
       <div
         className="eh-mock-root"

@@ -1,4 +1,4 @@
-import { getValidToken, clearSession, refreshAccessToken, hasLocalDevAuthGrace } from '@/lib/session/tokenManager';
+import { getValidToken, refreshAccessToken } from '@/lib/session/tokenManager';
 
 const DEFAULT_TIMEOUT_MS = 30_000;
 const LONG_TIMEOUT_MS = 600_000;
@@ -33,7 +33,8 @@ function isAuthUrl(path: string) {
   return (
     path.includes('/api/auth/login') ||
     path.includes('/api/auth/signup') ||
-    path.includes('/api/auth/refresh')
+    path.includes('/api/auth/refresh') ||
+    path.includes('/api/auth/logout')
   );
 }
 
@@ -90,15 +91,8 @@ export async function apiRequest<T = unknown>(
           return apiRequest<T>(path, options, true);
         }
       }
-      const msg = (data as { message?: string })?.message || '';
-      const isSignatureOnly =
-        msg.includes('Missing API signature') || msg.includes('Invalid API signature');
-      if (!hasLocalDevAuthGrace() && !isSignatureOnly) {
-        clearSession();
-        if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/login')) {
-          window.location.href = '/login';
-        }
-      }
+      const msg = (data as { message?: string })?.message || 'Authentication required.';
+      throw new ApiError(msg, 401, data);
     }
 
     if (!res.ok) {

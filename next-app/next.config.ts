@@ -26,14 +26,15 @@ function buildApiRewrites(): { source: string; destination: string }[] {
 
   const rules: { source: string; destination: string }[] = [];
 
-  // Local dev: v3 can hit Python directly. Production: /api/* → Railway Node (includes /api/v3 proxy).
-  if (isLocal && pythonBase) {
-    rules.push({ source: '/api/v3/:path*', destination: `${pythonBase}/api/v3/:path*` });
+  if (isLocal) {
+    if (pythonBase) {
+      rules.push({ source: '/api/v3/:path*', destination: `${pythonBase}/api/v3/:path*` });
+    }
+    rules.push({ source: '/api/:path*', destination: `${nodeBase}/api/:path*` });
   }
 
   rules.push(
     { source: '/health', destination: `${nodeBase}/health` },
-    { source: '/api/:path*', destination: `${nodeBase}/api/:path*` },
     { source: '/uploads/:path*', destination: `${nodeBase}/uploads/:path*` },
   );
 

@@ -1,5 +1,4 @@
 import { apiRequest } from '@/lib/api/client';
-import { appEnv } from '@/lib/api/config';
 import { normalizeCaseDataForSummary } from '@/lib/summaryCaseData';
 
 export interface SummaryResponse {
@@ -23,7 +22,7 @@ export async function postClinicalSummary(caseData: Record<string, unknown>) {
     method: 'POST',
     body,
     timeoutMs: 600_000,
-    auth: appEnv !== 'local',
+    auth: true,
   });
 
   if (!res?.success) {

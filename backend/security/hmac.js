@@ -1,19 +1,14 @@
-const crypto = require('crypto');
-
-const HMAC_SECRET = process.env.HMAC_SECRET || 'eh-arogya-sutra-hmac-secret-2026';
+'use strict';
 
 /**
- * Middleware to verify HMAC signature of the request.
- * Header: x-api-signature
- *
- * Browser clients use JWT (Authorization: Bearer) — HMAC is for server-to-server only.
+ * Optional HMAC for server-to-server calls. Browser clients use JWT (Authorization: Bearer).
+ * Set DISABLE_HMAC=1 to turn off entirely.
  */
 function verifyHmacSignature(req, res, next) {
   if (process.env.DISABLE_HMAC === '1') {
     return next();
   }
 
-  // Browser / JWT clients — HMAC not used; requireAuth validates downstream.
   const authHeader = String(req.headers.authorization || '');
   if (authHeader.startsWith('Bearer ') && authHeader.length > 15) {
     return next();
@@ -24,6 +19,8 @@ function verifyHmacSignature(req, res, next) {
     return res.status(401).json({ success: false, message: 'Missing API signature' });
   }
 
+  const crypto = require('crypto');
+  const HMAC_SECRET = process.env.HMAC_SECRET || 'eh-arogya-sutra-hmac-secret-2026';
   const payload = JSON.stringify(req.body || {});
   const expectedSignature = crypto
     .createHmac('sha256', HMAC_SECRET)

@@ -50,7 +50,6 @@ const { requireAuth } = require('./middleware/requireAuth');
 const { errorHandler } = require('./middleware/errorHandler');
 const { notFound } = require('./middleware/notFound');
 const { auditMiddleware } = require('./middleware/auditLog');
-const { verifyHmacSignature } = require('./security/hmac');
 const { connectRedis } = require('./services/redisService');
 const { doctorRateLimiter } = require('./middleware/doctorRateLimit');
 const ehHubApi = require('./routes/ehHubApi');
@@ -243,12 +242,12 @@ app.post(
 app.use('/api/summary', summaryLimiter, summaryGenerateRoutes);
 
 app.use('/api/auth', auditMiddleware('auth.action'), authRoutes);
-app.use('/api/patients', verifyHmacSignature, doctorRateLimiter, patientRoutes);
+app.use('/api/patients', doctorRateLimiter, patientRoutes);
 app.use('/api/medicines', doctorRateLimiter, medicineRoutes);
-app.use('/api/reports', verifyHmacSignature, doctorRateLimiter, reportRoutes);
-app.use('/api/prescriptions', verifyHmacSignature, doctorRateLimiter, prescriptionRoutes);
+app.use('/api/reports', doctorRateLimiter, reportRoutes);
+app.use('/api/prescriptions', doctorRateLimiter, prescriptionRoutes);
 app.use('/api/admin', auditMiddleware('admin.action'), adminRoutes);
-app.use('/api/payment', verifyHmacSignature, auditMiddleware('payment.action'), paymentRoutes);
+app.use('/api/payment', auditMiddleware('payment.action'), paymentRoutes);
 app.use('/api/search', smartSearchRoutes);
 app.use('/api/v3', ehV3ProxyRoutes);
 app.use('/api/audit', auditRoutes);

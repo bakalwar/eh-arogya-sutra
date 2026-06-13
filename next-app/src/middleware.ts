@@ -2,14 +2,18 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { SESSION_COOKIE_NAMES } from '@/lib/session/tokenManager';
 
+const appEnv =
+  process.env.NEXT_PUBLIC_APP_ENV ||
+  (process.env.NODE_ENV === 'production' ? 'production' : 'local');
+
 const IS_LOCAL =
-  process.env.NEXT_PUBLIC_APP_ENV === 'local' ||
-  process.env.EH_LOCAL_DEV === '1' ||
-  process.env.NODE_ENV === 'development';
+  appEnv === 'local' ||
+  process.env.EH_LOCAL_DEV === '1';
 
 function hasSessionCookies(request: NextRequest) {
   const c = request.cookies;
   return (
+    c.has(SESSION_COOKIE_NAMES.sessionMarker) ||
     c.has(SESSION_COOKIE_NAMES.access) ||
     c.has(SESSION_COOKIE_NAMES.refresh) ||
     c.has(SESSION_COOKIE_NAMES.localAuth)
@@ -19,7 +23,6 @@ function hasSessionCookies(request: NextRequest) {
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  /** Local dev: never block clinical routes — AuthGate is a no-op client-side */
   if (IS_LOCAL) {
     if (pathname === '/') {
       return NextResponse.redirect(new URL('/reports', request.url));
@@ -41,5 +44,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/', '/login', '/signup', '/overview', '/reports', '/records', '/symptom-search', '/case-summary'],
+  matcher: ['/', '/login', '/signup', '/overview', '/reports', '/records', '/symptom-search', '/case-summary', '/clinic', '/admin'],
 };
