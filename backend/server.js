@@ -40,6 +40,7 @@ const translationRoutes = require('./routes/translation');
 const summaryGenerateRoutes = require('./routes/summaryGenerate');
 const { EXPERT_BASE } = require('./services/ehExpertClient');
 const ehExpertProxyRoutes = require('./routes/ehExpertProxy');
+const ehV3ProxyRoutes = require('./routes/ehV3Proxy');
 const subscriptionRoutes = require('./routes/subscription');
 const referralRoutes = require('./routes/referral');
 
@@ -249,6 +250,7 @@ app.use('/api/prescriptions', verifyHmacSignature, doctorRateLimiter, prescripti
 app.use('/api/admin', auditMiddleware('admin.action'), adminRoutes);
 app.use('/api/payment', verifyHmacSignature, auditMiddleware('payment.action'), paymentRoutes);
 app.use('/api/search', smartSearchRoutes);
+app.use('/api/v3', ehV3ProxyRoutes);
 app.use('/api/audit', auditRoutes);
 app.use('/api/symptom-checker', symptomCheckerRoutes);
 app.use('/api/branding', brandingRoutes);
