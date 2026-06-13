@@ -1,6 +1,4 @@
 import { apiRequest, ApiError } from '@/lib/api/client';
-import { appEnv } from '@/lib/api/config';
-import { postToNodeApiDirect } from '@/lib/api/directNodeFetch';
 import type { SynthesizedClinicalPayload } from '@/components/reports/SynthesizedClinicalDisplay';
 
 /** Locked for Report Analysis — Python :8005 /api/v3/analyze-report must never enter prescription mode */
@@ -171,29 +169,15 @@ function assertClinicalAnalysisResponse(res: ReportAnalyzeResult, analysis: Synt
 }
 
 /**
- * Report Analysis — production uploads go direct to Railway (bypass Vercel 4.5MB + multipart limits).
+ * Report Analysis — production → Railway Node (NEXT_PUBLIC_NODE_API_URL).
  */
 export async function analyzeClinicalReport(form: FormData): Promise<ReportAnalyzeResult> {
   enforceClinicalOutputMode(form);
-
-  if (typeof window !== 'undefined' && appEnv === 'production') {
-    try {
-      return await postToNodeApiDirect<ReportAnalyzeResult>(
-        '/api/search/clinical-analysis',
-        form,
-        600_000
-      );
-    } catch (e) {
-      if (e instanceof ApiError && e.status !== 0) throw e;
-      console.warn('[reports] Direct Railway upload failed, trying Vercel proxy:', e);
-    }
-  }
-
   return apiRequest<ReportAnalyzeResult>('/api/search/clinical-analysis', {
     method: 'POST',
     body: form,
     timeoutMs: 600_000,
-    auth: appEnv !== 'local',
+    auth: true,
   });
 }
 

@@ -25,6 +25,28 @@ export function resolvePublicNodeApiBase(): string {
   return 'https://eh-arogya-api-production.up.railway.app';
 }
 
+export const RAILWAY_NODE_API_PREFIXES = ['/api/search/', '/api/v3/'] as const;
+
+export function usesRailwayNodeApi(path: string): boolean {
+  const normalized = path.startsWith('/') ? path : `/${path}`;
+  return RAILWAY_NODE_API_PREFIXES.some((prefix) => normalized.startsWith(prefix));
+}
+
+/** Production browser: Railway Node base + path. Local dev: same-origin (Next rewrites). */
+export function resolveBrowserApiUrl(path: string): string {
+  const normalized = path.startsWith('/') ? path : `/${path}`;
+
+  if (appEnv === 'local') return normalized;
+  if (!usesRailwayNodeApi(normalized)) return normalized;
+
+  const base = resolvePublicNodeApiBase();
+  return base ? `${base}${normalized}` : normalized;
+}
+
+export function isCrossOriginApiUrl(url: string): boolean {
+  return /^https?:\/\//i.test(url);
+}
+
 export function resolvePythonApiBase(): string {
   if (typeof window !== 'undefined') {
     return '';

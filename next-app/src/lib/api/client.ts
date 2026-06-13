@@ -1,4 +1,5 @@
 import { getValidToken, refreshAccessToken } from '@/lib/session/tokenManager';
+import { isCrossOriginApiUrl, resolveBrowserApiUrl } from '@/lib/api/config';
 
 const DEFAULT_TIMEOUT_MS = 30_000;
 const LONG_TIMEOUT_MS = 600_000;
@@ -53,6 +54,8 @@ export async function apiRequest<T = unknown>(
 ): Promise<T> {
   const { method = 'GET', body = null, auth = true, headers = {} } = options;
   const timeoutMs = options.timeoutMs ?? timeoutForPath(path);
+  const url = resolveBrowserApiUrl(path);
+  const crossOrigin = isCrossOriginApiUrl(url);
 
   const reqHeaders: Record<string, string> = { ...headers };
 
@@ -73,12 +76,12 @@ export async function apiRequest<T = unknown>(
   const timer = window.setTimeout(() => controller.abort(), timeoutMs);
 
   try {
-    const res = await fetch(path, {
+    const res = await fetch(url, {
       method,
       headers: reqHeaders,
       body: payload,
       signal: controller.signal,
-      credentials: 'same-origin',
+      credentials: crossOrigin ? 'omit' : 'same-origin',
     });
 
     const isJson = (res.headers.get('content-type') || '').includes('application/json');
