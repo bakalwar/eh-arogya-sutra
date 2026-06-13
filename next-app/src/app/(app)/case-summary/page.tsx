@@ -5,15 +5,34 @@ import Link from 'next/link';
 import { PageHeader } from '@/components/ui/DashboardPanels';
 import ClinicalSummaryDisplay from '@/components/ClinicalSummaryDisplay';
 import { formatTodayDate } from '@/lib/formatDate';
-import { loadSmartSearchResult } from '@/lib/session/smartSearchStorage';
+import { loadSmartSearchResult, saveSmartSearchResult } from '@/lib/session/smartSearchStorage';
 import { extractClinicalSummary } from '@/lib/summaryCaseData';
-import { postClinicalSummary } from '@/lib/api/summary';
+import { needsFullClinicalSummary, postClinicalSummary } from '@/lib/api/summary';
 
 export default function CaseSummaryPage() {
   const [caseData, setCaseData] = useState<Record<string, unknown> | null>(null);
   const [summary, setSummary] = useState('');
   const [loadingSummary, setLoadingSummary] = useState(false);
   const [error, setError] = useState('');
+
+  async function generateSummary(data: Record<string, unknown>) {
+    setLoadingSummary(true);
+    setError('');
+    try {
+      const res = await postClinicalSummary(data);
+      const text = res.data?.summary || '';
+      if (text.trim()) {
+        setSummary(text);
+        saveSmartSearchResult({ ...data, clinical_summary: text, summary: text });
+      } else {
+        setError('Summary is not available yet. Please try again.');
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not generate summary.');
+    } finally {
+      setLoadingSummary(false);
+    }
+  }
 
   useEffect(() => {
     const data = loadSmartSearchResult();
@@ -22,23 +41,16 @@ export default function CaseSummaryPage() {
       return;
     }
     setCaseData(data);
-    setSummary(extractClinicalSummary(data));
+    const existing = extractClinicalSummary(data);
+    setSummary(existing);
+    if (needsFullClinicalSummary(data)) {
+      void generateSummary(data);
+    }
   }, []);
 
   async function refreshSummary() {
     if (!caseData) return;
-    setLoadingSummary(true);
-    setError('');
-    try {
-      const res = await postClinicalSummary(caseData);
-      const text = res.data?.summary || '';
-      if (text.trim()) setSummary(text);
-      else setError('Summary is not available yet. Please try again.');
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not refresh summary.');
-    } finally {
-      setLoadingSummary(false);
-    }
+    await generateSummary(caseData);
   }
 
   const patient = (caseData?.patient || {}) as Record<string, unknown>;
@@ -98,7 +110,7 @@ export default function CaseSummaryPage() {
           </div>
           <div className="card-body">
             {loadingSummary ? (
-              <div className="eh-analyze-status loading">Updating summary…</div>
+              <div className="eh-analyze-status loading">Generating clinical summary (9 Rule Engines)…</div>
             ) : null}
             {error && caseData ? <div className="eh-analyze-status error">{error}</div> : null}
             {summary ? (
