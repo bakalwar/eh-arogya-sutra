@@ -158,9 +158,7 @@ router.post(
   })
 );
 
-router.post(
-  '/signup',
-  asyncHandler(async (req, res) => {
+const signupHandler = asyncHandler(async (req, res) => {
     const { mobile, full_name, fullName, password, confirmPassword } = req.body || {};
     const mobileNorm = normalizeMobile(mobile);
     const name = String(full_name || fullName || '').trim();
@@ -226,8 +224,10 @@ router.post(
       mustChangePassword: false,
       expiresIn: process.env.JWT_ACCESS_EXPIRE || '24h'
     });
-  })
-);
+});
+
+router.post('/signup', signupHandler);
+router.post('/register', signupHandler);
 
 router.post(
   '/change-password',
