@@ -111,7 +111,14 @@ export async function apiRequest<T = unknown>(
     if (e instanceof DOMException && e.name === 'AbortError') {
       throw new ApiError('Request timed out — server busy, try again.', 408);
     }
-    throw new ApiError(e instanceof Error ? e.message : 'Network error', 0);
+    throw new ApiError(
+      e instanceof Error && /failed to fetch|networkerror|load failed/i.test(e.message)
+        ? 'Could not reach the server — check connection or sign in again.'
+        : e instanceof Error
+          ? e.message
+          : 'Network error',
+      0
+    );
   } finally {
     window.clearTimeout(timer);
   }

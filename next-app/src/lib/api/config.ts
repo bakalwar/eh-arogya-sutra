@@ -25,10 +25,21 @@ export function resolvePublicNodeApiBase(): string {
   return 'https://eh-arogya-api-production.up.railway.app';
 }
 
-export const RAILWAY_NODE_API_PREFIXES = ['/api/search/', '/api/v3/', '/api/summary/'] as const;
+/** Browser → Railway direct for search/v3 only. Summary/auth stay same-origin on Vercel. */
+export const RAILWAY_NODE_API_PREFIXES = ['/api/search/', '/api/v3/'] as const;
+
+export const VERCEL_SAME_ORIGIN_PREFIXES = [
+  '/api/summary/',
+  '/api/auth/',
+  '/api/patients',
+  '/api/branding',
+] as const;
 
 export function usesRailwayNodeApi(path: string): boolean {
   const normalized = path.startsWith('/') ? path : `/${path}`;
+  if (VERCEL_SAME_ORIGIN_PREFIXES.some((prefix) => normalized.startsWith(prefix))) {
+    return false;
+  }
   return RAILWAY_NODE_API_PREFIXES.some((prefix) => normalized.startsWith(prefix));
 }
 

@@ -3,7 +3,7 @@ import { proxyToUpstream } from '@/lib/api/upstreamProxy';
 
 type RouteCtx = { params: Promise<{ path: string[] }> };
 
-const LOCAL_HANDLERS = new Set(['auth', 'patients', 'branding']);
+const LOCAL_HANDLERS = new Set(['auth', 'patients', 'branding', 'summary']);
 
 async function handle(request: NextRequest, ctx: RouteCtx) {
   const { path } = await ctx.params;

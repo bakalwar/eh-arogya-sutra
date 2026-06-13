@@ -112,10 +112,17 @@ export default function CaseSummaryPage() {
             {loadingSummary ? (
               <div className="eh-analyze-status loading">Generating clinical summary (9 Rule Engines)…</div>
             ) : null}
-            {error && caseData ? <div className="eh-analyze-status error">{error}</div> : null}
-            {summary ? (
+            {error && caseData && !loadingSummary ? (
+              <div className="eh-analyze-status error">
+                {error}{' '}
+                <button type="button" className="card-action" onClick={refreshSummary}>
+                  Retry
+                </button>
+              </div>
+            ) : null}
+            {!loadingSummary && !error && summary ? (
               <ClinicalSummaryDisplay summary={summary} />
-            ) : caseData ? (
+            ) : !loadingSummary && !error && caseData && !summary ? (
               <p style={{ color: 'var(--muted)', fontSize: 14 }}>
                 Summary not yet available.{' '}
                 <button type="button" className="card-action" onClick={refreshSummary}>

@@ -34,7 +34,7 @@ function validateSummaryResponse(res: SummaryResponse): SummaryResponse {
 }
 
 /**
- * Clinical summary — production → Railway Node (NEXT_PUBLIC_NODE_API_URL) → EH API 9 Rule Engines.
+ * Clinical summary — same-origin Vercel route → trusted proxy → Railway → EH API 9 Rule Engines.
  */
 export async function postClinicalSummary(caseData: Record<string, unknown>) {
   const body = { caseData: normalizeCaseDataForSummary(caseData) };
