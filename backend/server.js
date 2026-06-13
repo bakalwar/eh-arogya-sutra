@@ -63,8 +63,90 @@ let server;
 
 // Security middleware
 app.use(helmet({
-  crossOriginResourcePolicy: { policy: "cross-origin" }
+  crossOriginResourcePolicy: { policy: 'cross-origin' }
 }));
+
+// CORS — before rate limit so OPTIONS preflight always succeeds (Vercel → Railway direct API)
+const defaultOrigins = [
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:5175',
+  'http://localhost:5176',
+  'http://localhost:5177',
+  'http://localhost:5178',
+  'http://localhost:5179',
+  'http://localhost:3000',
+  'http://127.0.0.1:5173',
+  'http://127.0.0.1:5174',
+  'http://127.0.0.1:5175',
+  'http://127.0.0.1:5176',
+  'http://127.0.0.1:5177',
+  'http://127.0.0.1:5178',
+  'http://127.0.0.1:5179',
+  'http://127.0.0.1:3000',
+  'http://localhost:3001',
+  'http://127.0.0.1:3001',
+  'https://eh-arogya-sutra.vercel.app',
+  'https://staging.arogyasutra.com',
+  'https://app.arogyasutra.com'
+];
+if (process.env.FRONTEND_URL) {
+  defaultOrigins.push(process.env.FRONTEND_URL.replace(/\/$/, ''));
+}
+
+function isAllowedCorsOrigin(origin) {
+  if (!origin) return true;
+  const allowed = process.env.CORS_ORIGIN
+    ? process.env.CORS_ORIGIN.split(',').map((s) => s.trim()).filter(Boolean)
+    : defaultOrigins;
+  if (allowed.includes(origin)) return true;
+  // All Vercel production + preview deployments (*.vercel.app)
+  if (/^https:\/\/([a-z0-9-]+\.)*vercel\.app$/i.test(origin)) return true;
+  const isLocalDev =
+    process.env.EH_LOCAL_DEV === '1' ||
+    (process.env.NODE_ENV || 'development') !== 'production';
+  if (
+    isLocalDev &&
+    /^https?:\/\/(localhost|127\.0\.0\.1|192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3})(:\d+)?$/i.test(
+      origin
+    )
+  ) {
+    return true;
+  }
+  return false;
+}
+
+const corsOptions = {
+  origin(origin, callback) {
+    if (isAllowedCorsOrigin(origin)) {
+      return callback(null, true);
+    }
+    console.warn('[CORS] blocked origin:', origin);
+    return callback(null, false);
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'],
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'Accept',
+    'Origin',
+    'X-Requested-With',
+    'X-Refresh-Token',
+    'x-refresh-token',
+    'x-eh-proxy-secret',
+    'x-eh-user-id',
+    'x-eh-user-role',
+    'x-api-signature',
+    'x-api-key'
+  ],
+  exposedHeaders: ['Content-Type', 'Authorization'],
+  optionsSuccessStatus: 204,
+  maxAge: 86400
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 
 // Rate limiting — dev/local needs higher cap (health poll + Smart Search + summary)
 const isProd = process.env.NODE_ENV === 'production';
@@ -72,6 +154,7 @@ const rateLimitWindow = Number(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 10
 const rateLimitMax = Number(process.env.RATE_LIMIT_MAX_REQUESTS) || (isProd ? 100 : 2000);
 
 function rateLimitSkip(req) {
+  if (req.method === 'OPTIONS') return true;
   const p = req.path || req.originalUrl || '';
   if (p.startsWith('/eh-arogya/api/stream')) return true;
   if (p === '/health') return true;
@@ -121,67 +204,6 @@ const authLoginLimiter = rateLimit({
   legacyHeaders: false
 });
 app.use('/api/auth/login', authLoginLimiter);
-
-// CORS configuration
-const defaultOrigins = [
-  'http://localhost:5173',
-  'http://localhost:5174',
-  'http://localhost:5175',
-  'http://localhost:5176',
-  'http://localhost:5177',
-  'http://localhost:5178',
-  'http://localhost:5179',
-  'http://localhost:3000',
-  'http://127.0.0.1:5173',
-  'http://127.0.0.1:5174',
-  'http://127.0.0.1:5175',
-  'http://127.0.0.1:5176',
-  'http://127.0.0.1:5177',
-  'http://127.0.0.1:5178',
-  'http://127.0.0.1:5179',
-  'http://127.0.0.1:3000',
-  'http://localhost:3001',
-  'http://127.0.0.1:3001',
-  'https://eh-arogya-sutra.vercel.app',
-  'https://staging.arogyasutra.com',
-  'https://app.arogyasutra.com'
-];
-if (process.env.FRONTEND_URL) {
-  defaultOrigins.push(process.env.FRONTEND_URL.replace(/\/$/, ''));
-}
-const corsOptions = {
-  origin(origin, callback) {
-    const allowed = process.env.CORS_ORIGIN
-      ? process.env.CORS_ORIGIN.split(',').map((s) => s.trim()).filter(Boolean)
-      : defaultOrigins;
-
-    if (!origin) return callback(null, true);
-    if (allowed.includes(origin)) return callback(null, true);
-
-    // Vercel preview + production deployments (*.vercel.app)
-    if (/^https:\/\/[a-z0-9-]+(?:-[a-z0-9-]+)*\.vercel\.app$/i.test(origin)) {
-      return callback(null, true);
-    }
-
-    const isLocalDev =
-      process.env.EH_LOCAL_DEV === '1' ||
-      (process.env.NODE_ENV || 'development') !== 'production';
-    if (
-      isLocalDev &&
-      /^https?:\/\/(localhost|127\.0\.0\.1|192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3})(:\d+)?$/i.test(
-        origin
-      )
-    ) {
-      return callback(null, true);
-    }
-
-    callback(new Error(`CORS blocked: ${origin}`));
-  },
-  credentials: true,
-  optionsSuccessStatus: 200,
-};
-
-app.use(cors(corsOptions));
 
 // Body parsing middleware — large clinical PDFs / imaging (local + production)
 app.use(express.json({ limit: '50mb' }));
