@@ -61,6 +61,11 @@ const { sequelize } = require('./db/sequelize');
 const app = express();
 let server;
 
+// Railway / Vercel proxy — required for express-rate-limit behind X-Forwarded-For
+if (process.env.NODE_ENV === 'production' || process.env.RAILWAY_ENVIRONMENT || process.env.TRUST_PROXY === '1') {
+  app.set('trust proxy', 1);
+}
+
 // Security middleware
 app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' }
