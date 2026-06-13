@@ -1,19 +1,31 @@
 import { NextRequest } from 'next/server';
+import { requireApiAuth } from '@/lib/auth/requireApiAuth';
 import { proxyToUpstream } from '@/lib/api/upstreamProxy';
 
 type RouteCtx = { params: Promise<{ path: string[] }> };
 
-const LOCAL_HANDLERS = new Set(['auth', 'patients', 'branding', 'summary']);
+/** Routes with dedicated handlers under src/app/api/<name>/ — never proxy via catch-all. */
+const LOCAL_HANDLERS = new Set(['auth', 'patients', 'branding']);
 
 async function handle(request: NextRequest, ctx: RouteCtx) {
   const { path } = await ctx.params;
+  const apiPath = path.map(encodeURIComponent).join('/');
+
   if (LOCAL_HANDLERS.has(path[0])) {
     return Response.json(
-      { success: false, message: `Route not found: /api/${path.join('/')}` },
+      { success: false, message: `Route not found: /api/${apiPath}` },
       { status: 404 }
     );
   }
-  return proxyToUpstream(request, path.map(encodeURIComponent).join('/'));
+
+  // Summary requires JWT on Vercel → trusted proxy headers to Railway
+  if (path[0] === 'summary') {
+    const auth = requireApiAuth(request);
+    if (auth instanceof Response) return auth;
+    return proxyToUpstream(request, apiPath, auth);
+  }
+
+  return proxyToUpstream(request, apiPath);
 }
 
 export const GET = handle;
