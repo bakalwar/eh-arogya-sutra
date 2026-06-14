@@ -26,8 +26,6 @@ export function parseLoginResponse(data: LoginResponse) {
 
 export function homePathForUser(user: SessionUser) {
   if (user?.mustChangePassword) return '/login';
-  if (user?.role === 'super_admin') return '/admin';
-  if (user?.role === 'admin') return '/admin';
   return '/overview';
 }
 
