@@ -11,18 +11,18 @@ async function handle(request: NextRequest, ctx: RouteCtx) {
   const { path } = await ctx.params;
   const apiPath = path.map(encodeURIComponent).join('/');
 
+  // Summary first — must never 404 here (CaseSummary → postClinicalSummary)
+  if (path[0] === 'summary') {
+    const auth = requireApiAuth(request);
+    if (auth instanceof Response) return auth;
+    return proxyToUpstream(request, apiPath, auth);
+  }
+
   if (LOCAL_HANDLERS.has(path[0])) {
     return Response.json(
       { success: false, message: `Route not found: /api/${apiPath}` },
       { status: 404 }
     );
-  }
-
-  // Summary requires JWT on Vercel → trusted proxy headers to Railway
-  if (path[0] === 'summary') {
-    const auth = requireApiAuth(request);
-    if (auth instanceof Response) return auth;
-    return proxyToUpstream(request, apiPath, auth);
   }
 
   return proxyToUpstream(request, apiPath);
