@@ -50,7 +50,6 @@
     "smoke:pdf-expert": "node scripts/smoke-pdf-expert.js",
     "verify:summary": "node scripts/verify-live-summary.js",
     "verify:summary-route": "node scripts/verify-summary-route.js",
-    "smoke:ollama-summary": "node scripts/smoke-ollama-summary.js",
     "smoke:reports": "node scripts/smoke-report-analyzer.js",
     "preview:docs": "serve . -l 5555",
     "dev:live": "concurrently -n stack,docs \"npm run dev\" \"npm run preview:docs\"",
