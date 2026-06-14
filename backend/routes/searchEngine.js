@@ -1,6 +1,6 @@
 'use strict';
 
-/** EH API-only clinical routes — no book / Node offline fallbacks in local dev */
+/** EH API-only clinical routes — 9 Rule Engines + 14k diseases (eh_api.py). No book/Ollama path. */
 if (process.env.EH_EXPERT_FALLBACK_NODE === '1' || process.env.EH_NODE_SINGLE_ENGINE === '1') {
   console.warn(
     '[search] EH_EXPERT_FALLBACK_NODE / EH_NODE_SINGLE_ENGINE ignored — EH Python API :8005 required'

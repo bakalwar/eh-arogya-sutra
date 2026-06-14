@@ -102,6 +102,13 @@ export async function apiRequest<T = unknown>(
       const msg =
         (data as { message?: string })?.message ||
         `Request failed (${res.status})`;
+      if (path.includes('/api/summary/') && res.status === 404) {
+        throw new ApiError(
+          'Summary route missing on server — redeploy Vercel next-app (npm run deploy:vercel:next). Clinical engine: EH API 9 Rule Engines + 14k diseases only.',
+          404,
+          data
+        );
+      }
       throw new ApiError(msg, res.status, data);
     }
 
