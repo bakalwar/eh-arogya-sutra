@@ -1,6 +1,7 @@
 import { createHash } from 'crypto';
 import jwt from 'jsonwebtoken';
 import { getPool } from '@/lib/auth/pg';
+import { normalizeMobile } from '@/lib/auth/mobile';
 
 const ACCESS_EXPIRE = process.env.JWT_ACCESS_EXPIRE || '24h';
 const REFRESH_EXPIRE = process.env.JWT_REFRESH_EXPIRE || '7d';
@@ -23,12 +24,16 @@ export interface AuthUserRow {
 }
 
 export function userResponse(row: AuthUserRow) {
+  const mobile10 = normalizeMobile(row.mobile);
   return {
     id: String(row.id),
     name: row.name,
-    mobile: row.mobile,
+    mobile: mobile10 || row.mobile,
     email: row.email || undefined,
     role: row.role,
+    plan: (row as AuthUserRow & { subscription_status?: string }).subscription_status || 'trial',
+    clinicName:
+      (row as AuthUserRow & { clinic_name?: string | null }).clinic_name || undefined,
     mustChangePassword: !!row.must_change_password,
   };
 }

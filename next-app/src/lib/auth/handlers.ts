@@ -15,6 +15,23 @@ function json(data: unknown, status = 200) {
   return Response.json(data, { status });
 }
 
+function bodyMobile(body: Record<string, unknown>) {
+  return body.mobile ?? body.mobile_number ?? body.mobileNumber;
+}
+
+function bodyName(body: Record<string, unknown>) {
+  return String(body.full_name || body.fullName || body.name || '').trim();
+}
+
+function bodyClinicName(body: Record<string, unknown>) {
+  return String(body.clinic_name || body.clinicName || '').trim();
+}
+
+function termsAccepted(body: Record<string, unknown>) {
+  const v = body.terms_accepted ?? body.termsAccepted;
+  return v === true || v === 'true' || v === 1 || v === '1';
+}
+
 async function findUserByMobile(mobile10: string): Promise<AuthUserRow | null> {
   const variants = mobileLookupValues(mobile10);
   const res = await getPool().query<AuthUserRow>(
@@ -64,6 +81,7 @@ async function completeLogin(user: AuthUserRow) {
     success: true,
     message: u.mustChangePassword ? 'Please set a new password to continue.' : 'Login successful',
     user: u,
+    doctor: u,
     token: accessToken,
     accessToken,
     refreshToken,
@@ -72,20 +90,35 @@ async function completeLogin(user: AuthUserRow) {
   });
 }
 
+export async function handleMe(userId: string) {
+  const res = await getPool().query<
+    AuthUserRow & { subscription_status?: string; clinic_name?: string | null }
+  >(`SELECT * FROM users WHERE id = $1 LIMIT 1`, [userId]);
+  const row = res.rows[0];
+  if (!row) return json({ success: false, message: 'User not found.' }, 404);
+  const u = userResponse(row);
+  return json({ success: true, user: u, doctor: u });
+}
+
 export async function handleSignup(body: Record<string, unknown>) {
-  const mobileNorm = normalizeMobile(body.mobile);
-  const name = String(body.full_name || body.fullName || '').trim();
+  const mobileNorm = normalizeMobile(bodyMobile(body));
+  const name = bodyName(body);
+  const clinicName = bodyClinicName(body);
   const pwd = body.password != null ? String(body.password) : '';
-  const confirm = body.confirmPassword != null ? String(body.confirmPassword) : '';
+  const confirm = body.confirmPassword != null ? String(body.confirmPassword) : pwd;
 
   if (!mobileNorm || mobileNorm.length !== 10) {
     return json({ success: false, message: 'Enter a valid 10-digit mobile number.' }, 400);
   }
   if (!name) return json({ success: false, message: 'Full name is required.' }, 400);
+  if (!clinicName) return json({ success: false, message: 'Clinic name is required.' }, 400);
+  if (!termsAccepted(body)) {
+    return json({ success: false, message: 'You must accept the terms to register.' }, 400);
+  }
   if (!pwd || pwd.length < 6) {
     return json({ success: false, message: 'Password must be at least 6 characters.' }, 400);
   }
-  if (pwd !== confirm) return json({ success: false, message: 'Passwords do not match.' }, 400);
+  if (confirm && pwd !== confirm) return json({ success: false, message: 'Passwords do not match.' }, 400);
 
   const existing = await findUserByMobile(mobileNorm);
   if (existing) {
@@ -101,11 +134,11 @@ export async function handleSignup(body: Record<string, unknown>) {
 
   const created = await getPool().query<AuthUserRow>(
     `INSERT INTO users (
-      name, full_name, mobile, role, password_hash, must_change_password,
+      name, full_name, mobile, clinic_name, role, password_hash, must_change_password,
       subscription_status, trial_ends_at, profile_completed
-    ) VALUES ($1, $2, $3, 'doctor', $4, false, 'trial', $5, false)
+    ) VALUES ($1, $2, $3, $4, 'doctor', $5, false, 'trial', $6, false)
     RETURNING *`,
-    [name, name, mobileNorm, password_hash, trialEnds]
+    [name, name, mobileNorm, clinicName, password_hash, trialEnds]
   );
 
   const user = created.rows[0];
@@ -117,6 +150,7 @@ export async function handleSignup(body: Record<string, unknown>) {
       success: true,
       message: 'Account created successfully.',
       user: u,
+      doctor: u,
       token: accessToken,
       accessToken,
       refreshToken,
@@ -128,7 +162,7 @@ export async function handleSignup(body: Record<string, unknown>) {
 }
 
 export async function handleLogin(body: Record<string, unknown>) {
-  const mobileNorm = normalizeMobile(body.mobile);
+  const mobileNorm = normalizeMobile(bodyMobile(body));
   const pwd = body.password != null ? String(body.password) : '';
 
   if (!mobileNorm || mobileNorm.length !== 10) {

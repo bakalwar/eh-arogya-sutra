@@ -21,14 +21,34 @@ const LOCK_MINUTES = parseInt(process.env.AUTH_LOCK_MINUTES || '15', 10) || 15;
 
 function userResponse(userDoc) {
   const u = userDoc.get({ plain: true });
+  const mobile10 = normalizeMobile(u.mobile);
   return {
     id: String(u.id),
     name: u.name,
-    mobile: u.mobile,
+    mobile: mobile10 || u.mobile,
     email: u.email || undefined,
     role: u.role,
+    plan: u.subscription_status || 'trial',
+    clinicName: u.clinic_name || undefined,
     mustChangePassword: !!u.must_change_password
   };
+}
+
+function bodyMobile(body) {
+  return body?.mobile ?? body?.mobile_number ?? body?.mobileNumber;
+}
+
+function bodyName(body) {
+  return String(body?.full_name || body?.fullName || body?.name || '').trim();
+}
+
+function bodyClinicName(body) {
+  return String(body?.clinic_name || body?.clinicName || '').trim();
+}
+
+function termsAccepted(body) {
+  const v = body?.terms_accepted ?? body?.termsAccepted;
+  return v === true || v === 'true' || v === 1 || v === '1';
 }
 
 function isLocked(user) {
@@ -78,8 +98,8 @@ async function completeLogin(user, ip) {
 router.post(
   '/login',
   asyncHandler(async (req, res) => {
-    const { mobile, password } = req.body || {};
-    const mobileNorm = normalizeMobile(mobile);
+    const { password } = req.body || {};
+    const mobileNorm = normalizeMobile(bodyMobile(req.body));
     const pwd = password != null ? String(password) : '';
     const ip = req.ip;
 
@@ -149,6 +169,7 @@ router.post(
       success: true,
       message: u.mustChangePassword ? 'Please set a new password to continue.' : 'Login successful',
       user: u,
+      doctor: u,
       token: accessToken,
       accessToken,
       refreshToken,
@@ -159,11 +180,12 @@ router.post(
 );
 
 const signupHandler = asyncHandler(async (req, res) => {
-    const { mobile, full_name, fullName, password, confirmPassword } = req.body || {};
-    const mobileNorm = normalizeMobile(mobile);
-    const name = String(full_name || fullName || '').trim();
+    const { password, confirmPassword } = req.body || {};
+    const mobileNorm = normalizeMobile(bodyMobile(req.body));
+    const name = bodyName(req.body);
+    const clinicName = bodyClinicName(req.body);
     const pwd = password != null ? String(password) : '';
-    const confirm = confirmPassword != null ? String(confirmPassword) : '';
+    const confirm = confirmPassword != null ? String(confirmPassword) : pwd;
     const ip = req.ip;
 
     if (!mobileNorm || mobileNorm.length !== 10) {
@@ -172,10 +194,16 @@ const signupHandler = asyncHandler(async (req, res) => {
     if (!name) {
       return res.status(400).json({ success: false, message: 'Full name is required.' });
     }
+    if (!clinicName) {
+      return res.status(400).json({ success: false, message: 'Clinic name is required.' });
+    }
+    if (!termsAccepted(req.body)) {
+      return res.status(400).json({ success: false, message: 'You must accept the terms to register.' });
+    }
     if (!pwd || pwd.length < 6) {
       return res.status(400).json({ success: false, message: 'Password must be at least 6 characters.' });
     }
-    if (pwd !== confirm) {
+    if (confirm && pwd !== confirm) {
       return res.status(400).json({ success: false, message: 'Passwords do not match.' });
     }
     if (!isDbReady()) {
@@ -202,6 +230,7 @@ const signupHandler = asyncHandler(async (req, res) => {
       name,
       full_name: name,
       mobile: mobileNorm,
+      clinic_name: clinicName,
       role: 'doctor',
       password_hash,
       must_change_password: false,
@@ -218,6 +247,7 @@ const signupHandler = asyncHandler(async (req, res) => {
       success: true,
       message: 'Account created successfully.',
       user: u,
+      doctor: u,
       token: accessToken,
       accessToken,
       refreshToken,
@@ -228,6 +258,28 @@ const signupHandler = asyncHandler(async (req, res) => {
 
 router.post('/signup', signupHandler);
 router.post('/register', signupHandler);
+
+router.get(
+  '/me',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    if (!isDbReady()) {
+      return res.status(503).json({
+        success: false,
+        message: 'PostgreSQL is not ready. Run npm run db:setup and restart the server.'
+      });
+    }
+
+    const { UserPg } = getPostgresModels();
+    const user = await UserPg.findByPk(req.user.id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found.' });
+    }
+
+    const u = userResponse(user);
+    return res.json({ success: true, user: u, doctor: u });
+  })
+);
 
 router.post(
   '/change-password',
