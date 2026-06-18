@@ -51,13 +51,23 @@ export async function signupDoctor(
   mobile: string,
   fullName: string,
   password: string,
-  confirmPassword: string
+  confirmPassword: string,
+  clinicName: string,
+  termsAccepted: boolean
 ) {
   try {
     const data = await apiRequest<LoginResponse>('/api/auth/signup', {
       method: 'POST',
       auth: false,
-      body: { mobile, full_name: fullName, password, confirmPassword },
+      body: {
+        mobile,
+        full_name: fullName,
+        name: fullName,
+        password,
+        confirmPassword,
+        clinic_name: clinicName,
+        terms_accepted: termsAccepted,
+      },
     });
     const parsed = parseLoginResponse(data);
     if (parsed.ok) {

@@ -21,7 +21,12 @@ export default function LoginForm() {
     try {
       const result = await loginDoctor(mobile.trim(), password);
       if (!result.ok) {
-        setError(result.error);
+        const msg = result.error;
+        setError(
+          /invalid mobile number or password/i.test(msg)
+            ? 'Mobile ya password galat hai'
+            : msg
+        );
         return;
       }
       const next = searchParams.get('next');

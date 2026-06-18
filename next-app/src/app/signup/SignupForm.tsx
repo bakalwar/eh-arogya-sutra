@@ -8,8 +8,10 @@ import { homePathForUser, signupDoctor } from '@/lib/api/auth';
 export default function SignupForm() {
   const [mobile, setMobile] = useState('');
   const [fullName, setFullName] = useState('');
+  const [clinicName, setClinicName] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
@@ -30,10 +32,29 @@ export default function SignupForm() {
       setError('Passwords do not match.');
       return;
     }
+    if (!fullName.trim()) {
+      setError('Full name is required.');
+      return;
+    }
+    if (!clinicName.trim()) {
+      setError('Clinic name is required.');
+      return;
+    }
+    if (!termsAccepted) {
+      setError('You must accept the terms to register.');
+      return;
+    }
 
     setBusy(true);
     try {
-      const result = await signupDoctor(mobileDigits, fullName.trim(), password, confirmPassword);
+      const result = await signupDoctor(
+        mobileDigits,
+        fullName.trim(),
+        password,
+        confirmPassword,
+        clinicName.trim(),
+        termsAccepted
+      );
       if (!result.ok) {
         setError(result.error);
         return;
@@ -88,6 +109,20 @@ export default function SignupForm() {
             />
           </div>
           <div className="form-group">
+            <label className="form-label" htmlFor="clinicName">
+              Clinic Name
+            </label>
+            <input
+              id="clinicName"
+              className="form-input"
+              type="text"
+              placeholder="Your clinic name"
+              value={clinicName}
+              onChange={(e) => setClinicName(e.target.value)}
+              required
+            />
+          </div>
+          <div className="form-group">
             <label className="form-label" htmlFor="password">
               Password
             </label>
@@ -117,6 +152,18 @@ export default function SignupForm() {
               required
             />
           </div>
+          <label className="form-group" style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={termsAccepted}
+              onChange={(e) => setTermsAccepted(e.target.checked)}
+              required
+              style={{ marginTop: 3 }}
+            />
+            <span style={{ fontSize: 13, lineHeight: 1.4 }}>
+              I accept the terms of service and privacy policy
+            </span>
+          </label>
           {error ? (
             <p style={{ color: '#fca5a5', fontSize: 13, marginBottom: 12 }}>{error}</p>
           ) : null}
