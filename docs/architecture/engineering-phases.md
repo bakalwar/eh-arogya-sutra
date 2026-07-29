@@ -13,8 +13,9 @@
 | **2A** | Identity contracts, roles, permissions, TenantContext, authz middleware | **Complete (local)** |
 | **2A-M** | Management Admin roles/policies, feedback foundation, `/management` shells | **Complete (local)** |
 | **2A-D** | Patient/consultation contracts, report non-retention, migration foundation | **Complete (local)** |
-| 2 | Authentication providers / live sessions (beyond 2A policies) | Not started — requires owner approval |
-| 2B | Identity-provider decision | Not started — requires owner approval |
+| **2B-A** | Authentication provider decision audit (PROPOSED ADR) | **Complete (local audit)** |
+| 2B | Authentication implementation (after owner approval) | Not started — requires owner approval |
+| 2 | Authentication providers / live sessions | Not started — requires owner approval |
 | 3 | Persistence foundation (PostgreSQL) | Not started — requires owner approval |
 
 
@@ -58,4 +59,4 @@ No security capability may be marked **live** before its implementation phase pa
 
 ## Next (only after owner approval)
 
-**Phase 2B** — Identity-provider decision; then Phase 3 PostgreSQL persistence foundation (requires owner approval). Clinical data / retention / migration contracts from Phase 2A-D remain non-live until persistence exists.
+**Owner decision on Phase 2B-A ADR 013** — then Phase 3 PostgreSQL persistence foundation. Authentication *implementation* remains blocked until owner approval of the proposed architecture.

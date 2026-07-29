@@ -52,6 +52,30 @@ export { evaluatePatientHistoryAccess, evaluateCrossTenantHistoryDenied } from '
 export type { TrustedHistoryQueryContext } from './historyAccess.js';
 
 export {
+  NotImplementedIdentityProvider,
+  NotImplementedOtpProvider,
+  NotImplementedPasskeyProvider,
+  NotImplementedSessionStore,
+  PROVIDER_OUTAGE_NO_BYPASS,
+  providerIdentityIsNotAuthorizationTruth,
+  authenticationRemainsNotImplemented,
+  forbiddenClientTokenStorageLocations,
+  UNIVERSAL_OTP_FORBIDDEN,
+  AUTH_PROVIDER_DECISION_ADR_STATUS,
+} from './authProviders.js';
+export type {
+  IdentityProviderName,
+  AuthenticationAssuranceLevel,
+  ProviderAccountMapping,
+  IdentityProviderChallenge,
+  IdentityProvider,
+  OtpProvider,
+  PasskeyProvider,
+  SessionStore,
+  ProviderOutageBehavior,
+} from './authProviders.js';
+
+export {
   WorkspaceKind,
   createTrustedAuthzContext,
   switchTrustedWorkspace,
