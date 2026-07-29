@@ -28,6 +28,7 @@ describe('Phase 1B navigation and status', () => {
       'Reports',
       'Prescriptions',
       'Medicines',
+      'Feedback & Support',
       'Settings',
     ]);
     expect(DOCTOR_NAV_ITEMS[0]?.href).toBe('/dashboard');
@@ -48,7 +49,8 @@ describe('Phase 1B navigation and status', () => {
           i.href.startsWith('/dashboard') ||
           i.href.startsWith('/patients') ||
           i.href.startsWith('/cases') ||
-          i.href.startsWith('/prescriptions'),
+          i.href.startsWith('/prescriptions') ||
+          i.href.startsWith('/feedback'),
       ),
     ).toBe(true);
   });

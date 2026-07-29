@@ -1,22 +1,32 @@
-import type { PlatformRoleName } from './roles.js';
+import {
+  isClinicScopedRole,
+  isManagementRole,
+  isSuperAdminRole,
+  type PlatformRoleName,
+} from './roles.js';
 
 /**
- * Identity contracts for Phase 2A.
+ * Identity contracts for Phase 2A / 2A-M.
  * Authentication providers / OTP / sessions are NOT live — principals are injected only in tests
- * or future auth middleware.
+ * or future auth middleware. Production must reject test-principal injection.
  */
 export const AUTHENTICATION_STATUS = 'NOT_IMPLEMENTED' as const;
 export const AUTHORIZATION_POLICY_STATUS = 'PHASE_2A_ACTIVE' as const;
+export const MANAGEMENT_POLICY_STATUS = 'PHASE_2A_M_ACTIVE' as const;
 
 export type IdentityPrincipal = {
-  /** Stable subject identifier (synthetic in Phase 2A). */
+  /** Stable subject identifier (synthetic in policy tests). */
   subjectId: string;
   role: PlatformRoleName;
-  /** Clinic/tenant scope. Null only for separate Super Admin control-plane identities. */
+  /** Clinic/tenant scope. Null for Super Admin and Management platform-scope identities. */
   tenantId: string | null;
   sessionId: string;
-  /** Never claim live authentication in Phase 2A. */
+  /** Never claim live authentication in Phase 2A/2A-M. */
   authenticationStatus: typeof AUTHENTICATION_STATUS;
+  /**
+   * Test-only flag. Must never be accepted when NODE_ENV/EHAS2_NODE_ENV is production.
+   */
+  isTestPrincipal?: boolean;
 };
 
 export type IdentitySessionClaims = {
@@ -34,11 +44,15 @@ export function createPrincipalForPolicyEvaluation(input: {
   role: PlatformRoleName;
   tenantId: string | null;
   sessionId?: string;
+  isTestPrincipal?: boolean;
 }): IdentityPrincipal {
-  if (input.role === 'Doctor' || input.role === 'ClinicAdmin') {
+  if (isClinicScopedRole(input.role)) {
     if (!input.tenantId?.trim()) {
-      throw new Error('Doctor-facing principals require a tenantId');
+      throw new Error('Clinic-scoped principals require a tenantId');
     }
+  }
+  if (isManagementRole(input.role) || isSuperAdminRole(input.role)) {
+    // Platform-scope identities may use null tenantId.
   }
   return {
     subjectId: input.subjectId,
@@ -46,5 +60,6 @@ export function createPrincipalForPolicyEvaluation(input: {
     tenantId: input.tenantId,
     sessionId: input.sessionId ?? `sess-policy-${input.subjectId}`,
     authenticationStatus: AUTHENTICATION_STATUS,
+    isTestPrincipal: input.isTestPrincipal === true,
   };
 }

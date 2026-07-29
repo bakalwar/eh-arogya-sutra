@@ -5,6 +5,7 @@ const ORDER = [
   '@ehas2/shared',
   '@ehas2/ops-contracts',
   '@ehas2/security',
+  '@ehas2/management-contracts',
   '@ehas2/observability',
   '@ehas2/config',
   '@ehas2/design-system',

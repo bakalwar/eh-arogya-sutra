@@ -44,7 +44,7 @@ export function TabletNavigation({ currentPath }: NavProps) {
 
 /** Mobile shows a compact primary set; full list remains available on tablet/desktop. */
 const MOBILE_PRIMARY = DOCTOR_NAV_ITEMS.filter((item) =>
-  ['dashboard', 'new-case', 'patients', 'settings'].includes(item.id),
+  ['dashboard', 'new-case', 'patients', 'feedback', 'settings'].includes(item.id),
 );
 
 export function MobileBottomNav({ currentPath }: NavProps) {

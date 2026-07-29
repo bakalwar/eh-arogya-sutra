@@ -23,6 +23,7 @@ type ApiErrorBody = {
     | 'NOT_FOUND'
     | 'INTERNAL_ERROR'
     | 'AUTH_NOT_CONNECTED'
+    | 'PERMISSION_DENIED'
     | 'FORBIDDEN';
   message: string;
   requestId: string;
@@ -71,7 +72,7 @@ app.get('/health', (req: RequestWithId, res) => {
   res.json({
     ok: true,
     service: 'eh-arogya-sutra-2-api',
-    phase: '2a',
+    phase: '2a-m',
     requestId: req.requestId,
   });
 });
@@ -84,6 +85,7 @@ app.get('/ready', (req: RequestWithId, res) => {
     authentication: false,
     authenticationStatus: AUTHENTICATION_STATUS,
     authorizationPolicies: AUTHORIZATION_POLICY_STATUS,
+    managementServices: false,
     patientDatabase: false,
     payment: false,
     monitoring: false,
@@ -158,6 +160,54 @@ app.use(
       501,
       'NOT_IMPLEMENTED',
       'Super Admin Security and Operations Center is NOT_IMPLEMENTED (no live Super Admin login)',
+      req.requestId ?? 'unknown',
+    );
+  },
+);
+
+/**
+ * Management Admin API shells — require ManagementShellAccess; still NOT_CONNECTED.
+ * Doctor / Clinic Admin receive PERMISSION_DENIED when a principal is present without permission.
+ * Without a live principal this returns AUTH_NOT_CONNECTED.
+ */
+app.get(
+  `${EHAS2_API_NAMESPACE}/management`,
+  requirePermission(Permission.ManagementShellAccess),
+  (req: RequestWithId, res) => {
+    sendError(
+      res,
+      503,
+      'NOT_READY',
+      'Management services are not connected.',
+      req.requestId ?? 'unknown',
+    );
+  },
+);
+
+app.use(
+  `${EHAS2_API_NAMESPACE}/management`,
+  requirePermission(Permission.ManagementShellAccess),
+  (req: RequestWithId, res) => {
+    sendError(
+      res,
+      503,
+      'NOT_READY',
+      'Management services are not connected.',
+      req.requestId ?? 'unknown',
+    );
+  },
+);
+
+/** Doctor feedback submit — requires FeedbackSubmit; transmission NOT_CONNECTED. */
+app.post(
+  `${EHAS2_API_NAMESPACE}/feedback`,
+  requirePermission(Permission.FeedbackSubmit),
+  (req: RequestWithId, res) => {
+    sendError(
+      res,
+      503,
+      'NOT_READY',
+      'Feedback transmission is not connected.',
       req.requestId ?? 'unknown',
     );
   },

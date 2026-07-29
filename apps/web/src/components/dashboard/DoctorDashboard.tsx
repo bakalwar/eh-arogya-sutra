@@ -72,6 +72,11 @@ export function DoctorDashboard({ currentPath }: { currentPath: string }) {
             Clinical engine, disease/medicine packages, payment, and monitoring remain disconnected.
             Future authentication guards will protect `/dashboard` after Phase 2.
           </p>
+          <p>
+            <a className="ehas2-nav-link" href="/feedback">
+              Feedback &amp; Support
+            </a>
+          </p>
           <ProblemReportDialog />
         </Surface>
       </div>

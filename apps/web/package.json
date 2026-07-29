@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@ehas2/design-system": "*",
+    "@ehas2/management-contracts": "*",
     "@ehas2/shared": "*",
     "next": "^15.1.4",
     "react": "^19.0.0",

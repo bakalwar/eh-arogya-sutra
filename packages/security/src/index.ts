@@ -1,7 +1,15 @@
 import { FoundationStatus } from '@ehas2/shared';
 import type { HighRiskActionRequest, SecurityEvent } from '@ehas2/ops-contracts';
 
-export { PlatformRole, SUPER_ADMIN_ROLES, isSuperAdminRole, isDoctorFacingRole } from './roles.js';
+export {
+  PlatformRole,
+  SUPER_ADMIN_ROLES,
+  MANAGEMENT_ROLES,
+  isSuperAdminRole,
+  isManagementRole,
+  isDoctorFacingRole,
+  isClinicScopedRole,
+} from './roles.js';
 export type { PlatformRoleName } from './roles.js';
 
 export {
@@ -9,12 +17,16 @@ export {
   ROLE_PERMISSIONS,
   permissionsForRole,
   roleHasPermission,
+  roleMayAccessManagementShell,
+  assertNoManagementPhiByDefault,
+  assertClinicAdminNotPlatformManagement,
 } from './permissions.js';
 export type { PermissionName } from './permissions.js';
 
 export {
   AUTHENTICATION_STATUS,
   AUTHORIZATION_POLICY_STATUS,
+  MANAGEMENT_POLICY_STATUS,
   createPrincipalForPolicyEvaluation,
 } from './identity.js';
 export type { IdentityPrincipal, IdentitySessionClaims } from './identity.js';
@@ -28,9 +40,28 @@ export type { ResourceKind, ResourceOwnershipInput } from './ownership.js';
 export {
   evaluateAuthorization,
   evaluateSuperAdminAccess,
+  evaluateManagementShellAccess,
   doctorCannotElevateViaPayload,
+  rejectClientSuppliedRoleGrant,
+  rejectTestPrincipalInProduction,
+  managementCannotAccessSuperAdminByDefault,
 } from './authorize.js';
 export type { AuthzDecision, AuthorizeRequest } from './authorize.js';
+
+export {
+  WorkspaceKind,
+  createTrustedAuthzContext,
+  switchTrustedWorkspace,
+  managementNavigationVisible,
+  doctorSeesFeedbackAndSupport,
+  workspaceForRole,
+} from './workspace.js';
+export type {
+  WorkspaceKindName,
+  TrustedAuthzContext,
+  WorkspaceSwitchAuditEvent,
+  WorkspaceSwitchSink,
+} from './workspace.js';
 
 export const SECURITY_HEADERS = {
   'X-Content-Type-Options': 'nosniff',
@@ -38,8 +69,8 @@ export const SECURITY_HEADERS = {
   'Referrer-Policy': 'strict-origin-when-cross-origin',
 } as const;
 
-/** Live authentication remains unimplemented; authorization *policies* are Phase 2A. */
-export const SECURITY_PACKAGE_STATUS = 'PHASE_2A_AUTHZ_POLICIES' as const;
+/** Live authentication remains unimplemented; authorization *policies* are Phase 2A/2A-M. */
+export const SECURITY_PACKAGE_STATUS = 'PHASE_2A_M_AUTHZ_POLICIES' as const;
 
 export type DoctorSafeError = {
   message: string;
@@ -147,6 +178,17 @@ export class SuperAdminMonitoringService {
 
   static getDashboard(): never {
     const err = new Error('SuperAdminMonitoringService: NOT_IMPLEMENTED (Phase 9/14)');
+    (err as Error & { code: string }).code = 'NOT_IMPLEMENTED';
+    throw err;
+  }
+}
+
+/** Management Admin login — NOT live (Phase 2A-M foundation only). */
+export class ManagementAdminAuthService {
+  static readonly status = FoundationStatus.NOT_IMPLEMENTED;
+
+  static authenticate(_input: unknown): never {
+    const err = new Error('ManagementAdminAuthService: NOT_IMPLEMENTED');
     (err as Error & { code: string }).code = 'NOT_IMPLEMENTED';
     throw err;
   }

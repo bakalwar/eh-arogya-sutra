@@ -6,7 +6,7 @@ export type DoctorNavItem = {
   comingPhase?: string;
 };
 
-/** Single source of truth for doctor navigation — no Super Admin entries. */
+/** Single source of truth for doctor navigation — no Management Admin / Super Admin entries. */
 export const DOCTOR_NAV_ITEMS: readonly DoctorNavItem[] = [
   { id: 'dashboard', label: 'Dashboard', href: '/dashboard' },
   { id: 'new-case', label: 'New Case', href: '/cases/new' },
@@ -26,6 +26,7 @@ export const DOCTOR_NAV_ITEMS: readonly DoctorNavItem[] = [
     comingSoon: true,
     comingPhase: 'Phase 2+',
   },
+  { id: 'feedback', label: 'Feedback & Support', href: '/feedback' },
   {
     id: 'settings',
     label: 'Settings',
@@ -40,6 +41,7 @@ export const PUBLIC_ROUTES = {
   login: '/login',
   verifyOtp: '/verify-otp',
   dashboard: '/dashboard',
+  feedback: '/feedback',
   uiFoundation: '/ui-foundation',
 } as const;
 
@@ -68,6 +70,12 @@ export const QUICK_ACTIONS = [
     href: '/prescriptions',
     comingPhase: 'Phase 1C-C',
   },
+  {
+    id: 'feedback',
+    label: 'Feedback & Support',
+    href: '/feedback',
+    comingPhase: 'Phase 2A-M',
+  },
 ] as const;
 
 export function isDoctorNavHref(href: string): boolean {
@@ -84,12 +92,28 @@ export function doctorNavExcludesSuperAdmin(): boolean {
   );
 }
 
+export function doctorNavExcludesManagementAdmin(): boolean {
+  return !DOCTOR_NAV_ITEMS.some(
+    (item) =>
+      /management\s*admin/i.test(item.label) ||
+      item.href === '/management' ||
+      item.href.startsWith('/management/'),
+  );
+}
+
+export function doctorNavIncludesFeedbackAndSupport(): boolean {
+  return DOCTOR_NAV_ITEMS.some(
+    (item) => item.label === 'Feedback & Support' && item.href === '/feedback',
+  );
+}
+
 export function isDoctorAreaPath(pathname: string): boolean {
   return (
     pathname.startsWith('/dashboard') ||
     pathname.startsWith('/patients') ||
     pathname.startsWith('/cases') ||
     pathname.startsWith('/prescriptions') ||
-    pathname.startsWith('/print')
+    pathname.startsWith('/print') ||
+    pathname.startsWith('/feedback')
   );
 }

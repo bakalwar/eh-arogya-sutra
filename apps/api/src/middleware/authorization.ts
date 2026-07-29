@@ -22,10 +22,12 @@ export type ResourceResolver = (req: AuthedRequest) => ResourceOwnershipInput | 
 export function requirePermission(permission: PermissionName, resolveResource?: ResourceResolver) {
   return (req: AuthedRequest, res: Response, next: NextFunction): void => {
     const resource = resolveResource ? resolveResource(req) : null;
+    const runtimeEnv = process.env.EHAS2_NODE_ENV ?? process.env.NODE_ENV ?? null;
     const decision = evaluateAuthorization({
       principal: req.principal ?? null,
       permission,
       resource,
+      runtimeEnv,
     });
     if (!decision.allowed) {
       sendAuthzDenied(res, req.requestId ?? 'unknown', decision);
@@ -39,10 +41,10 @@ function sendAuthzDenied(res: Response, requestId: string, decision: AuthzDecisi
   const unauthenticated = decision.reason === 'authentication_not_connected';
   res.status(unauthenticated ? 401 : 403).json({
     success: false,
-    code: unauthenticated ? 'AUTH_NOT_CONNECTED' : 'FORBIDDEN',
+    code: unauthenticated ? 'AUTH_NOT_CONNECTED' : 'PERMISSION_DENIED',
     message: unauthenticated
       ? 'Authentication service is not connected.'
-      : 'You are not authorized to perform this action.',
+      : 'PERMISSION_DENIED — you are not authorized to perform this action.',
     reason: decision.reason,
     policy: decision.policy,
     requestId,

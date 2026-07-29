@@ -1,5 +1,5 @@
 import type { IdentityPrincipal } from './identity.js';
-import { PlatformRole } from './roles.js';
+import { isManagementRole, PlatformRole } from './roles.js';
 import { assertTenantMatch } from './tenant.js';
 
 export type ResourceKind =
@@ -18,6 +18,13 @@ export type OwnershipDecision = {
   policy: string;
 };
 
+const CLINICAL_KINDS: ReadonlySet<ResourceKind> = new Set([
+  'patient',
+  'case',
+  'prescription',
+  'report',
+]);
+
 /**
  * Resource ownership / tenant isolation policy (deterministic).
  * Does not load a database — callers supply ownership attributes.
@@ -35,6 +42,21 @@ export function evaluateResourceOwnership(
     return {
       allowed: false,
       reason: 'super_admin_no_default_patient_resource_access',
+      policy,
+    };
+  }
+
+  if (isManagementRole(principal.role)) {
+    if (CLINICAL_KINDS.has(resource.resourceKind)) {
+      return {
+        allowed: false,
+        reason: 'management_no_default_patient_phi',
+        policy,
+      };
+    }
+    return {
+      allowed: false,
+      reason: 'management_clinical_resource_denied',
       policy,
     };
   }
@@ -59,10 +81,7 @@ export function evaluateResourceOwnership(
     if (
       resource.ownerDoctorId &&
       resource.ownerDoctorId !== principal.subjectId &&
-      (resource.resourceKind === 'patient' ||
-        resource.resourceKind === 'case' ||
-        resource.resourceKind === 'prescription' ||
-        resource.resourceKind === 'report')
+      CLINICAL_KINDS.has(resource.resourceKind)
     ) {
       return {
         allowed: false,

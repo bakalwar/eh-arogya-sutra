@@ -11,8 +11,11 @@
 | Support Operator | Limited support tickets; no default patient PHI |
 | Security Analyst | Security events (redacted) |
 | Operations Admin | Ops health / deployments (scoped) |
+| ManagementAdmin (+ specialized management roles) | Platform doctor/billing/support/feedback — see Phase 2A-M matrix |
 | Super Admin | Full control-plane privileges |
 | Break-Glass Super Admin | Emergency only; always alerted + audited |
+
+Management Admin does **not** inherit Super Admin. See `docs/architecture/management-vs-super-admin.md`.
 
 ## Super Admin authentication (planned)
 

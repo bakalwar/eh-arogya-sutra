@@ -11,7 +11,10 @@
 | **1C-B** | Patient / New Case / Report Upload UX | Complete (local) |
 | **1C-C** | Prescription / Clinical Summary / History / Print UX | Complete (local) |
 | **2A** | Identity contracts, roles, permissions, TenantContext, authz middleware | **Complete (local)** |
+| **2A-M** | Management Admin roles/policies, feedback foundation, `/management` shells | **Complete (local)** |
 | 2 | Authentication providers / live sessions (beyond 2A policies) | Not started — requires owner approval |
+| 2B | Identity-provider decision | Not started — requires owner approval |
+| 3 | Persistence foundation | Not started — requires owner approval |
 
 
 ## Explicit non-claims
@@ -54,4 +57,4 @@ No security capability may be marked **live** before its implementation phase pa
 
 ## Next (only after owner approval)
 
-**Phase 2B+** — Live authentication providers, OTP, and session issuance (requires owner approval). Authz *policies* from Phase 2A remain deny-by-default.
+**Phase 2B** — Identity-provider decision; then Phase 3 persistence foundation (requires owner approval). Management Admin policies from Phase 2A-M remain deny-by-default until live auth exists.
