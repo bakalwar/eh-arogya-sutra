@@ -9,8 +9,9 @@
 | **1B** | Jupiter design system + responsive AppShell | Complete |
 | **1C-A** | Splash, login, OTP, doctor dashboard UX | Complete (local) |
 | **1C-B** | Patient / New Case / Report Upload UX | Complete (local) |
-| **1C-C** | Prescription / Clinical Summary / History / Print UX | **Complete (local)** |
-| 2 | Authentication, roles, tenant isolation | Not started — requires owner approval |
+| **1C-C** | Prescription / Clinical Summary / History / Print UX | Complete (local) |
+| **2A** | Identity contracts, roles, permissions, TenantContext, authz middleware | **Complete (local)** |
+| 2 | Authentication providers / live sessions (beyond 2A policies) | Not started — requires owner approval |
 
 
 ## Explicit non-claims
@@ -53,4 +54,4 @@ No security capability may be marked **live** before its implementation phase pa
 
 ## Next (only after owner approval)
 
-**Phase 2** — Authentication, roles and tenant-isolation foundation (requires owner approval).
+**Phase 2B+** — Live authentication providers, OTP, and session issuance (requires owner approval). Authz *policies* from Phase 2A remain deny-by-default.

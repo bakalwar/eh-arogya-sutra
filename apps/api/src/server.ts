@@ -1,8 +1,14 @@
 import { randomUUID } from 'node:crypto';
-import express, { type NextFunction, type Request, type Response } from 'express';
+import express, { type NextFunction, type Response } from 'express';
 import { EHAS2_API_NAMESPACE } from '@ehas2/shared';
-import { SECURITY_HEADERS } from '@ehas2/security';
+import {
+  AUTHENTICATION_STATUS,
+  AUTHORIZATION_POLICY_STATUS,
+  Permission,
+  SECURITY_HEADERS,
+} from '@ehas2/security';
 import { logInfo } from '@ehas2/observability';
+import { requirePermission, type AuthedRequest } from './middleware/authorization.js';
 
 const app = express();
 const port = Number(process.env.EHAS2_API_PORT ?? 4100);
@@ -11,12 +17,18 @@ const isProd = (process.env.EHAS2_NODE_ENV ?? process.env.NODE_ENV) === 'product
 type ApiErrorBody = {
   success: false;
   code:
-    'NOT_IMPLEMENTED' | 'NOT_READY' | 'DATA_PACKAGE_NOT_INSTALLED' | 'NOT_FOUND' | 'INTERNAL_ERROR';
+    | 'NOT_IMPLEMENTED'
+    | 'NOT_READY'
+    | 'DATA_PACKAGE_NOT_INSTALLED'
+    | 'NOT_FOUND'
+    | 'INTERNAL_ERROR'
+    | 'AUTH_NOT_CONNECTED'
+    | 'FORBIDDEN';
   message: string;
   requestId: string;
 };
 
-type RequestWithId = Request & { requestId?: string };
+type RequestWithId = AuthedRequest;
 
 app.use(express.json({ limit: '1mb' }));
 
@@ -32,7 +44,15 @@ app.use((_req, res, next) => {
   for (const [k, v] of Object.entries(SECURITY_HEADERS)) {
     res.setHeader(k, v as string);
   }
-  // No production CORS wildcard. CORS not enabled in Phase 1A.
+  next();
+});
+
+/**
+ * Phase 2A: no authentication provider — principal remains null.
+ * Authorization middleware still enforces deny-by-default on protected routes.
+ */
+app.use((req: RequestWithId, _res, next) => {
+  req.principal = null;
   next();
 });
 
@@ -47,27 +67,23 @@ function sendError(
   res.status(status).json(body);
 }
 
-/** Process liveness only — does not imply clinical readiness. */
 app.get('/health', (req: RequestWithId, res) => {
   res.json({
     ok: true,
     service: 'eh-arogya-sutra-2-api',
-    phase: '1a',
+    phase: '2a',
     requestId: req.requestId,
   });
 });
 
-/**
- * Readiness — false/503 while required services and data packages are absent.
- * Clinical engine, DB, and data packages are not installed in Phase 1A.
- */
 app.get('/ready', (req: RequestWithId, res) => {
-  const ready = false;
   const payload = {
-    ready,
+    ready: false,
     clinicalEngine: false,
     dataPackages: false,
     authentication: false,
+    authenticationStatus: AUTHENTICATION_STATUS,
+    authorizationPolicies: AUTHORIZATION_POLICY_STATUS,
     patientDatabase: false,
     payment: false,
     monitoring: false,
@@ -87,7 +103,38 @@ app.get(`${EHAS2_API_NAMESPACE}/system/data-version`, (req: RequestWithId, res) 
   );
 });
 
-/** Analysis is not implemented — no synthetic medicine or clinical success. */
+app.get(`${EHAS2_API_NAMESPACE}/system/authz-status`, (req: RequestWithId, res) => {
+  res.json({
+    success: true,
+    data: {
+      authenticationStatus: AUTHENTICATION_STATUS,
+      authorizationPolicyStatus: AUTHORIZATION_POLICY_STATUS,
+      realOtp: false,
+      authProvider: false,
+      patientPersistence: false,
+    },
+    requestId: req.requestId,
+  });
+});
+
+/**
+ * Protected patient probe — demonstrates backend authz without patient persistence.
+ * Without a live principal this returns AUTH_NOT_CONNECTED.
+ */
+app.get(
+  `${EHAS2_API_NAMESPACE}/patients`,
+  requirePermission(Permission.PatientRead),
+  (req: RequestWithId, res) => {
+    sendError(
+      res,
+      501,
+      'NOT_IMPLEMENTED',
+      'Patient persistence is not implemented (Phase 2A authz only)',
+      req.requestId ?? 'unknown',
+    );
+  },
+);
+
 app.use(`${EHAS2_API_NAMESPACE}/analysis`, (req: RequestWithId, res) => {
   sendError(
     res,
@@ -99,18 +146,22 @@ app.use(`${EHAS2_API_NAMESPACE}/analysis`, (req: RequestWithId, res) => {
 });
 
 /**
- * Super Admin control-plane API — NOT live.
- * Route existence is not authorization; Phase 2+ will enforce separate auth.
+ * Super Admin control-plane API — requires Super Admin permission; still NOT_IMPLEMENTED.
+ * Doctor principals (when auth exists) cannot pass requirePermission for this plane.
  */
-app.use(`${EHAS2_API_NAMESPACE}/ops`, (req: RequestWithId, res) => {
-  sendError(
-    res,
-    501,
-    'NOT_IMPLEMENTED',
-    'Super Admin Security and Operations Center is NOT_IMPLEMENTED (architecture/contracts only)',
-    req.requestId ?? 'unknown',
-  );
-});
+app.use(
+  `${EHAS2_API_NAMESPACE}/ops`,
+  requirePermission(Permission.SuperAdminControlPlane),
+  (req: RequestWithId, res) => {
+    sendError(
+      res,
+      501,
+      'NOT_IMPLEMENTED',
+      'Super Admin Security and Operations Center is NOT_IMPLEMENTED (no live Super Admin login)',
+      req.requestId ?? 'unknown',
+    );
+  },
+);
 
 app.use((req: RequestWithId, res) => {
   sendError(
@@ -129,7 +180,6 @@ app.use((err: unknown, req: RequestWithId, res: Response, _next: NextFunction) =
   } else {
     logInfo('api_error', { requestId, message: 'internal_error' });
   }
-  // Never leak stack traces in production responses.
   sendError(res, 500, 'INTERNAL_ERROR', 'Internal server error', requestId);
 });
 

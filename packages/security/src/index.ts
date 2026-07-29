@@ -1,58 +1,45 @@
 import { FoundationStatus } from '@ehas2/shared';
 import type { HighRiskActionRequest, SecurityEvent } from '@ehas2/ops-contracts';
 
+export { PlatformRole, SUPER_ADMIN_ROLES, isSuperAdminRole, isDoctorFacingRole } from './roles.js';
+export type { PlatformRoleName } from './roles.js';
+
+export {
+  Permission,
+  ROLE_PERMISSIONS,
+  permissionsForRole,
+  roleHasPermission,
+} from './permissions.js';
+export type { PermissionName } from './permissions.js';
+
+export {
+  AUTHENTICATION_STATUS,
+  AUTHORIZATION_POLICY_STATUS,
+  createPrincipalForPolicyEvaluation,
+} from './identity.js';
+export type { IdentityPrincipal, IdentitySessionClaims } from './identity.js';
+
+export { createTenantContext, assertTenantMatch } from './tenant.js';
+export type { TenantContext } from './tenant.js';
+
+export { evaluateResourceOwnership } from './ownership.js';
+export type { ResourceKind, ResourceOwnershipInput } from './ownership.js';
+
+export {
+  evaluateAuthorization,
+  evaluateSuperAdminAccess,
+  doctorCannotElevateViaPayload,
+} from './authorize.js';
+export type { AuthzDecision, AuthorizeRequest } from './authorize.js';
+
 export const SECURITY_HEADERS = {
   'X-Content-Type-Options': 'nosniff',
   'X-Frame-Options': 'DENY',
   'Referrer-Policy': 'strict-origin-when-cross-origin',
 } as const;
 
-export const SECURITY_PACKAGE_STATUS = 'NOT_IMPLEMENTED' as const;
-
-/** Platform roles — least privilege; Super Admin is a separate control-plane identity. */
-export const PlatformRole = {
-  Doctor: 'Doctor',
-  ClinicAdmin: 'ClinicAdmin',
-  SupportOperator: 'SupportOperator',
-  SecurityAnalyst: 'SecurityAnalyst',
-  OperationsAdmin: 'OperationsAdmin',
-  SuperAdmin: 'SuperAdmin',
-  BreakGlassSuperAdmin: 'BreakGlassSuperAdmin',
-} as const;
-
-export type PlatformRoleName = (typeof PlatformRole)[keyof typeof PlatformRole];
-
-export type AuthzDecision = {
-  allowed: boolean;
-  reason: string;
-  policy: string;
-};
-
-const SUPER_ADMIN_ROLES: ReadonlySet<PlatformRoleName> = new Set([
-  PlatformRole.SuperAdmin,
-  PlatformRole.BreakGlassSuperAdmin,
-]);
-
-/**
- * Deny-by-default Super Admin policy check (foundation only).
- * URL or payload changes must never grant Super Admin to Doctor.
- */
-export function evaluateSuperAdminAccess(
-  role: PlatformRoleName | string | undefined,
-): AuthzDecision {
-  if (role && SUPER_ADMIN_ROLES.has(role as PlatformRoleName)) {
-    return {
-      allowed: true,
-      reason: 'role_matches_super_admin_control_plane',
-      policy: 'super-admin-control-plane',
-    };
-  }
-  return {
-    allowed: false,
-    reason: 'deny_by_default',
-    policy: 'super-admin-control-plane',
-  };
-}
+/** Live authentication remains unimplemented; authorization *policies* are Phase 2A. */
+export const SECURITY_PACKAGE_STATUS = 'PHASE_2A_AUTHZ_POLICIES' as const;
 
 export type DoctorSafeError = {
   message: string;
@@ -141,14 +128,14 @@ export function assertSecurityEventIdentifiers(
 }
 
 /**
- * Super Admin authentication — NOT live in Phase 1A-H.
+ * Super Admin authentication — NOT live.
  * Forbidden: hardcoded passwords, default credentials, bypass query params, shared doctor sessions.
  */
 export class SuperAdminAuthService {
   static readonly status = FoundationStatus.NOT_IMPLEMENTED;
 
   static authenticate(_input: unknown): never {
-    const err = new Error('SuperAdminAuthService: NOT_IMPLEMENTED (Phase 2+)');
+    const err = new Error('SuperAdminAuthService: NOT_IMPLEMENTED (Phase 2+ live auth)');
     (err as Error & { code: string }).code = 'NOT_IMPLEMENTED';
     throw err;
   }
