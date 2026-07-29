@@ -1,7 +1,7 @@
 {
-  "name": "@ehas2/clinical-contracts",
+  "name": "@ehas2/data-lifecycle-contracts",
   "version": "0.1.0-phase2ad",
-  "description": "E.H. AROGYA SUTRA 2 — typed clinical persistence and display contracts",
+  "description": "E.H. AROGYA SUTRA 2 — report non-retention, backup, migration, provider portability contracts",
   "private": true,
   "type": "module",
   "main": "./dist/index.js",

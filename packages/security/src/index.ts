@@ -48,6 +48,9 @@ export {
 } from './authorize.js';
 export type { AuthzDecision, AuthorizeRequest } from './authorize.js';
 
+export { evaluatePatientHistoryAccess, evaluateCrossTenantHistoryDenied } from './historyAccess.js';
+export type { TrustedHistoryQueryContext } from './historyAccess.js';
+
 export {
   WorkspaceKind,
   createTrustedAuthzContext,
