@@ -42,17 +42,19 @@ Post-phase re-verification must match the same HEAD and DB hash.
 9. Documentation + risk register
 10. Foundation tests for status codes / adapter honesty
 
-## Validation commands (recorded)
+## Validation commands (recorded — final)
 
 | Command | Exit | Result |
 |---------|------|--------|
 | `npm run verify:boundary` | 0 | PASS |
-| `npm run format:check` | (re-run after prettier write) | see final gate table |
-| `npm run lint` | (re-run after eslint ignore) | see final gate table |
-| `npm run typecheck` | (re-run after ordered typecheck) | see final gate table |
+| `npm run format:check` | 0 | PASS |
+| `npm run lint` | 0 | PASS |
+| `npm run typecheck` | 0 | PASS |
 | `npm run test` | 0 | PASS (5 tests) |
 | `npm run build` | 0 | PASS |
-| `npm audit` | 0 | 0 vulnerabilities |
+| `npm audit` | 0 | PASS (0 vulnerabilities) |
+| Clean `npm ci` (TEMP copy) | 0 | PASS |
+| Local commit | — | `3a3af292ab0834113cac34f3a407df6abe13aa61` |
 
 ## Explicit non-claims
 
