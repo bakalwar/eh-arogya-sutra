@@ -62,6 +62,7 @@ export {
   forbiddenClientTokenStorageLocations,
   UNIVERSAL_OTP_FORBIDDEN,
   AUTH_PROVIDER_DECISION_ADR_STATUS,
+  OTP_PROVIDER_STATUS,
 } from './authProviders.js';
 export type {
   IdentityProviderName,

@@ -2,7 +2,9 @@
 
 ## Status
 
-**PROPOSED** — not accepted. Owner approval required.
+**ACCEPTED — ARCHITECTURE ONLY; OTP PROVIDER PENDING**
+
+Owner approved the authentication architecture for Phase 3A planning. No OTP provider SDK may be selected or installed yet.
 
 ## Context
 
@@ -32,17 +34,21 @@ Phase 2A already defines deny-by-default authorization. Authentication remains `
 
 Official sources are listed in `docs/phase-reports/PHASE_2B_A_OFFICIAL_SOURCES.md` (access date 2026-07-30).
 
-## Proposed decision
+## Accepted architecture (provider selection still pending)
 
-**Primary architecture: Hybrid (Category E / C1)**
+Approved architecture only — **do not install MSG91, Twilio, Cognito, or another provider SDK yet**.
 
-1. **OTP delivery:** MSG91 (India) as primary SMS/OTP channel; Twilio Verify as fallback channel  
-2. **Identity & authorization truth:** EHAS2 internal stable user ID + memberships + roles + TenantContext (PostgreSQL in Phase 3)  
-3. **Sessions:** EHAS2 opaque server-side sessions; HttpOnly Secure cookies; never localStorage  
-4. **Passkeys:** EHAS2 WebAuthn/PasskeyProvider for Doctor (encouraged), Management (mandatory), Super Admin (phishing-resistant mandatory)  
-5. **Provider mapping table:** allows dual-provider transition and exit without rewriting clinical ownership  
+1. **EHAS2 stable internal user identity**  
+2. **EHAS2 roles, memberships, and TenantContext**  
+3. **Opaque server-side sessions** (HttpOnly Secure cookies; never localStorage)  
+4. **Provider-neutral OTP adapter** (delivery vendor undecided)  
+5. **Doctor OTP onboarding + passkey enrollment**  
+6. **Management Admin mandatory passkey/MFA**  
+7. **Separate Super Admin control plane**  
+8. **Super Admin phishing-resistant passkey/security key**  
+9. **No authentication bypass during provider outage**  
 
-**Fallback managed platform:** Amazon Cognito Essentials (if owner prefers less custom session/WebAuthn operations). Cognito SMS still billed separately via Amazon SNS; India OTP economics remain a sales/ops confirmation item.
+Historical option research (MSG91 / Twilio / Cognito) remains informative for a later OTP-provider decision phase and must not be treated as an installed integration.
 
 ## Reasons
 

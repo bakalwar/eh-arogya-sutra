@@ -1,0 +1,14 @@
+DROP INDEX IF EXISTS idx_memberships_user_org;
+DROP INDEX IF EXISTS idx_external_identity_mapping;
+DROP INDEX IF EXISTS idx_audit_events_tenant_time;
+DROP INDEX IF EXISTS idx_audit_events_timestamp;
+DROP INDEX IF EXISTS idx_doctor_feedback_status;
+DROP INDEX IF EXISTS idx_support_tickets_status;
+DROP INDEX IF EXISTS idx_clinician_reviews_state;
+DROP INDEX IF EXISTS idx_prescription_versions_status;
+DROP INDEX IF EXISTS idx_follow_ups_due;
+DROP INDEX IF EXISTS idx_consultations_patient_history;
+DROP INDEX IF EXISTS idx_consultations_doctor_date;
+DROP INDEX IF EXISTS idx_consultations_tenant_date;
+DROP INDEX IF EXISTS idx_patients_tenant_clinic;
+DROP INDEX IF EXISTS idx_patients_tenant_patient;

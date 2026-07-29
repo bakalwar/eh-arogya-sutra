@@ -6,6 +6,8 @@
  */
 import { type FoundationStatusCode } from '@ehas2/shared';
 
+export { CLINICAL_PRODUCT_CONSTITUTION, type ClinicalProductConstitution } from './constitution.js';
+
 export const CLINICAL_CONTRACTS_VERSION = '0.1.0-phase2ad' as const;
 export const CLINICAL_CONTRACTS_STATUS = 'NOT_READY' as const;
 export const CLINICAL_DATA_SERVICE_STATUS = 'DATA_SERVICE_NOT_INSTALLED' as const;

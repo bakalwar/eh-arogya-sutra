@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import {
   AUTHENTICATION_STATUS,
   AUTH_PROVIDER_DECISION_ADR_STATUS,
+  OTP_PROVIDER_STATUS,
   NotImplementedOtpProvider,
   NotImplementedSessionStore,
   PROVIDER_OUTAGE_NO_BYPASS,
@@ -98,13 +99,13 @@ describe('Phase 2B-A authentication decision audit', () => {
     expect(evaluateSuperAdminAccess(PlatformRole.ManagementAdmin).allowed).toBe(false);
   });
 
-  it('keeps authentication ADR status PROPOSED', () => {
-    expect(AUTH_PROVIDER_DECISION_ADR_STATUS).toBe('PROPOSED');
+  it('accepts authentication architecture only with OTP provider pending', () => {
+    expect(AUTH_PROVIDER_DECISION_ADR_STATUS).toBe('ACCEPTED_ARCHITECTURE_ONLY');
+    expect(OTP_PROVIDER_STATUS).toBe('PENDING');
     const adr = fs.readFileSync(
       path.join(root, 'docs/adr/013-authentication-provider-decision.md'),
       'utf8',
     );
-    expect(adr).toMatch(/\*\*PROPOSED\*\*/);
-    expect(adr).not.toMatch(/Status\n\nAccepted/i);
+    expect(adr).toMatch(/ACCEPTED — ARCHITECTURE ONLY; OTP PROVIDER PENDING/);
   });
 });

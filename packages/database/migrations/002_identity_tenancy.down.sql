@@ -1,0 +1,9 @@
+DROP TABLE IF EXISTS role_permissions;
+DROP TABLE IF EXISTS membership_roles;
+DROP TABLE IF EXISTS memberships;
+DROP TABLE IF EXISTS permissions;
+DROP TABLE IF EXISTS roles;
+DROP TABLE IF EXISTS clinics;
+DROP TABLE IF EXISTS organizations;
+DROP TABLE IF EXISTS external_identity_mappings;
+DROP TABLE IF EXISTS users;

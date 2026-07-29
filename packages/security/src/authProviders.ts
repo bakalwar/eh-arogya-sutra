@@ -173,4 +173,5 @@ export function forbiddenClientTokenStorageLocations(): readonly string[] {
 
 export const UNIVERSAL_OTP_FORBIDDEN = true as const;
 
-export const AUTH_PROVIDER_DECISION_ADR_STATUS = 'PROPOSED' as const;
+export const AUTH_PROVIDER_DECISION_ADR_STATUS = 'ACCEPTED_ARCHITECTURE_ONLY' as const;
+export const OTP_PROVIDER_STATUS = 'PENDING' as const;

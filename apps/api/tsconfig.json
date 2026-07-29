@@ -9,6 +9,7 @@
   "references": [
     { "path": "../../packages/shared" },
     { "path": "../../packages/config" },
+    { "path": "../../packages/database" },
     { "path": "../../packages/observability" },
     { "path": "../../packages/security" }
   ]

@@ -7,6 +7,7 @@ import {
   Permission,
   SECURITY_HEADERS,
 } from '@ehas2/security';
+import { databaseReadinessCode } from '@ehas2/database';
 import { logInfo } from '@ehas2/observability';
 import { requirePermission, type AuthedRequest } from './middleware/authorization.js';
 
@@ -78,6 +79,7 @@ app.get('/health', (req: RequestWithId, res) => {
 });
 
 app.get('/ready', (req: RequestWithId, res) => {
+  const database = databaseReadinessCode();
   const payload = {
     ready: false,
     clinicalEngine: false,
@@ -87,6 +89,8 @@ app.get('/ready', (req: RequestWithId, res) => {
     authorizationPolicies: AUTHORIZATION_POLICY_STATUS,
     managementServices: false,
     patientDatabase: false,
+    database,
+    databaseCode: database === 'DATABASE_NOT_INSTALLED' ? 'DATABASE_NOT_INSTALLED' : database,
     payment: false,
     monitoring: false,
     superAdminControlPlane: false,
