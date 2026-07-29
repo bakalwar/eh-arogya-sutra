@@ -39,7 +39,10 @@
     "vitest": "^3.0.4"
   },
   "engines": {
-    "node": ">=20",
+    "node": "20.x",
     "npm": ">=10"
+  },
+  "allowScripts": {
+    "esbuild@0.28.1": true
   }
 }

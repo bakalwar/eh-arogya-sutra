@@ -2,9 +2,9 @@
 
 Separate clinical SaaS platform — **not** the legacy application tree.
 
-## Status (Phase 1A-H)
+## Status
 
-**Engineering foundation only.** This is **not** production-ready.
+**Engineering + UI foundation.** This is **not** production-ready.
 
 Confirmed **absent / not active**:
 
@@ -18,8 +18,11 @@ Confirmed **absent / not active**:
 
 ## Requirements
 
-- Node.js 20+ (tested: Node 24.16.0 / also CI Node 20)
-- npm 10+ (tested: npm 11.17.0)
+- **Node.js 20.x** (project baseline; validated on **v20.20.2**)
+- **npm >= 10** (validated with npm 10.8.2 under Node 20.20.2)
+- See `.nvmrc` / `.node-version` / `package.json` `engines`
+
+Local machines may still have other Node versions installed; **do not** treat that as the project baseline. CI uses Node **20.20.2**.
 
 ## Commands
 

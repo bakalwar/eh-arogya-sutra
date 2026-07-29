@@ -1,19 +1,104 @@
 :root {
-  --ehas2-bg-primary: #ffffff;
-  --ehas2-bg-secondary: #f4f7f5;
-  --ehas2-space-900: #0d1b2a;
-  --ehas2-space-800: #162236;
-  --ehas2-space-700: #1e3048;
-  --ehas2-space-600: #274060;
-  --ehas2-space-500: #3a5a7c;
-  --ehas2-space-400: #5b7fa0;
-  --ehas2-mint: #00e676;
-  --ehas2-mint-soft: #e8fdf2;
-  --ehas2-orange: #ff6d00;
-  --ehas2-gold: #f9a825;
+  /* Jupiter colors */
+  --ehas2-color-white: #ffffff;
+  --ehas2-color-soft-grey: #f4f7f5;
+  --ehas2-color-space-900: #0d1b2a;
+  --ehas2-color-space-800: #162236;
+  --ehas2-color-space-700: #1e3048;
+  --ehas2-color-space-600: #274060;
+  --ehas2-color-space-500: #3a5a7c;
+  --ehas2-color-space-400: #5b7fa0;
+  --ehas2-color-mint: #00e676;
+  --ehas2-color-mint-soft: #e8fdf2;
+  --ehas2-color-mint-mid: #b2f5d4;
+  --ehas2-color-orange: #ff6d00;
+  --ehas2-color-gold: #f9a825;
+  --ehas2-color-red: #e53935;
+  --ehas2-color-blue: #1976d2;
+  --ehas2-color-purple: #7b1fa2;
+  --ehas2-color-teal: #00897b;
+
+  /* Semantic surfaces / text */
+  --ehas2-bg-primary: var(--ehas2-color-white);
+  --ehas2-bg-secondary: var(--ehas2-color-soft-grey);
+  --ehas2-bg-inverse: var(--ehas2-color-space-900);
+  --ehas2-text-primary: var(--ehas2-color-space-900);
+  --ehas2-text-secondary: var(--ehas2-color-space-500);
+  --ehas2-text-inverse: var(--ehas2-color-white);
+  --ehas2-border-subtle: color-mix(in srgb, var(--ehas2-color-space-400) 28%, transparent);
+  --ehas2-focus-ring: var(--ehas2-color-mint);
+  --ehas2-accent: var(--ehas2-color-mint);
+  --ehas2-accent-soft: var(--ehas2-color-mint-soft);
+  --ehas2-warning: var(--ehas2-color-orange);
+  --ehas2-danger: var(--ehas2-color-red);
+
+  /* Typography */
   --ehas2-font-display: 'Plus Jakarta Sans', system-ui, sans-serif;
   --ehas2-font-body: 'Inter', system-ui, sans-serif;
-  --ehas2-font-hindi: 'Noto Sans Devanagari', system-ui, sans-serif;
+  --ehas2-font-hindi: 'Noto Sans Devanagari', 'Inter', system-ui, sans-serif;
+
+  /* Spacing scale */
+  --ehas2-space-1: 0.25rem;
+  --ehas2-space-2: 0.5rem;
+  --ehas2-space-3: 0.75rem;
+  --ehas2-space-4: 1rem;
+  --ehas2-space-5: 1.25rem;
+  --ehas2-space-6: 1.5rem;
+  --ehas2-space-8: 2rem;
+  --ehas2-space-10: 2.5rem;
+  --ehas2-space-12: 3rem;
+
+  /* Radii */
+  --ehas2-radius-sm: 8px;
   --ehas2-radius-md: 16px;
+  --ehas2-radius-lg: 24px;
+  --ehas2-radius-pill: 999px;
+
+  /* Shadows */
   --ehas2-shadow-sm: 0 2px 8px rgba(13, 27, 42, 0.06);
+  --ehas2-shadow-md: 0 8px 24px rgba(13, 27, 42, 0.1);
+
+  /* Borders / focus / touch */
+  --ehas2-border-width: 1px;
+  --ehas2-focus-outline: 2px solid var(--ehas2-focus-ring);
+  --ehas2-focus-offset: 2px;
+  --ehas2-touch-min: 44px;
+
+  /* Layout */
+  --ehas2-content-max: 1120px;
+  --ehas2-header-height: 64px;
+  --ehas2-sidebar-width: 260px;
+  --ehas2-sidebar-collapsed: 72px;
+  --ehas2-bottom-nav-height: 64px;
+
+  /* Z-index */
+  --ehas2-z-header: 40;
+  --ehas2-z-sidebar: 50;
+  --ehas2-z-bottom-nav: 50;
+  --ehas2-z-overlay: 60;
+  --ehas2-z-skip: 100;
+
+  /* Motion */
+  --ehas2-motion-fast: 120ms;
+  --ehas2-motion-base: 180ms;
+  --ehas2-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  /* Safe areas */
+  --ehas2-safe-top: env(safe-area-inset-top, 0px);
+  --ehas2-safe-right: env(safe-area-inset-right, 0px);
+  --ehas2-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --ehas2-safe-left: env(safe-area-inset-left, 0px);
+
+  /* Breakpoints (documentation mirrors; media queries use literals) */
+  --ehas2-bp-mobile-max: 599px;
+  --ehas2-bp-tablet-min: 600px;
+  --ehas2-bp-tablet-max: 1023px;
+  --ehas2-bp-desktop-min: 1024px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --ehas2-motion-fast: 0ms;
+    --ehas2-motion-base: 0ms;
+  }
 }

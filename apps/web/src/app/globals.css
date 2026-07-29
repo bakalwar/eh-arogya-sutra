@@ -1,6 +1,53 @@
+html,
 body {
   margin: 0;
-  font-family: var(--ehas2-font-body);
+  padding: 0;
   background: var(--ehas2-bg-secondary);
-  color: var(--ehas2-space-900);
+  color: var(--ehas2-text-primary);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+a {
+  color: var(--ehas2-color-blue);
+}
+
+:focus-visible {
+  outline: var(--ehas2-focus-outline);
+  outline-offset: var(--ehas2-focus-offset);
+}
+
+.ehas2-preview-grid {
+  display: grid;
+  gap: var(--ehas2-space-4);
+}
+
+.ehas2-swatch-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ehas2-space-3);
+}
+
+.ehas2-swatch {
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: var(--ehas2-radius-sm);
+  border: var(--ehas2-border-width) solid var(--ehas2-border-subtle);
+}
+
+.ehas2-hero {
+  padding: var(--ehas2-space-8) 0;
+}
+
+.ehas2-hero h1 {
+  font-family: var(--ehas2-font-display);
+  font-size: clamp(1.75rem, 4vw, 2.75rem);
+  margin: 0 0 var(--ehas2-space-3);
+}
+
+.ehas2-hero p {
+  max-width: 40rem;
+  color: var(--ehas2-text-secondary);
 }

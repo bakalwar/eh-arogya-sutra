@@ -5,8 +5,9 @@
 | Phase | Name | Status |
 |-------|------|--------|
 | 1A | Engineering foundation | Complete (basic) |
-| **1A-H** | **Dependency hardening + Super Admin architecture/contracts** | **This gate** |
-| 1B | Jupiter UI shell | **Not started — requires owner approval** |
+| **1A-H** | Dependency hardening + Super Admin architecture/contracts | Complete |
+| **1B** | Jupiter design system + responsive AppShell | **This phase** |
+| 1C | Application screens | Not started — requires owner approval |
 
 ## Explicit non-claims
 
@@ -48,4 +49,4 @@ No security capability may be marked **live** before its implementation phase pa
 
 ## Next (only after owner approval)
 
-**Phase 1B** — Jupiter design tokens, logo extraction, responsive AppShell (doctor UI — **no** Super Admin nav).
+**Phase 1C** — application screens (still no clinical engine / auth / payments unless separately approved).

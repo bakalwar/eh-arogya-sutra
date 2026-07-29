@@ -1,9 +1,9 @@
 # Dependency risk register — E.H. AROGYA SUTRA 2 (Phase 1A-H)
 
-**Date:** 2026-07-29  
-**Node:** v24.16.0 (CI targets 20)  
-**npm:** 11.17.0  
-**Raw audits (not in Git):** `%TEMP%\ehas2_phase1a_hardening\`
+**Date:** 2026-07-29 (updated Phase 1B preflight)  
+**Node policy:** `20.x` (validated on **v20.20.2** via TEMP portable official build)  
+**npm:** >=10 (validated with npm 10.8.2 under Node 20.20.2)  
+**Raw audits (not in Git):** `%TEMP%\ehas2_phase1a_hardening\`, `%TEMP%\ehas2_phase1b_preflight\`
 
 ## Summary
 
@@ -94,6 +94,15 @@
 
 None removed in Phase 1A-H (all workspace packages retain a documented purpose). `sharp` was **added** as a direct pin to force the patched version under Next.
 
+## Lifecycle scripts (Phase 1B preflight)
+
+See `docs/security/npm-lifecycle-script-policy.md`.
+
+| Package | Version | Allowed | Notes |
+|---------|---------|---------|-------|
+| esbuild | 0.28.1 | YES (pinned) | Official npm registry + lockfile integrity; required for Vite/Vitest/tsx |
+| sharp | 0.35.3 | NO (not in allowScripts) | Separate audit required before any install-script approval |
+
 ## Review date
 
-Re-audit before Phase 1B UI work and after any Next.js upgrade: **before Phase 1B start**.
+Re-audit after any Next.js / esbuild / sharp upgrade and before production monitoring activation.

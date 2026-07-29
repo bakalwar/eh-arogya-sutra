@@ -1,6 +1,12 @@
 # Contributing — E.H. AROGYA SUTRA 2
 
-This repository is an **engineering foundation only** until later phases.
+This repository is an **engineering / UI foundation** until later phases.
+
+## Runtime
+
+- Use **Node.js 20.x** (see `.nvmrc` / `.node-version`; validated **20.20.2**)
+- npm **>= 10**
+- Lifecycle install scripts are deny-by-default; see `docs/security/npm-lifecycle-script-policy.md`
 
 ## Rules
 
@@ -10,8 +16,8 @@ This repository is an **engineering foundation only** until later phases.
 4. Clinical-engine changes require golden tests + owner approval (Phase 6+).
 5. No patient data in fixtures — use `fixtures/synthetic/` only (label: SYNTHETIC_FIXTURE).
 6. No secrets in source; use `EHAS2_*` environment variables.
-7. Do not start Phase 1B (Jupiter UI) without owner approval.
-8. Do not use `npm audit fix --force`.
+7. Do not use `npm audit fix --force`.
+8. Do not use wildcard `allowScripts` approvals.
 
 ## Local quality gates
 
@@ -24,11 +30,9 @@ npm run test
 npm run build
 ```
 
-## Not in this phase
+## Not claimed live
 
-- Clinical engine integration
-- Disease/medicine packages
-- Authentication
-- Patient database
-- Payments
+- Clinical engine / disease / medicine packages
+- Authentication / payments
+- Live Super Admin monitoring / WAF / production alerts
 - Production deployment
