@@ -13,7 +13,11 @@ Report vulnerabilities to the project owner through approved channels only.
 
 - Threat model: `docs/security/threat-model.md`
 - Dependency risk register: `docs/security/dependency-risk-register.md`
-- Foundation only: no clinical engine, no patient DB, no auth, no payments, no production deployment
+- Privileged access: `docs/security/privileged-access-model.md`
+- Super Admin control plane: `docs/architecture/super-admin-control-plane.md`
+- Foundation only: no clinical engine, no patient DB, no auth, no payments, no live Super Admin monitoring, no production deployment
+
+Do not claim the platform is unhackable or that every attack will be detected.
 
 ## Dependency policy
 

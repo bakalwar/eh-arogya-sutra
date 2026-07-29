@@ -1,7 +1,7 @@
 {
-  "name": "@ehas2/observability",
+  "name": "@ehas2/ops-contracts",
   "version": "0.1.0-phase1a",
-  "description": "E.H. AROGYA SUTRA 2 — structured logging shell",
+  "description": "E.H. AROGYA SUTRA 2 — Super Admin / ops / incident typed contracts (shell until live phases)",
   "private": true,
   "type": "module",
   "main": "./dist/index.js",
@@ -18,7 +18,6 @@
     "lint": "eslint src"
   },
   "dependencies": {
-    "@ehas2/shared": "*",
-    "@ehas2/ops-contracts": "*"
+    "@ehas2/shared": "*"
   }
 }

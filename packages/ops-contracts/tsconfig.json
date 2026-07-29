@@ -5,6 +5,6 @@
     "rootDir": "src",
     "composite": true
   },
-  "references": [{ "path": "../shared" }, { "path": "../ops-contracts" }],
+  "references": [{ "path": "../shared" }],
   "include": ["src/**/*"]
 }

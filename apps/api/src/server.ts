@@ -70,6 +70,8 @@ app.get('/ready', (req: RequestWithId, res) => {
     authentication: false,
     patientDatabase: false,
     payment: false,
+    monitoring: false,
+    superAdminControlPlane: false,
     requestId: req.requestId,
   };
   res.status(503).json(payload);
@@ -92,6 +94,20 @@ app.use(`${EHAS2_API_NAMESPACE}/analysis`, (req: RequestWithId, res) => {
     501,
     'NOT_IMPLEMENTED',
     'Clinical analysis is not implemented (Phase 6+)',
+    req.requestId ?? 'unknown',
+  );
+});
+
+/**
+ * Super Admin control-plane API — NOT live.
+ * Route existence is not authorization; Phase 2+ will enforce separate auth.
+ */
+app.use(`${EHAS2_API_NAMESPACE}/ops`, (req: RequestWithId, res) => {
+  sendError(
+    res,
+    501,
+    'NOT_IMPLEMENTED',
+    'Super Admin Security and Operations Center is NOT_IMPLEMENTED (architecture/contracts only)',
     req.requestId ?? 'unknown',
   );
 });

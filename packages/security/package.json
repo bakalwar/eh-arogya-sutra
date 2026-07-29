@@ -1,7 +1,7 @@
 {
   "name": "@ehas2/security",
   "version": "0.1.0-phase1a",
-  "description": "E.H. AROGYA SUTRA 2 — security headers and auth primitives shell",
+  "description": "E.H. AROGYA SUTRA 2 — security headers, privileged access policy shells, redaction",
   "private": true,
   "type": "module",
   "main": "./dist/index.js",
@@ -17,5 +17,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint src"
   },
-  "dependencies": {}
+  "dependencies": {
+    "@ehas2/shared": "*",
+    "@ehas2/ops-contracts": "*"
+  }
 }
