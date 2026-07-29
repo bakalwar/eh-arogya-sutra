@@ -25,8 +25,8 @@ export function Divider() {
   return <hr className="ehas2-divider" />;
 }
 
-export function Surface({ children }: { children: ReactNode }) {
-  return <div className="ehas2-surface">{children}</div>;
+export function Surface({ children, className }: { children: ReactNode; className?: string }) {
+  return <div className={['ehas2-surface', className].filter(Boolean).join(' ')}>{children}</div>;
 }
 
 export function Skeleton({ width = '100%', height = '1rem' }: { width?: string; height?: string }) {

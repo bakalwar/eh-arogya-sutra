@@ -9,20 +9,8 @@ export type DoctorNavItem = {
 /** Single source of truth for doctor navigation — no Super Admin entries. */
 export const DOCTOR_NAV_ITEMS: readonly DoctorNavItem[] = [
   { id: 'dashboard', label: 'Dashboard', href: '/dashboard' },
-  {
-    id: 'new-case',
-    label: 'New Case',
-    href: '/dashboard/coming/new-case',
-    comingSoon: true,
-    comingPhase: 'Phase 1C-B',
-  },
-  {
-    id: 'patients',
-    label: 'Patients',
-    href: '/dashboard/coming/patients',
-    comingSoon: true,
-    comingPhase: 'Phase 1C-B',
-  },
+  { id: 'new-case', label: 'New Case', href: '/cases/new' },
+  { id: 'patients', label: 'Patients', href: '/patients' },
   {
     id: 'reports',
     label: 'Reports',
@@ -49,7 +37,7 @@ export const DOCTOR_NAV_ITEMS: readonly DoctorNavItem[] = [
     label: 'Settings',
     href: '/dashboard/coming/settings',
     comingSoon: true,
-    comingPhase: 'Phase 1C-B',
+    comingPhase: 'Phase 1C-C',
   },
 ] as const;
 
@@ -65,13 +53,13 @@ export const QUICK_ACTIONS = [
   {
     id: 'new-case',
     label: 'New Case',
-    href: '/dashboard/coming/new-case',
+    href: '/cases/new',
     comingPhase: 'Phase 1C-B',
   },
   {
     id: 'patients',
     label: 'Patients',
-    href: '/dashboard/coming/patients',
+    href: '/patients',
     comingPhase: 'Phase 1C-B',
   },
   {
@@ -99,5 +87,13 @@ export function doctorNavExcludesSuperAdmin(): boolean {
       /super.?admin/i.test(item.href) ||
       /security.?center/i.test(item.label) ||
       item.href.includes('/ops'),
+  );
+}
+
+export function isDoctorAreaPath(pathname: string): boolean {
+  return (
+    pathname.startsWith('/dashboard') ||
+    pathname.startsWith('/patients') ||
+    pathname.startsWith('/cases')
   );
 }

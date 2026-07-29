@@ -61,8 +61,14 @@ describe('Phase 1C-A dashboard truthfulness', () => {
     expect(DASHBOARD_INTEGRATION_STATUS.every((s) => /not |preview/i.test(s.value))).toBe(true);
   });
 
-  it('quick actions point to coming-soon routes', () => {
-    expect(QUICK_ACTIONS.every((a) => a.href.includes('/coming/'))).toBe(true);
+  it('quick actions include live 1C-B routes and deferred 1C-C placeholders', () => {
+    expect(QUICK_ACTIONS.find((a) => a.id === 'new-case')?.href).toBe('/cases/new');
+    expect(QUICK_ACTIONS.find((a) => a.id === 'patients')?.href).toBe('/patients');
+    expect(
+      QUICK_ACTIONS.filter((a) => a.comingPhase === 'Phase 1C-C').every((a) =>
+        a.href.includes('/coming/'),
+      ),
+    ).toBe(true);
   });
 
   it('doctor navigation excludes Super Admin and /ops', () => {

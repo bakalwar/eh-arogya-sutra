@@ -42,7 +42,14 @@ describe('Phase 1B navigation and status', () => {
 
   it('defines desktop, tablet, and mobile nav targets via single config', () => {
     expect(DOCTOR_NAV_ITEMS.length).toBeGreaterThanOrEqual(4);
-    expect(DOCTOR_NAV_ITEMS.every((i) => i.href.startsWith('/dashboard'))).toBe(true);
+    expect(
+      DOCTOR_NAV_ITEMS.every(
+        (i) =>
+          i.href.startsWith('/dashboard') ||
+          i.href.startsWith('/patients') ||
+          i.href.startsWith('/cases'),
+      ),
+    ).toBe(true);
   });
 });
 
