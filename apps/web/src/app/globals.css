@@ -1,0 +1,6 @@
+body {
+  margin: 0;
+  font-family: var(--ehas2-font-body);
+  background: var(--ehas2-bg-secondary);
+  color: var(--ehas2-space-900);
+}

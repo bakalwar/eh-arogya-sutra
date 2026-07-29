@@ -1,0 +1,25 @@
+{
+  "name": "eh-arogya-sutra-2-web",
+  "version": "0.1.0-phase1a",
+  "description": "E.H. AROGYA SUTRA 2 — Next.js web shell (Jupiter UI is Phase 1B)",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 4101",
+    "build": "next build",
+    "start": "next start -p 4101",
+    "lint": "eslint src",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@ehas2/design-system": "*",
+    "@ehas2/shared": "*",
+    "next": "^15.1.4",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "sharp": "^0.35.3"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.2",
+    "@types/react-dom": "^19.0.2"
+  }
+}

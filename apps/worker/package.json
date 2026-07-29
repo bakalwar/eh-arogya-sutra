@@ -1,0 +1,15 @@
+{
+  "name": "eh-arogya-sutra-2-worker",
+  "version": "0.1.0-phase1a",
+  "description": "E.H. AROGYA SUTRA 2 — background worker shell (jobs Phase 7+)",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint src"
+  },
+  "dependencies": {
+    "@ehas2/observability": "*"
+  }
+}

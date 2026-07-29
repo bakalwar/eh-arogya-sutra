@@ -1,0 +1,19 @@
+:root {
+  --ehas2-bg-primary: #ffffff;
+  --ehas2-bg-secondary: #f4f7f5;
+  --ehas2-space-900: #0d1b2a;
+  --ehas2-space-800: #162236;
+  --ehas2-space-700: #1e3048;
+  --ehas2-space-600: #274060;
+  --ehas2-space-500: #3a5a7c;
+  --ehas2-space-400: #5b7fa0;
+  --ehas2-mint: #00e676;
+  --ehas2-mint-soft: #e8fdf2;
+  --ehas2-orange: #ff6d00;
+  --ehas2-gold: #f9a825;
+  --ehas2-font-display: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --ehas2-font-body: 'Inter', system-ui, sans-serif;
+  --ehas2-font-hindi: 'Noto Sans Devanagari', system-ui, sans-serif;
+  --ehas2-radius-md: 16px;
+  --ehas2-shadow-sm: 0 2px 8px rgba(13, 27, 42, 0.06);
+}

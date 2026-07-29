@@ -1,0 +1,47 @@
+name: EHAS2 CI
+
+on:
+  push:
+    branches: [main, develop, master]
+  pull_request:
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - name: Install (lockfile)
+        run: npm ci
+      - name: Boundary verification
+        run: npm run verify:boundary
+      - name: Format check
+        run: npm run format:check
+      - name: Lint
+        run: npm run lint
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Tests
+        run: npm run test
+      - name: Production build
+        run: npm run build
+      - name: Dependency audit (fail on high+ in production deps)
+        run: npm audit --omit=dev --audit-level=high
+      - name: Full audit report (informational)
+        run: npm audit --json > dependency-audit.json || true
+      - name: Preserve audit artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ehas2-quality-reports
+          path: |
+            dependency-audit.json
+          if-no-files-found: ignore
+
+  # Planned (not yet enforced as fail gate in Phase 1A-H):
+  # - dedicated secret-scan action (gitleaks / trufflehog)
+  # - patient-data heuristic scan beyond verify:boundary
+  # Do not configure deployment or cloud credentials in this workflow.

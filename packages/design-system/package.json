@@ -1,0 +1,19 @@
+{
+  "name": "@ehas2/design-system",
+  "version": "0.1.0-phase1a",
+  "description": "E.H. AROGYA SUTRA 2 — Jupiter design tokens shell (Phase 1B completes UI)",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./tokens.css": "./src/tokens.css"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint src"
+  }
+}

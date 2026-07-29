@@ -1,0 +1,45 @@
+{
+  "name": "eh-arogya-sutra-2",
+  "type": "module",
+  "private": true,
+  "version": "0.1.0-phase1a",
+  "description": "E.H. AROGYA SUTRA 2 — clinical SaaS platform (engineering foundation only)",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "node scripts/build-all.mjs",
+    "lint": "eslint .",
+    "typecheck": "node scripts/typecheck-all.mjs",
+    "test": "vitest run",
+    "verify:boundary": "node scripts/verify-boundary.mjs",
+    "format": "prettier --check .",
+    "format:check": "prettier --check .",
+    "format:write": "prettier --write .",
+    "audit:deps": "npm audit --omit=dev"
+  },
+  "overrides": {
+    "postcss": "8.5.25",
+    "sharp": "0.35.3",
+    "brace-expansion": "5.0.8",
+    "next": {
+      "postcss": "8.5.25",
+      "sharp": "0.35.3"
+    }
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.18.0",
+    "@types/node": "^22.10.5",
+    "eslint": "^9.18.0",
+    "globals": "^15.14.0",
+    "prettier": "^3.4.2",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.20.0",
+    "vitest": "^3.0.4"
+  },
+  "engines": {
+    "node": ">=20",
+    "npm": ">=10"
+  }
+}

@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.next/
+out/
+coverage/
+.turbo/
+package-lock.json
+*.log
+*.md

@@ -1,0 +1,25 @@
+{
+  "name": "eh-arogya-sutra-2-api",
+  "version": "0.1.0-phase1a",
+  "description": "E.H. AROGYA SUTRA 2 — HTTP API shell (no clinical engine)",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/server.js",
+    "dev": "tsx watch src/server.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint src"
+  },
+  "dependencies": {
+    "@ehas2/config": "*",
+    "@ehas2/observability": "*",
+    "@ehas2/security": "*",
+    "@ehas2/shared": "*",
+    "express": "^4.21.2"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "tsx": "^4.19.2"
+  }
+}
