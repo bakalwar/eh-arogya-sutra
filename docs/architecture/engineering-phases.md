@@ -6,8 +6,11 @@
 |-------|------|--------|
 | 1A | Engineering foundation | Complete (basic) |
 | **1A-H** | Dependency hardening + Super Admin architecture/contracts | Complete |
-| **1B** | Jupiter design system + responsive AppShell | **This phase** |
-| 1C | Application screens | Not started — requires owner approval |
+| **1B** | Jupiter design system + responsive AppShell | Complete |
+| **1C-A** | Splash, login, OTP, doctor dashboard UX | **Complete (local)** |
+| 1C-B | Patient / New Case UX | Not started — requires owner approval |
+| 1C-C | Report upload UX | Not started — requires owner approval |
+
 
 ## Explicit non-claims
 
@@ -49,4 +52,4 @@ No security capability may be marked **live** before its implementation phase pa
 
 ## Next (only after owner approval)
 
-**Phase 1C** — application screens (still no clinical engine / auth / payments unless separately approved).
+**Phase 1C-B** — Patient list and New Case UX (still no clinical engine unless separately approved).

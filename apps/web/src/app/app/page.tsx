@@ -1,15 +1,6 @@
-import { NotImplementedNotice, PageHeader, Surface } from '../../components/ui/Primitives';
+import { redirect } from 'next/navigation';
 
-export default function DoctorDashboardPage() {
-  return (
-    <>
-      <PageHeader
-        title="Doctor shell"
-        description="Responsive navigation demo. Screens and clinical workflows arrive in Phase 1C+."
-      />
-      <Surface>
-        <NotImplementedNotice feature="Dashboard widgets" />
-      </Surface>
-    </>
-  );
+/** Compatibility redirect from Phase 1B demo path. */
+export default function AppRedirectPage() {
+  redirect('/dashboard');
 }

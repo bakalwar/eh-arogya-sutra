@@ -3,6 +3,7 @@ import type { CSSProperties, ReactNode } from 'react';
 import { Plus_Jakarta_Sans, Inter, Noto_Sans_Devanagari } from 'next/font/google';
 import '@ehas2/design-system/tokens.css';
 import '../styles/shell.css';
+import '../styles/auth-dashboard.css';
 import './globals.css';
 
 const display = Plus_Jakarta_Sans({

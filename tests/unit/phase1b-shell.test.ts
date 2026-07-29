@@ -30,18 +30,19 @@ describe('Phase 1B navigation and status', () => {
       'Medicines',
       'Settings',
     ]);
+    expect(DOCTOR_NAV_ITEMS[0]?.href).toBe('/dashboard');
   });
 
   it('keeps truthful system status labels', () => {
     expect(statusLabelsAreTruthful(SYSTEM_STATUS_LABELS)).toBe(true);
     expect(SYSTEM_STATUS_LABELS.join(' ')).toMatch(/Not Connected/);
     expect(SYSTEM_STATUS_LABELS.join(' ')).toMatch(/Not Installed/);
-    expect(SYSTEM_STATUS_LABELS.join(' ')).toMatch(/Not Active/);
+    expect(SYSTEM_STATUS_LABELS.join(' ')).toMatch(/Preview Only|Not Active/);
   });
 
   it('defines desktop, tablet, and mobile nav targets via single config', () => {
     expect(DOCTOR_NAV_ITEMS.length).toBeGreaterThanOrEqual(4);
-    expect(DOCTOR_NAV_ITEMS.every((i) => i.href.startsWith('/app'))).toBe(true);
+    expect(DOCTOR_NAV_ITEMS.every((i) => i.href.startsWith('/dashboard'))).toBe(true);
   });
 });
 

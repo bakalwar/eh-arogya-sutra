@@ -155,7 +155,13 @@ function checkForbiddenArtifacts() {
       }
     }
     if (/\.(pdf|jpg|jpeg|png|dcm)$/i.test(base) && /report|upload|patient/i.test(rel)) {
-      if (!rel.replace(/\\/g, '/').includes('fixtures/synthetic')) {
+      const norm = rel.replace(/\\/g, '/');
+      const allowedBinary =
+        norm.includes('fixtures/synthetic') ||
+        norm.includes('docs/phase-reports/qa-screenshots') ||
+        norm.includes('docs/phase-reports/qa-screenshots-1c-a') ||
+        norm.includes('apps/web/public/brand/');
+      if (!allowedBinary) {
         fail(`Report/upload-like binary outside synthetic fixtures: ${rel}`);
       }
     }

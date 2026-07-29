@@ -34,5 +34,8 @@ export const touchTargetMinPx = 44 as const;
 
 export const brandAssets = {
   logoPath: '/brand/ehas2-logo.png',
+  logoOriginalPath: '/brand/ehas2-logo.original.png',
   logoAlt: 'E.H. Arogya Sutra 2 logo',
+  logoWidth: 512,
+  logoHeight: 512,
 } as const;

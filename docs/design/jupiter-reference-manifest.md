@@ -6,11 +6,10 @@
 
 ## Extracted assets
 
-| Asset | Path | SHA-256 |
-|-------|------|---------|
-| Logo PNG | `apps/web/public/brand/ehas2-logo.png` | `7D32612C2378AA83DEA9C025D49F0279EB1F53BEFBA24CA537B68AF844F00646` |
-
-No separate mark file was genuinely available (single repeated embedded logo).
+| Asset | Path | SHA-256 | Notes |
+|-------|------|---------|-------|
+| Logo original | `apps/web/public/brand/ehas2-logo.original.png` | `7D32612C2378AA83DEA9C025D49F0279EB1F53BEFBA24CA537B68AF844F00646` | Retained for comparison (~2.2 MB) |
+| Logo optimized | `apps/web/public/brand/ehas2-logo.png` | `3827252438908FD65F49C5594EBA4DB0FB4B6D104AA1394B283D8FAABDA2C3E3` | 512×512 PNG (~356 KB), used via `next/image` |
 
 ## Extracted for tokens
 

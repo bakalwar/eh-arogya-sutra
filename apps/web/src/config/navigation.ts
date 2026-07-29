@@ -2,23 +2,91 @@ export type DoctorNavItem = {
   id: string;
   label: string;
   href: string;
+  comingSoon?: boolean;
+  comingPhase?: string;
 };
 
 /** Single source of truth for doctor navigation — no Super Admin entries. */
 export const DOCTOR_NAV_ITEMS: readonly DoctorNavItem[] = [
-  { id: 'dashboard', label: 'Dashboard', href: '/app' },
-  { id: 'new-case', label: 'New Case', href: '/app/new-case' },
-  { id: 'patients', label: 'Patients', href: '/app/patients' },
-  { id: 'reports', label: 'Reports', href: '/app/reports' },
-  { id: 'prescriptions', label: 'Prescriptions', href: '/app/prescriptions' },
-  { id: 'medicines', label: 'Medicines', href: '/app/medicines' },
-  { id: 'settings', label: 'Settings', href: '/app/settings' },
+  { id: 'dashboard', label: 'Dashboard', href: '/dashboard' },
+  {
+    id: 'new-case',
+    label: 'New Case',
+    href: '/dashboard/coming/new-case',
+    comingSoon: true,
+    comingPhase: 'Phase 1C-B',
+  },
+  {
+    id: 'patients',
+    label: 'Patients',
+    href: '/dashboard/coming/patients',
+    comingSoon: true,
+    comingPhase: 'Phase 1C-B',
+  },
+  {
+    id: 'reports',
+    label: 'Reports',
+    href: '/dashboard/coming/reports',
+    comingSoon: true,
+    comingPhase: 'Phase 1C-C',
+  },
+  {
+    id: 'prescriptions',
+    label: 'Prescriptions',
+    href: '/dashboard/coming/prescriptions',
+    comingSoon: true,
+    comingPhase: 'Phase 1C-C',
+  },
+  {
+    id: 'medicines',
+    label: 'Medicines',
+    href: '/dashboard/coming/medicines',
+    comingSoon: true,
+    comingPhase: 'Phase 1C-C',
+  },
+  {
+    id: 'settings',
+    label: 'Settings',
+    href: '/dashboard/coming/settings',
+    comingSoon: true,
+    comingPhase: 'Phase 1C-B',
+  },
 ] as const;
 
 export const PUBLIC_ROUTES = {
-  home: '/',
+  splash: '/',
+  login: '/login',
+  verifyOtp: '/verify-otp',
+  dashboard: '/dashboard',
   uiFoundation: '/ui-foundation',
 } as const;
+
+export const QUICK_ACTIONS = [
+  {
+    id: 'new-case',
+    label: 'New Case',
+    href: '/dashboard/coming/new-case',
+    comingPhase: 'Phase 1C-B',
+  },
+  {
+    id: 'patients',
+    label: 'Patients',
+    href: '/dashboard/coming/patients',
+    comingPhase: 'Phase 1C-B',
+  },
+  {
+    id: 'reports',
+    label: 'Reports',
+    href: '/dashboard/coming/reports',
+    comingPhase: 'Phase 1C-C',
+  },
+  {
+    id: 'prescriptions',
+    label: 'Prescriptions',
+    href: '/dashboard/coming/prescriptions',
+    comingPhase: 'Phase 1C-C',
+  },
+] as const;
 
 export function isDoctorNavHref(href: string): boolean {
   return DOCTOR_NAV_ITEMS.some((item) => item.href === href);
@@ -29,6 +97,7 @@ export function doctorNavExcludesSuperAdmin(): boolean {
     (item) =>
       /super.?admin/i.test(item.label) ||
       /super.?admin/i.test(item.href) ||
-      /security.?center/i.test(item.label),
+      /security.?center/i.test(item.label) ||
+      item.href.includes('/ops'),
   );
 }

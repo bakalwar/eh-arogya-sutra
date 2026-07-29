@@ -6,7 +6,7 @@ type NavProps = {
 };
 
 function isCurrent(currentPath: string, href: string): boolean {
-  if (href === '/app') return currentPath === '/app' || currentPath === '/app/';
+  if (href === '/dashboard') return currentPath === '/dashboard' || currentPath === '/dashboard/';
   return currentPath === href || currentPath.startsWith(`${href}/`);
 }
 

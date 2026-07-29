@@ -11,10 +11,11 @@ export function EHAS2Logo({ size = 40, priority = false }: EHAS2LogoProps) {
     <Image
       src={brandAssets.logoPath}
       alt={brandAssets.logoAlt}
-      width={size}
-      height={size}
+      width={brandAssets.logoWidth}
+      height={brandAssets.logoHeight}
       priority={priority}
-      style={{ width: size, height: 'auto', objectFit: 'contain' }}
+      sizes={`${size}px`}
+      style={{ width: size, height: size, objectFit: 'contain' }}
     />
   );
 }
