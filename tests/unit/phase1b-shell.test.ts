@@ -47,7 +47,8 @@ describe('Phase 1B navigation and status', () => {
         (i) =>
           i.href.startsWith('/dashboard') ||
           i.href.startsWith('/patients') ||
-          i.href.startsWith('/cases'),
+          i.href.startsWith('/cases') ||
+          i.href.startsWith('/prescriptions'),
       ),
     ).toBe(true);
   });

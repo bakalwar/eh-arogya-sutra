@@ -5,6 +5,7 @@ import '@ehas2/design-system/tokens.css';
 import '../styles/shell.css';
 import '../styles/auth-dashboard.css';
 import '../styles/clinical-ux.css';
+import '../styles/clinical-results.css';
 import './globals.css';
 
 const display = Plus_Jakarta_Sans({

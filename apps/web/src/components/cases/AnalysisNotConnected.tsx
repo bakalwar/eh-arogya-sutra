@@ -26,6 +26,12 @@ export function AnalysisNotConnected({ caseId }: { caseId: string }) {
         <Link className="ehas2-btn ehas2-btn--secondary" href="/cases/new/review">
           Return to review
         </Link>
+        <Link
+          className="ehas2-btn ehas2-btn--secondary"
+          href="/cases/preview-case-3mix/prescription"
+        >
+          Demo prescription layout
+        </Link>
         <Button type="button" variant="ghost" disabled>
           Save (unavailable)
         </Button>

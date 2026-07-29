@@ -161,6 +161,7 @@ function checkForbiddenArtifacts() {
         norm.includes('docs/phase-reports/qa-screenshots') ||
         norm.includes('docs/phase-reports/qa-screenshots-1c-a') ||
         norm.includes('docs/phase-reports/qa-screenshots-1c-b') ||
+        norm.includes('docs/phase-reports/qa-screenshots-1c-c') ||
         norm.includes('apps/web/public/brand/');
       if (!allowedBinary) {
         fail(`Report/upload-like binary outside synthetic fixtures: ${rel}`);

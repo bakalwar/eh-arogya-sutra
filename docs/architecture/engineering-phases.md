@@ -8,8 +8,9 @@
 | **1A-H** | Dependency hardening + Super Admin architecture/contracts | Complete |
 | **1B** | Jupiter design system + responsive AppShell | Complete |
 | **1C-A** | Splash, login, OTP, doctor dashboard UX | Complete (local) |
-| **1C-B** | Patient / New Case / Report Upload UX | **Complete (local)** |
-| 1C-C | Prescription / Clinical Summary / History / Print UX | Not started — requires owner approval |
+| **1C-B** | Patient / New Case / Report Upload UX | Complete (local) |
+| **1C-C** | Prescription / Clinical Summary / History / Print UX | **Complete (local)** |
+| 2 | Authentication, roles, tenant isolation | Not started — requires owner approval |
 
 
 ## Explicit non-claims
@@ -52,4 +53,4 @@ No security capability may be marked **live** before its implementation phase pa
 
 ## Next (only after owner approval)
 
-**Phase 1C-C** — Prescription, Clinical Summary, History and Print UX (still no clinical engine unless separately approved).
+**Phase 2** — Authentication, roles and tenant-isolation foundation (requires owner approval).

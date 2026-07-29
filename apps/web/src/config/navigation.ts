@@ -16,28 +16,22 @@ export const DOCTOR_NAV_ITEMS: readonly DoctorNavItem[] = [
     label: 'Reports',
     href: '/dashboard/coming/reports',
     comingSoon: true,
-    comingPhase: 'Phase 1C-C',
+    comingPhase: 'Phase 2+',
   },
-  {
-    id: 'prescriptions',
-    label: 'Prescriptions',
-    href: '/dashboard/coming/prescriptions',
-    comingSoon: true,
-    comingPhase: 'Phase 1C-C',
-  },
+  { id: 'prescriptions', label: 'Prescriptions', href: '/prescriptions' },
   {
     id: 'medicines',
     label: 'Medicines',
     href: '/dashboard/coming/medicines',
     comingSoon: true,
-    comingPhase: 'Phase 1C-C',
+    comingPhase: 'Phase 2+',
   },
   {
     id: 'settings',
     label: 'Settings',
     href: '/dashboard/coming/settings',
     comingSoon: true,
-    comingPhase: 'Phase 1C-C',
+    comingPhase: 'Phase 2+',
   },
 ] as const;
 
@@ -66,12 +60,12 @@ export const QUICK_ACTIONS = [
     id: 'reports',
     label: 'Reports',
     href: '/dashboard/coming/reports',
-    comingPhase: 'Phase 1C-C',
+    comingPhase: 'Phase 2+',
   },
   {
     id: 'prescriptions',
     label: 'Prescriptions',
-    href: '/dashboard/coming/prescriptions',
+    href: '/prescriptions',
     comingPhase: 'Phase 1C-C',
   },
 ] as const;
@@ -94,6 +88,8 @@ export function isDoctorAreaPath(pathname: string): boolean {
   return (
     pathname.startsWith('/dashboard') ||
     pathname.startsWith('/patients') ||
-    pathname.startsWith('/cases')
+    pathname.startsWith('/cases') ||
+    pathname.startsWith('/prescriptions') ||
+    pathname.startsWith('/print')
   );
 }

@@ -71,7 +71,8 @@ export function ConsultationTimeline({
                       <p>Clinician review: {c.clinicianReviewStatus}</p>
                       <p>
                         Prescription status: {c.prescriptionStatus} —{' '}
-                        <Link href="/dashboard/coming/prescriptions">Phase 1C-C</Link>
+                        <Link href="/prescriptions">History</Link> ·{' '}
+                        <Link href={`/cases/preview-case-3mix/prescription`}>Demo layout</Link>
                       </p>
                       <p>Report/document placeholders: {c.reportPlaceholderCount}</p>
                     </div>
