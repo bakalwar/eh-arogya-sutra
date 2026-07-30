@@ -12,6 +12,7 @@ const MIGRATION_IDS = [
   '005_indexes',
   '006_rls',
   '007_idempotency_keys',
+  '008_doctor_clinic_profiles',
 ] as const;
 
 export type MigrationId = (typeof MIGRATION_IDS)[number];

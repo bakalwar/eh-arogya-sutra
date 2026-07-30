@@ -62,3 +62,129 @@ export function assertBoundedBatch(size: number): void {
     throw new ValidationError(`Batch size must be 1..${MAX_FINDING_BATCH}`);
   }
 }
+
+function normalizeBoundedText(raw: string, field: string, min: number, max: number): string {
+  const normalized = raw.normalize('NFC').trim().replace(/\s+/g, ' ');
+  if (normalized.length < min || normalized.length > max) {
+    throw new ValidationError(`${field} length out of bounds`);
+  }
+  return normalized;
+}
+
+export function assertOptionalBoundedText(
+  value: string | null | undefined,
+  field: string,
+  max: number,
+): string | null {
+  if (value == null || value === '') return null;
+  return normalizeBoundedText(value, field, 1, max);
+}
+
+export function assertRequiredBoundedText(value: string, field: string, max: number): string {
+  return normalizeBoundedText(value, field, 1, max);
+}
+
+export function assertOptionalEmail(value: string | null | undefined): string | null {
+  if (value == null || value === '') return null;
+  const email = value.normalize('NFC').trim().toLowerCase();
+  if (email.length > 254) throw new ValidationError('email too long');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new ValidationError('Invalid email');
+  return email;
+}
+
+/** Digits and optional leading + only; does not invent a country code. */
+export function assertOptionalPhone(
+  value: string | null | undefined,
+  field: string,
+): string | null {
+  if (value == null || value === '') return null;
+  const trimmed = value.normalize('NFC').trim();
+  if (trimmed.length > 20) throw new ValidationError(`${field} too long`);
+  if (!/^\+?[0-9][0-9\s-]{6,18}[0-9]$/.test(trimmed)) {
+    throw new ValidationError(`Invalid ${field}`);
+  }
+  return trimmed.replace(/\s+/g, ' ');
+}
+
+export function assertLanguageCode(value: string): string {
+  const code = value.trim().toLowerCase();
+  if (!/^[a-z]{2}(-[a-z]{2})?$/.test(code)) throw new ValidationError('Invalid language code');
+  return code;
+}
+
+export function assertTimezone(value: string): string {
+  const tz = value.trim();
+  if (tz.length < 3 || tz.length > 64) throw new ValidationError('Invalid timezone');
+  try {
+    Intl.DateTimeFormat(undefined, { timeZone: tz });
+  } catch {
+    throw new ValidationError('Invalid timezone');
+  }
+  return tz;
+}
+
+export function assertOptionalYear(
+  value: number | null | undefined,
+  field: string,
+  min: number,
+  max: number,
+): number | null {
+  if (value == null) return null;
+  if (!Number.isInteger(value) || value < min || value > max) {
+    throw new ValidationError(`Invalid ${field}`);
+  }
+  return value;
+}
+
+export function assertOptionalIsoDate(
+  value: string | null | undefined,
+  field: string,
+): string | null {
+  if (value == null || value === '') return null;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) throw new ValidationError(`Invalid ${field}`);
+  const d = new Date(`${value}T00:00:00.000Z`);
+  if (Number.isNaN(d.getTime())) throw new ValidationError(`Invalid ${field}`);
+  return value;
+}
+
+export function assertRegistrationDates(issuedOn: string | null, expiresOn: string | null): void {
+  if (issuedOn && expiresOn && expiresOn < issuedOn) {
+    throw new ValidationError('expiresOn cannot be before issuedOn');
+  }
+}
+
+export function assertDisplayOrder(value: number | undefined): number {
+  if (value == null) return 0;
+  if (!Number.isInteger(value) || value < 0 || value > 10_000) {
+    throw new ValidationError('Invalid displayOrder');
+  }
+  return value;
+}
+
+export function assertDayOfWeek(value: number): number {
+  if (!Number.isInteger(value) || value < 0 || value > 6) {
+    throw new ValidationError('Invalid dayOfWeek');
+  }
+  return value;
+}
+
+export function assertOptionalTime(value: string | null | undefined, field: string): string | null {
+  if (value == null || value === '') return null;
+  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(value)) throw new ValidationError(`Invalid ${field}`);
+  return value;
+}
+
+export function assertCountryCode(value: string): string {
+  const code = value.trim().toUpperCase();
+  if (!/^[A-Z]{2}$/.test(code)) throw new ValidationError('Invalid country');
+  return code;
+}
+
+export function assertPostalCode(value: string | null | undefined): string | null {
+  if (value == null || value === '') return null;
+  const code = value.normalize('NFC').trim();
+  if (code.length > 16 || !/^[A-Za-z0-9\s-]+$/.test(code)) {
+    throw new ValidationError('Invalid postalCode');
+  }
+  return code;
+}

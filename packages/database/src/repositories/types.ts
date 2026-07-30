@@ -100,6 +100,134 @@ export type PrescriptionVersionRecord = {
   readableSnapshot: string;
   structuredPrescription: unknown;
   modificationReason: string | null;
+  prescriberIdentitySnapshot: PrescriberIdentitySnapshot | null;
+};
+
+export type PrescriberIdentitySnapshot = {
+  schemaVersion: 'ehas2.prescriber_identity.v1';
+  capturedAt: string;
+  doctor: {
+    userId: string;
+    legalName: string;
+    displayName: string;
+    prescriptionName: string;
+    qualifications: Array<{ degreeTitle: string; displayOrder: number }>;
+    registrations: Array<{
+      registrationNumber: string;
+      registrationAuthority: string;
+      registrationRegion: string | null;
+      displayOrder: number;
+      verificationClaimed: false;
+    }>;
+  };
+  clinic: {
+    clinicId: string;
+    organizationId: string;
+    displayName: string;
+    legalName: string | null;
+    phone: string | null;
+    addressLine1: string | null;
+    city: string | null;
+    state: string | null;
+    postalCode: string | null;
+    country: string | null;
+  };
+};
+
+export type DoctorProfileStatus = 'DRAFT' | 'ACTIVE' | 'INACTIVE';
+
+export type DoctorProfessionalProfileRecord = {
+  userId: string;
+  legalName: string;
+  displayName: string;
+  prescriptionName: string;
+  primaryPhone: string | null;
+  alternatePhone: string | null;
+  professionalEmail: string | null;
+  specialization: string | null;
+  yearsOfExperience: number | null;
+  professionalBio: string | null;
+  preferredLanguage: string;
+  timezone: string;
+  profileStatus: DoctorProfileStatus;
+  updatedAt: string;
+};
+
+export type DoctorQualificationRecord = {
+  id: string;
+  userId: string;
+  degreeTitle: string;
+  institution: string | null;
+  awardingAuthority: string | null;
+  completionYear: number | null;
+  displayOrder: number;
+  status: 'ACTIVE' | 'INACTIVE';
+};
+
+export type DoctorRegistrationRecord = {
+  id: string;
+  userId: string;
+  registrationNumber: string;
+  registrationAuthority: string;
+  registrationRegion: string | null;
+  issuedOn: string | null;
+  expiresOn: string | null;
+  status: 'ACTIVE' | 'INACTIVE' | 'EXPIRED';
+  displayOrder: number;
+  verificationClaimed: false;
+};
+
+export type ClinicProfileRecord = {
+  id: string;
+  organizationId: string;
+  publicId: string;
+  displayName: string;
+  legalName: string | null;
+  clinicCode: string | null;
+  phone: string | null;
+  whatsappContact: string | null;
+  email: string | null;
+  website: string | null;
+  addressLine1: string | null;
+  addressLine2: string | null;
+  landmark: string | null;
+  city: string | null;
+  district: string | null;
+  state: string | null;
+  postalCode: string | null;
+  country: string;
+  preferredLanguage: string;
+  timezone: string;
+  status: string;
+  updatedAt: string;
+};
+
+export type ClinicHoursRecord = {
+  id: string;
+  organizationId: string;
+  clinicId: string;
+  dayOfWeek: number;
+  isClosed: boolean;
+  openTime: string | null;
+  closeTime: string | null;
+  displayOrder: number;
+};
+
+export type ClinicPrescriptionDisplaySettingsRecord = {
+  clinicId: string;
+  organizationId: string;
+  showClinicName: boolean;
+  showDoctorName: boolean;
+  showQualifications: boolean;
+  showRegistration: boolean;
+  showClinicContact: boolean;
+  showAddress: boolean;
+  headerText: string | null;
+  footerText: string | null;
+};
+
+export type MembershipWithRolesRecord = MembershipRecord & {
+  roleCodes: string[];
 };
 
 export type SummarySnapshotRecord = {
@@ -157,6 +285,15 @@ export interface MembershipRepository {
       actorId: string;
     },
   ): Promise<MembershipRecord>;
+  assignRole(
+    tx: TransactionContext,
+    input: { membershipId: string; roleCode: string },
+  ): Promise<void>;
+  listByActor(tx: TransactionContext, actorId: string): Promise<MembershipWithRolesRecord[]>;
+  findActiveForTenant(
+    tx: TransactionContext,
+    input: { userId: string; organizationId: string; clinicId: string },
+  ): Promise<MembershipWithRolesRecord | null>;
 }
 
 export interface PatientRepository {
@@ -256,6 +393,7 @@ export interface PrescriptionRepository {
       medicineDataVersion: string;
       inputHash: string;
       contentHash: string;
+      prescriberIdentitySnapshot?: PrescriberIdentitySnapshot | null;
     },
   ): Promise<PrescriptionVersionRecord>;
   transition(

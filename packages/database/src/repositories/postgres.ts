@@ -95,6 +95,10 @@ function mapPrescription(row: Record<string, unknown>): PrescriptionVersionRecor
     readableSnapshot: String(row.readable_snapshot),
     structuredPrescription: row.structured_prescription,
     modificationReason: row.modification_reason == null ? null : String(row.modification_reason),
+    prescriberIdentitySnapshot:
+      row.prescriber_identity_snapshot == null
+        ? null
+        : (row.prescriber_identity_snapshot as PrescriptionVersionRecord['prescriberIdentitySnapshot']),
   };
 }
 
@@ -177,6 +181,75 @@ export class PgMembershipRepository implements MembershipRepository {
       organizationId: String(row.organization_id),
       clinicId: row.clinic_id == null ? null : String(row.clinic_id),
       status: String(row.status),
+    };
+  }
+
+  async assignRole(
+    tx: TransactionContext,
+    input: { membershipId: string; roleCode: string },
+  ): Promise<void> {
+    const role = await tx.query(`SELECT id FROM roles WHERE code = $1`, [input.roleCode]);
+    if (!role.rows[0]) throw new ResourceNotFoundError();
+    await tx.query(
+      `INSERT INTO membership_roles (membership_id, role_id)
+       VALUES ($1, $2)
+       ON CONFLICT DO NOTHING`,
+      [input.membershipId, (role.rows[0] as { id: string }).id],
+    );
+  }
+
+  async listByActor(
+    tx: TransactionContext,
+    actorId: string,
+  ): Promise<import('./types.js').MembershipWithRolesRecord[]> {
+    const r = await tx.query(
+      `SELECT m.*, COALESCE(array_agg(r.code) FILTER (WHERE r.code IS NOT NULL), '{}') AS role_codes
+       FROM memberships m
+       LEFT JOIN membership_roles mr ON mr.membership_id = m.id
+       LEFT JOIN roles r ON r.id = mr.role_id
+       WHERE m.user_id = $1
+       GROUP BY m.id
+       ORDER BY m.created_at ASC`,
+      [actorId],
+    );
+    return r.rows.map((row) => {
+      const rec = row as Record<string, unknown>;
+      const codes = rec.role_codes;
+      return {
+        id: String(rec.id),
+        userId: String(rec.user_id),
+        organizationId: String(rec.organization_id),
+        clinicId: rec.clinic_id == null ? null : String(rec.clinic_id),
+        status: String(rec.status),
+        roleCodes: Array.isArray(codes) ? codes.map(String) : [],
+      };
+    });
+  }
+
+  async findActiveForTenant(
+    tx: TransactionContext,
+    input: { userId: string; organizationId: string; clinicId: string },
+  ): Promise<import('./types.js').MembershipWithRolesRecord | null> {
+    const r = await tx.query(
+      `SELECT m.*, COALESCE(array_agg(r.code) FILTER (WHERE r.code IS NOT NULL), '{}') AS role_codes
+       FROM memberships m
+       LEFT JOIN membership_roles mr ON mr.membership_id = m.id
+       LEFT JOIN roles r ON r.id = mr.role_id
+       WHERE m.user_id = $1 AND m.organization_id = $2 AND m.clinic_id = $3 AND m.status = 'ACTIVE'
+       GROUP BY m.id
+       LIMIT 1`,
+      [input.userId, input.organizationId, input.clinicId],
+    );
+    if (!r.rows[0]) return null;
+    const rec = r.rows[0] as Record<string, unknown>;
+    const codes = rec.role_codes;
+    return {
+      id: String(rec.id),
+      userId: String(rec.user_id),
+      organizationId: String(rec.organization_id),
+      clinicId: rec.clinic_id == null ? null : String(rec.clinic_id),
+      status: String(rec.status),
+      roleCodes: Array.isArray(codes) ? codes.map(String) : [],
     };
   }
 }
@@ -550,6 +623,7 @@ export class PgPrescriptionRepository implements PrescriptionRepository {
       medicineDataVersion: string;
       inputHash: string;
       contentHash: string;
+      prescriberIdentitySnapshot?: import('./types.js').PrescriberIdentitySnapshot | null;
     },
   ): Promise<PrescriptionVersionRecord> {
     assertTenantContext(tenant);
@@ -561,8 +635,8 @@ export class PgPrescriptionRepository implements PrescriptionRepository {
          consultation_id, organization_id, clinic_id, version_number, previous_version_id,
          review_state, structured_prescription, readable_snapshot,
          engine_version, rules_version, disease_data_version, medicine_data_version,
-         input_hash, content_hash, created_by_actor_id
-       ) VALUES ($1,$2,$3,1,NULL,'GENERATED_PENDING_REVIEW',$4::jsonb,$5,$6,$7,$8,$9,$10,$11,$12)
+         input_hash, content_hash, prescriber_identity_snapshot, created_by_actor_id
+       ) VALUES ($1,$2,$3,1,NULL,'GENERATED_PENDING_REVIEW',$4::jsonb,$5,$6,$7,$8,$9,$10,$11,$12::jsonb,$13)
        RETURNING *`,
       [
         input.consultationId,
@@ -576,6 +650,7 @@ export class PgPrescriptionRepository implements PrescriptionRepository {
         input.medicineDataVersion,
         input.inputHash,
         input.contentHash,
+        input.prescriberIdentitySnapshot ? JSON.stringify(input.prescriberIdentitySnapshot) : null,
         tenant.actorId,
       ],
     );
@@ -892,6 +967,15 @@ const FORBIDDEN_AUDIT_KEYS = new Set([
   'image',
   'pdf',
   'secret',
+  'password',
+  'phone',
+  'primary_phone',
+  'alternate_phone',
+  'whatsapp',
+  'address',
+  'address_line1',
+  'registration_number',
+  'email',
 ]);
 
 export class PgAuditEventRepository implements AuditEventRepository {

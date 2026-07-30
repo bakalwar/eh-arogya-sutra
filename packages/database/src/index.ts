@@ -1,9 +1,9 @@
 /**
- * PostgreSQL persistence services — Phase 3B.
- * Clinical engine, OTP, and production patient records remain out of scope.
+ * PostgreSQL persistence services — Phase 3C doctor/clinic profile layer.
+ * Clinical engine, OTP, uploads, and production patient records remain out of scope.
  */
-export const DATABASE_PACKAGE_VERSION = '0.1.0-phase3b' as const;
-export const DATABASE_PACKAGE_STATUS = 'PERSISTENCE_SERVICES' as const;
+export const DATABASE_PACKAGE_VERSION = '0.1.0-phase3c' as const;
+export const DATABASE_PACKAGE_STATUS = 'PROFILE_PERSISTENCE' as const;
 export const DATABASE_ACCESS_LAYER = 'pg+sql-migrations' as const;
 
 export {
@@ -29,12 +29,15 @@ export {
   IdempotencyConflictError,
   InvalidConsultationTransitionError,
   ImmutableArtifactError,
+  AccessDeniedError,
 } from './domainErrors.js';
 export {
   type TenantContext,
   type TransactionContext,
   assertTenantContext,
   assertBackgroundJobTenant,
+  assertProfileAccessContext,
+  assertClinicAdminRole,
 } from './tenantContext.js';
 export { getPool, closePool, withTenantTransaction, withAdminClient } from './pool.js';
 export {
@@ -79,9 +82,22 @@ export {
   PgAuditEventRepository,
   UNSCOPED_PATIENT_METHODS_FORBIDDEN,
 } from './repositories/postgres.js';
+export {
+  PgDoctorProfileRepository,
+  PgClinicProfileRepository,
+  buildPrescriberIdentitySnapshot,
+} from './repositories/profiles.js';
 export { PgIdempotencyRepository } from './repositories/idempotency.js';
 export { PatientService, patientService } from './services/patientService.js';
 export { ConsultationService, consultationService } from './services/consultationService.js';
+export {
+  DoctorProfileService,
+  ClinicProfileService,
+  MembershipQueryService,
+  doctorProfileService,
+  clinicProfileService,
+  membershipQueryService,
+} from './services/profileServices.js';
 
 /** @deprecated — use getPool / withTenantTransaction. Kept to fail closed without config. */
 export function getConnection(): never {

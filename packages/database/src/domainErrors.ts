@@ -46,3 +46,11 @@ export class ImmutableArtifactError extends Error {
     this.name = 'ImmutableArtifactError';
   }
 }
+
+export class AccessDeniedError extends Error {
+  readonly code = 'ACCESS_DENIED' as const;
+  constructor(message = 'Access denied') {
+    super(message);
+    this.name = 'AccessDeniedError';
+  }
+}
