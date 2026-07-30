@@ -1,0 +1,16 @@
+{
+  "files": [],
+  "references": [
+    { "path": "./packages/shared" },
+    { "path": "./packages/config" },
+    { "path": "./packages/design-system" },
+    { "path": "./packages/clinical-contracts" },
+    { "path": "./packages/engine-adapter" },
+    { "path": "./packages/database" },
+    { "path": "./packages/observability" },
+    { "path": "./packages/security" },
+    { "path": "./apps/api" },
+    { "path": "./apps/worker" },
+    { "path": "./apps/web" }
+  ]
+}

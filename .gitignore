@@ -23,4 +23,8 @@ dependency-audit.json
 .ehas2-boundary-write-probe
 _scaffold_phase1a.py
 *.tsbuildinfo
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
 

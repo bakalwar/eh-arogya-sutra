@@ -13,6 +13,9 @@ export function AnalysisNotConnected({ caseId }: { caseId: string }) {
           Case preview ID: <code>{caseId}</code>
         </p>
         <ul className="ehas2-status-list">
+          <li>
+            <strong>CLINICAL_ENGINE_NOT_CONNECTED</strong>
+          </li>
           <li>Case input validated (frontend only)</li>
           <li>Clinical engine not connected</li>
           <li>Disease data not installed</li>

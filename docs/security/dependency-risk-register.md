@@ -106,3 +106,11 @@ See `docs/security/npm-lifecycle-script-policy.md`.
 ## Review date
 
 Re-audit after any Next.js / esbuild / sharp upgrade and before production monitoring activation.
+
+## Phase 4C-V addition — Playwright
+
+| Package | Version | Prod / dev | Notes |
+|---------|---------|------------|-------|
+| `@playwright/test` | 1.62.0 (exact) | **Development** | Node 20 compatible; browser binaries via `npx playwright install chromium` (not committed) |
+| Lifecycle scripts | install browsers separately | N/A | No `npm audit fix --force`; no `--legacy-peer-deps` |
+| Audit after add | 0 vulnerabilities | — | Recorded in `%TEMP%\ehas2_phase4c_v_audit\` |

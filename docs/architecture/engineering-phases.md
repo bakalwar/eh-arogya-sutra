@@ -21,6 +21,8 @@
 | **3C-II** | Fast-forward integration of 3C onto canonical main | **Complete (local)** |
 | **3D** | Doctor/clinic profile API + UI connection | **Complete (local)** |
 | **4A** | Secure authentication core + session foundation | **Complete (local)** — OTP provider **NOT_CONFIGURED**; passkeys **PASSKEY_NOT_CONNECTED**; production auth **not** active |
+| **4B** | Real OTP-provider connection | **HOLD** — no provider account; do not start without owner approval |
+| **4C-V** | Local browser preview + Playwright visual QA | **Complete (local)** — `/preview` local-only; synthetic data; no auth bypass |
 
 
 ## Explicit non-claims
@@ -31,14 +33,17 @@ This repository is an **engineering foundation only**:
 - No disease/medicine package is installed
 - No real OTP provider is configured; production authentication is not active
 - Passkeys are not connected
+- Phase 4B is on HOLD
+- Local `/preview` is not production and is blocked when `NODE_ENV=production`
 - No production patient database is deployed
 - No payment is active
 - No production deployment exists
 - No live monitoring, WAF, or production alerts
 - Profile uploads are not active
 
-Do **not** claim production readiness or “unhackable” security after Phase 4A.
+Do **not** claim production readiness or “unhackable” security after Phase 4C-V.
 
 ## Next (only after owner approval)
 
-**Phase 4B — real OTP-provider connection** (after owner account/provider approval). Do not begin without explicit approval.
+**Do not start Phase 4B** until a real OTP provider account is approved.
+Safe non-live options may include additional UX polish, accessibility deepening, or API contract work that does not send OTP.

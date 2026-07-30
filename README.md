@@ -12,13 +12,15 @@ Confirmed **absent / not active**:
 - No disease/medicine data package installed
 - No real OTP provider configured — login truthfully returns **OTP_PROVIDER_NOT_CONFIGURED**; production authentication is **not** active
 - Passkeys **PASSKEY_NOT_CONNECTED**
+- Phase **4B** real OTP provider: **HOLD** (no provider account)
+- Local `/preview` gallery is development-only (blocked in production)
 - No production patient database deployment
 - No payment integration
 - No production deployment
 - No live monitoring / WAF / production alerts
 - No profile photo / logo / signature uploads (NOT_IMPLEMENTED)
 
-Phase **3A–3D** persistence + profile API/UI and Phase **4A** authentication session core are present locally. See `docs/architecture/engineering-phases.md` and `docs/phase-reports/PHASE_4A_AUTH_CORE_REPORT.md`.
+Phase **3A–4A** persistence/auth core and Phase **4C-V** local browser preview are present. See `docs/architecture/engineering-phases.md` and `docs/phase-reports/PHASE_4C_V_BROWSER_PREVIEW_REPORT.md`.
 
 ## Requirements
 
@@ -32,14 +34,19 @@ Local machines may still have other Node versions installed; **do not** treat th
 
 ```bash
 npm ci
+npm run dev
 npm run verify:boundary
 npm run format:check
 npm run lint
 npm run typecheck
 npm run test
+npm run test:browser
 npm run build
 npm audit
 ```
+
+Local web (after `npm run dev`): **http://127.0.0.1:4101/**  
+Preview gallery (development only): **http://127.0.0.1:4101/preview**
 
 ## API namespace (shell)
 

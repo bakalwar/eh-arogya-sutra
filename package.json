@@ -9,10 +9,12 @@
     "packages/*"
   ],
   "scripts": {
+    "dev": "npm run dev -w eh-arogya-sutra-2-web",
     "build": "node scripts/build-all.mjs",
     "lint": "eslint .",
     "typecheck": "node scripts/typecheck-all.mjs",
     "test": "vitest run",
+    "test:browser": "playwright test -c playwright.config.mjs",
     "verify:boundary": "node scripts/verify-boundary.mjs",
     "format": "prettier --check .",
     "format:check": "prettier --check .",
@@ -30,6 +32,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.18.0",
+    "@playwright/test": "1.62.0",
     "@types/node": "^22.10.5",
     "eslint": "^9.18.0",
     "globals": "^15.14.0",

@@ -290,6 +290,30 @@ export const SYNTHETIC_CLINICAL_RESULTS = {
     ],
     externalApplications: externalSet(4),
   }),
+  oneExternal: baseResult({
+    resultId: 'syn-result-ext-1',
+    caseContext: {
+      casePreviewId: 'preview-case-ext-1',
+      chiefComplaint: 'Synthetic one-external layout fixture',
+      phase: 'acute',
+      severity: '2',
+    },
+    oralMixtures: threeMixtures.slice(0, 1),
+    tabletSectionB: tabletBPartial,
+    externalApplications: externalSet(1),
+  }),
+  threeExternal: baseResult({
+    resultId: 'syn-result-ext-3',
+    caseContext: {
+      casePreviewId: 'preview-case-ext-3',
+      chiefComplaint: 'Synthetic three-external layout fixture',
+      phase: 'subacute',
+      severity: '4',
+    },
+    oralMixtures: threeMixtures,
+    tabletSectionB: tabletBPartial,
+    externalApplications: externalSet(3),
+  }),
   notGenerated: baseResult({
     resultId: 'syn-result-empty',
     prescriptionStatus: 'not-generated',
@@ -372,6 +396,8 @@ export function getClinicalResultByCaseId(caseId: string): ClinicalResultDisplay
     'preview-case-3mix': SYNTHETIC_CLINICAL_RESULTS.threeMixture,
     'preview-case-4mix': SYNTHETIC_CLINICAL_RESULTS.fourMixture,
     'preview-case-5mix': SYNTHETIC_CLINICAL_RESULTS.fiveMixture,
+    'preview-case-ext-1': SYNTHETIC_CLINICAL_RESULTS.oneExternal,
+    'preview-case-ext-3': SYNTHETIC_CLINICAL_RESULTS.threeExternal,
     'preview-case-empty': SYNTHETIC_CLINICAL_RESULTS.notGenerated,
     'syn-case-3mix': SYNTHETIC_CLINICAL_RESULTS.threeMixture,
   };

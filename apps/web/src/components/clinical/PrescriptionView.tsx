@@ -38,19 +38,19 @@ export function PrescriptionView({
         <SystemBadgeGroup systems={result.affectedSystems} primary={result.primarySystem} />
         <PolarityCard polarity={result.polarity} />
       </Surface>
-      <section aria-label="Oral mixtures">
+      <section aria-label="Oral mixtures" id="oral-mixtures">
         <h2>Oral mixtures</h2>
         <OralMixturesSection mixtures={result.oralMixtures} />
       </section>
-      <section aria-label="Tablet Section A">
+      <section aria-label="Tablet Section A" id="tablet-section-a">
         <h2>Tablet Section A</h2>
         <TabletSectionA section={result.tabletSectionA} />
       </section>
-      <section aria-label="Tablet Section B">
+      <section aria-label="Tablet Section B" id="tablet-section-b">
         <h2>Tablet Section B</h2>
         <TabletSectionB slots={result.tabletSectionB} />
       </section>
-      <section aria-label="External applications">
+      <section aria-label="External applications" id="external-applications">
         <h2>External applications</h2>
         <ExternalApplicationsSection items={result.externalApplications} />
       </section>
