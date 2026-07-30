@@ -2,5 +2,8 @@
   "name": "ehas2-clinical-extract-tools",
   "private": true,
   "type": "module",
-  "description": "Offline clinical data extraction tools — never used at app startup"
+  "description": "Offline clinical data extraction tools — never used at app startup",
+  "dependencies": {
+    "better-sqlite3": "^11.8.1"
+  }
 }

@@ -1,0 +1,40 @@
+# Mixture evidence safety policy (Phase 5C-G)
+
+## Owner rules (final EHAS2 target)
+
+- Simple → exactly **3** oral mixtures  
+- Moderate → exactly **4**  
+- Complex / multi-system → exactly **5**  
+- Never 1 or 2 mixtures  
+- Do **not** add unsupported medicines only to fill count  
+- No fixed formula / fixed temperament triad  
+- No unjustified repetition  
+- Formula-specific potency and electricity  
+- No default WE; unresolved electricity must state reason  
+- Tablet A/B from full 39 pool independently (not oral-copy)  
+- Section B without evidence → `NO_CLINICALLY_JUSTIFIED_CANDIDATE`  
+- External by organ/site evidence (not oral-copy)  
+- Frontend: no medicine inference  
+- No prescription issue without doctor review  
+
+## Conflict
+
+**Minimum 3 mixtures** vs **do not add unsupported medicines to fill count**.
+
+These conflict when ranked evidence supports fewer than the required mixture count.
+
+## Recommended safe behavior (owner-rule clarification)
+
+When evidence cannot support the required 3/4/5 mixtures without fillers:
+
+1. **Do not issue** a prescription  
+2. Return `INSUFFICIENT_CLINICAL_EVIDENCE`  
+3. Set `DOCTOR_REVIEW_REQUIRED`  
+4. Emit **zero** fake/filler formulas  
+5. Do **not** return empty arrays as successful generation  
+
+Legacy `decide_mixture_count` may return **0** when untreatable — align EHAS2 with that fail-closed posture rather than fabricating mixtures.
+
+## Status
+
+Documented as **OWNER_DECISION_REQUIRED** until owner explicitly confirms this fail-closed clarification for Phase 5D.

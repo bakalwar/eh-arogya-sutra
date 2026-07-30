@@ -9,12 +9,13 @@ import {
 
 export const metadata: Metadata = {
   title: 'Clinical Validation · Preview · EHAS2',
-  description: 'Phase 5C synthetic nine-rule validation dashboard — non-clinical.',
+  description:
+    'Phase 5C-G synthetic nine-rule validation and prescription readiness — non-clinical.',
   robots: { index: false, follow: false },
 };
 
 /**
- * Local-only Phase 5C validation board.
+ * Local-only Phase 5C-G validation board.
  * Static synthetic data — zero DB writes, zero old-server requests, no medicines.
  */
 export default function ClinicalValidationPreviewPage() {
@@ -29,7 +30,7 @@ export default function ClinicalValidationPreviewPage() {
       </p>
       <PageHeader
         title="Clinical validation"
-        description="Phase 5C nine-rule orchestration — synthetic / read-only. Prescription engine NOT_CONNECTED."
+        description="Phase 5C-G closure — synthetic / read-only. Prescription engine NOT_CONNECTED."
       />
       <Surface>
         <table className="ehas2-preview-status-table" data-ehas2-clinical-validation="true">
@@ -41,6 +42,12 @@ export default function ClinicalValidationPreviewPage() {
             </tr>
           </thead>
           <tbody>
+            <tr>
+              <th scope="row">Phase 5C clean validation</th>
+              <td>
+                <code>{D.cleanValidationStatus}</code>
+              </td>
+            </tr>
             <tr>
               <th scope="row">Dataset</th>
               <td>
@@ -59,17 +66,30 @@ export default function ClinicalValidationPreviewPage() {
               </td>
             </tr>
             <tr>
-              <th scope="row">Rule 8</th>
+              <th scope="row">Rule 8 readiness</th>
               <td>
-                <code>{D.rule8Status}</code>
+                <code>
+                  {D.rule8Status} · implementation {D.rule8Implementation}
+                </code>
+              </td>
+            </tr>
+            <tr>
+              <th scope="row">Prescription readiness</th>
+              <td>
+                <code>
+                  oral {D.prescriptionReadiness.oral} · potency {D.prescriptionReadiness.potency} ·
+                  electricity {D.prescriptionReadiness.electricity} · TabletA{' '}
+                  {D.prescriptionReadiness.tabletA} · TabletB {D.prescriptionReadiness.tabletB} ·
+                  external {D.prescriptionReadiness.external}
+                </code>
               </td>
             </tr>
             <tr>
               <th scope="row">Golden cases</th>
               <td>
                 <code>
-                  total {D.goldenCases.total} · passed {D.goldenCases.passed} · blocked{' '}
-                  {D.goldenCases.blocked} · review {D.goldenCases.reviewRequired}
+                  total {D.goldenCases.total} · passed {D.goldenCases.passed} · assertions{' '}
+                  {D.goldenCases.assertionsMeaningful}
                 </code>
               </td>
             </tr>
@@ -104,7 +124,7 @@ export default function ClinicalValidationPreviewPage() {
               </td>
             </tr>
             <tr>
-              <th scope="row">Identifiable clinical records</th>
+              <th scope="row">Patient data (production)</th>
               <td>
                 <code>{D.realPatientData}</code>
               </td>
@@ -113,6 +133,12 @@ export default function ClinicalValidationPreviewPage() {
               <th scope="row">Clinical readiness</th>
               <td>
                 <code>{String(D.clinicalReadiness).toUpperCase()}</code>
+              </td>
+            </tr>
+            <tr>
+              <th scope="row">Phase 5D ready</th>
+              <td>
+                <code>{String(D.phase5dReady).toUpperCase()}</code>
               </td>
             </tr>
             <tr>

@@ -47,15 +47,16 @@ This repository is an **engineering foundation only**:
 
 Do **not** claim production readiness or “unhackable” security after Phase 5C.
 
-## Phase 5C (complete pending validation gates)
+## Phase 5C / 5C-G
 
-Nine-rule orchestration reconstructed for **synthetic validation only**:
+Nine-rule orchestration reconstructed for **synthetic validation only**. Phase **5C-G** closed clean TEMP `npm ci` gates and documented prescription readiness.
 
 - Production `AnalyzeComplete` remains **NOT_CONNECTED**
 - Prescription engine **PRESCRIPTION_ENGINE_NOT_CONNECTED**
-- Rule 8 truthful **NOT_IMPLEMENTED**
+- Rule 8 implementation **NOT_IMPLEMENTED**; readiness **OWNER_DECISION_REQUIRED**
 - Preview: `/preview/clinical-validation`
 - Phase **4B** remains **HOLD**
+- Phase **5D** not started — owner decisions required (Rule 8, tablet full-pool, min-3 evidence policy)
 
 ## Next (only after owner approval)
 

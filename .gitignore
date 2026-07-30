@@ -42,6 +42,18 @@ apps/web/.next-phase5b/
 
 apps/web/.next-phase5c/
 
+.next-phase5c-g/
+
+apps/web/.next-phase5c-g/
+
+.next-phase5c-g-br/
+
+apps/web/.next-phase5c-g-br/
+
+.next-phase5c-g-br2/
+
+apps/web/.next-phase5c-g-br2/
+
 tools/clinical-extract/node_modules/
 
 apps/clinical-engine/.venv/

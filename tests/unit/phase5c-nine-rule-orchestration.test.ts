@@ -41,8 +41,11 @@ describe('Phase 5C nine-rule orchestration contracts', () => {
     expect(CLINICAL_VALIDATION_DASHBOARD.clinicalReadiness).toBe(false);
     expect(CLINICAL_VALIDATION_DASHBOARD.prescriptionEngine).toBe('NOT_CONNECTED');
     expect(CLINICAL_VALIDATION_DASHBOARD.medicineOutput).toBe(0);
-    expect(CLINICAL_VALIDATION_DASHBOARD.realPatientData).toBe('NOT_USED');
-    expect(CLINICAL_VALIDATION_DASHBOARD.rule8Status).toBe('NOT_IMPLEMENTED');
+    expect(CLINICAL_VALIDATION_DASHBOARD.realPatientData).toBe('NO');
+    expect(CLINICAL_VALIDATION_DASHBOARD.rule8Status).toBe('OWNER_DECISION_REQUIRED');
+    expect(CLINICAL_VALIDATION_DASHBOARD.rule8Implementation).toBe('NOT_IMPLEMENTED');
+    expect(CLINICAL_VALIDATION_DASHBOARD.prescriptionEngine).toBe('NOT_CONNECTED');
+    expect(CLINICAL_VALIDATION_DASHBOARD.phase5dReady).toBe(false);
     expect(CLINICAL_VALIDATION_DASHBOARD.goldenCases.total).toBe(26);
     expect(CLINICAL_VALIDATION_DASHBOARD.databaseWritesFromPreview).toBe(0);
     const item = PREVIEW_CATALOG.find((i) => i.id === 'clinical-validation');
@@ -74,6 +77,12 @@ describe('Phase 5C nine-rule orchestration contracts', () => {
       'docs/architecture/clinical-engine-scaling.md',
       'docs/phase-reports/PHASE_5C_NINE_RULE_VALIDATION_REPORT.md',
       'docs/phase-reports/PHASE_5C_FINAL_MANIFEST.md',
+      'docs/clinical/rule-8-readiness-decision.md',
+      'docs/clinical/prescription-readiness-matrix.md',
+      'docs/clinical/mixture-evidence-safety-policy.md',
+      'docs/clinical/phase5c-golden-assertion-review.md',
+      'docs/phase-reports/PHASE_5C_G_CLOSURE_REPORT.md',
+      'docs/phase-reports/PHASE_5C_G_FINAL_MANIFEST.md',
     ];
     for (const d of docs) {
       expect(fs.existsSync(path.join(root, d)), d).toBe(true);

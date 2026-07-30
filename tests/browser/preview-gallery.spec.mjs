@@ -106,10 +106,12 @@ test.describe('Phase 4C-V browser preview', () => {
       /SYNTHETIC VALIDATION ONLY/i,
     );
     await expect(page.locator('[data-ehas2-clinical-validation="true"]')).toBeVisible();
+    await expect(page.getByText('OWNER_DECISION_REQUIRED').first()).toBeVisible();
     await expect(page.getByText('NOT_IMPLEMENTED').first()).toBeVisible();
     await expect(page.getByText('NOT_CONNECTED').first()).toBeVisible();
-    await expect(page.getByText('FALSE')).toBeVisible();
+    await expect(page.getByText('FALSE').first()).toBeVisible();
     await expect(page.getByText(/No live prescription/i)).toBeVisible();
+    await expect(page.getByText('PASS').first()).toBeVisible();
     const forbidden = requests.filter((r) =>
       /\/auth\/otp|\/v1\/analyze|\/payment|\/upload|eh_arogya|electrohomeopathy/i.test(r),
     );

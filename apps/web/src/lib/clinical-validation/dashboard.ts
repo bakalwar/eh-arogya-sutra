@@ -1,13 +1,15 @@
 /**
- * Static Phase 5C clinical validation dashboard data.
+ * Static Phase 5C / 5C-G clinical validation dashboard data.
  * Loaded in local preview only — no engine/DB calls from the browser.
  * SYNTHETIC / read-only labels.
  */
 
 export const CLINICAL_VALIDATION_DASHBOARD = {
   watermark: 'SYNTHETIC VALIDATION ONLY — NOT MEDICAL ADVICE — NOT SAVED',
+  phase: '5C-G' as const,
+  cleanValidationStatus: 'PASS' as const,
   clinicalReadiness: false as const,
-  realPatientData: 'NOT_USED' as const,
+  realPatientData: 'NO' as const,
   prescriptionEngine: 'NOT_CONNECTED' as const,
   medicineOutput: 0 as const,
   databaseWritesFromPreview: 0 as const,
@@ -52,20 +54,32 @@ export const CLINICAL_VALIDATION_DASHBOARD = {
     {
       ruleNumber: 8,
       ruleName: 'Disease-level Prakruti Inference',
-      status: 'NOT_IMPLEMENTED',
+      status: 'OWNER_DECISION_REQUIRED',
     },
     { ruleNumber: 9, ruleName: 'Master Pipeline', status: 'READY_FOR_VALIDATION' },
   ] as const,
-  rule8Status: 'NOT_IMPLEMENTED' as const,
+  rule8Status: 'OWNER_DECISION_REQUIRED' as const,
+  rule8Implementation: 'NOT_IMPLEMENTED' as const,
+  prescriptionReadiness: {
+    oral: 'REQUIRES_RECONSTRUCTION',
+    potency: 'REQUIRES_RECONSTRUCTION',
+    electricity: 'REQUIRES_RECONSTRUCTION',
+    tabletA: 'LEGACY_CONFLICT',
+    tabletB: 'LEGACY_CONFLICT',
+    external: 'REQUIRES_RECONSTRUCTION',
+    minimum3EvidencePolicy: 'OWNER_DECISION_REQUIRED',
+  },
   goldenCases: {
     total: 26,
     passed: 26,
     blocked: 0,
     reviewRequired: 0,
+    assertionsMeaningful: 'PASS',
   },
   determinism: 'PASS' as const,
   safetyGate: 'PASS' as const,
   diseaseRetrieval: 'PASS' as const,
+  phase5dReady: false as const,
   gates: {
     noForcedTop1: 'PASS',
     noGlobalSymptomLeakage: 'PASS',
