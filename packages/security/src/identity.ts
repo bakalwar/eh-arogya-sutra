@@ -6,11 +6,12 @@ import {
 } from './roles.js';
 
 /**
- * Identity contracts for Phase 2A / 2A-M.
- * Authentication providers / OTP / sessions are NOT live — principals are injected only in tests
- * or future auth middleware. Production must reject test-principal injection.
+ * Identity contracts for Phase 4A session core.
+ * OTP provider remains NOT_CONFIGURED — no real OTP traffic until Phase 4B owner approval.
+ * Principals from live sessions use authenticationStatus = AUTHENTICATION_STATUS.
+ * Test principals may still be injected only outside production.
  */
-export const AUTHENTICATION_STATUS = 'NOT_IMPLEMENTED' as const;
+export const AUTHENTICATION_STATUS = 'PHASE_4A_SESSION_CORE' as const;
 export const AUTHORIZATION_POLICY_STATUS = 'PHASE_2A_ACTIVE' as const;
 export const MANAGEMENT_POLICY_STATUS = 'PHASE_2A_M_ACTIVE' as const;
 

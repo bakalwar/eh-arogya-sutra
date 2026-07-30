@@ -1,9 +1,8 @@
 import { FoundationStatus } from '@ehas2/shared';
-import { AUTHENTICATION_STATUS } from './identity.js';
 
 /**
- * Provider-portable authentication interfaces — Phase 2B-A design only.
- * No SDK, no credentials, no OTP traffic, no session issuance.
+ * Provider-portable authentication interfaces — Phase 2B-A design + Phase 4A delivery adapter boundary.
+ * No SDK, no credentials, no real OTP traffic until Phase 4B owner approval.
  */
 export type IdentityProviderName =
   | 'ehas2_internal'
@@ -164,7 +163,12 @@ export function providerIdentityIsNotAuthorizationTruth(): true {
 }
 
 export function authenticationRemainsNotImplemented(): boolean {
-  return AUTHENTICATION_STATUS === 'NOT_IMPLEMENTED';
+  // Legacy helper name — Phase 4A session core exists but OTP provider is not configured.
+  return false;
+}
+
+export function authenticationOtpProviderConfigured(): boolean {
+  return false;
 }
 
 export function forbiddenClientTokenStorageLocations(): readonly string[] {
@@ -174,4 +178,4 @@ export function forbiddenClientTokenStorageLocations(): readonly string[] {
 export const UNIVERSAL_OTP_FORBIDDEN = true as const;
 
 export const AUTH_PROVIDER_DECISION_ADR_STATUS = 'ACCEPTED_ARCHITECTURE_ONLY' as const;
-export const OTP_PROVIDER_STATUS = 'PENDING' as const;
+export const OTP_PROVIDER_STATUS = 'NOT_CONFIGURED' as const;

@@ -59,10 +59,11 @@ export {
   PROVIDER_OUTAGE_NO_BYPASS,
   providerIdentityIsNotAuthorizationTruth,
   authenticationRemainsNotImplemented,
+  authenticationOtpProviderConfigured,
   forbiddenClientTokenStorageLocations,
   UNIVERSAL_OTP_FORBIDDEN,
   AUTH_PROVIDER_DECISION_ADR_STATUS,
-  OTP_PROVIDER_STATUS,
+  OTP_PROVIDER_STATUS as AUTH_PROVIDERS_OTP_STATUS,
 } from './authProviders.js';
 export type {
   IdentityProviderName,
@@ -75,6 +76,68 @@ export type {
   SessionStore,
   ProviderOutageBehavior,
 } from './authProviders.js';
+
+export {
+  NotConfiguredOtpDeliveryProvider,
+  createDefaultOtpDeliveryProvider,
+  OTP_PROVIDER_STATUS,
+} from './otpDelivery.js';
+export type {
+  OtpDeliveryProvider,
+  OtpDeliveryRequest,
+  OtpDeliveryResult,
+  OtpDeliveryResultCode,
+} from './otpDelivery.js';
+
+export {
+  requireAuthPepper,
+  normalizeIndianMobile,
+  hashContact,
+  contactLast4,
+  hashIp,
+  hashUserAgent,
+  generateOtpCode,
+  hashOtp,
+  verifyOtp,
+  generateOpaqueToken,
+  hashToken,
+  generateCsrfToken,
+  sha256Hex,
+  newSalt,
+} from './authCrypto.js';
+
+export {
+  requiredAssuranceForRole,
+  smsOnlyLoginAllowed,
+  authWorkspaceForRole,
+  breakGlassActivated,
+  SESSION_IDLE_TIMEOUT_MS,
+  SESSION_ABSOLUTE_TIMEOUT_MS,
+  PRIVILEGED_SESSION_IDLE_TIMEOUT_MS,
+  PRIVILEGED_SESSION_ABSOLUTE_TIMEOUT_MS,
+  OTP_TTL_MS,
+  OTP_RESEND_COOLDOWN_MS,
+  OTP_MAX_ATTEMPTS,
+  OTP_PHONE_WINDOW_MS,
+  OTP_PHONE_MAX_REQUESTS,
+  OTP_IP_WINDOW_MS,
+  OTP_IP_MAX_REQUESTS,
+  ACCOUNT_LOCK_MS,
+} from './authAssurance.js';
+export type { AuthWorkspace } from './authAssurance.js';
+
+export {
+  SESSION_COOKIE_NAME,
+  CSRF_COOKIE_NAME,
+  CSRF_HEADER_NAME,
+  sessionCookieAttrs,
+  csrfCookieAttrs,
+  serializeCookie,
+  clearCookie,
+  parseCookies,
+  originAllowed,
+} from './sessionCookies.js';
+export type { CookieAttrs } from './sessionCookies.js';
 
 export {
   WorkspaceKind,
@@ -97,8 +160,8 @@ export const SECURITY_HEADERS = {
   'Referrer-Policy': 'strict-origin-when-cross-origin',
 } as const;
 
-/** Live authentication remains unimplemented; authorization *policies* are Phase 2A/2A-M. */
-export const SECURITY_PACKAGE_STATUS = 'PHASE_2A_M_AUTHZ_POLICIES' as const;
+/** Live OTP provider not configured; session/CSRF core is Phase 4A. */
+export const SECURITY_PACKAGE_STATUS = 'PHASE_4A_AUTH_CORE' as const;
 
 export type DoctorSafeError = {
   message: string;

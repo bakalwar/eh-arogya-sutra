@@ -25,8 +25,8 @@ import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 
 describe('Phase 2A identity and permissions', () => {
-  it('keeps authentication NOT_IMPLEMENTED while authz policies are active', () => {
-    expect(AUTHENTICATION_STATUS).toBe('NOT_IMPLEMENTED');
+  it('keeps authentication PHASE_4A_SESSION_CORE while authz policies are active', () => {
+    expect(AUTHENTICATION_STATUS).toBe('PHASE_4A_SESSION_CORE');
     expect(AUTHORIZATION_POLICY_STATUS).toBe('PHASE_2A_ACTIVE');
   });
 

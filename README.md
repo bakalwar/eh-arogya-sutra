@@ -10,14 +10,15 @@ Confirmed **absent / not active**:
 
 - No clinical engine integrated
 - No disease/medicine data package installed
-- No authentication active (including Super Admin) — profile APIs return **AUTH_NOT_CONNECTED**
+- No real OTP provider configured — login truthfully returns **OTP_PROVIDER_NOT_CONFIGURED**; production authentication is **not** active
+- Passkeys **PASSKEY_NOT_CONNECTED**
 - No production patient database deployment
 - No payment integration
 - No production deployment
 - No live monitoring / WAF / production alerts
 - No profile photo / logo / signature uploads (NOT_IMPLEMENTED)
 
-Phase **3A–3D** local persistence + doctor/clinic profile API/UI shells are present. See `docs/architecture/engineering-phases.md` and `docs/phase-reports/PHASE_3D_PROFILE_API_UI_REPORT.md`.
+Phase **3A–3D** persistence + profile API/UI and Phase **4A** authentication session core are present locally. See `docs/architecture/engineering-phases.md` and `docs/phase-reports/PHASE_4A_AUTH_CORE_REPORT.md`.
 
 ## Requirements
 
@@ -46,7 +47,8 @@ npm audit
 
 - `/health` — process liveness only
 - `/ready` — **503 / ready:false** until services exist
-- `/api/eh-as-2/v1/me/*` and `/clinics/current*` — Phase 3D profile APIs (fail closed without auth)
+- `/api/eh-as-2/v1/auth/*` — Phase 4A session core (OTP provider **NOT_CONFIGURED**; passkeys **PASSKEY_NOT_CONNECTED**)
+- `/api/eh-as-2/v1/me/*` and `/clinics/current*` — Phase 3D profile APIs (fail closed without session)
 - `/api/eh-as-2/v1/system/data-version` — **503 DATA_PACKAGE_NOT_INSTALLED**
 - `/api/eh-as-2/v1/analysis` — **501 NOT_IMPLEMENTED**
 - `/api/eh-as-2/v1/ops` — **501 NOT_IMPLEMENTED** (Super Admin control plane)

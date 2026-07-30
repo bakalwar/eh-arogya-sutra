@@ -19,7 +19,8 @@
 | **3B** | Patient and consultation persistence services | **Complete (local)** |
 | **3C** | Doctor and clinic profile persistence | **Complete (local)** |
 | **3C-II** | Fast-forward integration of 3C onto canonical main | **Complete (local)** |
-| **3D** | Doctor/clinic profile API + UI connection | **Complete (local)** — auth still NOT_CONNECTED |
+| **3D** | Doctor/clinic profile API + UI connection | **Complete (local)** |
+| **4A** | Secure authentication core + session foundation | **Complete (local)** — OTP provider **NOT_CONFIGURED**; passkeys **PASSKEY_NOT_CONNECTED**; production auth **not** active |
 
 
 ## Explicit non-claims
@@ -28,15 +29,16 @@ This repository is an **engineering foundation only**:
 
 - No clinical engine is integrated
 - No disease/medicine package is installed
-- No authentication is active (including Super Admin)
+- No real OTP provider is configured; production authentication is not active
+- Passkeys are not connected
 - No production patient database is deployed
 - No payment is active
 - No production deployment exists
 - No live monitoring, WAF, or production alerts
 - Profile uploads are not active
 
-Do **not** claim production readiness or “unhackable” security after Phase 3D.
+Do **not** claim production readiness or “unhackable” security after Phase 4A.
 
 ## Next (only after owner approval)
 
-**Phase 4A — authentication implementation** (after owner approval). Do not begin without explicit approval.
+**Phase 4B — real OTP-provider connection** (after owner account/provider approval). Do not begin without explicit approval.

@@ -1,6 +1,7 @@
 /** UI-preview auth helpers — NOT real authentication. Never log OTP/phone. */
 
-export const AUTH_PREVIEW_BANNER = 'Authentication service is not connected.' as const;
+export const AUTH_PREVIEW_BANNER =
+  'OTP provider is not configured. Real authentication cannot complete.' as const;
 export const UI_PREVIEW_SESSION_LABEL = 'UI PREVIEW' as const;
 export const DEMO_DOCTOR_NAME = 'Demo Doctor' as const;
 

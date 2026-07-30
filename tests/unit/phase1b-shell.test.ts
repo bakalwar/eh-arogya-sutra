@@ -39,7 +39,7 @@ describe('Phase 1B navigation and status', () => {
     expect(statusLabelsAreTruthful(SYSTEM_STATUS_LABELS)).toBe(true);
     expect(SYSTEM_STATUS_LABELS.join(' ')).toMatch(/Not Connected/);
     expect(SYSTEM_STATUS_LABELS.join(' ')).toMatch(/Not Installed/);
-    expect(SYSTEM_STATUS_LABELS.join(' ')).toMatch(/Preview Only|Not Active/);
+    expect(SYSTEM_STATUS_LABELS.join(' ')).toMatch(/Preview Only|Not Active|OTP Not Configured/);
   });
 
   it('defines desktop, tablet, and mobile nav targets via single config', () => {

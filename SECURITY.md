@@ -9,13 +9,21 @@ Report vulnerabilities to the project owner through approved channels only.
 - Symlinks into the legacy application tree
 - Copied legacy `.env` or database files
 
+## Phase 4A authentication
+
+- Session core + CSRF cookies are local engineering only
+- OTP provider status: **NOT_CONFIGURED** (no real OTP sent; no provider credentials)
+- Passkeys: **PASSKEY_NOT_CONNECTED**
+- Docs: `docs/security/authentication-threat-model.md`, `docs/security/session-and-cookie-policy.md`, `docs/security/otp-abuse-protection.md`, `docs/security/privileged-access-assurance.md`
+- Production authentication is **not** active
+
 ## Phase 1A-H
 
 - Threat model: `docs/security/threat-model.md`
 - Dependency risk register: `docs/security/dependency-risk-register.md`
 - Privileged access: `docs/security/privileged-access-model.md`
 - Super Admin control plane: `docs/architecture/super-admin-control-plane.md`
-- Foundation only: no clinical engine, no patient DB, no auth, no payments, no live Super Admin monitoring, no production deployment
+- Foundation only: no clinical engine, no patient DB, no live Super Admin monitoring, no production deployment
 
 Do not claim the platform is unhackable or that every attack will be detected.
 

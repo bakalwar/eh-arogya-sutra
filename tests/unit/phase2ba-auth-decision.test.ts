@@ -29,9 +29,9 @@ import {
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 
 describe('Phase 2B-A authentication decision audit', () => {
-  it('keeps authentication NOT_IMPLEMENTED', () => {
-    expect(AUTHENTICATION_STATUS).toBe('NOT_IMPLEMENTED');
-    expect(authenticationRemainsNotImplemented()).toBe(true);
+  it('keeps session core active while OTP provider remains NOT_CONFIGURED', () => {
+    expect(AUTHENTICATION_STATUS).toBe('PHASE_4A_SESSION_CORE');
+    expect(authenticationRemainsNotImplemented()).toBe(false);
   });
 
   it('does not add provider SDKs to package manifests', () => {
@@ -99,9 +99,9 @@ describe('Phase 2B-A authentication decision audit', () => {
     expect(evaluateSuperAdminAccess(PlatformRole.ManagementAdmin).allowed).toBe(false);
   });
 
-  it('accepts authentication architecture only with OTP provider pending', () => {
+  it('accepts authentication architecture with OTP provider NOT_CONFIGURED', () => {
     expect(AUTH_PROVIDER_DECISION_ADR_STATUS).toBe('ACCEPTED_ARCHITECTURE_ONLY');
-    expect(OTP_PROVIDER_STATUS).toBe('PENDING');
+    expect(OTP_PROVIDER_STATUS).toBe('NOT_CONFIGURED');
     const adr = fs.readFileSync(
       path.join(root, 'docs/adr/013-authentication-provider-decision.md'),
       'utf8',

@@ -1,9 +1,9 @@
 /**
- * PostgreSQL persistence services — Phase 3D profile API-ready layer.
- * Clinical engine, OTP, uploads, and production patient records remain out of scope.
+ * PostgreSQL persistence — Phase 4A authentication core ready.
+ * Clinical engine, real OTP provider, uploads, and production patient records remain out of scope.
  */
-export const DATABASE_PACKAGE_VERSION = '0.1.0-phase3d' as const;
-export const DATABASE_PACKAGE_STATUS = 'PROFILE_API_READY' as const;
+export const DATABASE_PACKAGE_VERSION = '0.1.0-phase4a' as const;
+export const DATABASE_PACKAGE_STATUS = 'AUTH_CORE_READY' as const;
 export const DATABASE_ACCESS_LAYER = 'pg+sql-migrations' as const;
 
 export {
@@ -98,6 +98,8 @@ export {
   clinicProfileService,
   membershipQueryService,
 } from './services/profileServices.js';
+export { AuthService, authService } from './services/authService.js';
+export type { AuthServiceResultCode, AuthServiceDeps } from './services/authService.js';
 
 /** @deprecated — use getPool / withTenantTransaction. Kept to fail closed without config. */
 export function getConnection(): never {

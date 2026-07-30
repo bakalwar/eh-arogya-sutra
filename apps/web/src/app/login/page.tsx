@@ -6,7 +6,7 @@ import { Surface, PageHeader } from '../../components/ui/Primitives';
 
 export const metadata: Metadata = {
   title: 'Doctor Login · E.H. AROGYA SUTRA 2',
-  description: 'Doctor login UI preview — authentication service is not connected.',
+  description: 'Doctor login — OTP provider is not configured; no real OTP is sent.',
 };
 
 export default function LoginPage() {
@@ -19,7 +19,7 @@ export default function LoginPage() {
             <EHAS2Logo size={72} priority />
             <PageHeader
               title="Doctor login"
-              description="Enter your mobile number. Authentication service is not connected."
+              description="Enter your mobile number. OTP provider is not configured — no OTP will be sent."
             />
           </div>
           <LoginForm />

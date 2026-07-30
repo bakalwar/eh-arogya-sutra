@@ -4,38 +4,46 @@ import { EHAS2_API_NAMESPACE } from '@ehas2/shared';
 import {
   AUTHENTICATION_STATUS,
   AUTHORIZATION_POLICY_STATUS,
+  OTP_PROVIDER_STATUS,
   Permission,
   SECURITY_HEADERS,
+  SESSION_COOKIE_NAME,
+  parseCookies,
   type IdentityPrincipal,
 } from '@ehas2/security';
-import { databaseReadinessCode } from '@ehas2/database';
+import { authService, databaseReadinessCode, type TenantContext } from '@ehas2/database';
 import { logInfo } from '@ehas2/observability';
 import { requirePermission, type AuthedRequest } from './middleware/authorization.js';
 import { sendError } from './http/errors.js';
 import { registerProfileRoutes, type ProfileRouteDeps } from './routes/profiles.js';
+import { registerAuthRoutes, type AuthRouteDeps } from './routes/auth.js';
 import type { TenantContextResolver } from './middleware/tenantBridge.js';
 
 export type CreateAppDeps = {
   /**
-   * Optional principal resolver for automated tests only.
-   * Production omits this — principal remains null (AUTH_NOT_CONNECTED).
+   * Optional principal override for automated tests.
+   * Production uses opaque session cookie → AuthService.resolveSession.
    * Must never read identity from headers or query strings.
    */
   resolvePrincipal?: (req: AuthedRequest) => IdentityPrincipal | null;
   /**
-   * Optional TenantContext bridge for automated tests only.
-   * Production has no session→tenant mapping until Phase 4 auth.
+   * Optional TenantContext bridge. Production derives from session membership when present.
    */
   resolveTenantContext?: TenantContextResolver;
   doctors?: ProfileRouteDeps['doctors'];
   clinics?: ProfileRouteDeps['clinics'];
   memberships?: ProfileRouteDeps['memberships'];
+  auth?: AuthRouteDeps['auth'];
+  allowedOrigins?: string[];
 };
 
-type RequestWithId = AuthedRequest;
+type RequestWithId = AuthedRequest & {
+  sessionTenant?: TenantContext | null;
+};
 
 export function createApp(deps: CreateAppDeps = {}) {
   const app = express();
+  const auth = deps.auth ?? authService;
 
   app.use(express.json({ limit: '1mb' }));
 
@@ -55,20 +63,60 @@ export function createApp(deps: CreateAppDeps = {}) {
   });
 
   /**
-   * Real authentication is not connected.
-   * Production always leaves principal null unless a future Phase 4 session adapter is wired.
-   * Tests may inject via createApp({ resolvePrincipal }) — never via headers/query.
+   * Session cookie → principal (Phase 4A).
+   * No header/query identity bypass. Tests may inject via resolvePrincipal.
    */
   app.use((req: RequestWithId, _res, next) => {
-    req.principal = deps.resolvePrincipal ? deps.resolvePrincipal(req) : null;
-    next();
+    void (async () => {
+      try {
+        if (deps.resolvePrincipal) {
+          req.principal = deps.resolvePrincipal(req);
+          req.sessionTenant = null;
+          next();
+          return;
+        }
+        const cookies = parseCookies(req.header('cookie') ?? undefined);
+        const token = cookies[SESSION_COOKIE_NAME];
+        if (!token) {
+          req.principal = null;
+          req.sessionTenant = null;
+          next();
+          return;
+        }
+        const resolved = await auth.resolveSession(token);
+        req.principal = resolved.principal ?? null;
+        if (
+          resolved.session?.organizationId &&
+          resolved.session.clinicId &&
+          resolved.session.roleCode &&
+          resolved.principal
+        ) {
+          req.sessionTenant = {
+            organizationId: resolved.session.organizationId,
+            clinicId: resolved.session.clinicId,
+            actorId: resolved.principal.subjectId,
+            actorRole: resolved.session.roleCode,
+            membershipStatus: 'ACTIVE',
+            allowPatientPhi:
+              resolved.session.roleCode === 'Doctor' || resolved.session.roleCode === 'ClinicAdmin',
+          };
+        } else {
+          req.sessionTenant = null;
+        }
+        next();
+      } catch {
+        req.principal = null;
+        req.sessionTenant = null;
+        next();
+      }
+    })();
   });
 
   app.get('/health', (req: RequestWithId, res) => {
     res.json({
       ok: true,
       service: 'eh-arogya-sutra-2-api',
-      phase: '3d',
+      phase: '4a',
       requestId: req.requestId,
     });
   });
@@ -81,11 +129,13 @@ export function createApp(deps: CreateAppDeps = {}) {
       dataPackages: false,
       authentication: false,
       authenticationStatus: AUTHENTICATION_STATUS,
+      otpProviderStatus: OTP_PROVIDER_STATUS,
       authorizationPolicies: AUTHORIZATION_POLICY_STATUS,
       managementServices: false,
       patientDatabase: false,
       doctorClinicProfileApi: true,
       profileUploads: false,
+      passkeys: 'PASSKEY_NOT_CONNECTED',
       database,
       databaseCode: database === 'DATABASE_NOT_INSTALLED' ? 'DATABASE_NOT_INSTALLED' : database,
       payment: false,
@@ -112,18 +162,26 @@ export function createApp(deps: CreateAppDeps = {}) {
       data: {
         authenticationStatus: AUTHENTICATION_STATUS,
         authorizationPolicyStatus: AUTHORIZATION_POLICY_STATUS,
+        otpProviderStatus: OTP_PROVIDER_STATUS,
         realOtp: false,
         authProvider: false,
         patientPersistence: false,
         profileApi: true,
         profileUploads: false,
+        passkeys: 'PASSKEY_NOT_CONNECTED',
       },
       requestId: req.requestId,
     });
   });
 
+  registerAuthRoutes(app, {
+    auth,
+    allowedOrigins: deps.allowedOrigins,
+  });
+
   registerProfileRoutes(app, {
-    resolveTenantContext: deps.resolveTenantContext ?? (() => null),
+    resolveTenantContext:
+      deps.resolveTenantContext ?? ((req) => (req as RequestWithId).sessionTenant ?? null),
     doctors: deps.doctors,
     clinics: deps.clinics,
     memberships: deps.memberships,
@@ -137,7 +195,7 @@ export function createApp(deps: CreateAppDeps = {}) {
         res,
         501,
         'NOT_IMPLEMENTED',
-        'Patient HTTP persistence is not implemented (Phase 3D profiles only)',
+        'Patient HTTP persistence is not implemented (Phase 4A auth core only)',
         req.requestId ?? 'unknown',
       );
     },

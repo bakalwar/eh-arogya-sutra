@@ -8,8 +8,6 @@ import { PreviewModeBanner } from './PreviewModeBanner';
 import {
   AUTH_PREVIEW_BANNER,
   isUniversalOtp,
-  maskMobile,
-  normalizeIndianMobile,
   UI_PREVIEW_CONTINUE_LABEL,
 } from '../../lib/authPreview';
 import { PUBLIC_ROUTES } from '../../config/navigation';
@@ -17,29 +15,42 @@ import { PUBLIC_ROUTES } from '../../config/navigation';
 export function OtpVerificationForm() {
   const router = useRouter();
   const params = useSearchParams();
-  const mobileParam = params.get('m') ?? '';
-  const masked = useMemo(() => maskMobile(normalizeIndianMobile(mobileParam)), [mobileParam]);
+  const preview = params.get('preview') === '1';
+  const challengeId = params.get('challenge') ?? '';
   const [digits, setDigits] = useState<string[]>(['', '', '', '', '', '']);
   const [error, setError] = useState<string | undefined>();
-  const [resendSeconds] = useState(30);
+  const [status, setStatus] = useState<string | undefined>();
   const code = digits.join('');
+  const heading = useMemo(
+    () =>
+      preview ? 'UI preview — not real authentication' : 'Enter OTP (provider must be configured)',
+    [preview],
+  );
 
-  function handlePreviewContinue(event: FormEvent) {
+  function handleSubmit(event: FormEvent) {
     event.preventDefault();
     if (code.length === 6 && isUniversalOtp(code)) {
       setError('Universal OTP codes are not accepted.');
       return;
     }
-    // Explicit UI-preview navigation — not backend verification.
-    router.push(PUBLIC_ROUTES.dashboard);
+    if (preview) {
+      // Explicit UI-preview navigation — not backend verification; never writes to PostgreSQL.
+      router.push(PUBLIC_ROUTES.dashboard);
+      return;
+    }
+    if (!challengeId) {
+      setStatus('OTP_PROVIDER_NOT_CONFIGURED — start again from login. No OTP was delivered.');
+      return;
+    }
+    setStatus(
+      'OTP verification requires a configured delivery provider. Production login remains blocked at OTP_PROVIDER_NOT_CONFIGURED.',
+    );
   }
 
   return (
-    <form className="ehas2-auth-actions" onSubmit={handlePreviewContinue}>
+    <form className="ehas2-auth-actions" onSubmit={handleSubmit}>
       <PreviewModeBanner message={AUTH_PREVIEW_BANNER} />
-      <p>
-        Code preview for <strong>{masked}</strong>
-      </p>
+      <p>{heading}</p>
       <OTPInput
         value={digits}
         onChange={(next) => {
@@ -48,12 +59,17 @@ export function OtpVerificationForm() {
         }}
         error={error}
       />
-      <p role="status">Resend available in {resendSeconds}s (UI timer only — no SMS).</p>
+      {status ? (
+        <p className="ehas2-field__error" role="status">
+          {status}
+        </p>
+      ) : null}
       <Button type="submit" variant="primary">
-        {UI_PREVIEW_CONTINUE_LABEL}
+        {preview ? UI_PREVIEW_CONTINUE_LABEL : 'Verify OTP'}
       </Button>
       <div className="ehas2-auth-links">
-        <a href={PUBLIC_ROUTES.login}>Change number</a>
+        <a href={PUBLIC_ROUTES.login}>Back to login</a>
+        <a href={PUBLIC_ROUTES.login}>Provider not configured</a>
       </div>
     </form>
   );
