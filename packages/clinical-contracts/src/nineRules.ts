@@ -1,0 +1,120 @@
+/**
+ * Nine-rule interfaces — Phase 5B.
+ * Canonical names/order from Phase 5A EH_9 audit. No live orchestration.
+ */
+
+export const RULE_SET_VERSION = 'ehas2-nine-rule-interfaces-v1' as const;
+
+export type ClinicalRuleStatus =
+  | 'NOT_CONNECTED'
+  | 'NOT_IMPLEMENTED'
+  | 'READY_FOR_VALIDATION'
+  | 'EXECUTED'
+  | 'UNRESOLVED'
+  | 'BLOCKED_BY_SAFETY'
+  | 'FAILED';
+
+export type ClinicalRuleResult = {
+  ruleNumber: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
+  ruleName: string;
+  status: ClinicalRuleStatus;
+  evidence: readonly string[];
+  confidence: number | null;
+  warnings: readonly string[];
+  unknownUnresolvedReason: string | null;
+  sourceVersion: string;
+  deterministicFingerprint: string | null;
+  /** Clinical selection effect is deferred until orchestration is validated. */
+  affectsClinicalSelection: boolean;
+};
+
+/** Canonical EH_9 names — do not invent. */
+export const NINE_RULE_DEFINITIONS = [
+  {
+    ruleNumber: 1 as const,
+    ruleName: 'Temperament (Prakriti)',
+    phase5bStatus: 'READY_FOR_VALIDATION' as ClinicalRuleStatus,
+    affectsClinicalSelection: true,
+  },
+  {
+    ruleNumber: 2 as const,
+    ruleName: 'Polarity',
+    phase5bStatus: 'READY_FOR_VALIDATION' as ClinicalRuleStatus,
+    affectsClinicalSelection: true,
+  },
+  {
+    ruleNumber: 3 as const,
+    ruleName: 'Organ / System Affinity',
+    phase5bStatus: 'READY_FOR_VALIDATION' as ClinicalRuleStatus,
+    affectsClinicalSelection: true,
+  },
+  {
+    ruleNumber: 4 as const,
+    ruleName: 'Potency',
+    phase5bStatus: 'READY_FOR_VALIDATION' as ClinicalRuleStatus,
+    affectsClinicalSelection: true,
+  },
+  {
+    ruleNumber: 5 as const,
+    ruleName: 'Dosage',
+    phase5bStatus: 'READY_FOR_VALIDATION' as ClinicalRuleStatus,
+    affectsClinicalSelection: true,
+  },
+  {
+    ruleNumber: 6 as const,
+    ruleName: 'Multi-Disease / Organ-System Triad',
+    phase5bStatus: 'READY_FOR_VALIDATION' as ClinicalRuleStatus,
+    affectsClinicalSelection: true,
+  },
+  {
+    ruleNumber: 7 as const,
+    ruleName: 'External Use Routes',
+    phase5bStatus: 'READY_FOR_VALIDATION' as ClinicalRuleStatus,
+    affectsClinicalSelection: true,
+  },
+  {
+    ruleNumber: 8 as const,
+    ruleName: 'Disease-level Prakruti Inference',
+    /** Historically unwired on live MDE path — remain honest. */
+    phase5bStatus: 'NOT_IMPLEMENTED' as ClinicalRuleStatus,
+    affectsClinicalSelection: false,
+  },
+  {
+    ruleNumber: 9 as const,
+    ruleName: 'Master Pipeline',
+    phase5bStatus: 'NOT_CONNECTED' as ClinicalRuleStatus,
+    affectsClinicalSelection: true,
+  },
+] as const;
+
+export function createRuleInterfaceResult(
+  def: (typeof NINE_RULE_DEFINITIONS)[number],
+): ClinicalRuleResult {
+  return {
+    ruleNumber: def.ruleNumber,
+    ruleName: def.ruleName,
+    status: def.phase5bStatus,
+    evidence: [],
+    confidence: null,
+    warnings:
+      def.phase5bStatus === 'NOT_IMPLEMENTED'
+        ? ['Historically unwired on legacy live path; not falsely marked implemented']
+        : [],
+    unknownUnresolvedReason:
+      def.phase5bStatus === 'UNRESOLVED' || def.phase5bStatus === 'NOT_IMPLEMENTED'
+        ? def.phase5bStatus
+        : null,
+    sourceVersion: RULE_SET_VERSION,
+    deterministicFingerprint: null,
+    affectsClinicalSelection: def.affectsClinicalSelection,
+  };
+}
+
+export function allNineRuleInterfaceResults(): readonly ClinicalRuleResult[] {
+  return NINE_RULE_DEFINITIONS.map(createRuleInterfaceResult);
+}
+
+export const ORCHESTRATION_STATUS = 'NOT_CONNECTED' as const;
+export const TABLET_ENGINE_STATUS = 'NOT_IMPLEMENTED' as const;
+export const TABLET_FULL_POOL_REGISTRY_STATUS = 'AVAILABLE' as const;
+export const TABLET_SELECTION_STATUS = 'DEFERRED_TO_CONTROLLED_RECONSTRUCTION' as const;

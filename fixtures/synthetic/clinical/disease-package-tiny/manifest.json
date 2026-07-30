@@ -1,0 +1,40 @@
+{
+  "schemaVersion": "ehas2-disease-schema-v1",
+  "datasetVersion": "ehas2-disease-v1",
+  "recordCount": 3,
+  "approvedFields": [
+    "id",
+    "icd10_code",
+    "name_english",
+    "name_hindi",
+    "category",
+    "system_key",
+    "symptoms_en",
+    "symptoms_hi",
+    "prakruti",
+    "base_medicines",
+    "base_formula"
+  ],
+  "approvedTables": ["diseases"],
+  "denylistTablesExcluded": [
+    "consultations",
+    "patients",
+    "api_keys",
+    "medicines",
+    "potency_rules",
+    "users",
+    "sessions",
+    "reports",
+    "uploads",
+    "prescriptions"
+  ],
+  "sourceFingerprint": "9B6A21980B3B55BF63C09074CC20B28A81DAB025F6725992DEB1662FB8F06568",
+  "artifactSha256": "80E2D65E5C23658AD99F0AB17A29B047D9C2D01BCD71256915C31CDA8DC2EA82",
+  "artifactFile": "diseases.v1.jsonl",
+  "generatedAt": "2026-07-30T17:49:20.681Z",
+  "notes": [
+    "Disease knowledge only — no consultations, patients, reports, or prescriptions.",
+    "Do not commit the full artifact to Git; store under data/clinical-artifacts/.",
+    "Production must receive a signed/versioned artifact — never an old laptop path."
+  ]
+}

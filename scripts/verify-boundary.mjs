@@ -26,10 +26,13 @@ const SKIP_DIRS = new Set([
   '.git',
   '.next',
   '.next-phase5a',
+  '.next-phase5b',
   'dist',
   'coverage',
   '.turbo',
   'out',
+  'clinical-artifacts',
+  '.venv',
 ]);
 
 const SCAN_EXT = new Set([

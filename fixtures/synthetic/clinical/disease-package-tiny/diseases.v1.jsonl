@@ -1,0 +1,3 @@
+{"id":1,"icd10_code":"A00","name_english":"Demo Disease Alpha","name_hindi":"रोग अ","category":"demo","system_key":"METABOLIC","symptoms_en":"fever","symptoms_hi":"बुखार","prakruti":"Mixed","base_medicines":"A1","base_formula":""}
+{"id":2,"icd10_code":"A01","name_english":"Demo Disease Beta","name_hindi":"रोग ब","category":"demo","system_key":"JOINTS","symptoms_en":"pain","symptoms_hi":"दर्द","prakruti":"Mixed","base_medicines":"S1","base_formula":""}
+{"id":3,"icd10_code":"A02","name_english":"Demo Disease Gamma","name_hindi":"रोग ग","category":"demo","system_key":"LIVER","symptoms_en":"nausea","symptoms_hi":"मतली","prakruti":"Mixed","base_medicines":"C1","base_formula":""}

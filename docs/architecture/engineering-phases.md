@@ -24,14 +24,16 @@
 | **4B** | Real OTP-provider connection | **HOLD** — no provider account; do not start without owner approval |
 | **4C-V** | Local browser preview + Playwright visual QA | **Complete (local)** — `/preview` local-only; synthetic data; no auth bypass |
 | **5A** | Clinical engine + data migration forensic audit | **Complete (audit-only)** — docs + status preview; **no** clinical code/data copied |
+| **5B** | Sanitized clinical data packages + isolated engine foundation | **Complete (non-live)** — disease extract tool, 39-medicine registry, contracts, Python scaffold; engine **NOT_CONNECTED** |
 
 
 ## Explicit non-claims
 
 This repository is an **engineering foundation only**:
 
-- No clinical engine is integrated
-- No disease/medicine package is installed
+- No clinical engine is integrated / analyze remains NOT_CONNECTED
+- Disease package may be generated locally but is **not** installed live
+- Medicine registry package exists (39) but does not prescribe
 - No real OTP provider is configured; production authentication is not active
 - Passkeys are not connected
 - Phase 4B is on HOLD
@@ -41,11 +43,12 @@ This repository is an **engineering foundation only**:
 - No production deployment exists
 - No live monitoring, WAF, or production alerts
 - Profile uploads are not active
-- Phase 5A audited old clinical assets only — migration not started
+- Phase 5A audited old clinical assets only — migration extraction is offline tooling only
 
-Do **not** claim production readiness or “unhackable” security after Phase 5A.
+Do **not** claim production readiness or “unhackable” security after Phase 5B.
 
 ## Next (only after owner approval)
 
 **Do not start Phase 4B** until a real OTP provider account is approved.  
-**Do not start clinical integration** until owner approves Phase 5B isolated package extraction plan.
+**Phase 5C** nine-rule orchestration reconstruction and golden validation — only after owner approval.  
+Do not activate clinical analysis.

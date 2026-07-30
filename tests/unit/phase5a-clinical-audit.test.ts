@@ -23,9 +23,8 @@ describe('Phase 5A clinical integration status preview', () => {
       'utf8',
     );
     expect(page).toMatch(/isLocalPreviewAllowed/);
-    expect(page).toMatch(/AUDIT_ONLY/);
     expect(page).toMatch(/NOT_CONNECTED/);
-    expect(page).toMatch(/NOT_USED/);
+    expect(page).toMatch(/NOT_IMPLEMENTED/);
     expect(page).not.toMatch(/fetch\(|axios|AnalyzeComplete|otp\/request/i);
     expect(previewMayCallClinicalEngine()).toBe(false);
     expect(isLocalPreviewAllowed({ NODE_ENV: 'production' })).toBe(false);

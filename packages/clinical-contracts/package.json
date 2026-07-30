@@ -1,7 +1,7 @@
 {
   "name": "@ehas2/clinical-contracts",
-  "version": "0.1.0-phase2ad",
-  "description": "E.H. AROGYA SUTRA 2 — typed clinical persistence and display contracts",
+  "version": "0.2.0-phase5b",
+  "description": "E.H. AROGYA SUTRA 2 — typed clinical persistence, analyze, and nine-rule contracts",
   "private": true,
   "type": "module",
   "main": "./dist/index.js",

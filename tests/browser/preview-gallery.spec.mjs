@@ -81,9 +81,10 @@ test.describe('Phase 4C-V browser preview', () => {
     });
     await page.goto('/preview/clinical-integration-status');
     await expect(page.getByRole('heading', { name: /Clinical integration status/i })).toBeVisible();
-    await expect(page.getByText('AUDIT_ONLY')).toBeVisible();
     await expect(page.getByText('NOT_CONNECTED').first()).toBeVisible();
-    await expect(page.getByText('NOT_USED')).toBeVisible();
+    await expect(page.getByText('NOT_IMPLEMENTED').first()).toBeVisible();
+    await expect(page.getByText('EXCLUDED_FROM_CLINICAL_AUTHORITY')).toBeVisible();
+    await expect(page.getByText('PRESENT')).toBeVisible();
     const forbidden = requests.filter((r) =>
       /\/auth\/otp|\/analysis|\/payment|\/upload|eh_arogya|electrohomeopathy|116284/i.test(r),
     );

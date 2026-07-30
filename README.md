@@ -15,13 +15,14 @@ Confirmed **absent / not active**:
 - Phase **4B** real OTP provider: **HOLD** (no provider account)
 - Local `/preview` gallery is development-only (blocked in production)
 - Phase **5A** clinical migration audit is documentation-only (engine still NOT_CONNECTED)
+- Phase **5B** sanitized disease extract tooling + 39-medicine registry package exist; analyze remains **NOT_CONNECTED**
 - No production patient database deployment
 - No payment integration
 - No production deployment
 - No live monitoring / WAF / production alerts
 - No profile photo / logo / signature uploads (NOT_IMPLEMENTED)
 
-Phase **3A–4A** persistence/auth core, Phase **4C-V** local browser preview, and Phase **5A** clinical migration audit docs are present. See `docs/architecture/engineering-phases.md` and `docs/phase-reports/PHASE_5A_CLINICAL_MIGRATION_AUDIT.md`.
+Phase **3A–4A** persistence/auth core, Phase **4C-V** local browser preview, Phase **5A** audit, and Phase **5B** sanitized package foundations are present. See `docs/architecture/engineering-phases.md` and `docs/phase-reports/PHASE_5B_CLINICAL_PACKAGE_REPORT.md`.
 
 ## Requirements
 

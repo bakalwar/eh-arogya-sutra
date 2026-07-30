@@ -31,3 +31,13 @@ playwright/.cache/
 
 .next-phase5a/
 apps/web/.next-phase5a/
+
+data/clinical-artifacts/
+
+.next-phase5b/
+
+apps/web/.next-phase5b/
+
+tools/clinical-extract/node_modules/
+
+apps/clinical-engine/.venv/

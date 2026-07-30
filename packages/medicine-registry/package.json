@@ -1,0 +1,19 @@
+{
+  "name": "@ehas2/medicine-registry",
+  "version": "0.1.0-phase5b",
+  "description": "EHAS2 canonical 39-medicine registry (versioned; clinical engine NOT_CONNECTED)",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  }
+}
