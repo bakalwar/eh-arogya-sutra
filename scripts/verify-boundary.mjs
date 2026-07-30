@@ -27,6 +27,7 @@ const SKIP_DIRS = new Set([
   '.next',
   '.next-phase5a',
   '.next-phase5b',
+  '.next-phase5c',
   'dist',
   'coverage',
   '.turbo',

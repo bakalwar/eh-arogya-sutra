@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 const auditDir = path.join(os.tmpdir(), 'ehas2_phase4c_v_audit');
-const PORT = 4101;
+const PORT = Number(process.env.EHAS2_PREVIEW_PORT || 4101);
 const baseURL = `http://127.0.0.1:${PORT}`;
 
 /** Isolated Playwright config — JS to avoid root TS project-references loader issues. */
@@ -30,15 +30,16 @@ export default defineConfig({
     ignoreHTTPSErrors: true,
   },
   webServer: {
-    command: 'npm run dev -w eh-arogya-sutra-2-web',
+    command: `npm run dev -w eh-arogya-sutra-2-web -- --port ${PORT}`,
     url: baseURL,
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: !process.env.CI && PORT === 4101,
     timeout: 180_000,
     cwd: root,
     env: {
       ...process.env,
       NODE_ENV: 'development',
       EHAS2_NODE_ENV: 'development',
+      PORT: String(PORT),
     },
   },
   projects: [

@@ -1,7 +1,7 @@
 {
   "schemaVersion": "ehas2-disease-schema-v1",
   "datasetVersion": "ehas2-disease-v1",
-  "recordCount": 3,
+  "recordCount": 11,
   "approvedFields": [
     "id",
     "icd10_code",
@@ -28,13 +28,12 @@
     "uploads",
     "prescriptions"
   ],
-  "sourceFingerprint": "9B6A21980B3B55BF63C09074CC20B28A81DAB025F6725992DEB1662FB8F06568",
-  "artifactSha256": "80E2D65E5C23658AD99F0AB17A29B047D9C2D01BCD71256915C31CDA8DC2EA82",
+  "sourceFingerprint": "SYNTHETIC-CI-ONLY",
+  "artifactSha256": "C03F4CD5851014ACBBA18953AA20B051A40B593BEF4CEEC60330D92C755F60C7",
   "artifactFile": "diseases.v1.jsonl",
-  "generatedAt": "2026-07-30T17:49:20.681Z",
+  "generatedAt": "2026-07-30T00:00:00.000Z",
   "notes": [
-    "Disease knowledge only — no consultations, patients, reports, or prescriptions.",
-    "Do not commit the full artifact to Git; store under data/clinical-artifacts/.",
-    "Production must receive a signed/versioned artifact — never an old laptop path."
+    "SYNTHETIC CI disease package only — not the full 116284 artifact.",
+    "No consultations, patients, reports, or prescriptions."
   ]
 }

@@ -45,10 +45,20 @@ This repository is an **engineering foundation only**:
 - Profile uploads are not active
 - Phase 5A audited old clinical assets only — migration extraction is offline tooling only
 
-Do **not** claim production readiness or “unhackable” security after Phase 5B.
+Do **not** claim production readiness or “unhackable” security after Phase 5C.
+
+## Phase 5C (complete pending validation gates)
+
+Nine-rule orchestration reconstructed for **synthetic validation only**:
+
+- Production `AnalyzeComplete` remains **NOT_CONNECTED**
+- Prescription engine **PRESCRIPTION_ENGINE_NOT_CONNECTED**
+- Rule 8 truthful **NOT_IMPLEMENTED**
+- Preview: `/preview/clinical-validation`
+- Phase **4B** remains **HOLD**
 
 ## Next (only after owner approval)
 
 **Do not start Phase 4B** until a real OTP provider account is approved.  
-**Phase 5C** nine-rule orchestration reconstruction and golden validation — only after owner approval.  
-Do not activate clinical analysis.
+**Phase 5D** controlled prescription-engine reconstruction — only after owner approval.  
+Do not activate clinical analysis or live prescriptions.

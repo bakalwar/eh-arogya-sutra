@@ -1,4 +1,4 @@
-{
+﻿{
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "jsx": "preserve",
@@ -11,7 +11,13 @@
     "moduleResolution": "Bundler",
     "paths": { "@/*": ["./src/*"] }
   },
-  "include": ["next-env.d.ts", "src/**/*.ts", "src/**/*.tsx", ".next/types/**/*.ts"],
+  "include": [
+    "next-env.d.ts",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    ".next/types/**/*.ts",
+    ".next-phase5c/types/**/*.ts"
+  ],
   "exclude": ["node_modules"],
   "references": [
     { "path": "../../packages/design-system" },

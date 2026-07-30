@@ -309,6 +309,14 @@ export const PREVIEW_CATALOG: readonly PreviewCatalogItem[] = [
     group: 'audit',
     shell: 'audit',
   },
+  {
+    id: 'clinical-validation',
+    title: 'Clinical validation (Phase 5C)',
+    description: 'Synthetic nine-rule orchestration board — prescription NOT_CONNECTED',
+    href: '/preview/clinical-validation',
+    group: 'audit',
+    shell: 'audit',
+  },
 ] as const;
 
 export const PREVIEW_GROUPS = [

@@ -38,6 +38,10 @@ data/clinical-artifacts/
 
 apps/web/.next-phase5b/
 
+.next-phase5c/
+
+apps/web/.next-phase5c/
+
 tools/clinical-extract/node_modules/
 
 apps/clinical-engine/.venv/

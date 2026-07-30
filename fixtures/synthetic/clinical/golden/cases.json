@@ -1,0 +1,241 @@
+[
+  {
+    "id": "GC01",
+    "label": "SYNTHETIC",
+    "title": "Simple single-system complaint",
+    "input": { "chief_complaint": "fever", "symptoms": ["fever"] },
+    "expect": { "min_candidates": 1, "systems_min": 1 }
+  },
+  {
+    "id": "GC02",
+    "label": "SYNTHETIC",
+    "title": "Moderate multi-symptom complaint",
+    "input": {
+      "chief_complaint": "fever with weakness",
+      "symptoms": ["fever", "weakness", "fatigue"]
+    },
+    "expect": { "min_candidates": 1 }
+  },
+  {
+    "id": "GC03",
+    "label": "SYNTHETIC",
+    "title": "Complex multi-system complaint",
+    "input": {
+      "chief_complaint": "multi system illness",
+      "symptoms": ["fever", "joint pain", "cough", "nausea", "headache", "rash"]
+    },
+    "expect": { "systems_min": 3 }
+  },
+  {
+    "id": "GC04",
+    "label": "SYNTHETIC",
+    "title": "Hindi chief complaint",
+    "input": { "chief_complaint": "बुखार", "symptoms": ["बुखार"] },
+    "expect": { "language_hi": true }
+  },
+  {
+    "id": "GC05",
+    "label": "SYNTHETIC",
+    "title": "Mixed Hindi/English complaint",
+    "input": { "chief_complaint": "bukhar and cough", "symptoms": ["bukhar", "khansi"] },
+    "expect": { "min_candidates": 1 }
+  },
+  {
+    "id": "GC06",
+    "label": "SYNTHETIC",
+    "title": "Negated symptom",
+    "input": { "chief_complaint": "weakness", "symptoms": ["no fever", "weakness"] },
+    "expect": { "negated_contains": "fever" }
+  },
+  {
+    "id": "GC07",
+    "label": "SYNTHETIC",
+    "title": "Ambiguous symptom",
+    "input": { "chief_complaint": "pain", "symptoms": ["pain"] },
+    "expect": { "forced_top1": false }
+  },
+  {
+    "id": "GC08",
+    "label": "SYNTHETIC",
+    "title": "No disease match",
+    "input": { "chief_complaint": "zzzznonexistenttoken999", "symptoms": ["qqqnomatchxyz"] },
+    "expect": { "min_candidates": 0, "rule6": "UNRESOLVED" }
+  },
+  {
+    "id": "GC09",
+    "label": "SYNTHETIC",
+    "title": "Conflicting evidence",
+    "input": {
+      "chief_complaint": "fever",
+      "symptoms": ["fever", "chronic cold weakness"],
+      "doctor_supplied_diagnosis": "totally unrelated diagnosis xyz"
+    },
+    "expect": { "has_warning_prefix": "DOCTOR" }
+  },
+  {
+    "id": "GC10",
+    "label": "SYNTHETIC",
+    "title": "High-BP red flag",
+    "input": {
+      "chief_complaint": "headache",
+      "symptoms": ["headache"],
+      "vitals": { "systolic_bp": 190, "diastolic_bp": 110 }
+    },
+    "expect": { "safety_warning": "HIGH_BP_RED_FLAG" }
+  },
+  {
+    "id": "GC11",
+    "label": "SYNTHETIC",
+    "title": "Low-confidence candidate",
+    "input": { "chief_complaint": "mild ache", "symptoms": ["ache"] },
+    "expect": { "forced_top1": false }
+  },
+  {
+    "id": "GC12",
+    "label": "SYNTHETIC",
+    "title": "Vata-related evidence",
+    "input": {
+      "chief_complaint": "dry constipation anxiety",
+      "symptoms": ["dry", "constipation", "anxiety", "cold"]
+    },
+    "expect": { "prakriti": "VATA" }
+  },
+  {
+    "id": "GC13",
+    "label": "SYNTHETIC",
+    "title": "Pitta-related evidence",
+    "input": {
+      "chief_complaint": "heat burn inflammation",
+      "symptoms": ["heat", "burn", "inflammation", "acid"]
+    },
+    "expect": { "prakriti": "PITTA" }
+  },
+  {
+    "id": "GC14",
+    "label": "SYNTHETIC",
+    "title": "Kapha-related evidence",
+    "input": {
+      "chief_complaint": "heavy mucus lethargy",
+      "symptoms": ["heavy", "mucus", "lethargy", "edema"]
+    },
+    "expect": { "prakriti": "KAPHA" }
+  },
+  {
+    "id": "GC15",
+    "label": "SYNTHETIC",
+    "title": "Mixed/unknown prakriti",
+    "input": { "chief_complaint": "general discomfort", "symptoms": ["discomfort"] },
+    "expect": { "prakriti_unknown_or_mixed": true }
+  },
+  {
+    "id": "GC16",
+    "label": "SYNTHETIC",
+    "title": "Positive polarity evidence",
+    "input": {
+      "chief_complaint": "acute active fever inflammation",
+      "symptoms": ["acute", "active", "fever", "inflammation"]
+    },
+    "expect": { "polarity": "POSITIVE" }
+  },
+  {
+    "id": "GC17",
+    "label": "SYNTHETIC",
+    "title": "Negative polarity evidence",
+    "input": {
+      "chief_complaint": "chronic deficient cold weakness",
+      "symptoms": ["chronic", "deficient", "cold", "weakness"]
+    },
+    "expect": { "polarity": "NEGATIVE" }
+  },
+  {
+    "id": "GC18",
+    "label": "SYNTHETIC",
+    "title": "Mixed/unresolved polarity",
+    "input": {
+      "chief_complaint": "acute chronic fever weakness",
+      "symptoms": ["acute", "chronic", "fever", "weakness"]
+    },
+    "expect": { "polarity_mixed_or_unknown": true }
+  },
+  {
+    "id": "GC19",
+    "label": "SYNTHETIC",
+    "title": "Temperament evidence",
+    "input": { "chief_complaint": "pitta heat anger", "symptoms": ["heat", "anger", "pitta"] },
+    "expect": { "temperament_not_unknown": true }
+  },
+  {
+    "id": "GC20",
+    "label": "SYNTHETIC",
+    "title": "Unknown temperament",
+    "input": { "chief_complaint": "vague unease", "symptoms": ["unease"] },
+    "expect": { "temperament": "UNKNOWN" }
+  },
+  {
+    "id": "GC21",
+    "label": "SYNTHETIC",
+    "title": "Multi-system case beyond five systems",
+    "input": {
+      "chief_complaint": "complex whole body",
+      "symptoms": [
+        "fever",
+        "joint pain",
+        "cough",
+        "chest palpitation",
+        "headache",
+        "abdomen diarrhea",
+        "rash itch",
+        "urine edema",
+        "menstrual"
+      ]
+    },
+    "expect": { "beyond_five": true }
+  },
+  {
+    "id": "GC22",
+    "label": "SYNTHETIC",
+    "title": "Unrelated symptom contamination test",
+    "input": { "chief_complaint": "fever", "symptoms": ["fever", "gene virus equine chromosome"] },
+    "expect": { "noise_not_top": true }
+  },
+  {
+    "id": "GC23",
+    "label": "SYNTHETIC",
+    "title": "Doctor diagnosis contradicting symptoms",
+    "input": {
+      "chief_complaint": "joint pain arthritis",
+      "symptoms": ["joint pain", "arthritis"],
+      "doctor_supplied_diagnosis": "unrelated hepatic cirrhosis xyz"
+    },
+    "expect": { "doctor_conflict_possible": true }
+  },
+  {
+    "id": "GC24",
+    "label": "SYNTHETIC",
+    "title": "Missing vitals",
+    "input": { "chief_complaint": "cough", "symptoms": ["cough"] },
+    "expect": { "missing_vitals_warning": true }
+  },
+  {
+    "id": "GC25",
+    "label": "SYNTHETIC",
+    "title": "Unsupported image evidence absent processing",
+    "input": {
+      "chief_complaint": "fever",
+      "symptoms": ["fever"],
+      "image_evidence": { "present": true, "claims_all_findings": false }
+    },
+    "expect": { "image_not_used": true }
+  },
+  {
+    "id": "GC26",
+    "label": "SYNTHETIC",
+    "title": "Report finding contract present but processing inactive",
+    "input": {
+      "chief_complaint": "weakness",
+      "symptoms": ["weakness"],
+      "report_findings_contract": { "schema": "v1", "findings": [] }
+    },
+    "expect": { "report_inactive": true }
+  }
+]

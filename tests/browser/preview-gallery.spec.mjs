@@ -92,6 +92,31 @@ test.describe('Phase 4C-V browser preview', () => {
     expect(errors.filter((e) => !/favicon/i.test(e))).toEqual([]);
   });
 
+  test('clinical validation dashboard is synthetic with prescription NOT_CONNECTED', async ({
+    page,
+  }) => {
+    const errors = collectConsoleErrors(page);
+    const requests = [];
+    page.on('request', (req) => {
+      requests.push(`${req.method()} ${req.url()}`);
+    });
+    await page.goto('/preview/clinical-validation');
+    await expect(page.getByRole('heading', { name: /Clinical validation/i })).toBeVisible();
+    await expect(page.locator('[data-ehas2-validation-watermark="true"]')).toContainText(
+      /SYNTHETIC VALIDATION ONLY/i,
+    );
+    await expect(page.locator('[data-ehas2-clinical-validation="true"]')).toBeVisible();
+    await expect(page.getByText('NOT_IMPLEMENTED').first()).toBeVisible();
+    await expect(page.getByText('NOT_CONNECTED').first()).toBeVisible();
+    await expect(page.getByText('FALSE')).toBeVisible();
+    await expect(page.getByText(/No live prescription/i)).toBeVisible();
+    const forbidden = requests.filter((r) =>
+      /\/auth\/otp|\/v1\/analyze|\/payment|\/upload|eh_arogya|electrohomeopathy/i.test(r),
+    );
+    expect(forbidden).toEqual([]);
+    expect(errors.filter((e) => !/favicon/i.test(e))).toEqual([]);
+  });
+
   test('login shows OTP_PROVIDER_NOT_CONFIGURED truthfully; no session cookie', async ({
     page,
     context,

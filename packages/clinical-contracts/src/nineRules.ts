@@ -9,9 +9,11 @@ export type ClinicalRuleStatus =
   | 'NOT_CONNECTED'
   | 'NOT_IMPLEMENTED'
   | 'READY_FOR_VALIDATION'
+  | 'EXECUTING'
   | 'EXECUTED'
   | 'UNRESOLVED'
   | 'BLOCKED_BY_SAFETY'
+  | 'BLOCKED_BY_POLICY_CONFLICT'
   | 'FAILED';
 
 export type ClinicalRuleResult = {
@@ -82,7 +84,7 @@ export const NINE_RULE_DEFINITIONS = [
   {
     ruleNumber: 9 as const,
     ruleName: 'Master Pipeline',
-    phase5bStatus: 'NOT_CONNECTED' as ClinicalRuleStatus,
+    phase5bStatus: 'READY_FOR_VALIDATION' as ClinicalRuleStatus,
     affectsClinicalSelection: true,
   },
 ] as const;
@@ -115,6 +117,9 @@ export function allNineRuleInterfaceResults(): readonly ClinicalRuleResult[] {
 }
 
 export const ORCHESTRATION_STATUS = 'NOT_CONNECTED' as const;
+/** Synthetic validation orchestrator only — does not enable production AnalyzeComplete. */
+export const VALIDATION_ORCHESTRATION_STATUS = 'READY_FOR_VALIDATION' as const;
+export const PRESCRIPTION_ENGINE_STATUS = 'PRESCRIPTION_ENGINE_NOT_CONNECTED' as const;
 export const TABLET_ENGINE_STATUS = 'NOT_IMPLEMENTED' as const;
 export const TABLET_FULL_POOL_REGISTRY_STATUS = 'AVAILABLE' as const;
 export const TABLET_SELECTION_STATUS = 'DEFERRED_TO_CONTROLLED_RECONSTRUCTION' as const;

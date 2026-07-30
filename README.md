@@ -16,13 +16,14 @@ Confirmed **absent / not active**:
 - Local `/preview` gallery is development-only (blocked in production)
 - Phase **5A** clinical migration audit is documentation-only (engine still NOT_CONNECTED)
 - Phase **5B** sanitized disease extract tooling + 39-medicine registry package exist; analyze remains **NOT_CONNECTED**
+- Phase **5C** isolated nine-rule **validation** orchestration exists; production AnalyzeComplete remains **NOT_CONNECTED**; Rule 8 **NOT_IMPLEMENTED**; no medicines issued
 - No production patient database deployment
 - No payment integration
 - No production deployment
 - No live monitoring / WAF / production alerts
 - No profile photo / logo / signature uploads (NOT_IMPLEMENTED)
 
-Phase **3A–4A** persistence/auth core, Phase **4C-V** local browser preview, Phase **5A** audit, and Phase **5B** sanitized package foundations are present. See `docs/architecture/engineering-phases.md` and `docs/phase-reports/PHASE_5B_CLINICAL_PACKAGE_REPORT.md`.
+Phase **3A–4A** persistence/auth core, Phase **4C-V** local browser preview, Phase **5A** audit, Phase **5B** packages, and Phase **5C** synthetic nine-rule validation are present. See `docs/architecture/engineering-phases.md` and `docs/phase-reports/PHASE_5C_NINE_RULE_VALIDATION_REPORT.md`.
 
 ## Requirements
 
@@ -49,7 +50,8 @@ npm audit
 
 Local web (after `npm run dev`): **http://127.0.0.1:4101/**  
 Preview gallery (development only): **http://127.0.0.1:4101/preview**  
-Clinical integration status (development only): **http://127.0.0.1:4101/preview/clinical-integration-status**
+Clinical integration status (development only): **http://127.0.0.1:4101/preview/clinical-integration-status**  
+Clinical validation (development only): **http://127.0.0.1:4101/preview/clinical-validation**
 
 ## API namespace (shell)
 

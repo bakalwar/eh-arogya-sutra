@@ -6,8 +6,11 @@ from fastapi import FastAPI, Header, Response
 from fastapi.responses import JSONResponse
 
 from . import ENGINE_VERSION, RULE_SET_VERSION, __version__
+from .disease_package import DiseasePackageError, load_disease_package, synthetic_fixture_dir
+from .golden import run_all_golden
 from .logging_safe import get_logger, redact
 from .models import AnalyzeRequest, AnalyzeResponse, EmptySlot, ErrorBody
+from .orchestrator import NineRuleOrchestrator, OrchestratorRun
 from .rules import orchestration_status, rule_interface_status
 
 logger = get_logger()
@@ -15,7 +18,7 @@ logger = get_logger()
 app = FastAPI(
     title="EHAS2 Clinical Engine",
     version=__version__,
-    description="Isolated clinical service scaffold — analysis NOT connected.",
+    description="Isolated clinical service — production analysis NOT connected; synthetic validation only.",
 )
 
 ARTIFACT_DIR = (
@@ -34,13 +37,15 @@ def health() -> dict:
 
 @app.get("/ready")
 def ready(response: Response) -> dict:
-    """Readiness remains false until rules/packages are validated (Phase 5B+)."""
+    """Production readiness remains false — validation orchestration does not flip ready."""
     body = {
         "ready": False,
-        "reason": "CLINICAL_RULES_NOT_VALIDATED",
+        "reason": "CLINICAL_READINESS_FALSE_PHASE_5C",
         "orchestration": orchestration_status(),
         "disease_package_installed_live": False,
         "medicine_registry": "AVAILABLE_IN_EHAS2_PACKAGE",
+        "prescription_engine": "PRESCRIPTION_ENGINE_NOT_CONNECTED",
+        "clinical_readiness": False,
     }
     response.status_code = 503
     return body
@@ -63,6 +68,7 @@ def data_package_status() -> dict:
         "installed_live": False,
         "path_policy": "data/clinical-artifacts/disease-package-v1",
         "runtime_old_project_path_allowed": False,
+        "synthetic_ci_separate": True,
     }
 
 
@@ -80,12 +86,15 @@ def medicine_registry_status() -> dict:
 @app.get("/status/rules")
 def rules_status() -> dict:
     return {
-        "orchestration": "NOT_CONNECTED",
+        "orchestration": "READY_FOR_VALIDATION",
+        "production_analyze_complete": "NOT_CONNECTED",
+        "prescription_engine": "PRESCRIPTION_ENGINE_NOT_CONNECTED",
         "rules": rule_interface_status(),
         "rule_8": "NOT_IMPLEMENTED",
         "tablet_engine": "NOT_IMPLEMENTED",
         "report_processing": "NOT_CONNECTED",
         "phase_f_clinical_authority": False,
+        "clinical_readiness": False,
     }
 
 
@@ -124,6 +133,63 @@ def analyze_complete(
         unknown_unresolved_reasons=["CLINICAL_ENGINE_NOT_CONNECTED"],
     )
     return JSONResponse(status_code=501, content=result.model_dump())
+
+
+@app.post("/v1/validation/orchestrate")
+def validation_orchestrate(payload: dict) -> JSONResponse:
+    """Synthetic-only non-prescription orchestration. Not production clinical analysis."""
+    if payload.get("label") != "SYNTHETIC":
+        return JSONResponse(
+            status_code=400,
+            content={
+                "code": "SYNTHETIC_LABEL_REQUIRED",
+                "message": "Phase 5C validation requires label=SYNTHETIC",
+            },
+        )
+    orch = NineRuleOrchestrator()
+    run = OrchestratorRun(
+        label="SYNTHETIC",
+        package_dir=synthetic_fixture_dir(),
+        allow_synthetic_package=True,
+        require_full_package=False,
+        timeout_ms=int(payload.get("timeout_ms") or 30_000),
+    )
+    try:
+        result = orch.orchestrate(payload.get("input") or payload, run)
+    except Exception as exc:  # noqa: BLE001
+        return JSONResponse(
+            status_code=408 if "TIMEOUT" in str(exc) or "CANCELLED" in str(exc) else 500,
+            content={"code": "ORCHESTRATION_ERROR", "message": str(exc)},
+        )
+    return JSONResponse(status_code=200, content=result)
+
+
+@app.get("/v1/validation/golden-summary")
+def validation_golden_summary() -> dict:
+    return run_all_golden(repetitions=2)
+
+
+@app.get("/v1/validation/disease-package-check")
+def disease_package_check(full: bool = False) -> JSONResponse:
+    try:
+        if full:
+            pkg = load_disease_package(require_full=True, allow_synthetic=False)
+        else:
+            pkg = load_disease_package(
+                synthetic_fixture_dir(), require_full=False, allow_synthetic=True
+            )
+        return JSONResponse(
+            {
+                "ok": True,
+                "count": pkg.count,
+                "artifactSha256": pkg.manifest.get("artifactSha256"),
+                "schemaVersion": pkg.manifest.get("schemaVersion"),
+                "path": str(pkg.path),
+                "full": full,
+            }
+        )
+    except DiseasePackageError as exc:
+        return JSONResponse(status_code=503, content={"ok": False, "error": str(exc)})
 
 
 @app.exception_handler(Exception)

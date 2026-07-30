@@ -19,7 +19,7 @@ RULE_DEFINITIONS = [
         "rule_name": "Disease-level Prakruti Inference",
         "status": "NOT_IMPLEMENTED",
     },
-    {"rule_number": 9, "rule_name": "Master Pipeline", "status": "NOT_CONNECTED"},
+    {"rule_number": 9, "rule_name": "Master Pipeline", "status": "READY_FOR_VALIDATION"},
 ]
 
 
@@ -48,8 +48,11 @@ def rule_interface_status() -> list[dict]:
 
 def orchestration_status() -> dict:
     return {
-        "status": "NOT_CONNECTED",
+        "status": "READY_FOR_VALIDATION",
+        "production_analyze_complete": "NOT_CONNECTED",
+        "prescription_engine": "PRESCRIPTION_ENGINE_NOT_CONNECTED",
         "engine_version": ENGINE_VERSION,
         "rule_set_version": RULE_SET_VERSION,
         "ready": False,
+        "clinical_readiness": False,
     }
