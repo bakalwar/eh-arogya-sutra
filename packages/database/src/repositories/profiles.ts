@@ -230,6 +230,53 @@ export class PgDoctorProfileRepository {
     return mapQualification(r.rows[0] as Record<string, unknown>);
   }
 
+  async updateQualification(
+    tenant: TenantContext,
+    tx: TransactionContext,
+    qualificationId: string,
+    input: {
+      degreeTitle?: string;
+      institution?: string | null;
+      awardingAuthority?: string | null;
+      completionYear?: number | null;
+      displayOrder?: number;
+      status?: DoctorQualificationRecord['status'];
+    },
+  ): Promise<DoctorQualificationRecord> {
+    assertProfileAccessContext(tenant);
+    const existing = await tx.query(
+      `SELECT * FROM doctor_qualifications WHERE id = $1 AND user_id = $2`,
+      [qualificationId, tenant.actorId],
+    );
+    if (!existing.rows[0]) throw new ResourceNotFoundError();
+    const cur = mapQualification(existing.rows[0] as Record<string, unknown>);
+    const r = await tx.query(
+      `UPDATE doctor_qualifications SET
+         degree_title = $3,
+         institution = $4,
+         awarding_authority = $5,
+         completion_year = $6,
+         display_order = $7,
+         status = $8,
+         updated_at = now(),
+         updated_by_actor_id = $2
+       WHERE id = $1 AND user_id = $2
+       RETURNING *`,
+      [
+        qualificationId,
+        tenant.actorId,
+        input.degreeTitle ?? cur.degreeTitle,
+        input.institution !== undefined ? input.institution : cur.institution,
+        input.awardingAuthority !== undefined ? input.awardingAuthority : cur.awardingAuthority,
+        input.completionYear !== undefined ? input.completionYear : cur.completionYear,
+        input.displayOrder ?? cur.displayOrder,
+        input.status ?? cur.status,
+      ],
+    );
+    if (!r.rows[0]) throw new ResourceNotFoundError();
+    return mapQualification(r.rows[0] as Record<string, unknown>);
+  }
+
   async listRegistrations(
     tenant: TenantContext,
     tx: TransactionContext,
@@ -294,6 +341,57 @@ export class PgDoctorProfileRepository {
     if (!r.rows[0]) throw new ResourceNotFoundError();
     return mapRegistration(r.rows[0] as Record<string, unknown>);
   }
+
+  async updateRegistration(
+    tenant: TenantContext,
+    tx: TransactionContext,
+    registrationId: string,
+    input: {
+      registrationNumber?: string;
+      registrationAuthority?: string;
+      registrationRegion?: string | null;
+      issuedOn?: string | null;
+      expiresOn?: string | null;
+      displayOrder?: number;
+      status?: DoctorRegistrationRecord['status'];
+    },
+  ): Promise<DoctorRegistrationRecord> {
+    assertProfileAccessContext(tenant);
+    const existing = await tx.query(
+      `SELECT * FROM doctor_registrations WHERE id = $1 AND user_id = $2`,
+      [registrationId, tenant.actorId],
+    );
+    if (!existing.rows[0]) throw new ResourceNotFoundError();
+    const cur = mapRegistration(existing.rows[0] as Record<string, unknown>);
+    const r = await tx.query(
+      `UPDATE doctor_registrations SET
+         registration_number = $3,
+         registration_authority = $4,
+         registration_region = $5,
+         issued_on = $6,
+         expires_on = $7,
+         display_order = $8,
+         status = $9,
+         verification_claimed = false,
+         updated_at = now(),
+         updated_by_actor_id = $2
+       WHERE id = $1 AND user_id = $2
+       RETURNING *`,
+      [
+        registrationId,
+        tenant.actorId,
+        input.registrationNumber ?? cur.registrationNumber,
+        input.registrationAuthority ?? cur.registrationAuthority,
+        input.registrationRegion !== undefined ? input.registrationRegion : cur.registrationRegion,
+        input.issuedOn !== undefined ? input.issuedOn : cur.issuedOn,
+        input.expiresOn !== undefined ? input.expiresOn : cur.expiresOn,
+        input.displayOrder ?? cur.displayOrder,
+        input.status ?? cur.status,
+      ],
+    );
+    if (!r.rows[0]) throw new ResourceNotFoundError();
+    return mapRegistration(r.rows[0] as Record<string, unknown>);
+  }
 }
 
 export class PgClinicProfileRepository {
@@ -331,11 +429,15 @@ export class PgClinicProfileRepository {
       preferredLanguage?: string;
       timezone?: string;
       status?: 'ACTIVE' | 'INACTIVE';
+      expectedUpdatedAt?: string;
     },
   ): Promise<ClinicProfileRecord> {
     assertProfileAccessContext(tenant);
     const current = await this.findCurrent(tenant, tx);
     if (!current) throw new ResourceNotFoundError();
+    if (input.expectedUpdatedAt && current.updatedAt !== input.expectedUpdatedAt) {
+      throw new ConflictError('Clinic profile was modified by another request');
+    }
     const r = await tx.query(
       `UPDATE clinics SET
          name = $3,

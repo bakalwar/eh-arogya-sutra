@@ -3,7 +3,14 @@ import { isManagementRole, PlatformRole } from './roles.js';
 import { assertTenantMatch } from './tenant.js';
 
 export type ResourceKind =
-  'patient' | 'case' | 'prescription' | 'report' | 'clinic-config' | 'support-ticket';
+  | 'patient'
+  | 'case'
+  | 'prescription'
+  | 'report'
+  | 'clinic-config'
+  | 'doctor-profile'
+  | 'clinic-profile'
+  | 'support-ticket';
 
 export type ResourceOwnershipInput = {
   resourceKind: ResourceKind;
@@ -23,6 +30,11 @@ const CLINICAL_KINDS: ReadonlySet<ResourceKind> = new Set([
   'case',
   'prescription',
   'report',
+]);
+
+const OWNER_SCOPED_KINDS: ReadonlySet<ResourceKind> = new Set([
+  ...CLINICAL_KINDS,
+  'doctor-profile',
 ]);
 
 /**
@@ -81,7 +93,7 @@ export function evaluateResourceOwnership(
     if (
       resource.ownerDoctorId &&
       resource.ownerDoctorId !== principal.subjectId &&
-      CLINICAL_KINDS.has(resource.resourceKind)
+      OWNER_SCOPED_KINDS.has(resource.resourceKind)
     ) {
       return {
         allowed: false,

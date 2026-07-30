@@ -63,11 +63,19 @@ export function assertBoundedBatch(size: number): void {
   }
 }
 
+/** Reject HTML/script injection vectors in free-text profile fields (fail closed). */
+export function rejectUnsafeMarkup(value: string, field: string): void {
+  if (/[<>]|javascript:|data:text\/html|on\w+\s*=/i.test(value)) {
+    throw new ValidationError(`${field} contains disallowed markup`);
+  }
+}
+
 function normalizeBoundedText(raw: string, field: string, min: number, max: number): string {
   const normalized = raw.normalize('NFC').trim().replace(/\s+/g, ' ');
   if (normalized.length < min || normalized.length > max) {
     throw new ValidationError(`${field} length out of bounds`);
   }
+  rejectUnsafeMarkup(normalized, field);
   return normalized;
 }
 

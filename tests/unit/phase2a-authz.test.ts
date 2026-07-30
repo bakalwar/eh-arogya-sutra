@@ -166,11 +166,16 @@ describe('Phase 2A tenant helpers and doctor UI boundary', () => {
 
   it('api middleware and server wire authz without OTP/provider secrets', () => {
     const server = fs.readFileSync(path.join(root, 'apps/api/src/server.ts'), 'utf8');
+    const createApp = fs.readFileSync(path.join(root, 'apps/api/src/createApp.ts'), 'utf8');
     const mw = fs.readFileSync(path.join(root, 'apps/api/src/middleware/authorization.ts'), 'utf8');
-    expect(server).toMatch(/requirePermission\(Permission\.PatientRead\)/);
-    expect(server).toMatch(/requirePermission\(Permission\.SuperAdminControlPlane\)/);
-    expect(server).toMatch(/AUTHENTICATION_STATUS/);
-    expect(server).not.toMatch(/UNIVERSAL_OTP|speakeasy|twilio|hardcoded.*password/i);
+    expect(server).toMatch(/createApp\(\)/);
+    expect(server).toMatch(/principal always null|Phase 4 authentication/i);
+    expect(createApp).toMatch(/requirePermission\(Permission\.PatientRead\)/);
+    expect(createApp).toMatch(/requirePermission\(Permission\.SuperAdminControlPlane\)/);
+    expect(createApp).toMatch(/AUTHENTICATION_STATUS/);
+    expect(createApp).not.toMatch(/UNIVERSAL_OTP|speakeasy|twilio|hardcoded.*password/i);
+    expect(server).not.toMatch(/x-user-id|x-tenant-id|query\.tenant/i);
+    expect(createApp).not.toMatch(/x-user-id|x-tenant-id|query\.tenant/i);
     expect(mw).toMatch(/AUTH_NOT_CONNECTED/);
     expect(mw).toMatch(/evaluateAuthorization/);
   });

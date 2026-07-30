@@ -28,11 +28,14 @@ export const DOCTOR_NAV_ITEMS: readonly DoctorNavItem[] = [
   },
   { id: 'feedback', label: 'Feedback & Support', href: '/feedback' },
   {
-    id: 'settings',
-    label: 'Settings',
-    href: '/dashboard/coming/settings',
-    comingSoon: true,
-    comingPhase: 'Phase 2+',
+    id: 'profile',
+    label: 'My Profile',
+    href: '/profile',
+  },
+  {
+    id: 'clinic-settings',
+    label: 'Clinic Settings',
+    href: '/clinic/settings',
   },
 ] as const;
 
@@ -114,6 +117,8 @@ export function isDoctorAreaPath(pathname: string): boolean {
     pathname.startsWith('/cases') ||
     pathname.startsWith('/prescriptions') ||
     pathname.startsWith('/print') ||
-    pathname.startsWith('/feedback')
+    pathname.startsWith('/feedback') ||
+    pathname.startsWith('/profile') ||
+    pathname.startsWith('/clinic')
   );
 }

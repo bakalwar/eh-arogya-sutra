@@ -19,6 +19,14 @@ export const Permission = {
   PrescriptionReview: 'prescription.review',
   ReportMetadataRead: 'report.metadata.read',
   ClinicConfigWrite: 'clinic.config.write',
+  /** Phase 3D — doctor self-service professional profile (not management safe-view). */
+  DoctorProfileRead: 'doctor.profile.read',
+  DoctorProfileWrite: 'doctor.profile.write',
+  /** Phase 3D — current clinic profile / hours / memberships (tenant-scoped). */
+  ClinicProfileRead: 'clinic.profile.read',
+  ClinicProfileWrite: 'clinic.profile.write',
+  ClinicHoursWrite: 'clinic.hours.write',
+  MembershipListOwn: 'membership.list_own',
   SupportTicketWrite: 'support.ticket.write',
   FeedbackSubmit: 'feedback.submit',
   OpsHealthRead: 'ops.health.read',
@@ -82,6 +90,10 @@ const DOCTOR_PERMISSIONS: readonly PermissionName[] = [
   Permission.PrescriptionRead,
   Permission.PrescriptionReview,
   Permission.ReportMetadataRead,
+  Permission.DoctorProfileRead,
+  Permission.DoctorProfileWrite,
+  Permission.ClinicProfileRead,
+  Permission.MembershipListOwn,
   Permission.SupportTicketWrite,
   Permission.FeedbackSubmit,
 ];
@@ -89,6 +101,8 @@ const DOCTOR_PERMISSIONS: readonly PermissionName[] = [
 const CLINIC_ADMIN_PERMISSIONS: readonly PermissionName[] = [
   ...DOCTOR_PERMISSIONS,
   Permission.ClinicConfigWrite,
+  Permission.ClinicProfileWrite,
+  Permission.ClinicHoursWrite,
 ];
 
 const SUPPORT_PERMISSIONS: readonly PermissionName[] = [Permission.SupportTicketWrite];
@@ -259,6 +273,10 @@ export function assertNoManagementPhiByDefault(role: PlatformRoleName): boolean 
     !perms.includes(Permission.PatientWrite) &&
     !perms.includes(Permission.ClinicalCaseRead) &&
     !perms.includes(Permission.PrescriptionRead) &&
+    !perms.includes(Permission.DoctorProfileRead) &&
+    !perms.includes(Permission.DoctorProfileWrite) &&
+    !perms.includes(Permission.ClinicProfileWrite) &&
+    !perms.includes(Permission.ClinicHoursWrite) &&
     !perms.includes(Permission.PatientPhiBreakGlass) &&
     !perms.includes(Permission.SuperAdminControlPlane) &&
     !perms.includes(Permission.OpsSecurityRead)

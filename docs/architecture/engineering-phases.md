@@ -15,8 +15,11 @@
 | **2A-D** | Patient/consultation contracts, report non-retention, migration foundation | **Complete (local)** |
 | **2B-A** | Authentication provider decision audit (PROPOSED ADR) | **Complete (local audit)** |
 | 2B | Authentication implementation (after owner approval) | Not started — requires owner approval |
-| 2 | Authentication providers / live sessions | Not started — requires owner approval |
-| 3 | Persistence foundation (PostgreSQL) | Not started — requires owner approval |
+| **3A** | PostgreSQL persistence foundation | **Complete (local)** |
+| **3B** | Patient and consultation persistence services | **Complete (local)** |
+| **3C** | Doctor and clinic profile persistence | **Complete (local)** |
+| **3C-II** | Fast-forward integration of 3C onto canonical main | **Complete (local)** |
+| **3D** | Doctor/clinic profile API + UI connection | **Complete (local)** — auth still NOT_CONNECTED |
 
 
 ## Explicit non-claims
@@ -26,37 +29,14 @@ This repository is an **engineering foundation only**:
 - No clinical engine is integrated
 - No disease/medicine package is installed
 - No authentication is active (including Super Admin)
-- No patient database exists
+- No production patient database is deployed
 - No payment is active
 - No production deployment exists
 - No live monitoring, WAF, or production alerts
+- Profile uploads are not active
 
-Do **not** claim production readiness or “unhackable” security after Phase 1A-H.
-
-## Super Admin / security roadmap
-
-| Phase | Security / ops capability |
-|-------|---------------------------|
-| **1A-H** | Architecture, ADRs, typed contracts, NOT_IMPLEMENTED shells, foundation tests |
-| **2** | Identity, MFA/passkeys, role foundations |
-| **3** | Audit event persistence and secure data model |
-| **7** | Clinical/report operational telemetry |
-| **9** | Super Admin operational UI foundations |
-| **10** | Security hardening, WAF/rate-limit/provider integrations |
-| **12** | Load / anomaly / capacity testing |
-| **13** | Incident and disaster-recovery drills |
-| **14** | Production monitoring and alert activation |
-
-No security capability may be marked **live** before its implementation phase passes.
-
-## Phase 1A-H gates
-
-1. Dependency hardening + risk register  
-2. Boundary / secret / patient-data scans  
-3. Super Admin control-plane docs + contracts  
-4. Format, lint, typecheck, test, build  
-5. Local Git checkpoint (no remote/push)
+Do **not** claim production readiness or “unhackable” security after Phase 3D.
 
 ## Next (only after owner approval)
 
-**Owner decision on Phase 2B-A ADR 013** — then Phase 3 PostgreSQL persistence foundation. Authentication *implementation* remains blocked until owner approval of the proposed architecture.
+**Phase 4A — authentication implementation** (after owner approval). Do not begin without explicit approval.

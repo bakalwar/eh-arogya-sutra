@@ -1,7 +1,7 @@
 {
   "name": "@ehas2/database",
-  "version": "0.1.0-phase3c",
-  "description": "E.H. AROGYA SUTRA 2 — PostgreSQL doctor/clinic profile persistence (Phase 3C)",
+  "version": "0.1.0-phase3d",
+  "description": "E.H. AROGYA SUTRA 2 — PostgreSQL profile persistence + API-ready services (Phase 3D)",
   "private": true,
   "type": "module",
   "main": "./dist/index.js",

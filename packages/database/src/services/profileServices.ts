@@ -57,6 +57,15 @@ function rethrowDomainOrSanitize(err: unknown): never {
   ) {
     throw err;
   }
+  if (
+    err &&
+    typeof err === 'object' &&
+    'code' in err &&
+    ((err as { code: string }).code === 'MEMBERSHIP_INACTIVE' ||
+      (err as { code: string }).code === 'TENANT_CONTEXT_REQUIRED')
+  ) {
+    throw err;
+  }
   const safe = sanitizeDatabaseError(err);
   const wrapped = new Error(safe.message);
   (wrapped as Error & { code: string }).code = safe.code;
@@ -243,7 +252,89 @@ export class DoctorProfileService {
     try {
       return await withTenantTransaction(
         tenant,
-        async (tx) => doctors.deactivateQualification(tenant, tx, qualificationId),
+        async (tx) => {
+          const deactivated = await doctors.deactivateQualification(tenant, tx, qualificationId);
+          await audit.append(tx, {
+            organizationId: tenant.organizationId,
+            clinicId: tenant.clinicId,
+            actorId: tenant.actorId,
+            actorRole: tenant.actorRole,
+            eventType: 'doctor_qualification_deactivated',
+            resourceType: 'doctor_qualification',
+            resourceId: deactivated.id,
+            outcome: 'SUCCESS',
+            metadata: { status: deactivated.status },
+          });
+          return deactivated;
+        },
+        env,
+      );
+    } catch (err) {
+      rethrowDomainOrSanitize(err);
+    }
+  }
+
+  async updateQualification(
+    tenant: TenantContext,
+    qualificationId: string,
+    raw: Record<string, unknown>,
+    env: Record<string, string | undefined> = process.env,
+  ): Promise<DoctorQualificationRecord> {
+    assertProfileAccessContext(tenant);
+    assertUuid(qualificationId, 'qualificationId');
+    const patch: Parameters<PgDoctorProfileRepository['updateQualification']>[3] = {};
+    if (raw.degreeTitle !== undefined) {
+      patch.degreeTitle = assertRequiredBoundedText(String(raw.degreeTitle), 'degreeTitle', 200);
+    }
+    if (raw.institution !== undefined) {
+      patch.institution = assertOptionalBoundedText(
+        raw.institution == null ? null : String(raw.institution),
+        'institution',
+        200,
+      );
+    }
+    if (raw.awardingAuthority !== undefined) {
+      patch.awardingAuthority = assertOptionalBoundedText(
+        raw.awardingAuthority == null ? null : String(raw.awardingAuthority),
+        'awardingAuthority',
+        200,
+      );
+    }
+    if (raw.completionYear !== undefined) {
+      patch.completionYear = assertOptionalYear(
+        raw.completionYear == null ? null : Number(raw.completionYear),
+        'completionYear',
+        1950,
+        2100,
+      );
+    }
+    if (raw.displayOrder !== undefined) {
+      patch.displayOrder = assertDisplayOrder(Number(raw.displayOrder));
+    }
+    if (raw.status !== undefined) {
+      if (raw.status !== 'ACTIVE' && raw.status !== 'INACTIVE') {
+        throw new ValidationError('Invalid status');
+      }
+      patch.status = raw.status;
+    }
+    try {
+      return await withTenantTransaction(
+        tenant,
+        async (tx) => {
+          const updated = await doctors.updateQualification(tenant, tx, qualificationId, patch);
+          await audit.append(tx, {
+            organizationId: tenant.organizationId,
+            clinicId: tenant.clinicId,
+            actorId: tenant.actorId,
+            actorRole: tenant.actorRole,
+            eventType: 'doctor_qualification_updated',
+            resourceType: 'doctor_qualification',
+            resourceId: updated.id,
+            outcome: 'SUCCESS',
+            metadata: { displayOrder: updated.displayOrder },
+          });
+          return updated;
+        },
         env,
       );
     } catch (err) {
@@ -330,6 +421,149 @@ export class DoctorProfileService {
     } catch (err) {
       rethrowDomainOrSanitize(err);
     }
+  }
+
+  async updateRegistration(
+    tenant: TenantContext,
+    registrationId: string,
+    raw: Record<string, unknown>,
+    env: Record<string, string | undefined> = process.env,
+  ): Promise<DoctorRegistrationRecord> {
+    assertProfileAccessContext(tenant);
+    assertUuid(registrationId, 'registrationId');
+    if (raw.verificationClaimed === true) {
+      throw new ValidationError('verificationClaimed cannot be set true in this phase');
+    }
+    const issuedOn =
+      raw.issuedOn !== undefined
+        ? assertOptionalIsoDate(raw.issuedOn == null ? null : String(raw.issuedOn), 'issuedOn')
+        : undefined;
+    const expiresOn =
+      raw.expiresOn !== undefined
+        ? assertOptionalIsoDate(raw.expiresOn == null ? null : String(raw.expiresOn), 'expiresOn')
+        : undefined;
+    if (issuedOn !== undefined || expiresOn !== undefined) {
+      assertRegistrationDates(issuedOn ?? null, expiresOn ?? null);
+    }
+    const patch: Parameters<PgDoctorProfileRepository['updateRegistration']>[3] = {};
+    if (raw.registrationNumber !== undefined) {
+      patch.registrationNumber = assertRequiredBoundedText(
+        String(raw.registrationNumber),
+        'registrationNumber',
+        80,
+      );
+    }
+    if (raw.registrationAuthority !== undefined) {
+      patch.registrationAuthority = assertRequiredBoundedText(
+        String(raw.registrationAuthority),
+        'registrationAuthority',
+        200,
+      );
+    }
+    if (raw.registrationRegion !== undefined) {
+      patch.registrationRegion = assertOptionalBoundedText(
+        raw.registrationRegion == null ? null : String(raw.registrationRegion),
+        'registrationRegion',
+        120,
+      );
+    }
+    if (issuedOn !== undefined) patch.issuedOn = issuedOn;
+    if (expiresOn !== undefined) patch.expiresOn = expiresOn;
+    if (raw.displayOrder !== undefined) {
+      patch.displayOrder = assertDisplayOrder(Number(raw.displayOrder));
+    }
+    if (raw.status !== undefined) {
+      if (raw.status !== 'ACTIVE' && raw.status !== 'INACTIVE') {
+        throw new ValidationError('Invalid status');
+      }
+      patch.status = raw.status;
+    }
+    try {
+      return await withTenantTransaction(
+        tenant,
+        async (tx) => {
+          const updated = await doctors.updateRegistration(tenant, tx, registrationId, patch);
+          await audit.append(tx, {
+            organizationId: tenant.organizationId,
+            clinicId: tenant.clinicId,
+            actorId: tenant.actorId,
+            actorRole: tenant.actorRole,
+            eventType: 'doctor_registration_updated',
+            resourceType: 'doctor_registration',
+            resourceId: updated.id,
+            outcome: 'SUCCESS',
+            metadata: { displayOrder: updated.displayOrder },
+          });
+          return updated;
+        },
+        env,
+      );
+    } catch (err) {
+      rethrowDomainOrSanitize(err);
+    }
+  }
+
+  async deactivateRegistration(
+    tenant: TenantContext,
+    registrationId: string,
+    env: Record<string, string | undefined> = process.env,
+  ): Promise<DoctorRegistrationRecord> {
+    assertProfileAccessContext(tenant);
+    assertUuid(registrationId, 'registrationId');
+    try {
+      return await withTenantTransaction(
+        tenant,
+        async (tx) => {
+          const deactivated = await doctors.deactivateRegistration(tenant, tx, registrationId);
+          await audit.append(tx, {
+            organizationId: tenant.organizationId,
+            clinicId: tenant.clinicId,
+            actorId: tenant.actorId,
+            actorRole: tenant.actorRole,
+            eventType: 'doctor_registration_deactivated',
+            resourceType: 'doctor_registration',
+            resourceId: deactivated.id,
+            outcome: 'SUCCESS',
+            metadata: { status: deactivated.status },
+          });
+          return deactivated;
+        },
+        env,
+      );
+    } catch (err) {
+      rethrowDomainOrSanitize(err);
+    }
+  }
+
+  async getProfileCompletion(
+    tenant: TenantContext,
+    env: Record<string, string | undefined> = process.env,
+  ): Promise<{
+    complete: boolean;
+    percent: number;
+    checks: Record<string, boolean>;
+    missing: string[];
+  }> {
+    const data = await this.getOwn(tenant, env);
+    const checks = {
+      hasDisplayName: Boolean(data.profile.displayName?.trim()),
+      hasPrescriptionName: Boolean(data.profile.prescriptionName?.trim()),
+      hasActiveQualification: data.qualifications.some((q) => q.status === 'ACTIVE'),
+      hasActiveRegistration: data.registrations.some((r) => r.status === 'ACTIVE'),
+      hasPrimaryPhone: Boolean(data.profile.primaryPhone),
+      hasTimezone: Boolean(data.profile.timezone),
+    };
+    const missing = Object.entries(checks)
+      .filter(([, ok]) => !ok)
+      .map(([key]) => key);
+    const done = Object.values(checks).filter(Boolean).length;
+    const total = Object.keys(checks).length;
+    return {
+      complete: missing.length === 0,
+      percent: Math.round((done / total) * 100),
+      checks,
+      missing,
+    };
   }
 }
 
@@ -465,6 +699,13 @@ export class ClinicProfileService {
         throw new ValidationError('Invalid status');
       }
       patch.status = raw.status;
+    }
+    if (raw.expectedUpdatedAt !== undefined) {
+      patch.expectedUpdatedAt = assertRequiredBoundedText(
+        String(raw.expectedUpdatedAt),
+        'expectedUpdatedAt',
+        64,
+      );
     }
     try {
       return await withTenantTransaction(

@@ -362,3 +362,68 @@
     padding-bottom: var(--ehas2-space-12);
   }
 }
+
+/* Phase 3D profile / clinic settings */
+.ehas2-profile-grid {
+  gap: var(--ehas2-space-4);
+}
+.ehas2-profile-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ehas2-space-2);
+  margin-bottom: var(--ehas2-space-3);
+}
+.ehas2-profile-subhead {
+  font-family: var(--ehas2-font-display);
+  font-size: 1.05rem;
+  margin: 0 0 var(--ehas2-space-2);
+}
+.ehas2-profile-dl {
+  display: grid;
+  gap: var(--ehas2-space-2);
+  margin: 0;
+}
+.ehas2-profile-dl div {
+  display: grid;
+  gap: 0.15rem;
+}
+.ehas2-profile-dl dt {
+  font-size: 0.75rem;
+  opacity: 0.75;
+}
+.ehas2-profile-dl dd {
+  margin: 0;
+}
+.ehas2-profile-subnav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ehas2-space-2);
+  margin: var(--ehas2-space-3) 0;
+}
+.ehas2-profile-subnav__link {
+  min-height: var(--ehas2-touch-min, 44px);
+  display: inline-flex;
+  align-items: center;
+  padding: 0.4rem 0.75rem;
+  border-radius: var(--ehas2-radius-sm, 6px);
+  border: var(--ehas2-border-width) solid var(--ehas2-border-subtle);
+  text-decoration: none;
+  color: inherit;
+  font-size: 0.875rem;
+}
+.ehas2-profile-subnav__link.is-active {
+  border-color: var(--ehas2-accent, #c9963a);
+  background: color-mix(in srgb, var(--ehas2-accent, #c9963a) 12%, transparent);
+}
+.ehas2-profile-checklist {
+  margin: 0 0 var(--ehas2-space-3);
+  padding-left: 1.2rem;
+}
+@media (max-width: 430px) {
+  .ehas2-profile-subnav {
+    flex-direction: column;
+  }
+  .ehas2-profile-subnav__link {
+    width: 100%;
+  }
+}
