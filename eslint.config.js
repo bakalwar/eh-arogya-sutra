@@ -7,6 +7,7 @@ export default tseslint.config(
     ignores: [
       '**/dist/**',
       '**/.next/**',
+      '**/.next-phase5a/**',
       '**/node_modules/**',
       '**/_scaffold_phase1a.py',
       '**/next-env.d.ts',

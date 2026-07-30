@@ -143,3 +143,33 @@ a {
     transition: none;
   }
 }
+
+.ehas2-preview-status {
+  max-width: min(48rem, 100%);
+  margin: 0 auto;
+  padding: 1rem 1rem 3rem;
+  display: grid;
+  gap: 1.25rem;
+  width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+.ehas2-preview-status-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.ehas2-preview-status-table th,
+.ehas2-preview-status-table td {
+  text-align: left;
+  vertical-align: top;
+  padding: 0.55rem 0.4rem;
+  border-bottom: 1px solid var(--ehas2-border-subtle, #ddd);
+  overflow-wrap: anywhere;
+}
+
+.ehas2-preview-status-table code {
+  font-size: 0.85em;
+}

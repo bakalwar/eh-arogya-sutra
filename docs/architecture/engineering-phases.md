@@ -23,6 +23,7 @@
 | **4A** | Secure authentication core + session foundation | **Complete (local)** — OTP provider **NOT_CONFIGURED**; passkeys **PASSKEY_NOT_CONNECTED**; production auth **not** active |
 | **4B** | Real OTP-provider connection | **HOLD** — no provider account; do not start without owner approval |
 | **4C-V** | Local browser preview + Playwright visual QA | **Complete (local)** — `/preview` local-only; synthetic data; no auth bypass |
+| **5A** | Clinical engine + data migration forensic audit | **Complete (audit-only)** — docs + status preview; **no** clinical code/data copied |
 
 
 ## Explicit non-claims
@@ -40,10 +41,11 @@ This repository is an **engineering foundation only**:
 - No production deployment exists
 - No live monitoring, WAF, or production alerts
 - Profile uploads are not active
+- Phase 5A audited old clinical assets only — migration not started
 
-Do **not** claim production readiness or “unhackable” security after Phase 4C-V.
+Do **not** claim production readiness or “unhackable” security after Phase 5A.
 
 ## Next (only after owner approval)
 
-**Do not start Phase 4B** until a real OTP provider account is approved.
-Safe non-live options may include additional UX polish, accessibility deepening, or API contract work that does not send OTP.
+**Do not start Phase 4B** until a real OTP provider account is approved.  
+**Do not start clinical integration** until owner approves Phase 5B isolated package extraction plan.

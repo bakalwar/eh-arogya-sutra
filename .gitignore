@@ -28,3 +28,6 @@ playwright-report/
 blob-report/
 playwright/.cache/
 
+
+.next-phase5a/
+apps/web/.next-phase5a/

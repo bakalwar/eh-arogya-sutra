@@ -14,13 +14,14 @@ Confirmed **absent / not active**:
 - Passkeys **PASSKEY_NOT_CONNECTED**
 - Phase **4B** real OTP provider: **HOLD** (no provider account)
 - Local `/preview` gallery is development-only (blocked in production)
+- Phase **5A** clinical migration audit is documentation-only (engine still NOT_CONNECTED)
 - No production patient database deployment
 - No payment integration
 - No production deployment
 - No live monitoring / WAF / production alerts
 - No profile photo / logo / signature uploads (NOT_IMPLEMENTED)
 
-Phase **3A–4A** persistence/auth core and Phase **4C-V** local browser preview are present. See `docs/architecture/engineering-phases.md` and `docs/phase-reports/PHASE_4C_V_BROWSER_PREVIEW_REPORT.md`.
+Phase **3A–4A** persistence/auth core, Phase **4C-V** local browser preview, and Phase **5A** clinical migration audit docs are present. See `docs/architecture/engineering-phases.md` and `docs/phase-reports/PHASE_5A_CLINICAL_MIGRATION_AUDIT.md`.
 
 ## Requirements
 
@@ -46,7 +47,8 @@ npm audit
 ```
 
 Local web (after `npm run dev`): **http://127.0.0.1:4101/**  
-Preview gallery (development only): **http://127.0.0.1:4101/preview**
+Preview gallery (development only): **http://127.0.0.1:4101/preview**  
+Clinical integration status (development only): **http://127.0.0.1:4101/preview/clinical-integration-status**
 
 ## API namespace (shell)
 

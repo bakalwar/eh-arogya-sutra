@@ -21,7 +21,16 @@ const FORBIDDEN_TEXT = [
 
 const FORBIDDEN_PATH_FRAGMENTS = [`${path.sep}eh-api${path.sep}`, '/eh-api/', '\\eh-api\\'];
 
-const SKIP_DIRS = new Set(['node_modules', '.git', '.next', 'dist', 'coverage', '.turbo', 'out']);
+const SKIP_DIRS = new Set([
+  'node_modules',
+  '.git',
+  '.next',
+  '.next-phase5a',
+  'dist',
+  'coverage',
+  '.turbo',
+  'out',
+]);
 
 const SCAN_EXT = new Set([
   '.ts',

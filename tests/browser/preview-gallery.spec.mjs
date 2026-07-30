@@ -62,11 +62,30 @@ test.describe('Phase 4C-V browser preview', () => {
     await expect(page.getByRole('link', { name: 'Login' })).toBeVisible();
     await expect(page.getByRole('link', { name: /Super Admin foundation/i })).toBeVisible();
     await expect(page.getByRole('link', { name: /Management Admin/i })).toBeVisible();
+    await expect(page.getByRole('link', { name: /Clinical integration status/i })).toBeVisible();
 
     const forbidden = requests.filter((r) =>
       /\/auth\/otp|\/auth\/session|\/analysis|\/payment|\/upload|eh_arogya|electrohomeopathy/i.test(
         r,
       ),
+    );
+    expect(forbidden).toEqual([]);
+    expect(errors.filter((e) => !/favicon/i.test(e))).toEqual([]);
+  });
+
+  test('clinical integration status is audit-only with no engine requests', async ({ page }) => {
+    const errors = collectConsoleErrors(page);
+    const requests = [];
+    page.on('request', (req) => {
+      requests.push(`${req.method()} ${req.url()}`);
+    });
+    await page.goto('/preview/clinical-integration-status');
+    await expect(page.getByRole('heading', { name: /Clinical integration status/i })).toBeVisible();
+    await expect(page.getByText('AUDIT_ONLY')).toBeVisible();
+    await expect(page.getByText('NOT_CONNECTED').first()).toBeVisible();
+    await expect(page.getByText('NOT_USED')).toBeVisible();
+    const forbidden = requests.filter((r) =>
+      /\/auth\/otp|\/analysis|\/payment|\/upload|eh_arogya|electrohomeopathy|116284/i.test(r),
     );
     expect(forbidden).toEqual([]);
     expect(errors.filter((e) => !/favicon/i.test(e))).toEqual([]);

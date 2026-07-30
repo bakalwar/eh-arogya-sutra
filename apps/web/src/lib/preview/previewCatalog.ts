@@ -8,8 +8,16 @@ export type PreviewCatalogItem = {
   title: string;
   description: string;
   href: string;
-  group: 'entry' | 'doctor' | 'clinical' | 'formula' | 'profile' | 'management' | 'super-admin';
-  shell: 'public' | 'doctor' | 'management' | 'super-admin' | 'fixture';
+  group:
+    | 'entry'
+    | 'doctor'
+    | 'clinical'
+    | 'formula'
+    | 'profile'
+    | 'management'
+    | 'super-admin'
+    | 'audit';
+  shell: 'public' | 'doctor' | 'management' | 'super-admin' | 'fixture' | 'audit';
 };
 
 export const PREVIEW_CATALOG: readonly PreviewCatalogItem[] = [
@@ -293,6 +301,14 @@ export const PREVIEW_CATALOG: readonly PreviewCatalogItem[] = [
     group: 'super-admin',
     shell: 'super-admin',
   },
+  {
+    id: 'clinical-integration-status',
+    title: 'Clinical integration status (audit)',
+    description: 'Phase 5A non-clinical AUDIT_ONLY / NOT_CONNECTED board',
+    href: '/preview/clinical-integration-status',
+    group: 'audit',
+    shell: 'audit',
+  },
 ] as const;
 
 export const PREVIEW_GROUPS = [
@@ -303,4 +319,5 @@ export const PREVIEW_GROUPS = [
   { id: 'profile', label: 'Profile & clinic' },
   { id: 'management', label: 'Management Admin' },
   { id: 'super-admin', label: 'Super Admin' },
+  { id: 'audit', label: 'Audit status' },
 ] as const;
