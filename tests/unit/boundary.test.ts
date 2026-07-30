@@ -25,7 +25,7 @@ describe('EHAS2 foundation', () => {
     expect(FoundationStatus.NOT_READY).toBe('NOT_READY');
     expect(FoundationStatus.DATA_PACKAGE_NOT_INSTALLED).toBe('DATA_PACKAGE_NOT_INSTALLED');
     expect(ENGINE_ADAPTER_STATUS).toBe('NOT_IMPLEMENTED');
-    expect(DATABASE_PACKAGE_STATUS).toBe('PERSISTENCE_FOUNDATION');
+    expect(DATABASE_PACKAGE_STATUS).toBe('PERSISTENCE_SERVICES');
     expect(CLINICAL_CONTRACTS_STATUS).toBe('NOT_READY');
   });
 

@@ -11,6 +11,7 @@ const MIGRATION_IDS = [
   '004_operations',
   '005_indexes',
   '006_rls',
+  '007_idempotency_keys',
 ] as const;
 
 export type MigrationId = (typeof MIGRATION_IDS)[number];
@@ -129,13 +130,19 @@ export async function migrateDownLast(
     const sql = fs.readFileSync(file.filePath, 'utf8');
     await query('BEGIN');
     try {
-      await query(sql);
+      // Remove up marker before destructive SQL (001 drops migration_runs itself).
       await query(`DELETE FROM migration_runs WHERE migration_id = $1 AND direction = 'up'`, [id]);
-      await query(
-        `INSERT INTO migration_runs (migration_id, checksum_sha256, direction, integrity_result)
-         VALUES ($1, $2, 'down', 'ROLLED_BACK')`,
-        [id, file.checksum],
-      );
+      await query(sql);
+      try {
+        await query(
+          `INSERT INTO migration_runs (migration_id, checksum_sha256, direction, integrity_result)
+           VALUES ($1, $2, 'down', 'ROLLED_BACK')`,
+          [id, file.checksum],
+        );
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        if (!/relation .*migration_runs.* does not exist/i.test(msg)) throw err;
+      }
       await query('COMMIT');
       return id;
     } catch (err) {

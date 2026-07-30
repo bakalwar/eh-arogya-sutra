@@ -1,7 +1,7 @@
 {
   "name": "@ehas2/database",
-  "version": "0.1.0-phase3a",
-  "description": "E.H. AROGYA SUTRA 2 — PostgreSQL persistence foundation (Phase 3A)",
+  "version": "0.1.0-phase3b",
+  "description": "E.H. AROGYA SUTRA 2 — PostgreSQL persistence services (Phase 3B)",
   "private": true,
   "type": "module",
   "main": "./dist/index.js",

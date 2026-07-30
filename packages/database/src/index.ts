@@ -1,9 +1,9 @@
 /**
- * PostgreSQL persistence foundation — Phase 3A.
+ * PostgreSQL persistence services — Phase 3B.
  * Clinical engine, OTP, and production patient records remain out of scope.
  */
-export const DATABASE_PACKAGE_VERSION = '0.1.0-phase3a' as const;
-export const DATABASE_PACKAGE_STATUS = 'PERSISTENCE_FOUNDATION' as const;
+export const DATABASE_PACKAGE_VERSION = '0.1.0-phase3b' as const;
+export const DATABASE_PACKAGE_STATUS = 'PERSISTENCE_SERVICES' as const;
 export const DATABASE_ACCESS_LAYER = 'pg+sql-migrations' as const;
 
 export {
@@ -22,6 +22,14 @@ export {
   ImmutablePrescriptionError,
   sanitizeDatabaseError,
 } from './errors.js';
+export {
+  ValidationError,
+  ResourceNotFoundError,
+  ConflictError,
+  IdempotencyConflictError,
+  InvalidConsultationTransitionError,
+  ImmutableArtifactError,
+} from './domainErrors.js';
 export {
   type TenantContext,
   type TransactionContext,
@@ -43,6 +51,20 @@ export {
   isTerminalReviewState,
   type ReviewState,
 } from './reviewTransitions.js';
+export {
+  CONSULTATION_STATUSES,
+  assertValidConsultationTransition,
+  isTerminalConsultationStatus,
+  consultationAllowsFieldUpdate,
+  type ConsultationStatus,
+} from './consultationTransitions.js';
+export {
+  assertUuid,
+  normalizeDisplayName,
+  clampPageLimit,
+  hashPayload,
+  MAX_FINDING_BATCH,
+} from './validation.js';
 export type * from './repositories/types.js';
 export {
   PgUserRepository,
@@ -57,6 +79,9 @@ export {
   PgAuditEventRepository,
   UNSCOPED_PATIENT_METHODS_FORBIDDEN,
 } from './repositories/postgres.js';
+export { PgIdempotencyRepository } from './repositories/idempotency.js';
+export { PatientService, patientService } from './services/patientService.js';
+export { ConsultationService, consultationService } from './services/consultationService.js';
 
 /** @deprecated — use getPool / withTenantTransaction. Kept to fail closed without config. */
 export function getConnection(): never {

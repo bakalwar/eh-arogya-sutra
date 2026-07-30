@@ -1,4 +1,4 @@
-import { CrossTenantDeniedError, ImmutablePrescriptionError } from '../errors.js';
+import { ImmutablePrescriptionError } from '../errors.js';
 import { assertValidReviewTransition, type ReviewState } from '../reviewTransitions.js';
 import {
   assertTenantContext,
@@ -16,8 +16,11 @@ import type {
   MembershipRepository,
   OrganizationRecord,
   OrganizationRepository,
+  PatientCreateInput,
   PatientRecord,
   PatientRepository,
+  PatientStatus,
+  PatientUpdateInput,
   PrescriptionRepository,
   PrescriptionVersionRecord,
   ReportFindingRecord,
@@ -27,6 +30,9 @@ import type {
   UserRecord,
   UserRepository,
 } from './types.js';
+import type { ConsultationStatus } from '../consultationTransitions.js';
+import { assertValidConsultationTransition } from '../consultationTransitions.js';
+import { ConflictError, ResourceNotFoundError } from '../domainErrors.js';
 
 function mapUser(row: Record<string, unknown>): UserRecord {
   return {
@@ -44,7 +50,17 @@ function mapPatient(row: Record<string, unknown>): PatientRecord {
     organizationId: String(row.organization_id),
     clinicId: String(row.clinic_id),
     displayName: String(row.display_name),
-    status: String(row.status),
+    dateOfBirth:
+      row.date_of_birth == null
+        ? null
+        : row.date_of_birth instanceof Date
+          ? row.date_of_birth.toISOString().slice(0, 10)
+          : String(row.date_of_birth).slice(0, 10),
+    sexAtBirth: row.sex_at_birth == null ? null : String(row.sex_at_birth),
+    phoneMasked: row.phone_masked == null ? null : String(row.phone_masked),
+    emailMasked: row.email_masked == null ? null : String(row.email_masked),
+    status: String(row.status) as PatientRecord['status'],
+    updatedAt: new Date(String(row.updated_at)).toISOString(),
   };
 }
 
@@ -56,8 +72,10 @@ function mapConsultation(row: Record<string, unknown>): ConsultationRecord {
     clinicId: String(row.clinic_id),
     patientId: String(row.patient_id),
     doctorUserId: String(row.doctor_user_id),
-    status: String(row.status),
+    status: String(row.status) as ConsultationRecord['status'],
+    chiefComplaintText: row.chief_complaint_text == null ? null : String(row.chief_complaint_text),
     consultationAt: new Date(String(row.consultation_at)).toISOString(),
+    updatedAt: new Date(String(row.updated_at)).toISOString(),
   };
 }
 
@@ -167,13 +185,24 @@ export class PgPatientRepository implements PatientRepository {
   async create(
     tenant: TenantContext,
     tx: TransactionContext,
-    input: { displayName: string },
+    input: PatientCreateInput,
   ): Promise<PatientRecord> {
     assertTenantContext(tenant);
     const r = await tx.query(
-      `INSERT INTO patients (organization_id, clinic_id, display_name, created_by_actor_id, updated_by_actor_id)
-       VALUES ($1, $2, $3, $4, $4) RETURNING *`,
-      [tenant.organizationId, tenant.clinicId, input.displayName, tenant.actorId],
+      `INSERT INTO patients (
+         organization_id, clinic_id, display_name, date_of_birth, sex_at_birth,
+         phone_masked, email_masked, created_by_actor_id, updated_by_actor_id
+       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$8) RETURNING *`,
+      [
+        tenant.organizationId,
+        tenant.clinicId,
+        input.displayName,
+        input.dateOfBirth ?? null,
+        input.sexAtBirth ?? null,
+        input.phoneMasked ?? null,
+        input.emailMasked ?? null,
+        tenant.actorId,
+      ],
     );
     return mapPatient(r.rows[0] as Record<string, unknown>);
   }
@@ -195,23 +224,101 @@ export class PgPatientRepository implements PatientRepository {
   async listByClinic(
     tenant: TenantContext,
     tx: TransactionContext,
-    opts: { cursor?: string; limit?: number } = {},
+    opts: {
+      cursor?: string;
+      limit?: number;
+      status?: PatientStatus;
+      displayNamePrefix?: string;
+    } = {},
   ): Promise<{ items: PatientRecord[]; nextCursor: string | null }> {
     assertTenantContext(tenant);
     const limit = Math.min(opts.limit ?? 50, 100);
-    const params: unknown[] = [tenant.organizationId, tenant.clinicId, limit + 1];
-    let sql = `SELECT * FROM patients
-      WHERE organization_id = $1 AND clinic_id = $2`;
+    const params: unknown[] = [tenant.organizationId, tenant.clinicId];
+    let sql = `SELECT * FROM patients WHERE organization_id = $1 AND clinic_id = $2`;
+    if (opts.status) {
+      params.push(opts.status);
+      sql += ` AND status = $${params.length}`;
+    }
+    if (opts.displayNamePrefix) {
+      params.push(`${opts.displayNamePrefix}%`);
+      sql += ` AND display_name ILIKE $${params.length}`;
+    }
     if (opts.cursor) {
       params.push(opts.cursor);
-      sql += ` AND id > $4`;
+      sql += ` AND id > $${params.length}`;
     }
-    sql += ` ORDER BY id ASC LIMIT $3`;
+    params.push(limit + 1);
+    sql += ` ORDER BY id ASC LIMIT $${params.length}`;
     const r = await tx.query(sql, params);
     const rows = r.rows as Record<string, unknown>[];
     const items = rows.slice(0, limit).map(mapPatient);
     const nextCursor = rows.length > limit ? (items[items.length - 1]?.id ?? null) : null;
     return { items, nextCursor };
+  }
+
+  async updateAllowedFields(
+    tenant: TenantContext,
+    tx: TransactionContext,
+    patientId: string,
+    input: PatientUpdateInput,
+    expectedUpdatedAt?: string,
+  ): Promise<PatientRecord> {
+    assertTenantContext(tenant);
+    const current = await this.findById(tenant, tx, patientId);
+    if (!current) throw new ResourceNotFoundError();
+    const params: unknown[] = [
+      input.displayName ?? null,
+      Object.prototype.hasOwnProperty.call(input, 'dateOfBirth'),
+      input.dateOfBirth ?? null,
+      Object.prototype.hasOwnProperty.call(input, 'sexAtBirth'),
+      input.sexAtBirth ?? null,
+      Object.prototype.hasOwnProperty.call(input, 'phoneMasked'),
+      input.phoneMasked ?? null,
+      Object.prototype.hasOwnProperty.call(input, 'emailMasked'),
+      input.emailMasked ?? null,
+      tenant.actorId,
+      patientId,
+      tenant.organizationId,
+      tenant.clinicId,
+    ];
+    let sql = `UPDATE patients SET
+         display_name = COALESCE($1, display_name),
+         date_of_birth = CASE WHEN $2::boolean THEN $3::date ELSE date_of_birth END,
+         sex_at_birth = CASE WHEN $4::boolean THEN $5 ELSE sex_at_birth END,
+         phone_masked = CASE WHEN $6::boolean THEN $7 ELSE phone_masked END,
+         email_masked = CASE WHEN $8::boolean THEN $9 ELSE email_masked END,
+         updated_at = clock_timestamp(),
+         updated_by_actor_id = $10
+       WHERE id = $11 AND organization_id = $12 AND clinic_id = $13`;
+    if (expectedUpdatedAt) {
+      params.push(expectedUpdatedAt);
+      sql += ` AND updated_at = $${params.length}::timestamptz`;
+    }
+    sql += ` RETURNING *`;
+    const r = await tx.query(sql, params);
+    if (!r.rows[0]) {
+      throw expectedUpdatedAt
+        ? new ConflictError('Patient was modified concurrently')
+        : new ResourceNotFoundError();
+    }
+    return mapPatient(r.rows[0] as Record<string, unknown>);
+  }
+
+  async archive(
+    tenant: TenantContext,
+    tx: TransactionContext,
+    patientId: string,
+  ): Promise<PatientRecord> {
+    assertTenantContext(tenant);
+    const r = await tx.query(
+      `UPDATE patients SET status = 'ARCHIVED', updated_at = now(), updated_by_actor_id = $1
+       WHERE id = $2 AND organization_id = $3 AND clinic_id = $4
+         AND status <> 'LEGAL_HOLD'
+       RETURNING *`,
+      [tenant.actorId, patientId, tenant.organizationId, tenant.clinicId],
+    );
+    if (!r.rows[0]) throw new ResourceNotFoundError();
+    return mapPatient(r.rows[0] as Record<string, unknown>);
   }
 }
 
@@ -219,22 +326,43 @@ export class PgConsultationRepository implements ConsultationRepository {
   async create(
     tenant: TenantContext,
     tx: TransactionContext,
-    input: { patientId: string; doctorUserId: string },
+    input: { patientId: string; doctorUserId: string; chiefComplaintText?: string | null },
   ): Promise<ConsultationRecord> {
     assertTenantContext(tenant);
     const patient = await tx.query(
-      `SELECT id FROM patients WHERE id = $1 AND organization_id = $2 AND clinic_id = $3`,
+      `SELECT id, status FROM patients WHERE id = $1 AND organization_id = $2 AND clinic_id = $3`,
       [input.patientId, tenant.organizationId, tenant.clinicId],
     );
-    if (!patient.rows[0]) throw new CrossTenantDeniedError('Patient not in tenant');
+    if (!patient.rows[0]) throw new ResourceNotFoundError();
     const r = await tx.query(
       `INSERT INTO consultations (
-         organization_id, clinic_id, patient_id, doctor_user_id,
+         organization_id, clinic_id, patient_id, doctor_user_id, chief_complaint_text,
          created_by_actor_id, updated_by_actor_id
-       ) VALUES ($1, $2, $3, $4, $5, $5) RETURNING *`,
-      [tenant.organizationId, tenant.clinicId, input.patientId, input.doctorUserId, tenant.actorId],
+       ) VALUES ($1, $2, $3, $4, $5, $6, $6) RETURNING *`,
+      [
+        tenant.organizationId,
+        tenant.clinicId,
+        input.patientId,
+        input.doctorUserId,
+        input.chiefComplaintText ?? null,
+        tenant.actorId,
+      ],
     );
     return mapConsultation(r.rows[0] as Record<string, unknown>);
+  }
+
+  async findById(
+    tenant: TenantContext,
+    tx: TransactionContext,
+    consultationId: string,
+  ): Promise<ConsultationRecord | null> {
+    assertTenantContext(tenant);
+    const r = await tx.query(
+      `SELECT * FROM consultations
+       WHERE id = $1 AND organization_id = $2 AND clinic_id = $3`,
+      [consultationId, tenant.organizationId, tenant.clinicId],
+    );
+    return r.rows[0] ? mapConsultation(r.rows[0] as Record<string, unknown>) : null;
   }
 
   async listByPatient(
@@ -259,6 +387,83 @@ export class PgConsultationRepository implements ConsultationRepository {
     const nextCursor =
       rows.length > limit ? (items[items.length - 1]?.consultationAt ?? null) : null;
     return { items, nextCursor };
+  }
+
+  async listByTenant(
+    tenant: TenantContext,
+    tx: TransactionContext,
+    opts: { cursor?: string; limit?: number; status?: ConsultationStatus } = {},
+  ): Promise<{ items: ConsultationRecord[]; nextCursor: string | null }> {
+    assertTenantContext(tenant);
+    const limit = Math.min(opts.limit ?? 50, 100);
+    const params: unknown[] = [tenant.organizationId, tenant.clinicId];
+    let sql = `SELECT * FROM consultations WHERE organization_id = $1 AND clinic_id = $2`;
+    if (opts.status) {
+      params.push(opts.status);
+      sql += ` AND status = $${params.length}`;
+    }
+    if (opts.cursor) {
+      params.push(opts.cursor);
+      sql += ` AND consultation_at < $${params.length}::timestamptz`;
+    }
+    params.push(limit + 1);
+    sql += ` ORDER BY consultation_at DESC LIMIT $${params.length}`;
+    const r = await tx.query(sql, params);
+    const rows = r.rows as Record<string, unknown>[];
+    const items = rows.slice(0, limit).map(mapConsultation);
+    const nextCursor =
+      rows.length > limit ? (items[items.length - 1]?.consultationAt ?? null) : null;
+    return { items, nextCursor };
+  }
+
+  async updateAllowedFields(
+    tenant: TenantContext,
+    tx: TransactionContext,
+    consultationId: string,
+    input: { chiefComplaintText?: string | null },
+  ): Promise<ConsultationRecord> {
+    assertTenantContext(tenant);
+    const r = await tx.query(
+      `UPDATE consultations SET
+         chief_complaint_text = CASE WHEN $1::boolean THEN $2 ELSE chief_complaint_text END,
+         updated_at = now(), updated_by_actor_id = $3
+       WHERE id = $4 AND organization_id = $5 AND clinic_id = $6
+       RETURNING *`,
+      [
+        Object.prototype.hasOwnProperty.call(input, 'chiefComplaintText'),
+        input.chiefComplaintText ?? null,
+        tenant.actorId,
+        consultationId,
+        tenant.organizationId,
+        tenant.clinicId,
+      ],
+    );
+    if (!r.rows[0]) throw new ResourceNotFoundError();
+    return mapConsultation(r.rows[0] as Record<string, unknown>);
+  }
+
+  async transitionStatus(
+    tenant: TenantContext,
+    tx: TransactionContext,
+    consultationId: string,
+    to: ConsultationStatus,
+    expectedUpdatedAt?: string,
+  ): Promise<ConsultationRecord> {
+    assertTenantContext(tenant);
+    const current = await this.findById(tenant, tx, consultationId);
+    if (!current) throw new ResourceNotFoundError();
+    if (expectedUpdatedAt && current.updatedAt !== expectedUpdatedAt) {
+      throw new ConflictError('Consultation was modified concurrently');
+    }
+    assertValidConsultationTransition(current.status, to);
+    const r = await tx.query(
+      `UPDATE consultations SET status = $1, updated_at = now(), updated_by_actor_id = $2
+       WHERE id = $3 AND organization_id = $4 AND clinic_id = $5 AND status = $6
+       RETURNING *`,
+      [to, tenant.actorId, consultationId, tenant.organizationId, tenant.clinicId, current.status],
+    );
+    if (!r.rows[0]) throw new ConflictError('Consultation transition conflict');
+    return mapConsultation(r.rows[0] as Record<string, unknown>);
   }
 }
 
@@ -400,7 +605,7 @@ export class PgPrescriptionRepository implements PrescriptionRepository {
   ): Promise<PrescriptionVersionRecord> {
     assertTenantContext(tenant);
     const current = await this.findById(tenant, tx, prescriptionId);
-    if (!current) throw new CrossTenantDeniedError('Prescription not found');
+    if (!current) throw new ResourceNotFoundError();
     if (current.reviewState === 'ISSUED' && to !== 'SUPERSEDED') {
       throw new ImmutablePrescriptionError();
     }
@@ -434,7 +639,7 @@ export class PgPrescriptionRepository implements PrescriptionRepository {
     assertTenantContext(tenant);
     if (!input.modificationReason.trim()) throw new Error('modification reason required');
     const previous = await this.findById(tenant, tx, previousId);
-    if (!previous) throw new CrossTenantDeniedError('Previous prescription not found');
+    if (!previous) throw new ResourceNotFoundError();
     if (previous.reviewState === 'ISSUED') {
       await this.transition(tenant, tx, previousId, 'SUPERSEDED', input.modificationReason);
     } else {
@@ -472,6 +677,21 @@ export class PgPrescriptionRepository implements PrescriptionRepository {
       ],
     );
     return mapPrescription(r.rows[0] as Record<string, unknown>);
+  }
+
+  async listByConsultation(
+    tenant: TenantContext,
+    tx: TransactionContext,
+    consultationId: string,
+  ): Promise<PrescriptionVersionRecord[]> {
+    assertTenantContext(tenant);
+    const r = await tx.query(
+      `SELECT * FROM prescription_versions
+       WHERE consultation_id = $1 AND organization_id = $2 AND clinic_id = $3
+       ORDER BY version_number ASC`,
+      [consultationId, tenant.organizationId, tenant.clinicId],
+    );
+    return (r.rows as Record<string, unknown>[]).map(mapPrescription);
   }
 }
 
@@ -522,7 +742,9 @@ export class PgSummarySnapshotRepository implements SummarySnapshotRepository {
       id: String(row.id),
       consultationId: String(row.consultation_id),
       contentHash: String(row.content_hash),
+      inputHash: String(row.input_hash),
       readableText: String(row.readable_text),
+      versionLabel: null,
     };
   }
 
@@ -543,8 +765,32 @@ export class PgSummarySnapshotRepository implements SummarySnapshotRepository {
       id: String(row.id),
       consultationId: String(row.consultation_id),
       contentHash: String(row.content_hash),
+      inputHash: String(row.input_hash),
       readableText: String(row.readable_text),
+      versionLabel: null,
     };
+  }
+
+  async listByConsultation(
+    tenant: TenantContext,
+    tx: TransactionContext,
+    consultationId: string,
+  ): Promise<SummarySnapshotRecord[]> {
+    assertTenantContext(tenant);
+    const r = await tx.query(
+      `SELECT * FROM clinical_summary_snapshots
+       WHERE consultation_id = $1 AND organization_id = $2 AND clinic_id = $3
+       ORDER BY created_at ASC`,
+      [consultationId, tenant.organizationId, tenant.clinicId],
+    );
+    return (r.rows as Record<string, unknown>[]).map((row) => ({
+      id: String(row.id),
+      consultationId: String(row.consultation_id),
+      contentHash: String(row.content_hash),
+      inputHash: String(row.input_hash),
+      readableText: String(row.readable_text),
+      versionLabel: null,
+    }));
   }
 }
 
@@ -604,6 +850,37 @@ export class PgReportFindingRepository implements ReportFindingRepository {
       verifiedByActorId: row.verified_by_actor_id == null ? null : String(row.verified_by_actor_id),
       verifiedAt: row.verified_at == null ? null : new Date(String(row.verified_at)).toISOString(),
     };
+  }
+
+  async createBatch(
+    tenant: TenantContext,
+    tx: TransactionContext,
+    consultationId: string,
+    findings: readonly {
+      reportCategory: string;
+      valueText: string;
+      verificationStatus: string;
+      normalizedFinding?: string | null;
+      unit?: string | null;
+      referenceRange?: string | null;
+      confidence?: number | null;
+      verifiedByActorId?: string | null;
+      verifiedAt?: string | null;
+      doctorCorrection?: string | null;
+      correctionReason?: string | null;
+      extractionEngineVersion?: string | null;
+    }[],
+  ): Promise<ReportFindingRecord[]> {
+    const out: ReportFindingRecord[] = [];
+    for (const f of findings) {
+      out.push(
+        await this.create(tenant, tx, {
+          consultationId,
+          ...f,
+        }),
+      );
+    }
+    return out;
   }
 }
 

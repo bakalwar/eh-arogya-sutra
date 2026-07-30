@@ -1,5 +1,6 @@
 import type { TenantContext, TransactionContext } from '../tenantContext.js';
 import type { ReviewState } from '../reviewTransitions.js';
+import type { ConsultationStatus } from '../consultationTransitions.js';
 
 export type CursorPage<T> = {
   items: T[];
@@ -28,13 +29,36 @@ export type MembershipRecord = {
   status: string;
 };
 
+export type PatientStatus = 'ACTIVE' | 'INACTIVE' | 'ARCHIVED' | 'LEGAL_HOLD';
+
 export type PatientRecord = {
   id: string;
   publicId: string;
   organizationId: string;
   clinicId: string;
   displayName: string;
-  status: string;
+  dateOfBirth: string | null;
+  sexAtBirth: string | null;
+  phoneMasked: string | null;
+  emailMasked: string | null;
+  status: PatientStatus;
+  updatedAt: string;
+};
+
+export type PatientCreateInput = {
+  displayName: string;
+  dateOfBirth?: string | null;
+  sexAtBirth?: string | null;
+  phoneMasked?: string | null;
+  emailMasked?: string | null;
+};
+
+export type PatientUpdateInput = {
+  displayName?: string;
+  dateOfBirth?: string | null;
+  sexAtBirth?: string | null;
+  phoneMasked?: string | null;
+  emailMasked?: string | null;
 };
 
 export type ConsultationRecord = {
@@ -44,8 +68,10 @@ export type ConsultationRecord = {
   clinicId: string;
   patientId: string;
   doctorUserId: string;
-  status: string;
+  status: ConsultationStatus;
+  chiefComplaintText: string | null;
   consultationAt: string;
+  updatedAt: string;
 };
 
 export type ClinicalAnalysisRecord = {
@@ -80,7 +106,9 @@ export type SummarySnapshotRecord = {
   id: string;
   consultationId: string;
   contentHash: string;
+  inputHash: string;
   readableText: string;
+  versionLabel: string | null;
 };
 
 export type ReportFindingRecord = {
@@ -135,7 +163,7 @@ export interface PatientRepository {
   create(
     tenant: TenantContext,
     tx: TransactionContext,
-    input: { displayName: string },
+    input: PatientCreateInput,
   ): Promise<PatientRecord>;
   findById(
     tenant: TenantContext,
@@ -145,22 +173,53 @@ export interface PatientRepository {
   listByClinic(
     tenant: TenantContext,
     tx: TransactionContext,
-    opts?: { cursor?: string; limit?: number },
+    opts?: { cursor?: string; limit?: number; status?: PatientStatus; displayNamePrefix?: string },
   ): Promise<CursorPage<PatientRecord>>;
+  updateAllowedFields(
+    tenant: TenantContext,
+    tx: TransactionContext,
+    patientId: string,
+    input: PatientUpdateInput,
+    expectedUpdatedAt?: string,
+  ): Promise<PatientRecord>;
+  archive(tenant: TenantContext, tx: TransactionContext, patientId: string): Promise<PatientRecord>;
 }
 
 export interface ConsultationRepository {
   create(
     tenant: TenantContext,
     tx: TransactionContext,
-    input: { patientId: string; doctorUserId: string },
+    input: { patientId: string; doctorUserId: string; chiefComplaintText?: string | null },
   ): Promise<ConsultationRecord>;
+  findById(
+    tenant: TenantContext,
+    tx: TransactionContext,
+    consultationId: string,
+  ): Promise<ConsultationRecord | null>;
   listByPatient(
     tenant: TenantContext,
     tx: TransactionContext,
     patientId: string,
     opts?: { cursor?: string; limit?: number },
   ): Promise<CursorPage<ConsultationRecord>>;
+  listByTenant(
+    tenant: TenantContext,
+    tx: TransactionContext,
+    opts?: { cursor?: string; limit?: number; status?: ConsultationStatus },
+  ): Promise<CursorPage<ConsultationRecord>>;
+  updateAllowedFields(
+    tenant: TenantContext,
+    tx: TransactionContext,
+    consultationId: string,
+    input: { chiefComplaintText?: string | null },
+  ): Promise<ConsultationRecord>;
+  transitionStatus(
+    tenant: TenantContext,
+    tx: TransactionContext,
+    consultationId: string,
+    to: ConsultationStatus,
+    expectedUpdatedAt?: string,
+  ): Promise<ConsultationRecord>;
 }
 
 export interface ClinicalAnalysisRepository {
@@ -227,6 +286,11 @@ export interface PrescriptionRepository {
     tx: TransactionContext,
     id: string,
   ): Promise<PrescriptionVersionRecord | null>;
+  listByConsultation(
+    tenant: TenantContext,
+    tx: TransactionContext,
+    consultationId: string,
+  ): Promise<PrescriptionVersionRecord[]>;
 }
 
 export interface SummarySnapshotRepository {
@@ -251,6 +315,11 @@ export interface SummarySnapshotRepository {
     tx: TransactionContext,
     id: string,
   ): Promise<SummarySnapshotRecord | null>;
+  listByConsultation(
+    tenant: TenantContext,
+    tx: TransactionContext,
+    consultationId: string,
+  ): Promise<SummarySnapshotRecord[]>;
 }
 
 export interface ReportFindingRepository {
@@ -273,6 +342,25 @@ export interface ReportFindingRepository {
       extractionEngineVersion?: string | null;
     },
   ): Promise<ReportFindingRecord>;
+  createBatch(
+    tenant: TenantContext,
+    tx: TransactionContext,
+    consultationId: string,
+    findings: readonly {
+      reportCategory: string;
+      valueText: string;
+      verificationStatus: string;
+      normalizedFinding?: string | null;
+      unit?: string | null;
+      referenceRange?: string | null;
+      confidence?: number | null;
+      verifiedByActorId?: string | null;
+      verifiedAt?: string | null;
+      doctorCorrection?: string | null;
+      correctionReason?: string | null;
+      extractionEngineVersion?: string | null;
+    }[],
+  ): Promise<ReportFindingRecord[]>;
 }
 
 export interface AuditEventRepository {

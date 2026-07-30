@@ -46,6 +46,15 @@ export class ImmutablePrescriptionError extends Error {
   }
 }
 
+import {
+  ValidationError,
+  ResourceNotFoundError,
+  ConflictError,
+  IdempotencyConflictError,
+  InvalidConsultationTransitionError,
+  ImmutableArtifactError,
+} from './domainErrors.js';
+
 /** Hide connection details from API/clients. */
 export function sanitizeDatabaseError(err: unknown): { code: string; message: string } {
   if (err instanceof DatabaseNotInstalledError) {
@@ -54,17 +63,29 @@ export function sanitizeDatabaseError(err: unknown): { code: string; message: st
   if (err instanceof TenantContextRequiredError) {
     return { code: err.code, message: 'Tenant context required' };
   }
-  if (err instanceof CrossTenantDeniedError) {
-    return { code: err.code, message: 'Access denied' };
+  if (err instanceof CrossTenantDeniedError || err instanceof ResourceNotFoundError) {
+    return { code: 'NOT_FOUND', message: 'Resource not found' };
   }
   if (err instanceof MembershipInactiveError) {
     return { code: err.code, message: 'Membership inactive' };
   }
-  if (err instanceof InvalidReviewTransitionError) {
-    return { code: err.code, message: 'Invalid review transition' };
+  if (
+    err instanceof InvalidReviewTransitionError ||
+    err instanceof InvalidConsultationTransitionError
+  ) {
+    return { code: 'INVALID_TRANSITION', message: 'Invalid state transition' };
   }
-  if (err instanceof ImmutablePrescriptionError) {
-    return { code: err.code, message: 'Prescription is immutable' };
+  if (err instanceof ImmutablePrescriptionError || err instanceof ImmutableArtifactError) {
+    return { code: 'IMMUTABLE_ARTIFACT', message: 'Artifact is immutable' };
+  }
+  if (err instanceof ValidationError) {
+    return { code: err.code, message: 'Validation failed' };
+  }
+  if (err instanceof ConflictError) {
+    return { code: err.code, message: 'Conflict' };
+  }
+  if (err instanceof IdempotencyConflictError) {
+    return { code: err.code, message: 'Idempotency conflict' };
   }
   return { code: 'DATABASE_ERROR', message: 'Database operation failed' };
 }
