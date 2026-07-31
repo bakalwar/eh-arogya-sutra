@@ -46,6 +46,34 @@ Only validated supported image types may influence analysis.
 
 Future integration must use the verified versioned **nine-rule engine**.
 
+### Rule 1 — Temperament Engine (Phase 5R-1F freeze)
+
+**Status:** OWNER-APPROVED specification · EHAS2 **NOT_IMPLEMENTED** · legacy reference LIVE_BUT_PARTIAL only.
+
+- Canonical name: **Temperament Engine** (Rule 1).
+- EH Temperament outputs: `LYMPHATIC`, `SANGUINE`, `BILIOUS_HEPATIC`, `NERVOUS`, `MIXED`, `UNKNOWN`.
+- **EH Temperament** and **Tridosha mapping** (`dosha_mapping`, `dosha_classification`) are **separate fields** — do not collapse into one ambiguous `prakriti` string.
+- Insufficient evidence → `UNKNOWN` and `ADDITIONAL_INFORMATION_REQUIRED` — no silent Lymphatic, Mixed, or Balanced default; no dictionary-order tie-break.
+- BP (systolic ≥140 / <100) is **supporting evidence only** (+3 Sanguine / +2 Lymphatic) and requires separate approved symptom or observation evidence before a resolved temperament.
+- Photos: supporting observation only; never sole authority; no skin-colour or ordinary-face automatic temperament.
+- Rule 1 supplies evidence to downstream engines; it **must not** directly select medicine, formula, potency, electricity, tablet, or external application.
+- Full spec: [rules/rule-01-temperament-engine.md](./rules/rule-01-temperament-engine.md).
+
+### Rule 2 — Polarity Engine (Phase 5R-2F freeze)
+
+**Status:** OWNER-APPROVED specification · EHAS2 **NOT_IMPLEMENTED** · legacy reference LIVE_BUT_PARTIAL only.
+
+- Canonical name: **Polarity Engine** (Rule 2).
+- **Formula-specific** disease polarity + **required therapeutic polarity** per formula; **`mutates_mixtures` = false** — annotation only.
+- Rule 2 **must not** select medicine, potency, electricity, mixture count, or target pathology, or issue prescriptions.
+- Law of opposites: POSITIVE disease → NEGATIVE therapeutic; NEGATIVE disease → POSITIVE therapeutic; resolved neutral support → NEUTRAL therapeutic.
+- UNRESOLVED → `required_therapeutic_polarity` NEUTRAL, `OWNER_APPROVED_NEUTRAL_FALLBACK`, `doctor_review_required`; do not overwrite raw uncertainty as proven neutral disease state.
+- SUPPORT_ONLY distinct from UNRESOLVED; support formulas → NEUTRAL therapeutic, `RESOLVED_SUPPORT_ROLE`.
+- No global case polarity on all formulas; BP/report/photo isolation per owner spec.
+- `case_polarity_summary` display-only; `formula_polarities` authoritative for downstream annotation consumers (not direct selection by Rule 2).
+- Potency and electricity selection: separate engines (**AUDIT_PENDING**).
+- Full spec: [rules/rule-02-polarity-engine.md](./rules/rule-02-polarity-engine.md).
+
 Every result must record:
 
 - engine version
@@ -66,8 +94,8 @@ System will recommend:
 - primary target
 - root cause
 - polarity
-- prakriti: Vata/Pitta/Kapha or supported mixed/unknown state
-- temperament
+- temperament (EH Temperament Engine — Rule 1; owner-frozen tokens)
+- dosha mapping (Tridosha — separate from temperament)
 - constitution
 - severity/phase
 - emergency warning
