@@ -8,7 +8,7 @@ Legend: **OWNER-APPROVED** spec frozen · **IMPLEMENTATION-PENDING** · **LEGACY
 |---|----------------|--------------|------------------------------|-------|
 | 1 | Temperament Engine | **NOT_IMPLEMENTED** (spec **OWNER-APPROVED** 5R-1F) | None until wired | [rules/rule-01-temperament-engine.md](./rules/rule-01-temperament-engine.md) |
 | 2 | Polarity Engine | **NOT_IMPLEMENTED** (spec **OWNER-APPROVED** 5R-2F) | None until wired | [rules/rule-02-polarity-engine.md](./rules/rule-02-polarity-engine.md). Legacy LIVE_BUT_PARTIAL. Phase 5C synthetic ≠ this spec. |
-| 3 | Organ / System Affinity | EXECUTED / UNRESOLVED (5C only) | None in production | Organ-System **rule number AUDIT_PENDING** — not “Rule 2” |
+| 3 | Organ-System Affinity Engine | **NOT_IMPLEMENTED** (spec **OWNER-APPROVED** 5R-3F) | None until wired | [rules/rule-03-organ-system-affinity.md](./rules/rule-03-organ-system-affinity.md). Legacy LIVE_AND_AUTHORITATIVE_BUT_CONFLICTED. Phase 5C synthetic ≠ this spec. Organ-System **Triad** rule number **AUDIT_PENDING**. |
 | 4 | Potency | READY_FOR_VALIDATION | **Not issued** | Prescription boundary · **AUDIT_PENDING** |
 | 5 | Dosage | READY_FOR_VALIDATION | **Not issued** | Prescription boundary |
 | 6 | Multi-Disease / Triad | EXECUTED / UNRESOLVED (5C) | Ranked candidates in 5C only | No production mixture / formula |
@@ -18,4 +18,4 @@ Legend: **OWNER-APPROVED** spec frozen · **IMPLEMENTATION-PENDING** · **LEGACY
 
 For every rule the future production orchestrator must record: name, number, evidence, confidence, warnings, unresolved reason, fingerprint, clinical effect, safety stop.
 
-Rule 1 and Rule 2 contract fields are **IMPLEMENTATION-PENDING** in runtime until wired.
+Rule 1, Rule 2, and Rule 3 contract fields are **IMPLEMENTATION-PENDING** in runtime until wired.
