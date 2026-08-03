@@ -1,21 +1,30 @@
-import { createHash } from 'node:crypto';
+import { rule4EmptyResultFingerprintV1Hash } from './emptyResultFingerprintV1.js';
+import { rule4Fingerprint } from './fingerprint.js';
 
 import type { Rule4InputContract } from './input.js';
-import { validateRule4InputContract } from './input.js';
-import type { Rule4Result } from './output.js';
+import {
+  isRule4Phase2SafetyContract,
+  toPhase2VerifiedAge,
+  validateRule4InputContract,
+} from './input.js';
+import type { Rule4Result, Rule4SafetyGateOutput, Rule4SlotResult } from './output.js';
 import { validateRule4OutputCodes } from './outputCodeValidation.js';
+import { evaluateRule4SafetyGate } from './safety/evaluateSafetyGate.js';
 import {
   RULE4_CONTRACT_VERSION,
+  RULE4_CONTRACT_VERSION_PHASE2,
   RULE4_DEFAULT_ENGINE_MODE,
   type Rule4EngineMode,
+  type Rule4PotencyStatus,
 } from './version.js';
 
 function stableJson(value: unknown): string {
   return JSON.stringify(value, (_k, v) => (v === undefined ? null : v));
 }
 
-function fingerprintResult(body: Record<string, unknown>): string {
-  return createHash('sha256').update(stableJson(body)).digest('hex');
+/** Phase 1 only — input serialization is not canonical cross-language. */
+function fingerprintPhase1Result(body: Record<string, unknown>): string {
+  return rule4Fingerprint(body);
 }
 
 export function parseRule4EngineMode(raw: string | null | undefined): Rule4EngineMode {
@@ -29,14 +38,67 @@ export function parseRule4EngineMode(raw: string | null | undefined): Rule4Engin
   throw new Error('RULE4_ENGINE_MODE_INVALID');
 }
 
-/** Phase 1 empty evaluator — structure validation only; no clinical inference. */
-export function evaluateRule4Empty(input: Rule4InputContract): Rule4Result {
-  validateRule4InputContract(input);
-  if (input.engineMode === 'active') {
-    throw new Error('RULE4_ENGINE_MODE_ACTIVE_NOT_IMPLEMENTED');
-  }
+function mapSafetyGateOutput(
+  safety: ReturnType<typeof evaluateRule4SafetyGate>,
+): Rule4SafetyGateOutput {
+  return {
+    safetyGateStatus: safety.safetyGateStatus,
+    safetyStatus: safety.safetyStatus,
+    prescriptionStatus: safety.prescriptionStatus,
+    holdStatus: safety.holdStatus,
+    patientWideHold: safety.patientWideHold,
+    urgentEscalationRequired: safety.urgentEscalationRequired,
+    analysisStatus: safety.analysisStatus,
+    clinicalPrescriptionSummary: safety.clinicalPrescriptionSummary,
+    d13HardStopActive: safety.d13HardStopActive,
+    safetyNoticeKey: safety.safetyNoticeKey,
+    safetyClearForFutureCascade: safety.safetyClearForFutureCascade,
+    deterministicSafetyFingerprint: safety.deterministicSafetyFingerprint,
+    reasonCodes: safety.reasonCodes,
+    limitationCodes: safety.limitationCodes,
+    ageVerificationStatus: safety.ageResolution.verificationStatus,
+    pediatricBand: safety.ageResolution.pediatricBand,
+  };
+}
 
-  const slots = input.formulaSlots.map((slot) => ({
+function slotOutcomeFromSafety(
+  safety: ReturnType<typeof evaluateRule4SafetyGate>,
+): Pick<Rule4SlotResult, 'potencyStatus' | 'reasonCodes' | 'limitationCodes'> {
+  if (safety.patientWideHold || safety.d13HardStopActive) {
+    return {
+      potencyStatus: 'BLOCKED_BY_PATIENT_WIDE_SAFETY_GATE',
+      reasonCodes: ['BLOCKED_BY_PATIENT_WIDE_SAFETY_GATE', ...safety.reasonCodes],
+      limitationCodes: safety.limitationCodes,
+    };
+  }
+  if (
+    safety.ageResolution.verificationStatus === 'MISSING' ||
+    safety.ageResolution.verificationStatus === 'INVALID' ||
+    safety.ageResolution.verificationStatus === 'CONTRADICTORY' ||
+    safety.ageResolution.verificationStatus === 'UNRESOLVED'
+  ) {
+    return {
+      potencyStatus: 'UNRESOLVED',
+      reasonCodes: [...new Set([...safety.ageResolution.reasonCodes, ...safety.reasonCodes])],
+      limitationCodes: safety.limitationCodes,
+    };
+  }
+  if (safety.safetyClearForFutureCascade) {
+    return {
+      potencyStatus: 'NOT_EVALUATED',
+      reasonCodes: ['RULE4_PHASE1_EVALUATOR_NOT_IMPLEMENTED', ...safety.reasonCodes],
+      limitationCodes: ['PHASE1_NO_CLINICAL_EVALUATION', ...safety.limitationCodes],
+    };
+  }
+  return {
+    potencyStatus: 'UNRESOLVED',
+    reasonCodes: [...new Set(safety.reasonCodes)],
+    limitationCodes: safety.limitationCodes,
+  };
+}
+
+function buildPhase1EmptySlots(input: Rule4InputContract): Rule4SlotResult[] {
+  return input.formulaSlots.map((slot) => ({
     formulaSlotId: slot.formulaSlotId,
     formulaTargetId: slot.formulaTargetId,
     potencyStatus: 'NOT_EVALUATED' as const,
@@ -46,6 +108,94 @@ export function evaluateRule4Empty(input: Rule4InputContract): Rule4Result {
     limitationCodes: ['PHASE1_NO_CLINICAL_EVALUATION'] as const,
     evidenceItemIds: [...slot.structuredEvidenceItemIds],
   }));
+}
+
+function evaluatePhase2Safety(input: Rule4InputContract): Rule4Result {
+  const phase2Input = isRule4Phase2SafetyContract(input)
+    ? input
+    : {
+        ...input,
+        contractVersion: RULE4_CONTRACT_VERSION_PHASE2,
+        verifiedAge: toPhase2VerifiedAge(input.verifiedAge),
+      };
+
+  const safety = evaluateRule4SafetyGate({
+    ...phase2Input,
+    contractVersion: RULE4_CONTRACT_VERSION_PHASE2,
+    verifiedAge: toPhase2VerifiedAge(phase2Input.verifiedAge),
+  });
+
+  const slotTemplate = slotOutcomeFromSafety(safety);
+  const slots: Rule4SlotResult[] = input.formulaSlots.map((slot) => ({
+    formulaSlotId: slot.formulaSlotId,
+    formulaTargetId: slot.formulaTargetId,
+    potencyStatus: slotTemplate.potencyStatus as Rule4PotencyStatus,
+    selectedDilution: null,
+    selectedCascade: null,
+    reasonCodes: [...new Set(slotTemplate.reasonCodes)],
+    limitationCodes: [...new Set(slotTemplate.limitationCodes)],
+    evidenceItemIds: [...slot.structuredEvidenceItemIds],
+  }));
+
+  const topReason = [...new Set([...safety.reasonCodes, ...slotTemplate.reasonCodes])];
+  const topLimitation = [...new Set(safety.limitationCodes)];
+
+  const core = {
+    contractVersion: input.contractVersion,
+    rulesetVersion: input.rulesetVersion,
+    executionStatus: 'NOT_IMPLEMENTED' as const,
+    engineMode: input.engineMode,
+    automaticPotencyRuntime: false as const,
+    automaticPrescriptionIssuanceRuntime: false as const,
+    currentRuntimePotencyDelta: 'NONE' as const,
+    currentRuntimeIssuanceDelta: 'NONE' as const,
+    finalDoctorApprovalRequired: true as const,
+    prescriptionIssueAllowed: false as const,
+    slots,
+    reasonCodes: topReason,
+    limitationCodes: topLimitation,
+    safetyGate: mapSafetyGateOutput(safety),
+  };
+
+  validateRule4OutputCodes(core);
+
+  return {
+    ...core,
+    deterministicFingerprint: rule4EmptyResultFingerprintV1Hash({
+      contractVersion: input.contractVersion,
+      rulesetVersion: input.rulesetVersion,
+      executionStatus: 'NOT_IMPLEMENTED',
+      engineMode: input.engineMode,
+      prescriptionIssueAllowed: false,
+      deterministicSafetyFingerprint: safety.deterministicSafetyFingerprint,
+      slots: slots.map((s) => ({
+        formulaSlotId: s.formulaSlotId,
+        potencyStatus: s.potencyStatus,
+        reasonCodes: s.reasonCodes,
+        limitationCodes: s.limitationCodes,
+      })),
+    }),
+  };
+}
+
+/** Phase 1 empty evaluator — unchanged for phase-1 contract without safety extension. */
+export function evaluateRule4Empty(input: Rule4InputContract): Rule4Result {
+  validateRule4InputContract(input);
+  if (input.engineMode === 'active') {
+    throw new Error('RULE4_ENGINE_MODE_ACTIVE_NOT_IMPLEMENTED');
+  }
+
+  if (
+    input.contractVersion === RULE4_CONTRACT_VERSION_PHASE2 ||
+    input.bpReadings != null ||
+    input.structuredCriticalFindings != null ||
+    input.structuredFrozenRedFlags != null ||
+    input.rawLabKeywordPresent != null
+  ) {
+    return evaluatePhase2Safety(input);
+  }
+
+  const slots = buildPhase1EmptySlots(input);
 
   const core = {
     contractVersion: RULE4_CONTRACT_VERSION,
@@ -67,6 +217,17 @@ export function evaluateRule4Empty(input: Rule4InputContract): Rule4Result {
 
   return {
     ...core,
-    deterministicFingerprint: fingerprintResult({ ...core, inputFingerprint: stableJson(input) }),
+    deterministicFingerprint: fingerprintPhase1Result({
+      ...core,
+      inputFingerprint: stableJson(input),
+    }),
   };
+}
+
+export function evaluateRule4Phase2Safety(input: Rule4InputContract): Rule4Result {
+  validateRule4InputContract(input);
+  if (input.engineMode === 'active') {
+    throw new Error('RULE4_ENGINE_MODE_ACTIVE_NOT_IMPLEMENTED');
+  }
+  return evaluatePhase2Safety(input);
 }

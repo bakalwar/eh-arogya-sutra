@@ -106,9 +106,22 @@ class Rule4Phase1Tests(unittest.TestCase):
         self.assertIn("RULE4_ENGINE_MODE_ACTIVE_NOT_IMPLEMENTED", str(ctx.exception))
 
     def test_python_registry_parity_with_fixtures(self) -> None:
-        registry = json.loads(REGISTRY_FIXTURE.read_text(encoding="utf-8"))
-        reason_codes = sorted(r["code"] for r in registry["reasonCodes"])
-        limitation_codes = sorted(r["code"] for r in registry["limitationCodes"])
+        phase1 = json.loads(
+            (REPO_ROOT / "fixtures" / "rule4" / "reason-code-registry.phase1-foundation-subset.v1.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        phase2 = json.loads(
+            (REPO_ROOT / "fixtures" / "rule4" / "reason-code-registry.phase2-safety-subset.v1.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        reason_codes = sorted(
+            r["code"] for r in phase1["reasonCodes"] + phase2["reasonCodes"]
+        )
+        limitation_codes = sorted(
+            r["code"] for r in phase1["limitationCodes"] + phase2["limitationCodes"]
+        )
         from ehas2_clinical_engine.rule4.evaluator import load_reason_code_registry
 
         loaded = load_reason_code_registry()
@@ -200,7 +213,7 @@ class Rule4OrchestratorHookTests(unittest.TestCase):
         run = OrchestratorRun(**self.base_run_kwargs, rule4_shadow_collector=_list_collector(captured))
         self.orch.orchestrate(self.payload, run)
         self.assertEqual(len(captured), 1)
-        self.assertEqual(captured[0]["label"], "RULE4_SHADOW_PHASE1")
+        self.assertEqual(captured[0]["label"], "RULE4_SHADOW_PHASE2")
         shadow = captured[0]["result"]
         self.assertEqual(shadow["execution_status"], "NOT_IMPLEMENTED")
         for slot in shadow["slots"]:

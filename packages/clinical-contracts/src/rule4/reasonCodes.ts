@@ -1,4 +1,8 @@
 import { Rule4UnknownCodeError } from './outputCodeValidation.js';
+import {
+  RULE4_PHASE2_LIMITATION_CODE_REGISTRY,
+  RULE4_PHASE2_REASON_CODE_REGISTRY,
+} from './reasonCodesPhase2.js';
 
 export type Rule4ReasonCodeEntry = {
   code: string;
@@ -90,9 +94,19 @@ export const RULE4_LIMITATION_CODE_REGISTRY: readonly Rule4LimitationCodeEntry[]
   },
 ];
 
-export const RULE4_REASON_CODES = RULE4_REASON_CODE_REGISTRY.map((e) => e.code);
+export const RULE4_REASON_CODE_REGISTRY_MERGED: readonly Rule4ReasonCodeEntry[] = [
+  ...RULE4_REASON_CODE_REGISTRY,
+  ...RULE4_PHASE2_REASON_CODE_REGISTRY,
+];
 
-export const RULE4_LIMITATION_CODES = RULE4_LIMITATION_CODE_REGISTRY.map((e) => e.code);
+export const RULE4_LIMITATION_CODE_REGISTRY_MERGED: readonly Rule4LimitationCodeEntry[] = [
+  ...RULE4_LIMITATION_CODE_REGISTRY,
+  ...RULE4_PHASE2_LIMITATION_CODE_REGISTRY,
+];
+
+export const RULE4_REASON_CODES = RULE4_REASON_CODE_REGISTRY_MERGED.map((e) => e.code);
+
+export const RULE4_LIMITATION_CODES = RULE4_LIMITATION_CODE_REGISTRY_MERGED.map((e) => e.code);
 
 export const RULE4_KNOWN_REASON_CODE_SET = new Set<string>(RULE4_REASON_CODES);
 

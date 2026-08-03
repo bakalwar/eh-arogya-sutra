@@ -6,10 +6,10 @@ from typing import Any
 
 from .evaluator import Rule4ConfigurationError, evaluate_rule4_empty
 from .mode import parse_rule4_engine_mode
-from .validate import RULE4_CONTRACT_VERSION
+from .validate import RULE4_CONTRACT_VERSION, RULE4_CONTRACT_VERSION_PHASE2
 
 RULE4_RULESET_VERSION = "ehas2-rule4-ruleset-v1-frozen-doc-4c35469"
-RULE4_SHADOW_ENVELOPE_LABEL = "RULE4_SHADOW_PHASE1"
+RULE4_SHADOW_ENVELOPE_LABEL = "RULE4_SHADOW_PHASE2"
 RULE4_SHADOW_COLLECTOR_PROTOCOL_VERSION = "rule4-shadow-collector-v1"
 
 Rule4ShadowCollector = Callable[[dict[str, Any]], None]
@@ -21,19 +21,25 @@ class Rule4ShadowCollectorError(Rule4ConfigurationError):
 
 def build_rule4_input_from_orchestrator_payload(payload: dict, *, engine_mode: str) -> dict:
     slots = payload.get("formula_slots") or payload.get("formulaSlots") or []
+    verified_age = payload.get("verified_age")
+    patient_wide = payload.get("patient_wide_safety")
     return {
-        "contract_version": RULE4_CONTRACT_VERSION,
+        "contract_version": payload.get("contract_version") or RULE4_CONTRACT_VERSION_PHASE2,
         "case_id": payload.get("case_id") or payload.get("caseId"),
         "consultation_id": payload.get("consultation_id") or payload.get("consultationId"),
         "ruleset_version": payload.get("ruleset_version") or RULE4_RULESET_VERSION,
         "engine_mode": engine_mode,
         "label": "SYNTHETIC",
         "formula_slots": slots,
-        "verified_age": payload.get("verified_age")
-        or {"age_years": None, "verification_status": "MISSING"},
-        "patient_wide_safety": payload.get("patient_wide_safety")
-        or {"crisis_hold": False, "prescription_hold": False, "d13_hard_stop_under_one_year": False},
+        "verified_age": verified_age
+        if verified_age is not None
+        else {"age_years": None, "verification_status": "MISSING"},
+        "patient_wide_safety": patient_wide if patient_wide is not None else {},
         "structured_evidence_item_ids": payload.get("structured_evidence_item_ids") or [],
+        "bp_readings": payload.get("bp_readings"),
+        "structured_critical_findings": payload.get("structured_critical_findings"),
+        "structured_frozen_red_flags": payload.get("structured_frozen_red_flags"),
+        "raw_lab_keyword_present": payload.get("raw_lab_keyword_present"),
     }
 
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-RULE4_CONTRACT_VERSION = "ehas2-rule4-contract-v1-phase1"
+from .registry_paths import RULE4_CONTRACT_VERSION, RULE4_CONTRACT_VERSION_PHASE2
+
 RULE4_FORBIDDEN_SELECTOR_KEYS = frozenset(
     {
         "global_text",
@@ -12,6 +13,8 @@ RULE4_FORBIDDEN_SELECTOR_KEYS = frozenset(
         "potency_logic",
     }
 )
+
+ACCEPTED_CONTRACT_VERSIONS = frozenset({RULE4_CONTRACT_VERSION, RULE4_CONTRACT_VERSION_PHASE2})
 
 
 class Rule4ValidationError(ValueError):
@@ -25,8 +28,11 @@ def _assert_no_forbidden_keys(obj: dict, path: str) -> None:
 
 
 def validate_rule4_input_contract(input_contract: dict) -> None:
-    if not input_contract.get("contract_version"):
+    version = input_contract.get("contract_version")
+    if not version:
         raise Rule4ValidationError("contract_version required")
+    if version not in ACCEPTED_CONTRACT_VERSIONS:
+        raise Rule4ValidationError("contract_version not supported")
     if not input_contract.get("ruleset_version"):
         raise Rule4ValidationError("ruleset_version required")
     label = input_contract.get("label")
@@ -42,3 +48,11 @@ def validate_rule4_input_contract(input_contract: dict) -> None:
         if not slot.get("formula_slot_id"):
             raise Rule4ValidationError("formula_slot_id required on each slot")
         _assert_no_forbidden_keys(slot, f"slot:{slot.get('formula_slot_id')}")
+    for i, reading in enumerate(input_contract.get("bp_readings") or []):
+        if not isinstance(reading, dict):
+            raise Rule4ValidationError(f"bp_readings[{i}] must be object")
+        if not reading.get("evidence_status"):
+            raise Rule4ValidationError(f"bp_readings[{i}].evidence_status required")
+    raw_kw = input_contract.get("raw_lab_keyword_present")
+    if raw_kw is not None and not isinstance(raw_kw, bool):
+        raise Rule4ValidationError("raw_lab_keyword_present must be boolean when provided")

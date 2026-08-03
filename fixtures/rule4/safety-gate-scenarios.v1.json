@@ -1,0 +1,1076 @@
+{
+  "fixtureVersion": "rule4-safety-gate-scenarios-v1",
+  "fingerprintNote": "Cross-language audit: rule4-safety-fingerprint-v1 and rule4-empty-result-fingerprint-v1 (canonical snake_case JSON, compact separators, uppercase SHA-256).",
+  "fingerprintV1Reference": {
+    "scenarioId": "valid-adult-clear",
+    "canonicalPayload": "{\"age_verification\":\"VERIFIED\",\"analysis_status\":\"NOT_EVALUATED\",\"bp_crisis\":false,\"d13_hard_stop_active\":false,\"fingerprint_version\":\"rule4-safety-fingerprint-v1\",\"hold_status\":\"NONE\",\"limitation_codes\":[\"PHASE2_NO_POTENCY_CASCADE\"],\"patient_wide_hold\":false,\"pediatric_band\":\"P13_E\",\"prescription_status\":\"OPEN\",\"reason_codes\":[\"RULE4_SAFETY_GATE_CLEAR_FOR_FUTURE_CASCADE\",\"RULE4_SAFETY_GATE_EVALUATED\"],\"safety_gate_status\":\"SAFETY_CLEAR_FOR_FUTURE_CASCADE\",\"safety_status\":\"NORMAL\",\"urgent_escalation_required\":false}",
+    "safetySha256": "6EE5B31DB7AF35404565D78D5BF16ABB0F7B3869CC9B97860B60EFBF279333A5",
+    "emptyResultSha256": "149486FB2F52EF5A977CC185A21864111BA6924743C848ABF0B40273FAC4419A"
+  },
+  "scenarios": [
+    {
+      "id": "valid-adult-clear",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase2-safety",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "engine_mode": "shadow",
+        "label": "SYNTHETIC",
+        "formula_slots": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "structured_evidence_item_ids": []
+          }
+        ],
+        "verified_age": {
+          "verification_status": "VERIFIED",
+          "verified_date_of_birth": "1990-01-01",
+          "consultation_assessment_date": "2026-01-01"
+        },
+        "patient_wide_safety": {},
+        "bp_readings": []
+      },
+      "expected": {
+        "ageVerificationStatus": "VERIFIED",
+        "pediatricBand": "P13_E",
+        "safetyGateStatus": "SAFETY_CLEAR_FOR_FUTURE_CASCADE",
+        "patientWideHold": false,
+        "urgentEscalationRequired": false,
+        "slotPotencyStatus": "NOT_EVALUATED"
+      }
+    },
+    {
+      "id": "dob-upstream-band-conflict",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase2-safety",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "engine_mode": "shadow",
+        "label": "SYNTHETIC",
+        "formula_slots": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "structured_evidence_item_ids": []
+          }
+        ],
+        "verified_age": {
+          "verification_status": "VERIFIED",
+          "verified_date_of_birth": "2024-06-01",
+          "consultation_assessment_date": "2025-06-01",
+          "pediatric_band_verification_status": "VERIFIED",
+          "upstream_verified_pediatric_band": "P13_B",
+          "age_source": "APPROVED_UPSTREAM"
+        },
+        "patient_wide_safety": {},
+        "bp_readings": []
+      },
+      "expected": {
+        "ageVerificationStatus": "CONTRADICTORY",
+        "pediatricBand": null,
+        "safetyGateStatus": "UNRESOLVED",
+        "patientWideHold": false,
+        "slotPotencyStatus": "UNRESOLVED"
+      }
+    },
+    {
+      "id": "upstream-without-provenance",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase2-safety",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "engine_mode": "shadow",
+        "label": "SYNTHETIC",
+        "formula_slots": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "structured_evidence_item_ids": []
+          }
+        ],
+        "verified_age": {
+          "verification_status": "VERIFIED",
+          "pediatric_band_verification_status": "VERIFIED",
+          "upstream_verified_pediatric_band": "P13_C"
+        },
+        "patient_wide_safety": {},
+        "bp_readings": []
+      },
+      "expected": {
+        "ageVerificationStatus": "UNRESOLVED",
+        "patientWideHold": false,
+        "slotPotencyStatus": "UNRESOLVED"
+      }
+    },
+    {
+      "id": "valid-source-critical",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase2-safety",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "engine_mode": "shadow",
+        "label": "SYNTHETIC",
+        "formula_slots": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "structured_evidence_item_ids": []
+          }
+        ],
+        "verified_age": {
+          "verification_status": "VERIFIED",
+          "verified_date_of_birth": "1990-01-01",
+          "consultation_assessment_date": "2026-01-01"
+        },
+        "patient_wide_safety": {},
+        "structured_critical_findings": [
+          {
+            "critical_flag_code": "SOURCE_DECLARED_URGENT",
+            "verification_status": "VERIFIED",
+            "source_reference_id": "ev-urgent-1",
+            "source_type": "STRUCTURED_REPORT",
+            "assertion_status": "ACTIVE"
+          }
+        ],
+        "bp_readings": []
+      },
+      "expected": {
+        "patientWideHold": true,
+        "urgentEscalationRequired": true,
+        "holdStatus": "PRESCRIPTION_HOLD",
+        "slotPotencyStatus": "BLOCKED_BY_PATIENT_WIDE_SAFETY_GATE"
+      }
+    },
+    {
+      "id": "unknown-critical-flag",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase2-safety",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "engine_mode": "shadow",
+        "label": "SYNTHETIC",
+        "formula_slots": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "structured_evidence_item_ids": []
+          }
+        ],
+        "verified_age": {
+          "verification_status": "VERIFIED",
+          "verified_date_of_birth": "1990-01-01",
+          "consultation_assessment_date": "2026-01-01"
+        },
+        "patient_wide_safety": {},
+        "structured_critical_findings": [
+          {
+            "critical_flag_code": "NOT_IN_ALLOWLIST",
+            "verification_status": "VERIFIED",
+            "source_reference_id": "ev-x",
+            "source_type": "STRUCTURED_REPORT",
+            "assertion_status": "ACTIVE"
+          }
+        ],
+        "bp_readings": []
+      },
+      "expected": {
+        "patientWideHold": false,
+        "safetyGateStatus": "UNRESOLVED",
+        "slotPotencyStatus": "UNRESOLVED"
+      }
+    },
+    {
+      "id": "systolic-crisis-missing-age",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase2-safety",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "engine_mode": "shadow",
+        "label": "SYNTHETIC",
+        "formula_slots": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "structured_evidence_item_ids": []
+          }
+        ],
+        "verified_age": { "verification_status": "MISSING" },
+        "patient_wide_safety": {},
+        "bp_readings": [
+          {
+            "systolic": 190,
+            "diastolic": 80,
+            "unit": "mmHg",
+            "evidence_status": "VERIFIED_CURRENT_READING"
+          }
+        ]
+      },
+      "expected": {
+        "ageVerificationStatus": "MISSING",
+        "patientWideHold": true,
+        "urgentEscalationRequired": true,
+        "slotPotencyStatus": "BLOCKED_BY_PATIENT_WIDE_SAFETY_GATE"
+      }
+    },
+    {
+      "id": "dob-upstream-band-same",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase2-safety",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "engine_mode": "shadow",
+        "label": "SYNTHETIC",
+        "formula_slots": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "structured_evidence_item_ids": []
+          }
+        ],
+        "verified_age": {
+          "verification_status": "VERIFIED",
+          "verified_date_of_birth": "2024-06-01",
+          "consultation_assessment_date": "2025-06-01",
+          "pediatric_band_verification_status": "VERIFIED",
+          "upstream_verified_pediatric_band": "P13_C",
+          "age_source": "APPROVED_UPSTREAM"
+        },
+        "patient_wide_safety": {},
+        "bp_readings": []
+      },
+      "expected": {
+        "ageVerificationStatus": "VERIFIED",
+        "pediatricBand": "P13_C",
+        "safetyGateStatus": "SAFETY_CLEAR_FOR_FUTURE_CASCADE",
+        "patientWideHold": false,
+        "slotPotencyStatus": "NOT_EVALUATED"
+      }
+    },
+    {
+      "id": "missing-age-unresolved",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase2-safety",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "engine_mode": "shadow",
+        "label": "SYNTHETIC",
+        "formula_slots": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "structured_evidence_item_ids": []
+          }
+        ],
+        "verified_age": { "verification_status": "MISSING" },
+        "patient_wide_safety": {},
+        "bp_readings": []
+      },
+      "expected": {
+        "ageVerificationStatus": "MISSING",
+        "safetyGateStatus": "UNRESOLVED",
+        "patientWideHold": false,
+        "slotPotencyStatus": "UNRESOLVED"
+      }
+    },
+    {
+      "id": "invalid-age-future-assessment",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase2-safety",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "engine_mode": "shadow",
+        "label": "SYNTHETIC",
+        "formula_slots": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "structured_evidence_item_ids": []
+          }
+        ],
+        "verified_age": {
+          "verification_status": "VERIFIED",
+          "verified_date_of_birth": "2026-01-01",
+          "consultation_assessment_date": "2020-01-01"
+        },
+        "patient_wide_safety": {},
+        "bp_readings": []
+      },
+      "expected": {
+        "ageVerificationStatus": "INVALID",
+        "safetyGateStatus": "UNRESOLVED",
+        "slotPotencyStatus": "UNRESOLVED"
+      }
+    },
+    {
+      "id": "invalid-upstream-band-valid-dob",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase2-safety",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "engine_mode": "shadow",
+        "label": "SYNTHETIC",
+        "formula_slots": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "structured_evidence_item_ids": []
+          }
+        ],
+        "verified_age": {
+          "verification_status": "VERIFIED",
+          "verified_date_of_birth": "1990-01-01",
+          "consultation_assessment_date": "2026-01-01",
+          "pediatric_band_verification_status": "VERIFIED",
+          "upstream_verified_pediatric_band": "P13_X",
+          "age_source": "APPROVED_UPSTREAM"
+        },
+        "patient_wide_safety": {},
+        "bp_readings": []
+      },
+      "expected": {
+        "ageVerificationStatus": "VERIFIED",
+        "pediatricBand": "P13_E",
+        "safetyGateStatus": "SAFETY_CLEAR_FOR_FUTURE_CASCADE",
+        "slotPotencyStatus": "NOT_EVALUATED"
+      }
+    },
+    {
+      "id": "first-birthday-p13-c",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase2-safety",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "engine_mode": "shadow",
+        "label": "SYNTHETIC",
+        "formula_slots": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "structured_evidence_item_ids": []
+          }
+        ],
+        "verified_age": {
+          "verification_status": "VERIFIED",
+          "verified_date_of_birth": "2024-01-15",
+          "consultation_assessment_date": "2025-01-15"
+        },
+        "patient_wide_safety": {},
+        "bp_readings": []
+      },
+      "expected": {
+        "pediatricBand": "P13_C",
+        "safetyGateStatus": "SAFETY_CLEAR_FOR_FUTURE_CASCADE",
+        "slotPotencyStatus": "NOT_EVALUATED"
+      }
+    },
+    {
+      "id": "leap-year-under-one",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase2-safety",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "engine_mode": "shadow",
+        "label": "SYNTHETIC",
+        "formula_slots": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "structured_evidence_item_ids": []
+          }
+        ],
+        "verified_age": {
+          "verification_status": "VERIFIED",
+          "verified_date_of_birth": "2020-02-29",
+          "consultation_assessment_date": "2021-02-27"
+        },
+        "patient_wide_safety": {},
+        "bp_readings": []
+      },
+      "expected": {
+        "pediatricBand": "P13_B",
+        "safetyGateStatus": "D13_HS_BLOCKED",
+        "prescriptionStatus": "BLOCKED",
+        "slotPotencyStatus": "BLOCKED_BY_PATIENT_WIDE_SAFETY_GATE"
+      }
+    },
+    {
+      "id": "p13-a-neonate",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase2-safety",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "engine_mode": "shadow",
+        "label": "SYNTHETIC",
+        "formula_slots": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "structured_evidence_item_ids": []
+          }
+        ],
+        "verified_age": {
+          "verification_status": "VERIFIED",
+          "verified_date_of_birth": "2026-07-01",
+          "consultation_assessment_date": "2026-07-10"
+        },
+        "patient_wide_safety": {},
+        "bp_readings": []
+      },
+      "expected": {
+        "pediatricBand": "P13_A",
+        "safetyGateStatus": "D13_HS_BLOCKED",
+        "prescriptionStatus": "BLOCKED",
+        "slotPotencyStatus": "BLOCKED_BY_PATIENT_WIDE_SAFETY_GATE"
+      }
+    },
+    {
+      "id": "p13-d-boundary",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase2-safety",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "engine_mode": "shadow",
+        "label": "SYNTHETIC",
+        "formula_slots": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "structured_evidence_item_ids": []
+          }
+        ],
+        "verified_age": {
+          "verification_status": "VERIFIED",
+          "verified_date_of_birth": "2020-01-01",
+          "consultation_assessment_date": "2026-06-01"
+        },
+        "patient_wide_safety": {},
+        "bp_readings": []
+      },
+      "expected": {
+        "pediatricBand": "P13_D",
+        "safetyGateStatus": "SAFETY_CLEAR_FOR_FUTURE_CASCADE",
+        "slotPotencyStatus": "NOT_EVALUATED"
+      }
+    },
+    {
+      "id": "diastolic-crisis-adult",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase2-safety",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "engine_mode": "shadow",
+        "label": "SYNTHETIC",
+        "formula_slots": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "structured_evidence_item_ids": []
+          }
+        ],
+        "verified_age": {
+          "verification_status": "VERIFIED",
+          "verified_date_of_birth": "1990-01-01",
+          "consultation_assessment_date": "2026-01-01"
+        },
+        "patient_wide_safety": {},
+        "bp_readings": [
+          {
+            "systolic": 120,
+            "diastolic": 115,
+            "unit": "mmHg",
+            "evidence_status": "VERIFIED_CURRENT_READING"
+          }
+        ]
+      },
+      "expected": {
+        "patientWideHold": true,
+        "urgentEscalationRequired": true,
+        "holdStatus": "PRESCRIPTION_HOLD",
+        "slotPotencyStatus": "BLOCKED_BY_PATIENT_WIDE_SAFETY_GATE"
+      }
+    },
+    {
+      "id": "systolic-crisis-adult",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase2-safety",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "engine_mode": "shadow",
+        "label": "SYNTHETIC",
+        "formula_slots": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "structured_evidence_item_ids": []
+          }
+        ],
+        "verified_age": {
+          "verification_status": "VERIFIED",
+          "verified_date_of_birth": "1990-01-01",
+          "consultation_assessment_date": "2026-01-01"
+        },
+        "patient_wide_safety": {},
+        "bp_readings": [
+          {
+            "systolic": 185,
+            "diastolic": 80,
+            "unit": "mmHg",
+            "evidence_status": "VERIFIED_CURRENT_READING"
+          }
+        ]
+      },
+      "expected": {
+        "patientWideHold": true,
+        "urgentEscalationRequired": true,
+        "slotPotencyStatus": "BLOCKED_BY_PATIENT_WIDE_SAFETY_GATE"
+      }
+    },
+    {
+      "id": "non-mmhg-bp-no-crisis",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase2-safety",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "engine_mode": "shadow",
+        "label": "SYNTHETIC",
+        "formula_slots": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "structured_evidence_item_ids": []
+          }
+        ],
+        "verified_age": {
+          "verification_status": "VERIFIED",
+          "verified_date_of_birth": "1990-01-01",
+          "consultation_assessment_date": "2026-01-01"
+        },
+        "patient_wide_safety": {},
+        "bp_readings": [
+          {
+            "systolic": 200,
+            "diastolic": 120,
+            "unit": "kPa",
+            "evidence_status": "VERIFIED_CURRENT_READING"
+          }
+        ]
+      },
+      "expected": {
+        "patientWideHold": false,
+        "safetyGateStatus": "SAFETY_CLEAR_FOR_FUTURE_CASCADE",
+        "slotPotencyStatus": "NOT_EVALUATED"
+      }
+    },
+    {
+      "id": "under-one-non-crisis",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase2-safety",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "engine_mode": "shadow",
+        "label": "SYNTHETIC",
+        "formula_slots": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "structured_evidence_item_ids": []
+          }
+        ],
+        "verified_age": {
+          "verification_status": "VERIFIED",
+          "verified_date_of_birth": "2026-01-01",
+          "consultation_assessment_date": "2026-06-01"
+        },
+        "patient_wide_safety": {},
+        "bp_readings": []
+      },
+      "expected": {
+        "pediatricBand": "P13_B",
+        "safetyGateStatus": "D13_HS_BLOCKED",
+        "prescriptionStatus": "BLOCKED",
+        "patientWideHold": false,
+        "slotPotencyStatus": "BLOCKED_BY_PATIENT_WIDE_SAFETY_GATE"
+      }
+    },
+    {
+      "id": "under-one-crisis",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase2-safety",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "engine_mode": "shadow",
+        "label": "SYNTHETIC",
+        "formula_slots": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "structured_evidence_item_ids": []
+          }
+        ],
+        "verified_age": {
+          "verification_status": "VERIFIED",
+          "verified_date_of_birth": "2026-01-01",
+          "consultation_assessment_date": "2026-06-01"
+        },
+        "patient_wide_safety": {},
+        "bp_readings": [
+          {
+            "systolic": 190,
+            "diastolic": 80,
+            "unit": "mmHg",
+            "evidence_status": "VERIFIED_CURRENT_READING"
+          }
+        ]
+      },
+      "expected": {
+        "prescriptionStatus": "BLOCKED",
+        "patientWideHold": true,
+        "urgentEscalationRequired": true,
+        "holdStatus": "PRESCRIPTION_HOLD",
+        "slotPotencyStatus": "BLOCKED_BY_PATIENT_WIDE_SAFETY_GATE"
+      }
+    },
+    {
+      "id": "explicit-prescription-hold",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase2-safety",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "engine_mode": "shadow",
+        "label": "SYNTHETIC",
+        "formula_slots": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "structured_evidence_item_ids": []
+          }
+        ],
+        "verified_age": {
+          "verification_status": "VERIFIED",
+          "verified_date_of_birth": "1990-01-01",
+          "consultation_assessment_date": "2026-01-01"
+        },
+        "patient_wide_safety": { "prescription_hold": true },
+        "bp_readings": []
+      },
+      "expected": {
+        "patientWideHold": true,
+        "holdStatus": "PRESCRIPTION_HOLD",
+        "safetyGateStatus": "PRESCRIPTION_HOLD",
+        "slotPotencyStatus": "BLOCKED_BY_PATIENT_WIDE_SAFETY_GATE"
+      }
+    },
+    {
+      "id": "frozen-red-flag-valid",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase2-safety",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "engine_mode": "shadow",
+        "label": "SYNTHETIC",
+        "formula_slots": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "structured_evidence_item_ids": []
+          }
+        ],
+        "verified_age": {
+          "verification_status": "VERIFIED",
+          "verified_date_of_birth": "1990-01-01",
+          "consultation_assessment_date": "2026-01-01"
+        },
+        "patient_wide_safety": {},
+        "structured_frozen_red_flags": [
+          {
+            "red_flag_code": "ACUTE_NEUROLOGICAL_RED_FLAG",
+            "verification_status": "VERIFIED",
+            "source_reference_id": "ev-neuro-1",
+            "source_type": "STRUCTURED_REPORT",
+            "assertion_status": "ACTIVE"
+          }
+        ],
+        "bp_readings": []
+      },
+      "expected": {
+        "patientWideHold": true,
+        "urgentEscalationRequired": true,
+        "holdStatus": "PRESCRIPTION_HOLD",
+        "slotPotencyStatus": "BLOCKED_BY_PATIENT_WIDE_SAFETY_GATE"
+      }
+    },
+    {
+      "id": "raw-lab-keyword-non-executable",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase2-safety",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "engine_mode": "shadow",
+        "label": "SYNTHETIC",
+        "formula_slots": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "structured_evidence_item_ids": []
+          }
+        ],
+        "verified_age": {
+          "verification_status": "VERIFIED",
+          "verified_date_of_birth": "1990-01-01",
+          "consultation_assessment_date": "2026-01-01"
+        },
+        "patient_wide_safety": {},
+        "raw_lab_keyword_present": true,
+        "bp_readings": []
+      },
+      "expected": {
+        "patientWideHold": false,
+        "safetyGateStatus": "UNRESOLVED",
+        "safetyClearForFutureCascade": false,
+        "slotPotencyStatus": "UNRESOLVED"
+      }
+    },
+    {
+      "id": "multi-slot-crisis-hold",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase2-safety",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "engine_mode": "shadow",
+        "label": "SYNTHETIC",
+        "formula_slots": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "structured_evidence_item_ids": []
+          },
+          {
+            "formula_slot_id": "s2",
+            "formula_target_id": "t2",
+            "structured_evidence_item_ids": []
+          }
+        ],
+        "verified_age": {
+          "verification_status": "VERIFIED",
+          "verified_date_of_birth": "1990-01-01",
+          "consultation_assessment_date": "2026-01-01"
+        },
+        "patient_wide_safety": {},
+        "bp_readings": [
+          {
+            "systolic": 190,
+            "diastolic": 80,
+            "unit": "mmHg",
+            "evidence_status": "VERIFIED_CURRENT_READING"
+          }
+        ]
+      },
+      "expected": {
+        "patientWideHold": true,
+        "slotPotencyStatus": "BLOCKED_BY_PATIENT_WIDE_SAFETY_GATE"
+      }
+    },
+    {
+      "id": "boundary-birth-day",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase2-safety",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "engine_mode": "shadow",
+        "label": "SYNTHETIC",
+        "formula_slots": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "structured_evidence_item_ids": []
+          }
+        ],
+        "verified_age": {
+          "verification_status": "VERIFIED",
+          "verified_date_of_birth": "2026-01-01",
+          "consultation_assessment_date": "2026-01-01"
+        },
+        "patient_wide_safety": {},
+        "bp_readings": []
+      },
+      "expected": {
+        "ageVerificationStatus": "VERIFIED",
+        "pediatricBand": "P13_A"
+      }
+    },
+    {
+      "id": "boundary-day-28",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase2-safety",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "engine_mode": "shadow",
+        "label": "SYNTHETIC",
+        "formula_slots": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "structured_evidence_item_ids": []
+          }
+        ],
+        "verified_age": {
+          "verification_status": "VERIFIED",
+          "verified_date_of_birth": "2026-01-01",
+          "consultation_assessment_date": "2026-01-29"
+        },
+        "patient_wide_safety": {},
+        "bp_readings": []
+      },
+      "expected": {
+        "pediatricBand": "P13_A"
+      }
+    },
+    {
+      "id": "boundary-day-29",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase2-safety",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "engine_mode": "shadow",
+        "label": "SYNTHETIC",
+        "formula_slots": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "structured_evidence_item_ids": []
+          }
+        ],
+        "verified_age": {
+          "verification_status": "VERIFIED",
+          "verified_date_of_birth": "2026-01-01",
+          "consultation_assessment_date": "2026-01-30"
+        },
+        "patient_wide_safety": {},
+        "bp_readings": []
+      },
+      "expected": {
+        "pediatricBand": "P13_B",
+        "safetyGateStatus": "D13_HS_BLOCKED"
+      }
+    },
+    {
+      "id": "boundary-eve-first-birthday",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase2-safety",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "engine_mode": "shadow",
+        "label": "SYNTHETIC",
+        "formula_slots": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "structured_evidence_item_ids": []
+          }
+        ],
+        "verified_age": {
+          "verification_status": "VERIFIED",
+          "verified_date_of_birth": "2024-01-15",
+          "consultation_assessment_date": "2025-01-14"
+        },
+        "patient_wide_safety": {},
+        "bp_readings": []
+      },
+      "expected": {
+        "pediatricBand": "P13_B",
+        "safetyGateStatus": "D13_HS_BLOCKED"
+      }
+    },
+    {
+      "id": "boundary-age-5-p13c",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase2-safety",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "engine_mode": "shadow",
+        "label": "SYNTHETIC",
+        "formula_slots": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "structured_evidence_item_ids": []
+          }
+        ],
+        "verified_age": {
+          "verification_status": "VERIFIED",
+          "verified_date_of_birth": "2021-06-01",
+          "consultation_assessment_date": "2026-06-01"
+        },
+        "patient_wide_safety": {},
+        "bp_readings": []
+      },
+      "expected": {
+        "pediatricBand": "P13_C",
+        "safetyGateStatus": "SAFETY_CLEAR_FOR_FUTURE_CASCADE"
+      }
+    },
+    {
+      "id": "boundary-exact-6-p13d",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase2-safety",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "engine_mode": "shadow",
+        "label": "SYNTHETIC",
+        "formula_slots": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "structured_evidence_item_ids": []
+          }
+        ],
+        "verified_age": {
+          "verification_status": "VERIFIED",
+          "verified_date_of_birth": "2020-06-01",
+          "consultation_assessment_date": "2026-06-01"
+        },
+        "patient_wide_safety": {},
+        "bp_readings": []
+      },
+      "expected": {
+        "pediatricBand": "P13_D"
+      }
+    },
+    {
+      "id": "boundary-exact-12-p13d",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase2-safety",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "engine_mode": "shadow",
+        "label": "SYNTHETIC",
+        "formula_slots": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "structured_evidence_item_ids": []
+          }
+        ],
+        "verified_age": {
+          "verification_status": "VERIFIED",
+          "verified_date_of_birth": "2014-06-01",
+          "consultation_assessment_date": "2026-06-01"
+        },
+        "patient_wide_safety": {},
+        "bp_readings": []
+      },
+      "expected": {
+        "pediatricBand": "P13_D"
+      }
+    },
+    {
+      "id": "boundary-exact-13-p13e",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase2-safety",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "engine_mode": "shadow",
+        "label": "SYNTHETIC",
+        "formula_slots": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "structured_evidence_item_ids": []
+          }
+        ],
+        "verified_age": {
+          "verification_status": "VERIFIED",
+          "verified_date_of_birth": "2013-06-01",
+          "consultation_assessment_date": "2026-06-01"
+        },
+        "patient_wide_safety": {},
+        "bp_readings": []
+      },
+      "expected": {
+        "pediatricBand": "P13_E"
+      }
+    },
+    {
+      "id": "boundary-leap-on-first-birthday",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase2-safety",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "engine_mode": "shadow",
+        "label": "SYNTHETIC",
+        "formula_slots": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "structured_evidence_item_ids": []
+          }
+        ],
+        "verified_age": {
+          "verification_status": "VERIFIED",
+          "verified_date_of_birth": "2020-02-29",
+          "consultation_assessment_date": "2021-02-28"
+        },
+        "patient_wide_safety": {},
+        "bp_readings": []
+      },
+      "expected": {
+        "pediatricBand": "P13_C",
+        "safetyGateStatus": "SAFETY_CLEAR_FOR_FUTURE_CASCADE"
+      }
+    },
+    {
+      "id": "boundary-invalid-dob-date",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase2-safety",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "engine_mode": "shadow",
+        "label": "SYNTHETIC",
+        "formula_slots": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "structured_evidence_item_ids": []
+          }
+        ],
+        "verified_age": {
+          "verification_status": "VERIFIED",
+          "verified_date_of_birth": "2020-02-30",
+          "consultation_assessment_date": "2026-01-01"
+        },
+        "patient_wide_safety": {},
+        "bp_readings": []
+      },
+      "expected": {
+        "ageVerificationStatus": "INVALID",
+        "safetyGateStatus": "UNRESOLVED",
+        "slotPotencyStatus": "UNRESOLVED"
+      }
+    },
+    {
+      "id": "upstream-owner-structured-rejected",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase2-safety",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "engine_mode": "shadow",
+        "label": "SYNTHETIC",
+        "formula_slots": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "structured_evidence_item_ids": []
+          }
+        ],
+        "verified_age": {
+          "verification_status": "VERIFIED",
+          "pediatric_band_verification_status": "VERIFIED",
+          "upstream_verified_pediatric_band": "P13_C",
+          "age_source": "OWNER_STRUCTURED"
+        },
+        "patient_wide_safety": {},
+        "bp_readings": []
+      },
+      "expected": {
+        "ageVerificationStatus": "UNRESOLVED",
+        "pediatricBand": null,
+        "slotPotencyStatus": "UNRESOLVED"
+      }
+    },
+    {
+      "id": "upstream-unknown-source",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase2-safety",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "engine_mode": "shadow",
+        "label": "SYNTHETIC",
+        "formula_slots": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "structured_evidence_item_ids": []
+          }
+        ],
+        "verified_age": {
+          "verification_status": "VERIFIED",
+          "pediatric_band_verification_status": "VERIFIED",
+          "upstream_verified_pediatric_band": "P13_D",
+          "age_source": "FREE_TEXT_LABEL"
+        },
+        "patient_wide_safety": {},
+        "bp_readings": []
+      },
+      "expected": {
+        "ageVerificationStatus": "UNRESOLVED",
+        "slotPotencyStatus": "UNRESOLVED"
+      }
+    }
+  ]
+}

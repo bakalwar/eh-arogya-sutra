@@ -1,5 +1,10 @@
+import type { Rule4BpReadingInput, Rule4VerifiedAgeContextPhase2 } from './safety/types.js';
 import type { Rule4EngineMode } from './version.js';
-import { RULE4_FORBIDDEN_SELECTOR_INPUT_FIELDS } from './version.js';
+import {
+  RULE4_CONTRACT_VERSION,
+  RULE4_CONTRACT_VERSION_PHASE2,
+  RULE4_FORBIDDEN_SELECTOR_INPUT_FIELDS,
+} from './version.js';
 
 export type Rule4PolarityPayloadRef = {
   diseasePolarity: string | null;
@@ -24,13 +29,20 @@ export type Rule4TemperamentPayloadRef = {
 
 export type Rule4VerifiedAgeContext = {
   ageYears: number | null;
-  verificationStatus: 'VERIFIED' | 'MISSING' | 'UNRESOLVED';
+  verificationStatus: 'VERIFIED' | 'MISSING' | 'UNRESOLVED' | 'INVALID' | 'CONTRADICTORY';
+  verifiedDateOfBirth?: string | null;
+  consultationAssessmentDate?: string | null;
+  ageSource?: string | null;
+  upstreamVerifiedPediatricBand?: 'P13_A' | 'P13_B' | 'P13_C' | 'P13_D' | 'P13_E' | null;
+  pediatricBandVerificationStatus?:
+    'VERIFIED' | 'MISSING' | 'UNRESOLVED' | 'INVALID' | 'CONTRADICTORY' | null;
 };
 
 export type Rule4PatientWideSafetyFlags = {
-  crisisHold: boolean;
-  prescriptionHold: boolean;
-  d13HardStopUnderOneYear: boolean;
+  crisisHold: boolean | null;
+  prescriptionHold: boolean | null;
+  d13HardStopUnderOneYear?: boolean;
+  contraindicationHold?: boolean | null;
 };
 
 export type Rule4PhaseInputRef = {
@@ -66,7 +78,55 @@ export type Rule4InputContract = {
   patientWideSafety: Rule4PatientWideSafetyFlags;
   /** Explicit IDs only — no global_text / keyword / registry selector inputs. */
   structuredEvidenceItemIds: readonly string[];
+  bpReadings?: readonly Rule4BpReadingInput[];
+  structuredCriticalFindings?: readonly import('./safety/structuredCritical.js').Rule4StructuredCriticalFinding[];
+  structuredFrozenRedFlags?: readonly import('./safety/structuredCritical.js').Rule4StructuredFrozenRedFlag[];
+  /** @deprecated Phase 2 — ignored; use structuredCriticalFindings */
+  sourceDeclaredCriticalFlags?: readonly string[];
+  /** @deprecated Phase 2 — ignored; use structuredFrozenRedFlags */
+  frozenRedFlagCodes?: readonly string[];
+  rawLabKeywordPresent?: boolean;
 };
+
+export type Rule4InputContractPhase2 = Rule4InputContract & {
+  contractVersion: typeof RULE4_CONTRACT_VERSION_PHASE2;
+  verifiedAge: Rule4VerifiedAgeContextPhase2;
+};
+
+const ACCEPTED_CONTRACT_VERSIONS = new Set<string>([
+  RULE4_CONTRACT_VERSION,
+  RULE4_CONTRACT_VERSION_PHASE2,
+]);
+
+export function isRule4Phase2SafetyContract(
+  input: Rule4InputContract,
+): input is Rule4InputContractPhase2 {
+  return input.contractVersion === RULE4_CONTRACT_VERSION_PHASE2;
+}
+
+export function toPhase2VerifiedAge(ctx: Rule4VerifiedAgeContext): Rule4VerifiedAgeContextPhase2 {
+  return {
+    ageYears: ctx.ageYears ?? null,
+    verificationStatus: ctx.verificationStatus ?? 'MISSING',
+    verifiedDateOfBirth: ctx.verifiedDateOfBirth ?? null,
+    consultationAssessmentDate: ctx.consultationAssessmentDate ?? null,
+    ageSource: ctx.ageSource ?? null,
+    upstreamVerifiedPediatricBand: ctx.upstreamVerifiedPediatricBand ?? null,
+    pediatricBandVerificationStatus: ctx.pediatricBandVerificationStatus ?? null,
+  };
+}
+
+function validateBpReading(reading: Rule4BpReadingInput, index: number): void {
+  if (reading.systolic != null && typeof reading.systolic !== 'number') {
+    throw new Rule4ValidationError(`bpReadings[${index}].systolic must be number or null`);
+  }
+  if (reading.diastolic != null && typeof reading.diastolic !== 'number') {
+    throw new Rule4ValidationError(`bpReadings[${index}].diastolic must be number or null`);
+  }
+  if (!reading.evidenceStatus) {
+    throw new Rule4ValidationError(`bpReadings[${index}].evidenceStatus required`);
+  }
+}
 
 export class Rule4ValidationError extends Error {
   readonly code = 'RULE4_INPUT_VALIDATION_FAILED';
@@ -89,6 +149,9 @@ export function validateRule4InputContract(input: Rule4InputContract): void {
   if (!input.contractVersion || typeof input.contractVersion !== 'string') {
     throw new Rule4ValidationError('contractVersion required');
   }
+  if (!ACCEPTED_CONTRACT_VERSIONS.has(input.contractVersion)) {
+    throw new Rule4ValidationError('contractVersion not supported');
+  }
   if (!input.rulesetVersion || typeof input.rulesetVersion !== 'string') {
     throw new Rule4ValidationError('rulesetVersion required');
   }
@@ -104,5 +167,11 @@ export function validateRule4InputContract(input: Rule4InputContract): void {
     if (!slot.formulaSlotId) {
       throw new Rule4ValidationError('formulaSlotId required on each slot');
     }
+  }
+  if (input.bpReadings) {
+    input.bpReadings.forEach((r, i) => validateBpReading(r, i));
+  }
+  if (input.rawLabKeywordPresent != null && typeof input.rawLabKeywordPresent !== 'boolean') {
+    throw new Rule4ValidationError('rawLabKeywordPresent must be boolean when provided');
   }
 }

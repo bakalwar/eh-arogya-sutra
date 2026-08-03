@@ -90,7 +90,7 @@ describe('Rule 4 Phase 1 contracts', () => {
     expect(out.prescriptionIssueAllowed).toBe(false);
     expect(out.slots.every((s) => s.selectedDilution === null)).toBe(true);
     expect(out.slots.every((s) => s.potencyStatus === 'NOT_EVALUATED')).toBe(true);
-    expect(out.deterministicFingerprint).toMatch(/^[a-f0-9]{64}$/);
+    expect(out.deterministicFingerprint).toMatch(/^[A-F0-9]{64}$/);
   });
 
   it('deterministic fingerprint for same input', () => {
@@ -111,15 +111,19 @@ describe('Rule 4 Phase 1 contracts', () => {
     expect(serialized).not.toMatch(/"D30"|"D10"|"MIXED"|"120"|"severity":5|"age":40/);
   });
 
-  it('TypeScript reason/limitation registry aligns with fixtures JSON', () => {
+  it('TypeScript reason/limitation registry includes phase 1 fixture codes', () => {
     const registry = JSON.parse(fs.readFileSync(REGISTRY_FIXTURE, 'utf8')) as {
       reasonCodes: { code: string }[];
       limitationCodes: { code: string }[];
     };
-    const jsonReason = registry.reasonCodes.map((r) => r.code).sort();
-    const jsonLimit = registry.limitationCodes.map((r) => r.code).sort();
-    expect([...RULE4_REASON_CODES].sort()).toEqual(jsonReason);
-    expect([...RULE4_LIMITATION_CODES].sort()).toEqual(jsonLimit);
+    const jsonReason = registry.reasonCodes.map((r) => r.code);
+    const jsonLimit = registry.limitationCodes.map((r) => r.code);
+    for (const code of jsonReason) {
+      expect(RULE4_REASON_CODES).toContain(code);
+    }
+    for (const code of jsonLimit) {
+      expect(RULE4_LIMITATION_CODES).toContain(code);
+    }
   });
 
   it('registry metadata parity with fixtures JSON', () => {

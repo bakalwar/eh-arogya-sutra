@@ -1,0 +1,24 @@
+{
+  "fixtureVersion": "rule4-phase2-allowed-critical-codes-v1",
+  "documentationBaselineCommit": "4c35469b9e9ba104e4097ddc48649b0aaa3761b4",
+  "sourceDeclaredCriticalFlagCodes": [
+    {
+      "code": "SOURCE_DECLARED_CRITICAL",
+      "source": "Q16-H source-declared critical"
+    },
+    {
+      "code": "SOURCE_DECLARED_LIFE_THREATENING",
+      "source": "Q16-H life-threatening"
+    },
+    {
+      "code": "SOURCE_DECLARED_URGENT",
+      "source": "Q16-H urgent"
+    }
+  ],
+  "frozenRedFlagCodes": [
+    {
+      "code": "ACUTE_NEUROLOGICAL_RED_FLAG",
+      "source": "Q4F / rule-04-owner-decisions-DRAFT.md Q4F classification"
+    }
+  ]
+}
