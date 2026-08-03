@@ -10,6 +10,8 @@ import {
 import type { Rule4Result, Rule4SafetyGateOutput, Rule4SlotResult } from './output.js';
 import { validateRule4OutputCodes } from './outputCodeValidation.js';
 import { evaluateRule4SafetyGate } from './safety/evaluateSafetyGate.js';
+import { evaluateEvidenceAdapter } from './evidence/evaluateEvidenceAdapter.js';
+import type { Rule4EvidenceAdapterOutput } from './evidence/types.js';
 import {
   RULE4_CONTRACT_VERSION,
   RULE4_CONTRACT_VERSION_PHASE2,
@@ -230,4 +232,21 @@ export function evaluateRule4Phase2Safety(input: Rule4InputContract): Rule4Resul
     throw new Error('RULE4_ENGINE_MODE_ACTIVE_NOT_IMPLEMENTED');
   }
   return evaluatePhase2Safety(input);
+}
+
+export type Rule4ShadowEvaluationBundle = {
+  result: Rule4Result;
+  evidenceAdapter: Rule4EvidenceAdapterOutput | null;
+};
+
+/**
+ * Phase 2 public result unchanged; Phase 3 evidence envelope computed only in shadow when provided.
+ */
+export function evaluateRule4ShadowBundle(input: Rule4InputContract): Rule4ShadowEvaluationBundle {
+  const result = evaluateRule4Empty(input);
+  if (input.engineMode !== 'shadow' || !input.evidenceAdapter) {
+    return { result, evidenceAdapter: null };
+  }
+  const evidenceAdapter = evaluateEvidenceAdapter(input.evidenceAdapter);
+  return { result, evidenceAdapter };
 }

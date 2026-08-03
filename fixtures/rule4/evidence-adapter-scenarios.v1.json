@@ -1,0 +1,4022 @@
+{
+  "fixtureVersion": "rule4-evidence-adapter-scenarios-v1",
+  "scenarioCount": 49,
+  "scenarios": [
+    {
+      "id": "tier1-valid-direct",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase3-evidence",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase3-evidence-subset-v1",
+        "data_asset_version": "synthetic-fixture-v1",
+        "label": "SYNTHETIC",
+        "rule3_binding_ports": [
+          {
+            "formula_slot_id": "s1",
+            "port_status": "RESOLVED",
+            "formula_target_id": "t-renal-1",
+            "organ_system_key": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "pathology_id": "path-stone-001"
+          }
+        ],
+        "documents": [
+          {
+            "document_id": "doc-t1",
+            "parent_source_id": "ps-t1",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": null,
+            "document_readability_score": null,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "items": [
+          {
+            "finding_id": "f1",
+            "document_id": "doc-t1",
+            "parent_source_id": "ps-t1",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "PRESENT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 1,
+            "value": null,
+            "unit": null,
+            "laterality": null,
+            "test_panel_identity": null,
+            "finding_identity_key": "identity-f1",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "usable_by_slot": {
+          "s1": ["f1"]
+        },
+        "contradictory_slots": [],
+        "quarantine_blocked": false
+      }
+    },
+    {
+      "id": "tier2-valid-doc-item",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase3-evidence",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase3-evidence-subset-v1",
+        "data_asset_version": "synthetic-fixture-v1",
+        "label": "SYNTHETIC",
+        "rule3_binding_ports": [
+          {
+            "formula_slot_id": "s1",
+            "port_status": "RESOLVED",
+            "formula_target_id": "t-renal-1",
+            "organ_system_key": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "pathology_id": "path-stone-001"
+          }
+        ],
+        "documents": [
+          {
+            "document_id": "doc-t2",
+            "parent_source_id": "ps-t2",
+            "source_type": "DIGITAL_STRUCTURED_REPORT",
+            "source_reference": "ref-digital-lims",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": 0.9,
+            "document_readability_score": null,
+            "extraction_model_derived": false,
+            "model_calibration_status": null
+          }
+        ],
+        "items": [
+          {
+            "finding_id": "f2",
+            "document_id": "doc-t2",
+            "parent_source_id": "ps-t2",
+            "source_type": "DIGITAL_STRUCTURED_REPORT",
+            "source_reference": "ref-digital-lims",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "PRESENT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 0.91,
+            "value": null,
+            "unit": null,
+            "laterality": null,
+            "test_panel_identity": null,
+            "finding_identity_key": "identity-f2",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "usable_by_slot": {
+          "s1": ["f2"]
+        },
+        "contradictory_slots": [],
+        "quarantine_blocked": false
+      }
+    },
+    {
+      "id": "tier2-document-fail",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase3-evidence",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase3-evidence-subset-v1",
+        "data_asset_version": "synthetic-fixture-v1",
+        "label": "SYNTHETIC",
+        "rule3_binding_ports": [
+          {
+            "formula_slot_id": "s1",
+            "port_status": "RESOLVED",
+            "formula_target_id": "t-renal-1",
+            "organ_system_key": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "pathology_id": "path-stone-001"
+          }
+        ],
+        "documents": [
+          {
+            "document_id": "doc-t2",
+            "parent_source_id": "ps-t2",
+            "source_type": "DIGITAL_STRUCTURED_REPORT",
+            "source_reference": "ref-digital-lims",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": 0.84,
+            "document_readability_score": null,
+            "extraction_model_derived": false,
+            "model_calibration_status": null
+          }
+        ],
+        "items": [
+          {
+            "finding_id": "f3",
+            "document_id": "doc-t2",
+            "parent_source_id": "ps-t2",
+            "source_type": "DIGITAL_STRUCTURED_REPORT",
+            "source_reference": "ref-digital-lims",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "PRESENT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 0.95,
+            "value": null,
+            "unit": null,
+            "laterality": null,
+            "test_panel_identity": null,
+            "finding_identity_key": "identity-f3",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "usable_by_slot": {
+          "s1": []
+        },
+        "contradictory_slots": [],
+        "quarantine_blocked": false
+      }
+    },
+    {
+      "id": "tier2-one-item-fail-sibling-pass",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase3-evidence",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase3-evidence-subset-v1",
+        "data_asset_version": "synthetic-fixture-v1",
+        "label": "SYNTHETIC",
+        "rule3_binding_ports": [
+          {
+            "formula_slot_id": "s1",
+            "port_status": "RESOLVED",
+            "formula_target_id": "t-renal-1",
+            "organ_system_key": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "pathology_id": "path-stone-001"
+          }
+        ],
+        "documents": [
+          {
+            "document_id": "doc-t2",
+            "parent_source_id": "ps-t2",
+            "source_type": "DIGITAL_STRUCTURED_REPORT",
+            "source_reference": "ref-digital-lims",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": 0.9,
+            "document_readability_score": null,
+            "extraction_model_derived": false,
+            "model_calibration_status": null
+          }
+        ],
+        "items": [
+          {
+            "finding_id": "f4a",
+            "document_id": "doc-t2",
+            "parent_source_id": "ps-t2",
+            "source_type": "DIGITAL_STRUCTURED_REPORT",
+            "source_reference": "ref-digital-lims",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "PRESENT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 0.89,
+            "value": null,
+            "unit": null,
+            "laterality": null,
+            "test_panel_identity": null,
+            "finding_identity_key": "identity-f4a",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          },
+          {
+            "finding_id": "f4b",
+            "document_id": "doc-t2",
+            "parent_source_id": "ps-t2",
+            "source_type": "DIGITAL_STRUCTURED_REPORT",
+            "source_reference": "ref-digital-lims",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "PRESENT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 0.92,
+            "value": null,
+            "unit": null,
+            "laterality": null,
+            "test_panel_identity": null,
+            "finding_identity_key": "identity-f4b",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "usable_by_slot": {
+          "s1": ["f4b"]
+        },
+        "contradictory_slots": [],
+        "quarantine_blocked": false
+      }
+    },
+    {
+      "id": "tier3-valid-ocr-item",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase3-evidence",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase3-evidence-subset-v1",
+        "data_asset_version": "synthetic-fixture-v1",
+        "label": "SYNTHETIC",
+        "rule3_binding_ports": [
+          {
+            "formula_slot_id": "s1",
+            "port_status": "RESOLVED",
+            "formula_target_id": "t-renal-1",
+            "organ_system_key": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "pathology_id": "path-stone-001"
+          }
+        ],
+        "documents": [
+          {
+            "document_id": "doc-t3",
+            "parent_source_id": "ps-t3",
+            "source_type": "OCR_EXTRACTED_DOCUMENT_IMAGE",
+            "source_reference": "ref-ocr-scan",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": null,
+            "document_readability_score": 0.85,
+            "extraction_model_derived": true,
+            "model_calibration_status": "CALIBRATED_AND_VERIFIED"
+          }
+        ],
+        "items": [
+          {
+            "finding_id": "f5",
+            "document_id": "doc-t3",
+            "parent_source_id": "ps-t3",
+            "source_type": "OCR_EXTRACTED_DOCUMENT_IMAGE",
+            "source_reference": "ref-ocr-scan",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "PRESENT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 0.86,
+            "value": null,
+            "unit": null,
+            "laterality": null,
+            "test_panel_identity": null,
+            "finding_identity_key": "identity-f5",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": true,
+            "model_calibration_status": "CALIBRATED_AND_VERIFIED"
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "usable_by_slot": {
+          "s1": ["f5"]
+        },
+        "contradictory_slots": [],
+        "quarantine_blocked": false
+      }
+    },
+    {
+      "id": "tier3-below-item-confidence",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase3-evidence",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase3-evidence-subset-v1",
+        "data_asset_version": "synthetic-fixture-v1",
+        "label": "SYNTHETIC",
+        "rule3_binding_ports": [
+          {
+            "formula_slot_id": "s1",
+            "port_status": "RESOLVED",
+            "formula_target_id": "t-renal-1",
+            "organ_system_key": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "pathology_id": "path-stone-001"
+          }
+        ],
+        "documents": [
+          {
+            "document_id": "doc-t3",
+            "parent_source_id": "ps-t3",
+            "source_type": "OCR_EXTRACTED_DOCUMENT_IMAGE",
+            "source_reference": "ref-ocr-scan",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": null,
+            "document_readability_score": 0.85,
+            "extraction_model_derived": true,
+            "model_calibration_status": "CALIBRATED_AND_VERIFIED"
+          }
+        ],
+        "items": [
+          {
+            "finding_id": "f6",
+            "document_id": "doc-t3",
+            "parent_source_id": "ps-t3",
+            "source_type": "OCR_EXTRACTED_DOCUMENT_IMAGE",
+            "source_reference": "ref-ocr-scan",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "PRESENT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 0.84,
+            "value": null,
+            "unit": null,
+            "laterality": null,
+            "test_panel_identity": null,
+            "finding_identity_key": "identity-f6",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": true,
+            "model_calibration_status": "CALIBRATED_AND_VERIFIED"
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "usable_by_slot": {
+          "s1": []
+        },
+        "contradictory_slots": [],
+        "quarantine_blocked": false
+      }
+    },
+    {
+      "id": "unknown-source-type-document",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase3-evidence",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase3-evidence-subset-v1",
+        "data_asset_version": "synthetic-fixture-v1",
+        "label": "SYNTHETIC",
+        "rule3_binding_ports": [
+          {
+            "formula_slot_id": "s1",
+            "port_status": "RESOLVED",
+            "formula_target_id": "t-renal-1",
+            "organ_system_key": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "pathology_id": "path-stone-001"
+          }
+        ],
+        "documents": [
+          {
+            "document_id": "doc-unknown",
+            "parent_source_id": "ps-t1",
+            "source_type": "INVALID_SOURCE_XYZ",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": null,
+            "document_readability_score": null,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "items": [
+          {
+            "finding_id": "f7",
+            "document_id": "doc-unknown",
+            "parent_source_id": "ps-t1",
+            "source_type": "INVALID_SOURCE_XYZ",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "PRESENT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 1,
+            "value": null,
+            "unit": null,
+            "laterality": null,
+            "test_panel_identity": null,
+            "finding_identity_key": "identity-f7",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "usable_by_slot": {
+          "s1": []
+        },
+        "contradictory_slots": [],
+        "quarantine_blocked": false
+      }
+    },
+    {
+      "id": "missing-confidence-tier2",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase3-evidence",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase3-evidence-subset-v1",
+        "data_asset_version": "synthetic-fixture-v1",
+        "label": "SYNTHETIC",
+        "rule3_binding_ports": [
+          {
+            "formula_slot_id": "s1",
+            "port_status": "RESOLVED",
+            "formula_target_id": "t-renal-1",
+            "organ_system_key": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "pathology_id": "path-stone-001"
+          }
+        ],
+        "documents": [
+          {
+            "document_id": "doc-t2",
+            "parent_source_id": "ps-t2",
+            "source_type": "DIGITAL_STRUCTURED_REPORT",
+            "source_reference": "ref-digital-lims",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": 0.9,
+            "document_readability_score": null,
+            "extraction_model_derived": false,
+            "model_calibration_status": null
+          }
+        ],
+        "items": [
+          {
+            "finding_id": "f8",
+            "document_id": "doc-t2",
+            "parent_source_id": "ps-t2",
+            "source_type": "DIGITAL_STRUCTURED_REPORT",
+            "source_reference": "ref-digital-lims",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "PRESENT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": null,
+            "value": null,
+            "unit": null,
+            "laterality": null,
+            "test_panel_identity": null,
+            "finding_identity_key": "identity-f8",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "usable_by_slot": {
+          "s1": []
+        },
+        "contradictory_slots": [],
+        "quarantine_blocked": false
+      }
+    },
+    {
+      "id": "negated-finding",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase3-evidence",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase3-evidence-subset-v1",
+        "data_asset_version": "synthetic-fixture-v1",
+        "label": "SYNTHETIC",
+        "rule3_binding_ports": [
+          {
+            "formula_slot_id": "s1",
+            "port_status": "RESOLVED",
+            "formula_target_id": "t-renal-1",
+            "organ_system_key": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "pathology_id": "path-stone-001"
+          }
+        ],
+        "documents": [
+          {
+            "document_id": "doc-t1",
+            "parent_source_id": "ps-t1",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": null,
+            "document_readability_score": null,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "items": [
+          {
+            "finding_id": "f9",
+            "document_id": "doc-t1",
+            "parent_source_id": "ps-t1",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "NEGATED",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 1,
+            "value": null,
+            "unit": null,
+            "laterality": null,
+            "test_panel_identity": null,
+            "finding_identity_key": "identity-f9",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "usable_by_slot": {
+          "s1": []
+        },
+        "contradictory_slots": [],
+        "quarantine_blocked": false
+      }
+    },
+    {
+      "id": "suspected-finding",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase3-evidence",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase3-evidence-subset-v1",
+        "data_asset_version": "synthetic-fixture-v1",
+        "label": "SYNTHETIC",
+        "rule3_binding_ports": [
+          {
+            "formula_slot_id": "s1",
+            "port_status": "RESOLVED",
+            "formula_target_id": "t-renal-1",
+            "organ_system_key": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "pathology_id": "path-stone-001"
+          }
+        ],
+        "documents": [
+          {
+            "document_id": "doc-t1",
+            "parent_source_id": "ps-t1",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": null,
+            "document_readability_score": null,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "items": [
+          {
+            "finding_id": "f10",
+            "document_id": "doc-t1",
+            "parent_source_id": "ps-t1",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "SUSPECTED",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 1,
+            "value": null,
+            "unit": null,
+            "laterality": null,
+            "test_panel_identity": null,
+            "finding_identity_key": "identity-f10",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "usable_by_slot": {
+          "s1": []
+        },
+        "contradictory_slots": [],
+        "quarantine_blocked": false
+      }
+    },
+    {
+      "id": "rule-out-finding",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase3-evidence",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase3-evidence-subset-v1",
+        "data_asset_version": "synthetic-fixture-v1",
+        "label": "SYNTHETIC",
+        "rule3_binding_ports": [
+          {
+            "formula_slot_id": "s1",
+            "port_status": "RESOLVED",
+            "formula_target_id": "t-renal-1",
+            "organ_system_key": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "pathology_id": "path-stone-001"
+          }
+        ],
+        "documents": [
+          {
+            "document_id": "doc-t1",
+            "parent_source_id": "ps-t1",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": null,
+            "document_readability_score": null,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "items": [
+          {
+            "finding_id": "f11",
+            "document_id": "doc-t1",
+            "parent_source_id": "ps-t1",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "RULE_OUT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 1,
+            "value": null,
+            "unit": null,
+            "laterality": null,
+            "test_panel_identity": null,
+            "finding_identity_key": "identity-f11",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "usable_by_slot": {
+          "s1": []
+        },
+        "contradictory_slots": [],
+        "quarantine_blocked": false
+      }
+    },
+    {
+      "id": "historical-only-finding",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase3-evidence",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase3-evidence-subset-v1",
+        "data_asset_version": "synthetic-fixture-v1",
+        "label": "SYNTHETIC",
+        "rule3_binding_ports": [
+          {
+            "formula_slot_id": "s1",
+            "port_status": "RESOLVED",
+            "formula_target_id": "t-renal-1",
+            "organ_system_key": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "pathology_id": "path-stone-001"
+          }
+        ],
+        "documents": [
+          {
+            "document_id": "doc-t1",
+            "parent_source_id": "ps-t1",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": null,
+            "document_readability_score": null,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "items": [
+          {
+            "finding_id": "f12",
+            "document_id": "doc-t1",
+            "parent_source_id": "ps-t1",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "HISTORICAL_ONLY",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 1,
+            "value": null,
+            "unit": null,
+            "laterality": null,
+            "test_panel_identity": null,
+            "finding_identity_key": "identity-f12",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "usable_by_slot": {
+          "s1": []
+        },
+        "contradictory_slots": [],
+        "quarantine_blocked": false
+      }
+    },
+    {
+      "id": "valid-item-invalid-sibling",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase3-evidence",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase3-evidence-subset-v1",
+        "data_asset_version": "synthetic-fixture-v1",
+        "label": "SYNTHETIC",
+        "rule3_binding_ports": [
+          {
+            "formula_slot_id": "s1",
+            "port_status": "RESOLVED",
+            "formula_target_id": "t-renal-1",
+            "organ_system_key": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "pathology_id": "path-stone-001"
+          }
+        ],
+        "documents": [
+          {
+            "document_id": "doc-t2",
+            "parent_source_id": "ps-t2",
+            "source_type": "DIGITAL_STRUCTURED_REPORT",
+            "source_reference": "ref-digital-lims",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": 0.9,
+            "document_readability_score": null,
+            "extraction_model_derived": false,
+            "model_calibration_status": null
+          }
+        ],
+        "items": [
+          {
+            "finding_id": "f13a",
+            "document_id": "doc-t2",
+            "parent_source_id": "ps-t2",
+            "source_type": "DIGITAL_STRUCTURED_REPORT",
+            "source_reference": "ref-digital-lims",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "PRESENT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 0.92,
+            "value": null,
+            "unit": null,
+            "laterality": null,
+            "test_panel_identity": null,
+            "finding_identity_key": "identity-f13a",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          },
+          {
+            "finding_id": "f13b",
+            "document_id": "doc-t2",
+            "parent_source_id": "ps-t2",
+            "source_type": "DIGITAL_STRUCTURED_REPORT",
+            "source_reference": "ref-digital-lims",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "wrong_site",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "PRESENT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 0.92,
+            "value": null,
+            "unit": null,
+            "laterality": null,
+            "test_panel_identity": null,
+            "finding_identity_key": "identity-f13b",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "usable_by_slot": {
+          "s1": ["f13a"]
+        },
+        "contradictory_slots": [],
+        "quarantine_blocked": false
+      }
+    },
+    {
+      "id": "duplicate-same-parent-source",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase3-evidence",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase3-evidence-subset-v1",
+        "data_asset_version": "synthetic-fixture-v1",
+        "label": "SYNTHETIC",
+        "rule3_binding_ports": [
+          {
+            "formula_slot_id": "s1",
+            "port_status": "RESOLVED",
+            "formula_target_id": "t-renal-1",
+            "organ_system_key": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "pathology_id": "path-stone-001"
+          }
+        ],
+        "documents": [
+          {
+            "document_id": "doc-t1",
+            "parent_source_id": "ps-t1",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": null,
+            "document_readability_score": null,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "items": [
+          {
+            "finding_id": "f14a",
+            "document_id": "doc-t1",
+            "parent_source_id": "ps-t1",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "PRESENT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 1,
+            "value": null,
+            "unit": null,
+            "laterality": null,
+            "test_panel_identity": null,
+            "finding_identity_key": "dup-key",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          },
+          {
+            "finding_id": "f14b",
+            "document_id": "doc-t1",
+            "parent_source_id": "ps-t1",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "PRESENT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 1,
+            "value": null,
+            "unit": null,
+            "laterality": null,
+            "test_panel_identity": null,
+            "finding_identity_key": "dup-key",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "usable_by_slot": {
+          "s1": ["f14a"]
+        },
+        "contradictory_slots": [],
+        "quarantine_blocked": false
+      }
+    },
+    {
+      "id": "duplicate-upload-shared-parent",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase3-evidence",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase3-evidence-subset-v1",
+        "data_asset_version": "synthetic-fixture-v1",
+        "label": "SYNTHETIC",
+        "rule3_binding_ports": [
+          {
+            "formula_slot_id": "s1",
+            "port_status": "RESOLVED",
+            "formula_target_id": "t-renal-1",
+            "organ_system_key": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "pathology_id": "path-stone-001"
+          }
+        ],
+        "documents": [
+          {
+            "document_id": "doc-dup-a",
+            "parent_source_id": "parent-shared",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": null,
+            "document_readability_score": null,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          },
+          {
+            "document_id": "doc-dup-b",
+            "parent_source_id": "parent-shared",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": null,
+            "document_readability_score": null,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "items": [
+          {
+            "finding_id": "f15a",
+            "document_id": "doc-dup-a",
+            "parent_source_id": "parent-shared",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "PRESENT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 1,
+            "value": null,
+            "unit": null,
+            "laterality": null,
+            "test_panel_identity": null,
+            "finding_identity_key": "lab-creat",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          },
+          {
+            "finding_id": "f15b",
+            "document_id": "doc-dup-b",
+            "parent_source_id": "parent-shared",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "PRESENT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 1,
+            "value": null,
+            "unit": null,
+            "laterality": null,
+            "test_panel_identity": null,
+            "finding_identity_key": "lab-creat",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "usable_by_slot": {
+          "s1": ["f15a"]
+        },
+        "contradictory_slots": [],
+        "quarantine_blocked": false
+      }
+    },
+    {
+      "id": "two-independent-corroborating",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase3-evidence",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase3-evidence-subset-v1",
+        "data_asset_version": "synthetic-fixture-v1",
+        "label": "SYNTHETIC",
+        "rule3_binding_ports": [
+          {
+            "formula_slot_id": "s1",
+            "port_status": "RESOLVED",
+            "formula_target_id": "t-renal-1",
+            "organ_system_key": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "pathology_id": "path-stone-001"
+          }
+        ],
+        "documents": [
+          {
+            "document_id": "doc-corr-a",
+            "parent_source_id": "parent-a",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": null,
+            "document_readability_score": null,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          },
+          {
+            "document_id": "doc-corr-b",
+            "parent_source_id": "parent-b",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": null,
+            "document_readability_score": null,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "items": [
+          {
+            "finding_id": "f16a",
+            "document_id": "doc-corr-a",
+            "parent_source_id": "parent-a",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "PRESENT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 1,
+            "value": 1.4,
+            "unit": "mg/dl",
+            "laterality": null,
+            "test_panel_identity": "panel-creat",
+            "finding_identity_key": "creatinine-high",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          },
+          {
+            "finding_id": "f16b",
+            "document_id": "doc-corr-b",
+            "parent_source_id": "parent-b",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "PRESENT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 1,
+            "value": 1.4,
+            "unit": "mg/dl",
+            "laterality": null,
+            "test_panel_identity": "panel-creat",
+            "finding_identity_key": "creatinine-high",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "usable_by_slot": {
+          "s1": ["f16a", "f16b"]
+        },
+        "contradictory_slots": [],
+        "quarantine_blocked": false
+      }
+    },
+    {
+      "id": "one-report-two-formula-slots",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase3-evidence",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase3-evidence-subset-v1",
+        "data_asset_version": "synthetic-fixture-v1",
+        "label": "SYNTHETIC",
+        "rule3_binding_ports": [
+          {
+            "formula_slot_id": "s1",
+            "port_status": "RESOLVED",
+            "formula_target_id": "t-renal-1",
+            "organ_system_key": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "pathology_id": "path-stone-001"
+          },
+          {
+            "formula_slot_id": "s2",
+            "port_status": "RESOLVED",
+            "formula_target_id": "t-resp-1",
+            "organ_system_key": "RESPIRATORY",
+            "anatomical_site": "lung_upper",
+            "pathology_id": "path-pneum-001"
+          }
+        ],
+        "documents": [
+          {
+            "document_id": "doc-multi",
+            "parent_source_id": "ps-t1",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": null,
+            "document_readability_score": null,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "items": [
+          {
+            "finding_id": "f17a",
+            "document_id": "doc-multi",
+            "parent_source_id": "ps-t1",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "PRESENT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 1,
+            "value": null,
+            "unit": null,
+            "laterality": null,
+            "test_panel_identity": null,
+            "finding_identity_key": "identity-f17a",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          },
+          {
+            "finding_id": "f17b",
+            "document_id": "doc-multi",
+            "parent_source_id": "ps-t1",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "formula_slot_id": "s2",
+            "formula_target_id": "t-resp-1",
+            "target_organ_system": "RESPIRATORY",
+            "anatomical_site": "lung_upper",
+            "target_pathology_id": "path-pneum-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "PRESENT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 1,
+            "value": null,
+            "unit": null,
+            "laterality": null,
+            "test_panel_identity": null,
+            "finding_identity_key": "identity-f17b",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "usable_by_slot": {
+          "s1": ["f17a"],
+          "s2": ["f17b"]
+        },
+        "contradictory_slots": [],
+        "quarantine_blocked": false
+      }
+    },
+    {
+      "id": "cross-formula-leakage-attempt",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase3-evidence",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase3-evidence-subset-v1",
+        "data_asset_version": "synthetic-fixture-v1",
+        "label": "SYNTHETIC",
+        "rule3_binding_ports": [
+          {
+            "formula_slot_id": "s1",
+            "port_status": "RESOLVED",
+            "formula_target_id": "t-renal-1",
+            "organ_system_key": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "pathology_id": "path-stone-001"
+          }
+        ],
+        "documents": [
+          {
+            "document_id": "doc-t1",
+            "parent_source_id": "ps-t1",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": null,
+            "document_readability_score": null,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "items": [
+          {
+            "finding_id": "f18",
+            "document_id": "doc-t1",
+            "parent_source_id": "ps-t1",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-wrong-target",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "PRESENT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 1,
+            "value": null,
+            "unit": null,
+            "laterality": null,
+            "test_panel_identity": null,
+            "finding_identity_key": "identity-f18",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "usable_by_slot": {
+          "s1": []
+        },
+        "contradictory_slots": [],
+        "quarantine_blocked": false
+      }
+    },
+    {
+      "id": "missing-formula-binding-port",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase3-evidence",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase3-evidence-subset-v1",
+        "data_asset_version": "synthetic-fixture-v1",
+        "label": "SYNTHETIC",
+        "rule3_binding_ports": [],
+        "documents": [
+          {
+            "document_id": "doc-t1",
+            "parent_source_id": "ps-t1",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": null,
+            "document_readability_score": null,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "items": [
+          {
+            "finding_id": "f19",
+            "document_id": "doc-t1",
+            "parent_source_id": "ps-t1",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "PRESENT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 1,
+            "value": null,
+            "unit": null,
+            "laterality": null,
+            "test_panel_identity": null,
+            "finding_identity_key": "identity-f19",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "usable_by_slot": {
+          "s1": []
+        },
+        "contradictory_slots": [],
+        "quarantine_blocked": false
+      }
+    },
+    {
+      "id": "organ-system-mismatch",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase3-evidence",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase3-evidence-subset-v1",
+        "data_asset_version": "synthetic-fixture-v1",
+        "label": "SYNTHETIC",
+        "rule3_binding_ports": [
+          {
+            "formula_slot_id": "s1",
+            "port_status": "RESOLVED",
+            "formula_target_id": "t-renal-1",
+            "organ_system_key": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "pathology_id": "path-stone-001"
+          }
+        ],
+        "documents": [
+          {
+            "document_id": "doc-t1",
+            "parent_source_id": "ps-t1",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": null,
+            "document_readability_score": null,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "items": [
+          {
+            "finding_id": "f20",
+            "document_id": "doc-t1",
+            "parent_source_id": "ps-t1",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "CARDIAC",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "PRESENT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 1,
+            "value": null,
+            "unit": null,
+            "laterality": null,
+            "test_panel_identity": null,
+            "finding_identity_key": "identity-f20",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "usable_by_slot": {
+          "s1": []
+        },
+        "contradictory_slots": [],
+        "quarantine_blocked": false
+      }
+    },
+    {
+      "id": "anatomical-site-mismatch",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase3-evidence",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase3-evidence-subset-v1",
+        "data_asset_version": "synthetic-fixture-v1",
+        "label": "SYNTHETIC",
+        "rule3_binding_ports": [
+          {
+            "formula_slot_id": "s1",
+            "port_status": "RESOLVED",
+            "formula_target_id": "t-renal-1",
+            "organ_system_key": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "pathology_id": "path-stone-001"
+          }
+        ],
+        "documents": [
+          {
+            "document_id": "doc-t1",
+            "parent_source_id": "ps-t1",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": null,
+            "document_readability_score": null,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "items": [
+          {
+            "finding_id": "f21",
+            "document_id": "doc-t1",
+            "parent_source_id": "ps-t1",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "ureter",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "PRESENT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 1,
+            "value": null,
+            "unit": null,
+            "laterality": null,
+            "test_panel_identity": null,
+            "finding_identity_key": "identity-f21",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "usable_by_slot": {
+          "s1": []
+        },
+        "contradictory_slots": [],
+        "quarantine_blocked": false
+      }
+    },
+    {
+      "id": "pathology-id-mismatch",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase3-evidence",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase3-evidence-subset-v1",
+        "data_asset_version": "synthetic-fixture-v1",
+        "label": "SYNTHETIC",
+        "rule3_binding_ports": [
+          {
+            "formula_slot_id": "s1",
+            "port_status": "RESOLVED",
+            "formula_target_id": "t-renal-1",
+            "organ_system_key": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "pathology_id": "path-stone-001"
+          }
+        ],
+        "documents": [
+          {
+            "document_id": "doc-t1",
+            "parent_source_id": "ps-t1",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": null,
+            "document_readability_score": null,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "items": [
+          {
+            "finding_id": "f22",
+            "document_id": "doc-t1",
+            "parent_source_id": "ps-t1",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-other",
+            "target_pathology_group_id": null,
+            "assertion_status": "PRESENT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 1,
+            "value": null,
+            "unit": null,
+            "laterality": null,
+            "test_panel_identity": null,
+            "finding_identity_key": "identity-f22",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "usable_by_slot": {
+          "s1": []
+        },
+        "contradictory_slots": [],
+        "quarantine_blocked": false
+      }
+    },
+    {
+      "id": "pathology-parent-group-not-executable",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase3-evidence",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase3-evidence-subset-v1",
+        "data_asset_version": "synthetic-fixture-v1",
+        "label": "SYNTHETIC",
+        "rule3_binding_ports": [
+          {
+            "formula_slot_id": "s1",
+            "port_status": "RESOLVED",
+            "formula_target_id": "t-renal-1",
+            "organ_system_key": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "pathology_id": "path-stone-001"
+          }
+        ],
+        "documents": [
+          {
+            "document_id": "doc-t1",
+            "parent_source_id": "ps-t1",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": null,
+            "document_readability_score": null,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "items": [
+          {
+            "finding_id": "f23",
+            "document_id": "doc-t1",
+            "parent_source_id": "ps-t1",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": "group-parent",
+            "assertion_status": "PRESENT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 1,
+            "value": null,
+            "unit": null,
+            "laterality": null,
+            "test_panel_identity": null,
+            "finding_identity_key": "identity-f23",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "usable_by_slot": {
+          "s1": []
+        },
+        "contradictory_slots": [],
+        "quarantine_blocked": false
+      }
+    },
+    {
+      "id": "cross-parent-supersession-newer-wins",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase3-evidence",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase3-evidence-subset-v1",
+        "data_asset_version": "synthetic-fixture-v1",
+        "label": "SYNTHETIC",
+        "rule3_binding_ports": [
+          {
+            "formula_slot_id": "s1",
+            "port_status": "RESOLVED",
+            "formula_target_id": "t-renal-1",
+            "organ_system_key": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "pathology_id": "path-stone-001"
+          }
+        ],
+        "documents": [
+          {
+            "document_id": "doc-old",
+            "parent_source_id": "p-super-old",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": null,
+            "document_readability_score": null,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          },
+          {
+            "document_id": "doc-new",
+            "parent_source_id": "p-super-new",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": null,
+            "document_readability_score": null,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "items": [
+          {
+            "finding_id": "f24old",
+            "document_id": "doc-old",
+            "parent_source_id": "p-super-old",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-01T00:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "PRESENT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 1,
+            "value": 1.2,
+            "unit": "mg/dl",
+            "laterality": null,
+            "test_panel_identity": "panel-a",
+            "finding_identity_key": "identity-f24old",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          },
+          {
+            "finding_id": "f24new",
+            "document_id": "doc-new",
+            "parent_source_id": "p-super-new",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-02-01T00:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "PRESENT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 1,
+            "value": 1.3,
+            "unit": "mg/dl",
+            "laterality": null,
+            "test_panel_identity": "panel-a",
+            "finding_identity_key": "identity-f24new",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "usable_by_slot": {
+          "s1": ["f24new"]
+        },
+        "contradictory_slots": [],
+        "quarantine_blocked": false
+      }
+    },
+    {
+      "id": "same-parent-newer-lineage",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase3-evidence",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase3-evidence-subset-v1",
+        "data_asset_version": "synthetic-fixture-v1",
+        "label": "SYNTHETIC",
+        "rule3_binding_ports": [
+          {
+            "formula_slot_id": "s1",
+            "port_status": "RESOLVED",
+            "formula_target_id": "t-renal-1",
+            "organ_system_key": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "pathology_id": "path-stone-001"
+          }
+        ],
+        "documents": [
+          {
+            "document_id": "doc-old",
+            "parent_source_id": "p-super-lineage",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": null,
+            "document_readability_score": null,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          },
+          {
+            "document_id": "doc-new",
+            "parent_source_id": "p-super-lineage",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": null,
+            "document_readability_score": null,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "items": [
+          {
+            "finding_id": "f24blold",
+            "document_id": "doc-old",
+            "parent_source_id": "p-super-lineage",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-01T00:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "PRESENT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 1,
+            "value": null,
+            "unit": null,
+            "laterality": null,
+            "test_panel_identity": "panel-lineage",
+            "finding_identity_key": "identity-f24blold",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          },
+          {
+            "finding_id": "f24bnew",
+            "document_id": "doc-new",
+            "parent_source_id": "p-super-lineage",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-02-01T00:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "PRESENT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 1,
+            "value": null,
+            "unit": null,
+            "laterality": null,
+            "test_panel_identity": "panel-lineage",
+            "finding_identity_key": "identity-f24bnew",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "usable_by_slot": {
+          "s1": ["f24bnew"]
+        },
+        "contradictory_slots": [],
+        "quarantine_blocked": false
+      }
+    },
+    {
+      "id": "invalid-newer-does-not-supersede",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase3-evidence",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase3-evidence-subset-v1",
+        "data_asset_version": "synthetic-fixture-v1",
+        "label": "SYNTHETIC",
+        "rule3_binding_ports": [
+          {
+            "formula_slot_id": "s1",
+            "port_status": "RESOLVED",
+            "formula_target_id": "t-renal-1",
+            "organ_system_key": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "pathology_id": "path-stone-001"
+          }
+        ],
+        "documents": [
+          {
+            "document_id": "doc-old2",
+            "parent_source_id": "p-old2",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": null,
+            "document_readability_score": null,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          },
+          {
+            "document_id": "doc-new2",
+            "parent_source_id": "p-new2",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": null,
+            "document_readability_score": null,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "items": [
+          {
+            "finding_id": "f25old",
+            "document_id": "doc-old2",
+            "parent_source_id": "p-old2",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-01T00:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "PRESENT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 1,
+            "value": null,
+            "unit": null,
+            "laterality": null,
+            "test_panel_identity": "panel-b",
+            "finding_identity_key": "identity-f25old",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          },
+          {
+            "finding_id": "f25new",
+            "document_id": "doc-new2",
+            "parent_source_id": "p-new2",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-02-01T00:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "NEGATED",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 1,
+            "value": null,
+            "unit": null,
+            "laterality": null,
+            "test_panel_identity": "panel-b",
+            "finding_identity_key": "identity-f25new",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "usable_by_slot": {
+          "s1": ["f25old"]
+        },
+        "contradictory_slots": [],
+        "quarantine_blocked": false
+      }
+    },
+    {
+      "id": "contradiction-same-binding",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase3-evidence",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase3-evidence-subset-v1",
+        "data_asset_version": "synthetic-fixture-v1",
+        "label": "SYNTHETIC",
+        "rule3_binding_ports": [
+          {
+            "formula_slot_id": "s1",
+            "port_status": "RESOLVED",
+            "formula_target_id": "t-renal-1",
+            "organ_system_key": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "pathology_id": "path-stone-001"
+          }
+        ],
+        "documents": [
+          {
+            "document_id": "doc-c1",
+            "parent_source_id": "pc1",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": null,
+            "document_readability_score": null,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          },
+          {
+            "document_id": "doc-c2",
+            "parent_source_id": "pc2",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": null,
+            "document_readability_score": null,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "items": [
+          {
+            "finding_id": "f26a",
+            "document_id": "doc-c1",
+            "parent_source_id": "pc1",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-11T00:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "PRESENT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 1,
+            "value": 5,
+            "unit": "mm",
+            "laterality": null,
+            "test_panel_identity": "panel-c",
+            "finding_identity_key": "identity-f26a",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          },
+          {
+            "finding_id": "f26b",
+            "document_id": "doc-c2",
+            "parent_source_id": "pc2",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-11T00:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "PRESENT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 1,
+            "value": 8,
+            "unit": "mm",
+            "laterality": null,
+            "test_panel_identity": "panel-c",
+            "finding_identity_key": "identity-f26b",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "usable_by_slot": {
+          "s1": ["f26a", "f26b"]
+        },
+        "contradictory_slots": ["s1"],
+        "quarantine_blocked": false
+      }
+    },
+    {
+      "id": "global-text-quarantine",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase3-evidence",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase3-evidence-subset-v1",
+        "data_asset_version": "synthetic-fixture-v1",
+        "label": "SYNTHETIC",
+        "rule3_binding_ports": [
+          {
+            "formula_slot_id": "s1",
+            "port_status": "RESOLVED",
+            "formula_target_id": "t-renal-1",
+            "organ_system_key": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "pathology_id": "path-stone-001"
+          }
+        ],
+        "documents": [
+          {
+            "document_id": "doc-t1",
+            "parent_source_id": "ps-t1",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": null,
+            "document_readability_score": null,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "items": [
+          {
+            "finding_id": "f27",
+            "document_id": "doc-t1",
+            "parent_source_id": "ps-t1",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "PRESENT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 1,
+            "value": null,
+            "unit": null,
+            "laterality": null,
+            "test_panel_identity": null,
+            "finding_identity_key": "identity-f27",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "quarantine_probe": {
+          "global_text": true
+        }
+      },
+      "expected": {
+        "usable_by_slot": {
+          "s1": ["f27"]
+        },
+        "contradictory_slots": [],
+        "quarantine_blocked": true
+      }
+    },
+    {
+      "id": "116k-supporting-only",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase3-evidence",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase3-evidence-subset-v1",
+        "data_asset_version": "synthetic-fixture-v1",
+        "label": "SYNTHETIC",
+        "rule3_binding_ports": [
+          {
+            "formula_slot_id": "s1",
+            "port_status": "RESOLVED",
+            "formula_target_id": "t-renal-1",
+            "organ_system_key": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "pathology_id": "path-stone-001"
+          }
+        ],
+        "documents": [
+          {
+            "document_id": "doc-116k",
+            "parent_source_id": "p-116k",
+            "source_type": "DATASET_TAXONOMY_ALIGNMENT",
+            "source_reference": "ref-116k",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": null,
+            "document_readability_score": null,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "items": [
+          {
+            "finding_id": "f28",
+            "document_id": "doc-116k",
+            "parent_source_id": "p-116k",
+            "source_type": "DATASET_TAXONOMY_ALIGNMENT",
+            "source_reference": "ref-116k",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "PRESENT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 0.85,
+            "value": null,
+            "unit": null,
+            "laterality": null,
+            "test_panel_identity": null,
+            "finding_identity_key": "identity-f28",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "usable_by_slot": {
+          "s1": []
+        },
+        "contradictory_slots": [],
+        "quarantine_blocked": false
+      }
+    },
+    {
+      "id": "raw-clinical-photo",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase3-evidence",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase3-evidence-subset-v1",
+        "data_asset_version": "synthetic-fixture-v1",
+        "label": "SYNTHETIC",
+        "rule3_binding_ports": [
+          {
+            "formula_slot_id": "s1",
+            "port_status": "RESOLVED",
+            "formula_target_id": "t-renal-1",
+            "organ_system_key": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "pathology_id": "path-stone-001"
+          }
+        ],
+        "documents": [
+          {
+            "document_id": "doc-photo",
+            "parent_source_id": "p-photo",
+            "source_type": "CLINICAL_PHOTO_RAW",
+            "source_reference": "ref-photo",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": null,
+            "document_readability_score": null,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "items": [
+          {
+            "finding_id": "f29",
+            "document_id": "doc-photo",
+            "parent_source_id": "p-photo",
+            "source_type": "CLINICAL_PHOTO_RAW",
+            "source_reference": "ref-photo",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "PRESENT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 0.99,
+            "value": null,
+            "unit": null,
+            "laterality": null,
+            "test_panel_identity": null,
+            "finding_identity_key": "identity-f29",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "usable_by_slot": {
+          "s1": []
+        },
+        "contradictory_slots": [],
+        "quarantine_blocked": false
+      }
+    },
+    {
+      "id": "doctor-structured-photo-observation",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase3-evidence",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase3-evidence-subset-v1",
+        "data_asset_version": "synthetic-fixture-v1",
+        "label": "SYNTHETIC",
+        "rule3_binding_ports": [
+          {
+            "formula_slot_id": "s1",
+            "port_status": "RESOLVED",
+            "formula_target_id": "t-renal-1",
+            "organ_system_key": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "pathology_id": "path-stone-001"
+          }
+        ],
+        "documents": [
+          {
+            "document_id": "doc-photo-obs",
+            "parent_source_id": "p-photo-obs",
+            "source_type": "DOCTOR_STRUCTURED_PHOTO_OBSERVATION",
+            "source_reference": "ref-photo-obs",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": null,
+            "document_readability_score": null,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "items": [
+          {
+            "finding_id": "f30",
+            "document_id": "doc-photo-obs",
+            "parent_source_id": "p-photo-obs",
+            "source_type": "DOCTOR_STRUCTURED_PHOTO_OBSERVATION",
+            "source_reference": "ref-photo-obs",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "PRESENT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 1,
+            "value": null,
+            "unit": null,
+            "laterality": null,
+            "test_panel_identity": null,
+            "finding_identity_key": "identity-f30",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "usable_by_slot": {
+          "s1": ["f30"]
+        },
+        "contradictory_slots": [],
+        "quarantine_blocked": false
+      }
+    },
+    {
+      "id": "empty-document-no-items",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase3-evidence",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase3-evidence-subset-v1",
+        "data_asset_version": "synthetic-fixture-v1",
+        "label": "SYNTHETIC",
+        "rule3_binding_ports": [
+          {
+            "formula_slot_id": "s1",
+            "port_status": "RESOLVED",
+            "formula_target_id": "t-renal-1",
+            "organ_system_key": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "pathology_id": "path-stone-001"
+          }
+        ],
+        "documents": [],
+        "items": [],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "usable_by_slot": {
+          "s1": []
+        },
+        "contradictory_slots": [],
+        "quarantine_blocked": false
+      }
+    },
+    {
+      "id": "tier2-boundary-thresholds",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase3-evidence",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase3-evidence-subset-v1",
+        "data_asset_version": "synthetic-fixture-v1",
+        "label": "SYNTHETIC",
+        "rule3_binding_ports": [
+          {
+            "formula_slot_id": "s1",
+            "port_status": "RESOLVED",
+            "formula_target_id": "t-renal-1",
+            "organ_system_key": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "pathology_id": "path-stone-001"
+          }
+        ],
+        "documents": [
+          {
+            "document_id": "doc-t2",
+            "parent_source_id": "ps-t2",
+            "source_type": "DIGITAL_STRUCTURED_REPORT",
+            "source_reference": "ref-digital-lims",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": 0.85,
+            "document_readability_score": null,
+            "extraction_model_derived": false,
+            "model_calibration_status": null
+          }
+        ],
+        "items": [
+          {
+            "finding_id": "f32",
+            "document_id": "doc-t2",
+            "parent_source_id": "ps-t2",
+            "source_type": "DIGITAL_STRUCTURED_REPORT",
+            "source_reference": "ref-digital-lims",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "PRESENT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 0.9,
+            "value": null,
+            "unit": null,
+            "laterality": null,
+            "test_panel_identity": null,
+            "finding_identity_key": "identity-f32",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "usable_by_slot": {
+          "s1": ["f32"]
+        },
+        "contradictory_slots": [],
+        "quarantine_blocked": false
+      }
+    },
+    {
+      "id": "tier4a-nlp-candidate-usable",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase3-evidence",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase3-evidence-subset-v1",
+        "data_asset_version": "synthetic-fixture-v1",
+        "label": "SYNTHETIC",
+        "rule3_binding_ports": [
+          {
+            "formula_slot_id": "s1",
+            "port_status": "RESOLVED",
+            "formula_target_id": "t-renal-1",
+            "organ_system_key": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "pathology_id": "path-stone-001"
+          }
+        ],
+        "documents": [
+          {
+            "document_id": "doc-4a",
+            "parent_source_id": "p-4a",
+            "source_type": "DOCTOR_FREE_TEXT_NLP_EXTRACTION",
+            "source_reference": "ref-nlp",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": null,
+            "document_readability_score": null,
+            "extraction_model_derived": true,
+            "model_calibration_status": "CALIBRATED_AND_VERIFIED"
+          }
+        ],
+        "items": [
+          {
+            "finding_id": "f33",
+            "document_id": "doc-4a",
+            "parent_source_id": "p-4a",
+            "source_type": "DOCTOR_FREE_TEXT_NLP_EXTRACTION",
+            "source_reference": "ref-nlp",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "PRESENT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 0.81,
+            "value": null,
+            "unit": null,
+            "laterality": null,
+            "test_panel_identity": null,
+            "finding_identity_key": "identity-f33",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": true,
+            "model_calibration_status": "CALIBRATED_AND_VERIFIED"
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "usable_by_slot": {
+          "s1": ["f33"]
+        },
+        "contradictory_slots": [],
+        "quarantine_blocked": false
+      }
+    },
+    {
+      "id": "uncalibrated-model-blocked",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase3-evidence",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase3-evidence-subset-v1",
+        "data_asset_version": "synthetic-fixture-v1",
+        "label": "SYNTHETIC",
+        "rule3_binding_ports": [
+          {
+            "formula_slot_id": "s1",
+            "port_status": "RESOLVED",
+            "formula_target_id": "t-renal-1",
+            "organ_system_key": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "pathology_id": "path-stone-001"
+          }
+        ],
+        "documents": [
+          {
+            "document_id": "doc-t3",
+            "parent_source_id": "ps-t3",
+            "source_type": "OCR_EXTRACTED_DOCUMENT_IMAGE",
+            "source_reference": "ref-ocr-scan",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": null,
+            "document_readability_score": 0.9,
+            "extraction_model_derived": true,
+            "model_calibration_status": "NOT_CALIBRATED"
+          }
+        ],
+        "items": [
+          {
+            "finding_id": "f34",
+            "document_id": "doc-t3",
+            "parent_source_id": "ps-t3",
+            "source_type": "OCR_EXTRACTED_DOCUMENT_IMAGE",
+            "source_reference": "ref-ocr-scan",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "PRESENT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 0.9,
+            "value": null,
+            "unit": null,
+            "laterality": null,
+            "test_panel_identity": null,
+            "finding_identity_key": "identity-f34",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": true,
+            "model_calibration_status": "NOT_CALIBRATED"
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "usable_by_slot": {
+          "s1": []
+        },
+        "contradictory_slots": [],
+        "quarantine_blocked": false
+      }
+    },
+    {
+      "id": "resolved-assertion-excluded",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase3-evidence",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase3-evidence-subset-v1",
+        "data_asset_version": "synthetic-fixture-v1",
+        "label": "SYNTHETIC",
+        "rule3_binding_ports": [
+          {
+            "formula_slot_id": "s1",
+            "port_status": "RESOLVED",
+            "formula_target_id": "t-renal-1",
+            "organ_system_key": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "pathology_id": "path-stone-001"
+          }
+        ],
+        "documents": [
+          {
+            "document_id": "doc-t1",
+            "parent_source_id": "ps-t1",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": null,
+            "document_readability_score": null,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "items": [
+          {
+            "finding_id": "f35",
+            "document_id": "doc-t1",
+            "parent_source_id": "ps-t1",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "RESOLVED",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 1,
+            "value": null,
+            "unit": null,
+            "laterality": null,
+            "test_panel_identity": null,
+            "finding_identity_key": "identity-f35",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "usable_by_slot": {
+          "s1": []
+        },
+        "contradictory_slots": [],
+        "quarantine_blocked": false
+      }
+    },
+    {
+      "id": "unknown-assertion-excluded",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase3-evidence",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase3-evidence-subset-v1",
+        "data_asset_version": "synthetic-fixture-v1",
+        "label": "SYNTHETIC",
+        "rule3_binding_ports": [
+          {
+            "formula_slot_id": "s1",
+            "port_status": "RESOLVED",
+            "formula_target_id": "t-renal-1",
+            "organ_system_key": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "pathology_id": "path-stone-001"
+          }
+        ],
+        "documents": [
+          {
+            "document_id": "doc-t1",
+            "parent_source_id": "ps-t1",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": null,
+            "document_readability_score": null,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "items": [
+          {
+            "finding_id": "f36",
+            "document_id": "doc-t1",
+            "parent_source_id": "ps-t1",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "UNKNOWN",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 1,
+            "value": null,
+            "unit": null,
+            "laterality": null,
+            "test_panel_identity": null,
+            "finding_identity_key": "identity-f36",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "usable_by_slot": {
+          "s1": []
+        },
+        "contradictory_slots": [],
+        "quarantine_blocked": false
+      }
+    },
+    {
+      "id": "ocr-native-same-parent-duplicate",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase3-evidence",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase3-evidence-subset-v1",
+        "data_asset_version": "synthetic-fixture-v1",
+        "label": "SYNTHETIC",
+        "rule3_binding_ports": [
+          {
+            "formula_slot_id": "s1",
+            "port_status": "RESOLVED",
+            "formula_target_id": "t-renal-1",
+            "organ_system_key": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "pathology_id": "path-stone-001"
+          }
+        ],
+        "documents": [
+          {
+            "document_id": "doc-native",
+            "parent_source_id": "parent-ocr-dup",
+            "source_type": "DIGITAL_STRUCTURED_REPORT",
+            "source_reference": "ref-digital-lims",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": 0.9,
+            "document_readability_score": null,
+            "extraction_model_derived": false,
+            "model_calibration_status": null
+          },
+          {
+            "document_id": "doc-ocr",
+            "parent_source_id": "parent-ocr-dup",
+            "source_type": "OCR_EXTRACTED_DOCUMENT_IMAGE",
+            "source_reference": "ref-ocr-scan",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": null,
+            "document_readability_score": 0.85,
+            "extraction_model_derived": true,
+            "model_calibration_status": "CALIBRATED_AND_VERIFIED"
+          }
+        ],
+        "items": [
+          {
+            "finding_id": "f37a",
+            "document_id": "doc-native",
+            "parent_source_id": "parent-ocr-dup",
+            "source_type": "DIGITAL_STRUCTURED_REPORT",
+            "source_reference": "ref-digital-lims",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "PRESENT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 0.92,
+            "value": null,
+            "unit": null,
+            "laterality": null,
+            "test_panel_identity": null,
+            "finding_identity_key": "same-lab",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          },
+          {
+            "finding_id": "f37b",
+            "document_id": "doc-ocr",
+            "parent_source_id": "parent-ocr-dup",
+            "source_type": "OCR_EXTRACTED_DOCUMENT_IMAGE",
+            "source_reference": "ref-ocr-scan",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "PRESENT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 0.86,
+            "value": null,
+            "unit": null,
+            "laterality": null,
+            "test_panel_identity": null,
+            "finding_identity_key": "same-lab",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": true,
+            "model_calibration_status": "CALIBRATED_AND_VERIFIED"
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "usable_by_slot": {
+          "s1": ["f37a"]
+        },
+        "contradictory_slots": [],
+        "quarantine_blocked": false
+      }
+    },
+    {
+      "id": "missing-conditional-interpretation-fields",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase3-evidence",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase3-evidence-subset-v1",
+        "data_asset_version": "synthetic-fixture-v1",
+        "label": "SYNTHETIC",
+        "rule3_binding_ports": [
+          {
+            "formula_slot_id": "s1",
+            "port_status": "RESOLVED",
+            "formula_target_id": "t-renal-1",
+            "organ_system_key": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "pathology_id": "path-stone-001"
+          }
+        ],
+        "documents": [
+          {
+            "document_id": "doc-t1",
+            "parent_source_id": "ps-t1",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": null,
+            "document_readability_score": null,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "items": [
+          {
+            "finding_id": "f38",
+            "document_id": "doc-t1",
+            "parent_source_id": "ps-t1",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "PRESENT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 1,
+            "value": null,
+            "unit": null,
+            "laterality": null,
+            "test_panel_identity": null,
+            "finding_identity_key": "identity-f38",
+            "requires_interpretation_fields": true,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "usable_by_slot": {
+          "s1": []
+        },
+        "contradictory_slots": [],
+        "quarantine_blocked": false
+      }
+    },
+    {
+      "id": "registry-nearest-match-quarantine",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase3-evidence",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase3-evidence-subset-v1",
+        "data_asset_version": "synthetic-fixture-v1",
+        "label": "SYNTHETIC",
+        "rule3_binding_ports": [
+          {
+            "formula_slot_id": "s1",
+            "port_status": "RESOLVED",
+            "formula_target_id": "t-renal-1",
+            "organ_system_key": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "pathology_id": "path-stone-001"
+          }
+        ],
+        "documents": [
+          {
+            "document_id": "doc-t1",
+            "parent_source_id": "ps-t1",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": null,
+            "document_readability_score": null,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "items": [
+          {
+            "finding_id": "f39",
+            "document_id": "doc-t1",
+            "parent_source_id": "ps-t1",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "PRESENT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 1,
+            "value": null,
+            "unit": null,
+            "laterality": null,
+            "test_panel_identity": null,
+            "finding_identity_key": "identity-f39",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "quarantine_probe": {
+          "registry_nearest_match": true
+        }
+      },
+      "expected": {
+        "usable_by_slot": {
+          "s1": ["f39"]
+        },
+        "contradictory_slots": [],
+        "quarantine_blocked": true
+      }
+    },
+    {
+      "id": "rule3-port-unresolved",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase3-evidence",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase3-evidence-subset-v1",
+        "data_asset_version": "synthetic-fixture-v1",
+        "label": "SYNTHETIC",
+        "rule3_binding_ports": [
+          {
+            "formula_slot_id": "s1",
+            "port_status": "UNRESOLVED",
+            "formula_target_id": "t-renal-1",
+            "organ_system_key": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "pathology_id": null
+          }
+        ],
+        "documents": [
+          {
+            "document_id": "doc-t1",
+            "parent_source_id": "ps-t1",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": null,
+            "document_readability_score": null,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "items": [
+          {
+            "finding_id": "f40",
+            "document_id": "doc-t1",
+            "parent_source_id": "ps-t1",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "PRESENT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 1,
+            "value": null,
+            "unit": null,
+            "laterality": null,
+            "test_panel_identity": null,
+            "finding_identity_key": "identity-f40",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "usable_by_slot": {
+          "s1": []
+        },
+        "contradictory_slots": [],
+        "quarantine_blocked": false
+      }
+    },
+    {
+      "id": "distinct-test-identities-both-active",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase3-evidence",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase3-evidence-subset-v1",
+        "data_asset_version": "synthetic-fixture-v1",
+        "label": "SYNTHETIC",
+        "rule3_binding_ports": [
+          {
+            "formula_slot_id": "s1",
+            "port_status": "RESOLVED",
+            "formula_target_id": "t-renal-1",
+            "organ_system_key": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "pathology_id": "path-stone-001"
+          }
+        ],
+        "documents": [
+          {
+            "document_id": "doc-t1",
+            "parent_source_id": "ps-t1",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": null,
+            "document_readability_score": null,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "items": [
+          {
+            "finding_id": "f41a",
+            "document_id": "doc-t1",
+            "parent_source_id": "ps-t1",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "PRESENT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 1,
+            "value": null,
+            "unit": null,
+            "laterality": null,
+            "test_panel_identity": "panel-x",
+            "finding_identity_key": "fx",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          },
+          {
+            "finding_id": "f41b",
+            "document_id": "doc-t1",
+            "parent_source_id": "ps-t1",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "PRESENT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 1,
+            "value": null,
+            "unit": null,
+            "laterality": null,
+            "test_panel_identity": "panel-y",
+            "finding_identity_key": "fy",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "usable_by_slot": {
+          "s1": ["f41a", "f41b"]
+        },
+        "contradictory_slots": [],
+        "quarantine_blocked": false
+      }
+    },
+    {
+      "id": "different-laterality-no-supersession",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase3-evidence",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase3-evidence-subset-v1",
+        "data_asset_version": "synthetic-fixture-v1",
+        "label": "SYNTHETIC",
+        "rule3_binding_ports": [
+          {
+            "formula_slot_id": "s1",
+            "port_status": "RESOLVED",
+            "formula_target_id": "t-renal-1",
+            "organ_system_key": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "pathology_id": "path-stone-001"
+          }
+        ],
+        "documents": [
+          {
+            "document_id": "doc-lat-a",
+            "parent_source_id": "p-lat-a",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": null,
+            "document_readability_score": null,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          },
+          {
+            "document_id": "doc-lat-b",
+            "parent_source_id": "p-lat-b",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": null,
+            "document_readability_score": null,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "items": [
+          {
+            "finding_id": "f42a",
+            "document_id": "doc-lat-a",
+            "parent_source_id": "p-lat-a",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-02-01T00:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "PRESENT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 1,
+            "value": null,
+            "unit": null,
+            "laterality": "LEFT",
+            "test_panel_identity": "panel-lat",
+            "finding_identity_key": "identity-f42a",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          },
+          {
+            "finding_id": "f42b",
+            "document_id": "doc-lat-b",
+            "parent_source_id": "p-lat-b",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-01T00:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "PRESENT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 1,
+            "value": null,
+            "unit": null,
+            "laterality": "RIGHT",
+            "test_panel_identity": "panel-lat",
+            "finding_identity_key": "identity-f42b",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "usable_by_slot": {
+          "s1": ["f42a", "f42b"]
+        },
+        "contradictory_slots": [],
+        "quarantine_blocked": false
+      }
+    },
+    {
+      "id": "different-source-tier-no-supersession",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase3-evidence",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase3-evidence-subset-v1",
+        "data_asset_version": "synthetic-fixture-v1",
+        "label": "SYNTHETIC",
+        "rule3_binding_ports": [
+          {
+            "formula_slot_id": "s1",
+            "port_status": "RESOLVED",
+            "formula_target_id": "t-renal-1",
+            "organ_system_key": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "pathology_id": "path-stone-001"
+          }
+        ],
+        "documents": [
+          {
+            "document_id": "doc-tier1",
+            "parent_source_id": "p-t1",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": null,
+            "document_readability_score": null,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          },
+          {
+            "document_id": "doc-tier2",
+            "parent_source_id": "p-t2",
+            "source_type": "DIGITAL_STRUCTURED_REPORT",
+            "source_reference": "ref-digital-lims",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": 0.9,
+            "document_readability_score": null,
+            "extraction_model_derived": false,
+            "model_calibration_status": null
+          }
+        ],
+        "items": [
+          {
+            "finding_id": "f43a",
+            "document_id": "doc-tier1",
+            "parent_source_id": "p-t1",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-01T00:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "PRESENT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 1,
+            "value": null,
+            "unit": null,
+            "laterality": null,
+            "test_panel_identity": "panel-tier",
+            "finding_identity_key": "identity-f43a",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          },
+          {
+            "finding_id": "f43b",
+            "document_id": "doc-tier2",
+            "parent_source_id": "p-t2",
+            "source_type": "DIGITAL_STRUCTURED_REPORT",
+            "source_reference": "ref-digital-lims",
+            "timestamp_or_case_context": "2026-02-01T00:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "PRESENT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 0.91,
+            "value": null,
+            "unit": null,
+            "laterality": null,
+            "test_panel_identity": "panel-tier",
+            "finding_identity_key": "identity-f43b",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "usable_by_slot": {
+          "s1": ["f43a", "f43b"]
+        },
+        "contradictory_slots": [],
+        "quarantine_blocked": false
+      }
+    },
+    {
+      "id": "missing-timestamp-no-supersession",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase3-evidence",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase3-evidence-subset-v1",
+        "data_asset_version": "synthetic-fixture-v1",
+        "label": "SYNTHETIC",
+        "rule3_binding_ports": [
+          {
+            "formula_slot_id": "s1",
+            "port_status": "RESOLVED",
+            "formula_target_id": "t-renal-1",
+            "organ_system_key": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "pathology_id": "path-stone-001"
+          }
+        ],
+        "documents": [
+          {
+            "document_id": "doc-ts-a",
+            "parent_source_id": "p-ts-a",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": null,
+            "document_readability_score": null,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          },
+          {
+            "document_id": "doc-ts-b",
+            "parent_source_id": "p-ts-b",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": null,
+            "document_readability_score": null,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "items": [
+          {
+            "finding_id": "f44old",
+            "document_id": "doc-ts-a",
+            "parent_source_id": "p-ts-a",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-01T00:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "PRESENT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 1,
+            "value": null,
+            "unit": null,
+            "laterality": null,
+            "test_panel_identity": "panel-ts",
+            "finding_identity_key": "identity-f44old",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          },
+          {
+            "finding_id": "f44bad",
+            "document_id": "doc-ts-b",
+            "parent_source_id": "p-ts-b",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "not-a-valid-iso-ts",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "PRESENT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 1,
+            "value": null,
+            "unit": null,
+            "laterality": null,
+            "test_panel_identity": "panel-ts",
+            "finding_identity_key": "identity-f44bad",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "usable_by_slot": {
+          "s1": ["f44bad", "f44old"]
+        },
+        "contradictory_slots": [],
+        "quarantine_blocked": false
+      }
+    },
+    {
+      "id": "doctor-entry-no-supersede-older-photo",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase3-evidence",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase3-evidence-subset-v1",
+        "data_asset_version": "synthetic-fixture-v1",
+        "label": "SYNTHETIC",
+        "rule3_binding_ports": [
+          {
+            "formula_slot_id": "s1",
+            "port_status": "RESOLVED",
+            "formula_target_id": "t-renal-1",
+            "organ_system_key": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "pathology_id": "path-stone-001"
+          }
+        ],
+        "documents": [
+          {
+            "document_id": "doc-photo-old",
+            "parent_source_id": "p-photo-old",
+            "source_type": "DOCTOR_STRUCTURED_PHOTO_OBSERVATION",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": null,
+            "document_readability_score": null,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          },
+          {
+            "document_id": "doc-entry-new",
+            "parent_source_id": "p-entry-new",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": null,
+            "document_readability_score": null,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "items": [
+          {
+            "finding_id": "f45photo",
+            "document_id": "doc-photo-old",
+            "parent_source_id": "p-photo-old",
+            "source_type": "DOCTOR_STRUCTURED_PHOTO_OBSERVATION",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-01T00:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "PRESENT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 1,
+            "value": null,
+            "unit": null,
+            "laterality": null,
+            "test_panel_identity": "panel-clin",
+            "finding_identity_key": "identity-f45photo",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          },
+          {
+            "finding_id": "f45entry",
+            "document_id": "doc-entry-new",
+            "parent_source_id": "p-entry-new",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-02-01T00:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "PRESENT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 1,
+            "value": null,
+            "unit": null,
+            "laterality": null,
+            "test_panel_identity": "panel-clin",
+            "finding_identity_key": "identity-f45entry",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "usable_by_slot": {
+          "s1": ["f45entry", "f45photo"]
+        },
+        "contradictory_slots": [],
+        "quarantine_blocked": false
+      }
+    },
+    {
+      "id": "photo-no-supersede-older-entry",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase3-evidence",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase3-evidence-subset-v1",
+        "data_asset_version": "synthetic-fixture-v1",
+        "label": "SYNTHETIC",
+        "rule3_binding_ports": [
+          {
+            "formula_slot_id": "s1",
+            "port_status": "RESOLVED",
+            "formula_target_id": "t-renal-1",
+            "organ_system_key": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "pathology_id": "path-stone-001"
+          }
+        ],
+        "documents": [
+          {
+            "document_id": "doc-entry-old",
+            "parent_source_id": "p-entry-old2",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": null,
+            "document_readability_score": null,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          },
+          {
+            "document_id": "doc-photo-new",
+            "parent_source_id": "p-photo-new2",
+            "source_type": "DOCTOR_STRUCTURED_PHOTO_OBSERVATION",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": null,
+            "document_readability_score": null,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "items": [
+          {
+            "finding_id": "f46entry",
+            "document_id": "doc-entry-old",
+            "parent_source_id": "p-entry-old2",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-01T00:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "PRESENT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 1,
+            "value": null,
+            "unit": null,
+            "laterality": null,
+            "test_panel_identity": "panel-clin2",
+            "finding_identity_key": "identity-f46entry",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          },
+          {
+            "finding_id": "f46photo",
+            "document_id": "doc-photo-new",
+            "parent_source_id": "p-photo-new2",
+            "source_type": "DOCTOR_STRUCTURED_PHOTO_OBSERVATION",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-02-01T00:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "PRESENT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 1,
+            "value": null,
+            "unit": null,
+            "laterality": null,
+            "test_panel_identity": "panel-clin2",
+            "finding_identity_key": "identity-f46photo",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "usable_by_slot": {
+          "s1": ["f46entry", "f46photo"]
+        },
+        "contradictory_slots": [],
+        "quarantine_blocked": false
+      }
+    },
+    {
+      "id": "same-source-type-entry-newer-supersedes",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase3-evidence",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase3-evidence-subset-v1",
+        "data_asset_version": "synthetic-fixture-v1",
+        "label": "SYNTHETIC",
+        "rule3_binding_ports": [
+          {
+            "formula_slot_id": "s1",
+            "port_status": "RESOLVED",
+            "formula_target_id": "t-renal-1",
+            "organ_system_key": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "pathology_id": "path-stone-001"
+          }
+        ],
+        "documents": [
+          {
+            "document_id": "doc-e-old",
+            "parent_source_id": "p-e-old",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": null,
+            "document_readability_score": null,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          },
+          {
+            "document_id": "doc-e-new",
+            "parent_source_id": "p-e-new",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": null,
+            "document_readability_score": null,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "items": [
+          {
+            "finding_id": "f47old",
+            "document_id": "doc-e-old",
+            "parent_source_id": "p-e-old",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-01T00:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "PRESENT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 1,
+            "value": 1,
+            "unit": "mg/dl",
+            "laterality": null,
+            "test_panel_identity": "panel-entry-line",
+            "finding_identity_key": "identity-f47old",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          },
+          {
+            "finding_id": "f47new",
+            "document_id": "doc-e-new",
+            "parent_source_id": "p-e-new",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-03-01T00:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "PRESENT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 1,
+            "value": 1.1,
+            "unit": "mg/dl",
+            "laterality": null,
+            "test_panel_identity": "panel-entry-line",
+            "finding_identity_key": "identity-f47new",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "usable_by_slot": {
+          "s1": ["f47new"]
+        },
+        "contradictory_slots": [],
+        "quarantine_blocked": false,
+        "corroborating_parent_count": {
+          "s1": 1
+        }
+      }
+    },
+    {
+      "id": "different-anatomical-site-two-slots-active",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase3-evidence",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase3-evidence-subset-v1",
+        "data_asset_version": "synthetic-fixture-v1",
+        "label": "SYNTHETIC",
+        "rule3_binding_ports": [
+          {
+            "formula_slot_id": "s1",
+            "port_status": "RESOLVED",
+            "formula_target_id": "t-renal-1",
+            "organ_system_key": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "pathology_id": "path-stone-001"
+          },
+          {
+            "formula_slot_id": "s2",
+            "port_status": "RESOLVED",
+            "formula_target_id": "t-renal-1",
+            "organ_system_key": "RENAL",
+            "anatomical_site": "ureter",
+            "pathology_id": "path-stone-001"
+          }
+        ],
+        "documents": [
+          {
+            "document_id": "doc-dual-site",
+            "parent_source_id": "ps-t1",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-15T10:00:00Z",
+            "document_integrity_score": null,
+            "document_readability_score": null,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "items": [
+          {
+            "finding_id": "f48cortex",
+            "document_id": "doc-dual-site",
+            "parent_source_id": "ps-t1",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-02-01T00:00:00Z",
+            "formula_slot_id": "s1",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "kidney_cortex",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "PRESENT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 1,
+            "value": null,
+            "unit": null,
+            "laterality": null,
+            "test_panel_identity": "panel-shared-stone",
+            "finding_identity_key": "identity-f48cortex",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          },
+          {
+            "finding_id": "f48ureter",
+            "document_id": "doc-dual-site",
+            "parent_source_id": "ps-t1",
+            "source_type": "DOCTOR_STRUCTURED_ENTRY",
+            "source_reference": "ref-structured-entry",
+            "timestamp_or_case_context": "2026-01-01T00:00:00Z",
+            "formula_slot_id": "s2",
+            "formula_target_id": "t-renal-1",
+            "target_organ_system": "RENAL",
+            "anatomical_site": "ureter",
+            "target_pathology_id": "path-stone-001",
+            "target_pathology_group_id": null,
+            "assertion_status": "PRESENT",
+            "verification_status": "SUPPORTED",
+            "formula_relevance": "DIRECT",
+            "confidence_score": 1,
+            "value": null,
+            "unit": null,
+            "laterality": null,
+            "test_panel_identity": "panel-shared-stone",
+            "finding_identity_key": "identity-f48ureter",
+            "requires_interpretation_fields": false,
+            "extraction_model_derived": null,
+            "model_calibration_status": null
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "usable_by_slot": {
+          "s1": ["f48cortex"],
+          "s2": ["f48ureter"]
+        },
+        "contradictory_slots": [],
+        "quarantine_blocked": false
+      }
+    }
+  ],
+  "fingerprintNote": "Evidence pool SHA-256 uses rule4-evidence-pool-fingerprint-v1 (canonical snake_case JSON). Only fingerprintV1References carry fixed hashes; scenario expected blocks are clinical fields only.",
+  "fingerprintV1References": [
+    {
+      "referenceId": "tier1-valid-direct-ref",
+      "scenarioId": "tier1-valid-direct",
+      "canonicalPayload": "{\"data_asset_version\":\"synthetic-fixture-v1\",\"fingerprint_version\":\"rule4-evidence-pool-fingerprint-v1\",\"formula_bound_pools\":[{\"contradiction_evidence_status\":\"CLEAR\",\"contradiction_limitation_codes\":[],\"contradiction_reason_codes\":[],\"corroborating_parent_source_ids\":[\"ps-t1\"],\"corroboration_distinct_parent_count\":1,\"formula_slot_id\":\"s1\",\"formula_target_id\":\"t-renal-1\",\"ignored_finding_ids\":[],\"usable_finding_ids\":[\"f1\"]}],\"limitation_codes\":[\"PHASE3_NO_POTENCY_CASCADE\"],\"reason_codes\":[],\"registry_version\":\"rule4-reason-codes-phase3-evidence-subset-v1\",\"ruleset_version\":\"ehas2-rule4-ruleset-v1-frozen-doc-4c35469\"}",
+      "evidencePoolSha256": "A1DE3855683810D7C5C04B91718EF211B9E22EDF4EDA42A7AD30E575A8DAC9C3"
+    },
+    {
+      "referenceId": "cross-parent-supersession-ref",
+      "scenarioId": "cross-parent-supersession-newer-wins",
+      "canonicalPayload": "{\"data_asset_version\":\"synthetic-fixture-v1\",\"fingerprint_version\":\"rule4-evidence-pool-fingerprint-v1\",\"formula_bound_pools\":[{\"contradiction_evidence_status\":\"CLEAR\",\"contradiction_limitation_codes\":[],\"contradiction_reason_codes\":[],\"corroborating_parent_source_ids\":[\"p-super-new\"],\"corroboration_distinct_parent_count\":1,\"formula_slot_id\":\"s1\",\"formula_target_id\":\"t-renal-1\",\"ignored_finding_ids\":[\"f24old\"],\"usable_finding_ids\":[\"f24new\"]}],\"limitation_codes\":[\"PHASE3_NO_POTENCY_CASCADE\"],\"reason_codes\":[\"EVIDENCE_SUPERSEDED\"],\"registry_version\":\"rule4-reason-codes-phase3-evidence-subset-v1\",\"ruleset_version\":\"ehas2-rule4-ruleset-v1-frozen-doc-4c35469\"}",
+      "evidencePoolSha256": "A8CB8D525FC4CD81009EB2B0E6563C47B827993F5AA0A60C00E0AE4829BCD55C"
+    },
+    {
+      "referenceId": "contradiction-same-binding-ref",
+      "scenarioId": "contradiction-same-binding",
+      "canonicalPayload": "{\"data_asset_version\":\"synthetic-fixture-v1\",\"fingerprint_version\":\"rule4-evidence-pool-fingerprint-v1\",\"formula_bound_pools\":[{\"contradiction_evidence_status\":\"CONTRADICTORY_EVIDENCE\",\"contradiction_limitation_codes\":[\"PHASE3_NO_POTENCY_CASCADE\"],\"contradiction_reason_codes\":[\"CONTRADICTORY_EVIDENCE\"],\"corroborating_parent_source_ids\":[\"pc1\",\"pc2\"],\"corroboration_distinct_parent_count\":2,\"formula_slot_id\":\"s1\",\"formula_target_id\":\"t-renal-1\",\"ignored_finding_ids\":[],\"usable_finding_ids\":[\"f26a\",\"f26b\"]}],\"limitation_codes\":[\"PHASE3_NO_POTENCY_CASCADE\",\"SUPERSESSION_SAME_TIMESTAMP_NO_CLINICAL_WINNER\"],\"reason_codes\":[\"CONTRADICTORY_EVIDENCE\"],\"registry_version\":\"rule4-reason-codes-phase3-evidence-subset-v1\",\"ruleset_version\":\"ehas2-rule4-ruleset-v1-frozen-doc-4c35469\"}",
+      "evidencePoolSha256": "C0C887C98ED15C8E126E82C7810238E0675F03AAA860474F3F8B193914B50B98"
+    }
+  ]
+}

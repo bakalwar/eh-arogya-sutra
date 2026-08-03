@@ -6,6 +6,7 @@ from pathlib import Path
 from .registry_merge import merge_registry_entries
 from .registry_paths import (
     RULE4_REGISTRY_FIXTURE_PHASE2_RELATIVE,
+    RULE4_REGISTRY_FIXTURE_PHASE3_RELATIVE,
     RULE4_REGISTRY_FIXTURE_RELATIVE,
 )
 
@@ -20,16 +21,23 @@ def _load_json(relative: str) -> dict:
 def load_reason_code_registry() -> dict:
     phase1 = _load_json(RULE4_REGISTRY_FIXTURE_RELATIVE)
     phase2 = _load_json(RULE4_REGISTRY_FIXTURE_PHASE2_RELATIVE)
-    reason_codes = merge_registry_entries(phase1["reasonCodes"], phase2["reasonCodes"])
-    limitation_codes = merge_registry_entries(phase1["limitationCodes"], phase2["limitationCodes"])
+    phase3 = _load_json(RULE4_REGISTRY_FIXTURE_PHASE3_RELATIVE)
+    reason_codes = merge_registry_entries(
+        merge_registry_entries(phase1["reasonCodes"], phase2["reasonCodes"]),
+        phase3["reasonCodes"],
+    )
+    limitation_codes = merge_registry_entries(
+        merge_registry_entries(phase1["limitationCodes"], phase2["limitationCodes"]),
+        phase3["limitationCodes"],
+    )
     return {
-        "registryVersion": phase2["registryVersion"],
-        "scope": phase2["scope"],
-        "complete": phase2["complete"],
-        "clinicalRegistryStatus": phase2["clinicalRegistryStatus"],
-        "documentationBaselineCommit": phase2["documentationBaselineCommit"],
-        "unknownCodePolicy": phase2["unknownCodePolicy"],
-        "fullRegistryStatus": phase2["fullRegistryStatus"],
+        "registryVersion": phase3["registryVersion"],
+        "scope": phase3["scope"],
+        "complete": phase3["complete"],
+        "clinicalRegistryStatus": phase3["clinicalRegistryStatus"],
+        "documentationBaselineCommit": phase3["documentationBaselineCommit"],
+        "unknownCodePolicy": phase3["unknownCodePolicy"],
+        "fullRegistryStatus": phase3["fullRegistryStatus"],
         "reasonCodes": reason_codes,
         "limitationCodes": limitation_codes,
     }

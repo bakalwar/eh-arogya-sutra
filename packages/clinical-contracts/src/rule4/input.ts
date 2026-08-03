@@ -86,6 +86,8 @@ export type Rule4InputContract = {
   /** @deprecated Phase 2 — ignored; use structuredFrozenRedFlags */
   frozenRedFlagCodes?: readonly string[];
   rawLabKeywordPresent?: boolean;
+  /** Phase 3 — shadow-only structured evidence adapter input (in-memory). */
+  evidenceAdapter?: import('./evidence/types.js').Rule4EvidenceAdapterInput;
 };
 
 export type Rule4InputContractPhase2 = Rule4InputContract & {

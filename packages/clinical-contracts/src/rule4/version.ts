@@ -3,6 +3,9 @@ export const RULE4_CONTRACT_VERSION = 'ehas2-rule4-contract-v1-phase1' as const;
 
 export const RULE4_CONTRACT_VERSION_PHASE2 = 'ehas2-rule4-contract-v1-phase2-safety' as const;
 
+export const RULE4_CONTRACT_VERSION_PHASE3_EVIDENCE =
+  'ehas2-rule4-contract-v1-phase3-evidence' as const;
+
 export const RULE4_RULESET_VERSION_DOC_BASELINE =
   'ehas2-rule4-ruleset-v1-frozen-doc-4c35469' as const;
 
@@ -42,6 +45,16 @@ export const RULE4_REGISTRY_FIXTURE_PHASE2_RELATIVE =
 export const RULE4_REGISTRY_PHASE2_VERSION = 'rule4-reason-codes-phase2-safety-subset-v1' as const;
 
 export const RULE4_REGISTRY_PHASE2_SCOPE = 'PHASE2_SAFETY_SUBSET' as const;
+
+export const RULE4_REGISTRY_FIXTURE_PHASE3_RELATIVE =
+  'fixtures/rule4/reason-code-registry.phase3-evidence-subset.v1.json' as const;
+
+export const RULE4_REGISTRY_PHASE3_VERSION =
+  'rule4-reason-codes-phase3-evidence-subset-v1' as const;
+
+export const RULE4_REGISTRY_PHASE3_SCOPE = 'PHASE3_EVIDENCE_SUBSET' as const;
+
+export const RULE4_REGISTRY_PHASE3_COMPLETE = false as const;
 
 export const RULE4_FORBIDDEN_SELECTOR_INPUT_FIELDS = [
   'global_text',

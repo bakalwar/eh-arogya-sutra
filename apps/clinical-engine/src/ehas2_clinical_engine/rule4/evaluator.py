@@ -133,6 +133,16 @@ def _evaluate_phase2(input_contract: dict) -> dict:
     return core
 
 
+def evaluate_rule4_shadow_bundle(input_contract: dict) -> dict:
+    result = evaluate_rule4_empty(input_contract)
+    evidence = None
+    if input_contract.get("engine_mode") == "shadow" and input_contract.get("evidence_adapter"):
+        from .evidence.evaluate_evidence_adapter import evaluate_evidence_adapter
+
+        evidence = evaluate_evidence_adapter(input_contract["evidence_adapter"])
+    return {"result": result, "evidence_adapter": evidence}
+
+
 def evaluate_rule4_empty(input_contract: dict) -> dict:
     validate_rule4_input_contract(input_contract)
     mode = input_contract.get("engine_mode", "off")
