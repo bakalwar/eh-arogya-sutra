@@ -24,6 +24,10 @@ RULE4_REGISTRY_FIXTURE_PHASE6_RELATIVE = (
     "fixtures/rule4/reason-code-registry.phase6-structured-severity-subset.v1.json"
 )
 
+RULE4_REGISTRY_FIXTURE_PHASE7_RELATIVE = (
+    "fixtures/rule4/reason-code-registry.phase7-candidate-eligibility-subset.v1.json"
+)
+
 RULE4_CONTRACT_VERSION = "ehas2-rule4-contract-v1-phase1"
 RULE4_CONTRACT_VERSION_PHASE2 = "ehas2-rule4-contract-v1-phase2-safety"
 RULE4_CONTRACT_VERSION_PHASE3_EVIDENCE = "ehas2-rule4-contract-v1-phase3-evidence"
@@ -33,6 +37,9 @@ RULE4_CONTRACT_VERSION_PHASE5_STRUCTURED_PHASE = (
 )
 RULE4_CONTRACT_VERSION_PHASE6_STRUCTURED_SEVERITY = (
     "ehas2-rule4-contract-v1-phase6-structured-severity"
+)
+RULE4_CONTRACT_VERSION_PHASE7_CANDIDATE_ELIGIBILITY = (
+    "ehas2-rule4-contract-v1-phase7-candidate-eligibility"
 )
 
 RULE4_REGISTRY_VERSION = "rule4-reason-codes-phase1-foundation-subset-v1"

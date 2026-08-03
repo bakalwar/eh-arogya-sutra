@@ -18,6 +18,8 @@ import { evaluatePhaseAdapter } from './phase/evaluatePhaseAdapter.js';
 import type { Rule4PhaseAdapterOutput } from './phase/types.js';
 import { evaluateSeverityAdapter } from './severity/evaluateSeverityAdapter.js';
 import type { Rule4SeverityAdapterOutput } from './severity/types.js';
+import { evaluateEligibilityAdapter } from './eligibility/evaluateEligibilityAdapter.js';
+import type { Rule4EligibilityAdapterOutput } from './eligibility/types.js';
 import {
   RULE4_CONTRACT_VERSION,
   RULE4_CONTRACT_VERSION_PHASE2,
@@ -246,6 +248,7 @@ export type Rule4ShadowEvaluationBundle = {
   polarityRouting: Rule4PolarityAdapterOutput | null;
   phaseResolution: Rule4PhaseAdapterOutput | null;
   severityResolution: Rule4SeverityAdapterOutput | null;
+  eligibilityResolution: Rule4EligibilityAdapterOutput | null;
 };
 
 /**
@@ -257,6 +260,7 @@ export function evaluateRule4ShadowBundle(input: Rule4InputContract): Rule4Shado
   let polarityRouting: Rule4PolarityAdapterOutput | null = null;
   let phaseResolution: Rule4PhaseAdapterOutput | null = null;
   let severityResolution: Rule4SeverityAdapterOutput | null = null;
+  let eligibilityResolution: Rule4EligibilityAdapterOutput | null = null;
 
   if (input.engineMode === 'shadow') {
     if (input.evidenceAdapter) {
@@ -286,7 +290,24 @@ export function evaluateRule4ShadowBundle(input: Rule4InputContract): Rule4Shado
         bindingGateMandatory: true,
       });
     }
+    if (input.eligibilityAdapter) {
+      eligibilityResolution = evaluateEligibilityAdapter(input.eligibilityAdapter, {
+        safetyGate: result.safetyGate ?? null,
+        evidenceAdapter,
+        polarityRouting,
+        phaseResolution,
+        severityResolution,
+        bindingGateMandatory: true,
+      });
+    }
   }
 
-  return { result, evidenceAdapter, polarityRouting, phaseResolution, severityResolution };
+  return {
+    result,
+    evidenceAdapter,
+    polarityRouting,
+    phaseResolution,
+    severityResolution,
+    eligibilityResolution,
+  };
 }

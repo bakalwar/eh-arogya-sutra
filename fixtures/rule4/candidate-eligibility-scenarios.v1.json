@@ -1,0 +1,3618 @@
+{
+  "fixtureVersion": "rule4-candidate-eligibility-scenarios-v1",
+  "scenarioCount": 50,
+  "fingerprintNote": "fingerprintV1References fixed independently",
+  "fingerprintV1References": [
+    {
+      "reference_id": "neg-both-d1-d2",
+      "scenario_id": "neg-both-d1-d2",
+      "canonical_payload": "{\"fingerprint_version\":\"rule4-candidate-eligibility-fingerprint-v1\",\"limitation_codes\":[\"PHASE7_NO_NUMERIC_SELECTION\",\"PHASE8_TEMPERAMENT_TIE_BREAK_DEFERRED\",\"TRUSTED_SYNTHETIC_ELIGIBILITY_BYPASS_TEST_ONLY\"],\"reason_codes\":[\"ELIGIBILITY_ALONE_NOT_A_POTENCY_SELECTOR\",\"FAMILY_ELIGIBILITY_NOT_NUMERIC_SELECTION\"],\"registry_version\":\"rule4-reason-codes-phase7-candidate-eligibility-subset-v1\",\"ruleset_version\":\"ehas2-rule4-ruleset-v1-frozen-doc-4c35469\",\"selection_status\":\"NOT_STARTED\",\"slot_resolutions\":[{\"blocking_gate_codes\":[],\"candidate_family\":\"BOTH_D1_D2_ELIGIBLE\",\"eligibility_status\":\"FAMILY_ELIGIBLE\",\"eligible_family_options\":[\"BOTH_D1_D2_ELIGIBLE\"],\"family_gate_status\":\"COMPLETE\",\"formula_slot_id\":\"s1\",\"formula_target_id\":\"t1\",\"gate_results\":[{\"evidence_item_ids\":[],\"gate_id\":\"COMMON_NEG_PRECONDITIONS\",\"limitation_codes\":[],\"outcome\":\"PASS\",\"reason_codes\":[]},{\"evidence_item_ids\":[\"e1\"],\"gate_id\":\"NEG_D1_HYPOFUNCTION_EVIDENCE\",\"limitation_codes\":[],\"outcome\":\"PASS\",\"reason_codes\":[]},{\"evidence_item_ids\":[],\"gate_id\":\"NEG_D1_SEVERITY_BAND\",\"limitation_codes\":[],\"outcome\":\"PASS\",\"reason_codes\":[]},{\"evidence_item_ids\":[\"e2\"],\"gate_id\":\"NEG_D2_MODERATING_EVIDENCE\",\"limitation_codes\":[],\"outcome\":\"PASS\",\"reason_codes\":[]},{\"evidence_item_ids\":[],\"gate_id\":\"UPSTREAM_SEVERITY_READY\",\"limitation_codes\":[],\"outcome\":\"PASS\",\"reason_codes\":[]}],\"limitation_codes\":[\"PHASE7_NO_NUMERIC_SELECTION\"],\"reason_codes\":[],\"selected_cascade\":null,\"selected_dilution\":null,\"selection_status\":\"NOT_STARTED\",\"target_role\":\"STANDARD_FORMULA_TARGET\",\"upstream_context_status\":\"READY_FOR_FUTURE_GATE_EVALUATION\"}]}",
+      "candidate_eligibility_sha256": "8DC1AA7E2BD17055302AA1A51D093FD5F437F22181630A65C8363C0CD0E0FFFC"
+    },
+    {
+      "reference_id": "pos-d30-family",
+      "scenario_id": "pos-d30-family",
+      "canonical_payload": "{\"fingerprint_version\":\"rule4-candidate-eligibility-fingerprint-v1\",\"limitation_codes\":[\"PHASE7_NO_NUMERIC_SELECTION\",\"PHASE8_TEMPERAMENT_TIE_BREAK_DEFERRED\",\"TRUSTED_SYNTHETIC_ELIGIBILITY_BYPASS_TEST_ONLY\"],\"reason_codes\":[\"ELIGIBILITY_ALONE_NOT_A_POTENCY_SELECTOR\",\"FAMILY_ELIGIBILITY_NOT_NUMERIC_SELECTION\"],\"registry_version\":\"rule4-reason-codes-phase7-candidate-eligibility-subset-v1\",\"ruleset_version\":\"ehas2-rule4-ruleset-v1-frozen-doc-4c35469\",\"selection_status\":\"NOT_STARTED\",\"slot_resolutions\":[{\"blocking_gate_codes\":[],\"candidate_family\":\"D30_FAMILY_ELIGIBLE\",\"eligibility_status\":\"FAMILY_ELIGIBLE\",\"eligible_family_options\":[\"D30_FAMILY_ELIGIBLE\"],\"family_gate_status\":\"COMPLETE\",\"formula_slot_id\":\"s1\",\"formula_target_id\":\"t1\",\"gate_results\":[{\"evidence_item_ids\":[],\"gate_id\":\"COMMON_POS_PRECONDITIONS\",\"limitation_codes\":[],\"outcome\":\"PASS\",\"reason_codes\":[]},{\"evidence_item_ids\":[\"e1\"],\"gate_id\":\"POS_D30F_COMPLETE\",\"limitation_codes\":[],\"outcome\":\"PASS\",\"reason_codes\":[]},{\"evidence_item_ids\":[],\"gate_id\":\"UPSTREAM_PHASE_READY\",\"limitation_codes\":[],\"outcome\":\"PASS\",\"reason_codes\":[]},{\"evidence_item_ids\":[],\"gate_id\":\"UPSTREAM_SEVERITY_READY\",\"limitation_codes\":[],\"outcome\":\"PASS\",\"reason_codes\":[]}],\"limitation_codes\":[\"PHASE7_NO_NUMERIC_SELECTION\"],\"reason_codes\":[],\"selected_cascade\":null,\"selected_dilution\":null,\"selection_status\":\"NOT_STARTED\",\"target_role\":\"STANDARD_FORMULA_TARGET\",\"upstream_context_status\":\"READY_FOR_FUTURE_GATE_EVALUATION\"}]}",
+      "candidate_eligibility_sha256": "CC836D0661513284638FF2B44A28C093882838BC3C741695D81349017DE1BF74"
+    },
+    {
+      "reference_id": "pos-d60-fallback-ready",
+      "scenario_id": "pos-d60-fallback-ready",
+      "canonical_payload": "{\"fingerprint_version\":\"rule4-candidate-eligibility-fingerprint-v1\",\"limitation_codes\":[\"PHASE7_NO_NUMERIC_SELECTION\",\"PHASE8_TEMPERAMENT_TIE_BREAK_DEFERRED\",\"TRUSTED_SYNTHETIC_ELIGIBILITY_BYPASS_TEST_ONLY\"],\"reason_codes\":[\"ELIGIBILITY_ALONE_NOT_A_POTENCY_SELECTOR\",\"FAMILY_ELIGIBILITY_NOT_NUMERIC_SELECTION\"],\"registry_version\":\"rule4-reason-codes-phase7-candidate-eligibility-subset-v1\",\"ruleset_version\":\"ehas2-rule4-ruleset-v1-frozen-doc-4c35469\",\"selection_status\":\"NOT_STARTED\",\"slot_resolutions\":[{\"blocking_gate_codes\":[],\"candidate_family\":\"D60_D10_FALLBACK_READY\",\"eligibility_status\":\"FAMILY_ELIGIBLE\",\"eligible_family_options\":[\"D60_D10_FALLBACK_READY\"],\"family_gate_status\":\"COMPLETE\",\"formula_slot_id\":\"s1\",\"formula_target_id\":\"t1\",\"gate_results\":[{\"evidence_item_ids\":[],\"gate_id\":\"COMMON_POS_PRECONDITIONS\",\"limitation_codes\":[],\"outcome\":\"PASS\",\"reason_codes\":[]},{\"evidence_item_ids\":[\"e1\"],\"gate_id\":\"POS_D60_FALLBACK_READY\",\"limitation_codes\":[],\"outcome\":\"PASS\",\"reason_codes\":[]},{\"evidence_item_ids\":[],\"gate_id\":\"UPSTREAM_PHASE_READY\",\"limitation_codes\":[],\"outcome\":\"PASS\",\"reason_codes\":[]},{\"evidence_item_ids\":[],\"gate_id\":\"UPSTREAM_SEVERITY_READY\",\"limitation_codes\":[],\"outcome\":\"PASS\",\"reason_codes\":[]}],\"limitation_codes\":[\"PHASE7_NO_NUMERIC_SELECTION\"],\"reason_codes\":[],\"selected_cascade\":null,\"selected_dilution\":null,\"selection_status\":\"NOT_STARTED\",\"target_role\":\"STANDARD_FORMULA_TARGET\",\"upstream_context_status\":\"READY_FOR_FUTURE_GATE_EVALUATION\"}]}",
+      "candidate_eligibility_sha256": "406416B97FC0E643F46B30AE82AD41E5A4FC7C7569B611E9CE20AC18E7632383"
+    },
+    {
+      "reference_id": "missing-gate-no-family",
+      "scenario_id": "missing-gate-no-family",
+      "canonical_payload": "{\"fingerprint_version\":\"rule4-candidate-eligibility-fingerprint-v1\",\"limitation_codes\":[\"PHASE7_NO_NUMERIC_SELECTION\",\"PHASE8_TEMPERAMENT_TIE_BREAK_DEFERRED\",\"TRUSTED_SYNTHETIC_ELIGIBILITY_BYPASS_TEST_ONLY\"],\"reason_codes\":[\"D1_HYPOFUNCTION_EVIDENCE_MISSING\",\"D2_MODERATING_EVIDENCE_MISSING\",\"ELIGIBILITY_ALONE_NOT_A_POTENCY_SELECTOR\",\"FAMILY_ELIGIBILITY_NOT_NUMERIC_SELECTION\"],\"registry_version\":\"rule4-reason-codes-phase7-candidate-eligibility-subset-v1\",\"ruleset_version\":\"ehas2-rule4-ruleset-v1-frozen-doc-4c35469\",\"selection_status\":\"NOT_STARTED\",\"slot_resolutions\":[{\"blocking_gate_codes\":[\"NEG_D1_HYPOFUNCTION_EVIDENCE\",\"NEG_D2_MODERATING_EVIDENCE\"],\"candidate_family\":\"NONE\",\"eligibility_status\":\"NO_FAMILY_ELIGIBLE\",\"eligible_family_options\":[],\"family_gate_status\":\"COMPLETE\",\"formula_slot_id\":\"s1\",\"formula_target_id\":\"t1\",\"gate_results\":[{\"evidence_item_ids\":[],\"gate_id\":\"COMMON_NEG_PRECONDITIONS\",\"limitation_codes\":[],\"outcome\":\"PASS\",\"reason_codes\":[]},{\"evidence_item_ids\":[],\"gate_id\":\"NEG_D1_HYPOFUNCTION_EVIDENCE\",\"limitation_codes\":[],\"outcome\":\"MISSING_INPUT\",\"reason_codes\":[\"D1_HYPOFUNCTION_EVIDENCE_MISSING\"]},{\"evidence_item_ids\":[],\"gate_id\":\"NEG_D2_MODERATING_EVIDENCE\",\"limitation_codes\":[],\"outcome\":\"MISSING_INPUT\",\"reason_codes\":[\"D2_MODERATING_EVIDENCE_MISSING\"]},{\"evidence_item_ids\":[],\"gate_id\":\"UPSTREAM_SEVERITY_READY\",\"limitation_codes\":[],\"outcome\":\"PASS\",\"reason_codes\":[]}],\"limitation_codes\":[\"PHASE7_NO_NUMERIC_SELECTION\"],\"reason_codes\":[\"D1_HYPOFUNCTION_EVIDENCE_MISSING\",\"D2_MODERATING_EVIDENCE_MISSING\"],\"selected_cascade\":null,\"selected_dilution\":null,\"selection_status\":\"NOT_STARTED\",\"target_role\":\"STANDARD_FORMULA_TARGET\",\"upstream_context_status\":\"READY_FOR_FUTURE_GATE_EVALUATION\"}]}",
+      "candidate_eligibility_sha256": "D2F60904F9683B8539F5DA0C71B184EBC4820D0CBF6C2AFC56CCA9DAA0CBF16D"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "neg-both-d1-d2",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase7-candidate-eligibility",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase7-candidate-eligibility-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_eligibility_bypass": true,
+        "formula_slot_ids": ["s1"],
+        "formula_eligibility_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "common_gate_bundle": {
+              "neg_complete": true,
+              "pos_complete": false,
+              "organ_system_resolved": true,
+              "evidence_item_ids": ["e1"]
+            },
+            "structured_hypofunction_evidence": {
+              "pass": true,
+              "evidence_item_ids": ["e1"]
+            },
+            "structured_moderating_force_evidence": {
+              "pass": true,
+              "evidence_item_ids": ["e2"]
+            }
+          }
+        ]
+      },
+      "context": {
+        "polarity_routing": {
+          "slot_routings": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "rule2_record_id": "r1",
+              "disease_polarity": "NEGATIVE",
+              "required_therapeutic_polarity": "POSITIVE",
+              "resolution_status": "RESOLVED",
+              "pathway": "NEGATIVE_DISEASE_POSITIVE_THERAPEUTIC_GROUP",
+              "potency_status": "NOT_EVALUATED",
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": []
+            }
+          ]
+        },
+        "severity_resolution": {
+          "slot_resolutions": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "target_role": "STANDARD_FORMULA_TARGET",
+              "severity_status": "RESOLVED_NUMERIC",
+              "severity_score": 4,
+              "severity_band": "MODERATE",
+              "severity_resolution_source": "DOCTOR_STRUCTURED",
+              "binding_status": "BOUND",
+              "evidence_item_ids": ["e1"],
+              "corroborating_source_ids": [],
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": [],
+              "upstream_context_status": "NOT_EVALUATED"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "eligibility_status": "FAMILY_ELIGIBLE",
+        "candidate_family": "BOTH_D1_D2_ELIGIBLE",
+        "selection_status": "NOT_STARTED"
+      }
+    },
+    {
+      "id": "neg-d1-only",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase7-candidate-eligibility",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase7-candidate-eligibility-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_eligibility_bypass": true,
+        "formula_slot_ids": ["s1"],
+        "formula_eligibility_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "common_gate_bundle": {
+              "neg_complete": true,
+              "pos_complete": false,
+              "organ_system_resolved": true,
+              "evidence_item_ids": ["e1"]
+            },
+            "structured_hypofunction_evidence": {
+              "pass": true,
+              "evidence_item_ids": ["e1"]
+            }
+          }
+        ]
+      },
+      "context": {
+        "polarity_routing": {
+          "slot_routings": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "rule2_record_id": "r1",
+              "disease_polarity": "NEGATIVE",
+              "required_therapeutic_polarity": "POSITIVE",
+              "resolution_status": "RESOLVED",
+              "pathway": "NEGATIVE_DISEASE_POSITIVE_THERAPEUTIC_GROUP",
+              "potency_status": "NOT_EVALUATED",
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": []
+            }
+          ]
+        },
+        "severity_resolution": {
+          "slot_resolutions": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "target_role": "STANDARD_FORMULA_TARGET",
+              "severity_status": "RESOLVED_NUMERIC",
+              "severity_score": 4,
+              "severity_band": "MODERATE",
+              "severity_resolution_source": "DOCTOR_STRUCTURED",
+              "binding_status": "BOUND",
+              "evidence_item_ids": ["e1"],
+              "corroborating_source_ids": [],
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": [],
+              "upstream_context_status": "NOT_EVALUATED"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "eligibility_status": "FAMILY_ELIGIBLE",
+        "candidate_family": "D1_ELIGIBLE",
+        "selection_status": "NOT_STARTED"
+      }
+    },
+    {
+      "id": "neg-d2-only",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase7-candidate-eligibility",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase7-candidate-eligibility-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_eligibility_bypass": true,
+        "formula_slot_ids": ["s1"],
+        "formula_eligibility_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "common_gate_bundle": {
+              "neg_complete": true,
+              "pos_complete": false,
+              "organ_system_resolved": true,
+              "evidence_item_ids": ["e1"]
+            },
+            "structured_moderating_force_evidence": {
+              "pass": true,
+              "evidence_item_ids": ["e2"]
+            }
+          }
+        ]
+      },
+      "context": {
+        "polarity_routing": {
+          "slot_routings": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "rule2_record_id": "r1",
+              "disease_polarity": "NEGATIVE",
+              "required_therapeutic_polarity": "POSITIVE",
+              "resolution_status": "RESOLVED",
+              "pathway": "NEGATIVE_DISEASE_POSITIVE_THERAPEUTIC_GROUP",
+              "potency_status": "NOT_EVALUATED",
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": []
+            }
+          ]
+        },
+        "severity_resolution": {
+          "slot_resolutions": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "target_role": "STANDARD_FORMULA_TARGET",
+              "severity_status": "RESOLVED_NUMERIC",
+              "severity_score": 4,
+              "severity_band": "MODERATE",
+              "severity_resolution_source": "DOCTOR_STRUCTURED",
+              "binding_status": "BOUND",
+              "evidence_item_ids": ["e1"],
+              "corroborating_source_ids": [],
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": [],
+              "upstream_context_status": "NOT_EVALUATED"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "eligibility_status": "FAMILY_ELIGIBLE",
+        "candidate_family": "D2_ELIGIBLE",
+        "selection_status": "NOT_STARTED"
+      }
+    },
+    {
+      "id": "neg-high-d1-prohibited",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase7-candidate-eligibility",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase7-candidate-eligibility-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_eligibility_bypass": true,
+        "formula_slot_ids": ["s1"],
+        "formula_eligibility_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "common_gate_bundle": {
+              "neg_complete": true,
+              "pos_complete": false,
+              "organ_system_resolved": true,
+              "evidence_item_ids": ["e1"]
+            },
+            "structured_moderating_force_evidence": {
+              "pass": true,
+              "evidence_item_ids": ["e2"]
+            }
+          }
+        ]
+      },
+      "context": {
+        "polarity_routing": {
+          "slot_routings": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "rule2_record_id": "r1",
+              "disease_polarity": "NEGATIVE",
+              "required_therapeutic_polarity": "POSITIVE",
+              "resolution_status": "RESOLVED",
+              "pathway": "NEGATIVE_DISEASE_POSITIVE_THERAPEUTIC_GROUP",
+              "potency_status": "NOT_EVALUATED",
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": []
+            }
+          ]
+        },
+        "severity_resolution": {
+          "slot_resolutions": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "target_role": "STANDARD_FORMULA_TARGET",
+              "severity_status": "RESOLVED_NUMERIC",
+              "severity_score": 8,
+              "severity_band": "HIGH",
+              "severity_resolution_source": "DOCTOR_STRUCTURED",
+              "binding_status": "BOUND",
+              "evidence_item_ids": ["e1"],
+              "corroborating_source_ids": [],
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": [],
+              "upstream_context_status": "NOT_EVALUATED"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "candidate_family": "D2_ELIGIBLE",
+        "selection_status": "NOT_STARTED"
+      }
+    },
+    {
+      "id": "neg-high-d2-incomplete",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase7-candidate-eligibility",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase7-candidate-eligibility-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_eligibility_bypass": true,
+        "formula_slot_ids": ["s1"],
+        "formula_eligibility_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "common_gate_bundle": {
+              "neg_complete": true,
+              "pos_complete": false,
+              "organ_system_resolved": true,
+              "evidence_item_ids": ["e1"]
+            }
+          }
+        ]
+      },
+      "context": {
+        "polarity_routing": {
+          "slot_routings": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "rule2_record_id": "r1",
+              "disease_polarity": "NEGATIVE",
+              "required_therapeutic_polarity": "POSITIVE",
+              "resolution_status": "RESOLVED",
+              "pathway": "NEGATIVE_DISEASE_POSITIVE_THERAPEUTIC_GROUP",
+              "potency_status": "NOT_EVALUATED",
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": []
+            }
+          ]
+        },
+        "severity_resolution": {
+          "slot_resolutions": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "target_role": "STANDARD_FORMULA_TARGET",
+              "severity_status": "RESOLVED_NUMERIC",
+              "severity_score": 8,
+              "severity_band": "HIGH",
+              "severity_resolution_source": "DOCTOR_STRUCTURED",
+              "binding_status": "BOUND",
+              "evidence_item_ids": ["e1"],
+              "corroborating_source_ids": [],
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": [],
+              "upstream_context_status": "NOT_EVALUATED"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "candidate_family": "NONE",
+        "selection_status": "NOT_STARTED"
+      }
+    },
+    {
+      "id": "pos-d3-d5-family",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase7-candidate-eligibility",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase7-candidate-eligibility-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_eligibility_bypass": true,
+        "formula_slot_ids": ["s1"],
+        "formula_eligibility_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "common_gate_bundle": {
+              "neg_complete": false,
+              "pos_complete": true,
+              "organ_system_resolved": true,
+              "evidence_item_ids": ["e1"]
+            },
+            "structured_sensitivity": {
+              "executable_status": "PASS",
+              "close_d05_qualifies_d5": false,
+              "evidence_item_ids": ["e3"]
+            }
+          }
+        ]
+      },
+      "context": {
+        "polarity_routing": {
+          "slot_routings": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "rule2_record_id": "r1",
+              "disease_polarity": "POSITIVE",
+              "required_therapeutic_polarity": "NEGATIVE",
+              "resolution_status": "RESOLVED",
+              "pathway": "POSITIVE_DISEASE_NEGATIVE_THERAPEUTIC_GROUP",
+              "potency_status": "NOT_EVALUATED",
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": []
+            }
+          ]
+        },
+        "severity_resolution": {
+          "slot_resolutions": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "target_role": "STANDARD_FORMULA_TARGET",
+              "severity_status": "RESOLVED_NUMERIC",
+              "severity_score": 3,
+              "severity_band": "LOW",
+              "severity_resolution_source": "DOCTOR_STRUCTURED",
+              "binding_status": "BOUND",
+              "evidence_item_ids": ["e1"],
+              "corroborating_source_ids": [],
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": [],
+              "upstream_context_status": "NOT_EVALUATED"
+            }
+          ]
+        },
+        "phase_resolution": {
+          "slot_resolutions": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "target_role": "STANDARD_FORMULA_TARGET",
+              "phase_status": "RESOLVED_BY_EVIDENCE",
+              "resolved_phase": "ACUTE",
+              "phase_resolution_source": "STRUCTURED_EVIDENCE",
+              "binding_status": "BOUND",
+              "evidence_item_ids": ["e1"],
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": []
+            }
+          ]
+        }
+      },
+      "expected": {
+        "candidate_family": "D3_D5_FAMILY_ELIGIBLE",
+        "selection_status": "NOT_STARTED"
+      }
+    },
+    {
+      "id": "pos-d10-family",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase7-candidate-eligibility",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase7-candidate-eligibility-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_eligibility_bypass": true,
+        "formula_slot_ids": ["s1"],
+        "formula_eligibility_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "common_gate_bundle": {
+              "neg_complete": false,
+              "pos_complete": true,
+              "organ_system_resolved": true,
+              "evidence_item_ids": ["e1"]
+            },
+            "structured_sensitivity": {
+              "executable_status": "PASS",
+              "close_d05_qualifies_d5": false,
+              "evidence_item_ids": ["e3"]
+            },
+            "d10_path_variant": "PATH_B"
+          }
+        ]
+      },
+      "context": {
+        "polarity_routing": {
+          "slot_routings": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "rule2_record_id": "r1",
+              "disease_polarity": "POSITIVE",
+              "required_therapeutic_polarity": "NEGATIVE",
+              "resolution_status": "RESOLVED",
+              "pathway": "POSITIVE_DISEASE_NEGATIVE_THERAPEUTIC_GROUP",
+              "potency_status": "NOT_EVALUATED",
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": []
+            }
+          ]
+        },
+        "severity_resolution": {
+          "slot_resolutions": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "target_role": "STANDARD_FORMULA_TARGET",
+              "severity_status": "RESOLVED_NUMERIC",
+              "severity_score": 5,
+              "severity_band": "MODERATE",
+              "severity_resolution_source": "DOCTOR_STRUCTURED",
+              "binding_status": "BOUND",
+              "evidence_item_ids": ["e1"],
+              "corroborating_source_ids": [],
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": [],
+              "upstream_context_status": "NOT_EVALUATED"
+            }
+          ]
+        },
+        "phase_resolution": {
+          "slot_resolutions": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "target_role": "STANDARD_FORMULA_TARGET",
+              "phase_status": "RESOLVED_BY_EVIDENCE",
+              "resolved_phase": "SUB_ACUTE",
+              "phase_resolution_source": "STRUCTURED_EVIDENCE",
+              "binding_status": "BOUND",
+              "evidence_item_ids": ["e1"],
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": []
+            }
+          ]
+        }
+      },
+      "expected": {
+        "candidate_family": "D10_FAMILY_ELIGIBLE",
+        "selection_status": "NOT_STARTED"
+      }
+    },
+    {
+      "id": "pos-d30-family",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase7-candidate-eligibility",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase7-candidate-eligibility-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_eligibility_bypass": true,
+        "formula_slot_ids": ["s1"],
+        "formula_eligibility_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "common_gate_bundle": {
+              "neg_complete": false,
+              "pos_complete": true,
+              "organ_system_resolved": true,
+              "evidence_item_ids": ["e1"]
+            },
+            "d30f_structured_bundle": {
+              "complete": true,
+              "pathway_b_high_severity_manifestation": true,
+              "evidence_item_ids": ["e1"]
+            }
+          }
+        ]
+      },
+      "context": {
+        "polarity_routing": {
+          "slot_routings": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "rule2_record_id": "r1",
+              "disease_polarity": "POSITIVE",
+              "required_therapeutic_polarity": "NEGATIVE",
+              "resolution_status": "RESOLVED",
+              "pathway": "POSITIVE_DISEASE_NEGATIVE_THERAPEUTIC_GROUP",
+              "potency_status": "NOT_EVALUATED",
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": []
+            }
+          ]
+        },
+        "severity_resolution": {
+          "slot_resolutions": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "target_role": "STANDARD_FORMULA_TARGET",
+              "severity_status": "RESOLVED_NUMERIC",
+              "severity_score": 8,
+              "severity_band": "HIGH",
+              "severity_resolution_source": "DOCTOR_STRUCTURED",
+              "binding_status": "BOUND",
+              "evidence_item_ids": ["e1"],
+              "corroborating_source_ids": [],
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": [],
+              "upstream_context_status": "NOT_EVALUATED"
+            }
+          ]
+        },
+        "phase_resolution": {
+          "slot_resolutions": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "target_role": "STANDARD_FORMULA_TARGET",
+              "phase_status": "RESOLVED_BY_EVIDENCE",
+              "resolved_phase": "ACUTE",
+              "phase_resolution_source": "STRUCTURED_EVIDENCE",
+              "binding_status": "BOUND",
+              "evidence_item_ids": ["e1"],
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": []
+            }
+          ]
+        }
+      },
+      "expected": {
+        "candidate_family": "D30_FAMILY_ELIGIBLE",
+        "selection_status": "NOT_STARTED"
+      }
+    },
+    {
+      "id": "pos-d30-incomplete",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase7-candidate-eligibility",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase7-candidate-eligibility-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_eligibility_bypass": true,
+        "formula_slot_ids": ["s1"],
+        "formula_eligibility_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "common_gate_bundle": {
+              "neg_complete": false,
+              "pos_complete": true,
+              "organ_system_resolved": true,
+              "evidence_item_ids": ["e1"]
+            }
+          }
+        ]
+      },
+      "context": {
+        "polarity_routing": {
+          "slot_routings": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "rule2_record_id": "r1",
+              "disease_polarity": "POSITIVE",
+              "required_therapeutic_polarity": "NEGATIVE",
+              "resolution_status": "RESOLVED",
+              "pathway": "POSITIVE_DISEASE_NEGATIVE_THERAPEUTIC_GROUP",
+              "potency_status": "NOT_EVALUATED",
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": []
+            }
+          ]
+        },
+        "severity_resolution": {
+          "slot_resolutions": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "target_role": "STANDARD_FORMULA_TARGET",
+              "severity_status": "RESOLVED_NUMERIC",
+              "severity_score": 8,
+              "severity_band": "HIGH",
+              "severity_resolution_source": "DOCTOR_STRUCTURED",
+              "binding_status": "BOUND",
+              "evidence_item_ids": ["e1"],
+              "corroborating_source_ids": [],
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": [],
+              "upstream_context_status": "NOT_EVALUATED"
+            }
+          ]
+        },
+        "phase_resolution": {
+          "slot_resolutions": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "target_role": "STANDARD_FORMULA_TARGET",
+              "phase_status": "RESOLVED_BY_EVIDENCE",
+              "resolved_phase": "ACUTE",
+              "phase_resolution_source": "STRUCTURED_EVIDENCE",
+              "binding_status": "BOUND",
+              "evidence_item_ids": ["e1"],
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": []
+            }
+          ]
+        }
+      },
+      "expected": {
+        "candidate_family": "NONE",
+        "selection_status": "NOT_STARTED"
+      }
+    },
+    {
+      "id": "pos-d60-fallback-ready",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase7-candidate-eligibility",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase7-candidate-eligibility-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_eligibility_bypass": true,
+        "formula_slot_ids": ["s1"],
+        "formula_eligibility_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "common_gate_bundle": {
+              "neg_complete": false,
+              "pos_complete": true,
+              "organ_system_resolved": true,
+              "evidence_item_ids": ["e1"]
+            },
+            "d60_fallback_structured": {
+              "ready": true,
+              "evidence_item_ids": ["e1"]
+            }
+          }
+        ]
+      },
+      "context": {
+        "polarity_routing": {
+          "slot_routings": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "rule2_record_id": "r1",
+              "disease_polarity": "POSITIVE",
+              "required_therapeutic_polarity": "NEGATIVE",
+              "resolution_status": "RESOLVED",
+              "pathway": "POSITIVE_DISEASE_NEGATIVE_THERAPEUTIC_GROUP",
+              "potency_status": "NOT_EVALUATED",
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": []
+            }
+          ]
+        },
+        "severity_resolution": {
+          "slot_resolutions": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "target_role": "STANDARD_FORMULA_TARGET",
+              "severity_status": "RESOLVED_NUMERIC",
+              "severity_score": 5,
+              "severity_band": "MODERATE",
+              "severity_resolution_source": "DOCTOR_STRUCTURED",
+              "binding_status": "BOUND",
+              "evidence_item_ids": ["e1"],
+              "corroborating_source_ids": [],
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": [],
+              "upstream_context_status": "NOT_EVALUATED"
+            }
+          ]
+        },
+        "phase_resolution": {
+          "slot_resolutions": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "target_role": "STANDARD_FORMULA_TARGET",
+              "phase_status": "RESOLVED_BY_EVIDENCE",
+              "resolved_phase": "DEEP_CHRONIC",
+              "phase_resolution_source": "STRUCTURED_EVIDENCE",
+              "binding_status": "BOUND",
+              "evidence_item_ids": ["e1"],
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": []
+            }
+          ]
+        }
+      },
+      "expected": {
+        "candidate_family": "D60_D10_FALLBACK_READY",
+        "selection_status": "NOT_STARTED"
+      }
+    },
+    {
+      "id": "tier3-pending-freeze",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase7-candidate-eligibility",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase7-candidate-eligibility-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_eligibility_bypass": true,
+        "formula_slot_ids": ["s1"],
+        "formula_eligibility_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "common_gate_bundle": {
+              "neg_complete": false,
+              "pos_complete": true,
+              "organ_system_resolved": true,
+              "evidence_item_ids": ["e1"]
+            },
+            "structured_pathology": {
+              "tier3_mapping_status": "PENDING",
+              "authority": "NONE",
+              "evidence_item_ids": []
+            }
+          }
+        ]
+      },
+      "context": {
+        "polarity_routing": {
+          "slot_routings": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "rule2_record_id": "r1",
+              "disease_polarity": "POSITIVE",
+              "required_therapeutic_polarity": "NEGATIVE",
+              "resolution_status": "RESOLVED",
+              "pathway": "POSITIVE_DISEASE_NEGATIVE_THERAPEUTIC_GROUP",
+              "potency_status": "NOT_EVALUATED",
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": []
+            }
+          ]
+        },
+        "severity_resolution": {
+          "slot_resolutions": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "target_role": "STANDARD_FORMULA_TARGET",
+              "severity_status": "RESOLVED_NUMERIC",
+              "severity_score": 5,
+              "severity_band": "MODERATE",
+              "severity_resolution_source": "DOCTOR_STRUCTURED",
+              "binding_status": "BOUND",
+              "evidence_item_ids": ["e1"],
+              "corroborating_source_ids": [],
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": [],
+              "upstream_context_status": "NOT_EVALUATED"
+            }
+          ]
+        },
+        "phase_resolution": {
+          "slot_resolutions": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "target_role": "STANDARD_FORMULA_TARGET",
+              "phase_status": "RESOLVED_BY_EVIDENCE",
+              "resolved_phase": "DEEP_CHRONIC",
+              "phase_resolution_source": "STRUCTURED_EVIDENCE",
+              "binding_status": "BOUND",
+              "evidence_item_ids": ["e1"],
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": []
+            }
+          ]
+        }
+      },
+      "expected": {
+        "candidate_family": "NONE",
+        "gate_includes": ["POS_D60_TIER3_PATHOLOGY"],
+        "selection_status": "NOT_STARTED"
+      }
+    },
+    {
+      "id": "resolved-neutral",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase7-candidate-eligibility",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase7-candidate-eligibility-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_eligibility_bypass": true,
+        "formula_slot_ids": ["s1"],
+        "formula_eligibility_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET"
+          }
+        ]
+      },
+      "context": {
+        "polarity_routing": {
+          "slot_routings": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "rule2_record_id": "r1",
+              "disease_polarity": "NEUTRAL",
+              "required_therapeutic_polarity": "NEUTRAL",
+              "resolution_status": "RESOLVED",
+              "pathway": "NEUTRAL_NON_POTENCY",
+              "potency_status": "NOT_EVALUATED",
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": []
+            }
+          ]
+        }
+      },
+      "expected": {
+        "eligibility_status": "NON_POTENCY",
+        "candidate_family": "NONE",
+        "selection_status": "NOT_STARTED"
+      }
+    },
+    {
+      "id": "production-no-pass",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase7-candidate-eligibility",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase7-candidate-eligibility-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_eligibility_bypass": false,
+        "formula_slot_ids": ["s1"],
+        "formula_eligibility_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "common_gate_bundle": {
+              "neg_complete": true,
+              "pos_complete": false,
+              "organ_system_resolved": true,
+              "evidence_item_ids": ["e1"]
+            },
+            "structured_hypofunction_evidence": {
+              "pass": true,
+              "evidence_item_ids": ["e1"]
+            }
+          }
+        ]
+      },
+      "context": {
+        "polarity_routing": {
+          "slot_routings": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "rule2_record_id": "r1",
+              "disease_polarity": "NEGATIVE",
+              "required_therapeutic_polarity": "POSITIVE",
+              "resolution_status": "RESOLVED",
+              "pathway": "NEGATIVE_DISEASE_POSITIVE_THERAPEUTIC_GROUP",
+              "potency_status": "NOT_EVALUATED",
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": []
+            }
+          ]
+        },
+        "severity_resolution": {
+          "slot_resolutions": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "target_role": "STANDARD_FORMULA_TARGET",
+              "severity_status": "RESOLVED_NUMERIC",
+              "severity_score": 4,
+              "severity_band": "MODERATE",
+              "severity_resolution_source": "DOCTOR_STRUCTURED",
+              "binding_status": "BOUND",
+              "evidence_item_ids": ["e1"],
+              "corroborating_source_ids": [],
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": [],
+              "upstream_context_status": "NOT_EVALUATED"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "candidate_family": "NONE",
+        "selection_status": "NOT_STARTED"
+      }
+    },
+    {
+      "id": "missing-gate-no-family",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase7-candidate-eligibility",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase7-candidate-eligibility-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_eligibility_bypass": true,
+        "formula_slot_ids": ["s1"],
+        "formula_eligibility_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "common_gate_bundle": {
+              "neg_complete": true,
+              "pos_complete": false,
+              "organ_system_resolved": true,
+              "evidence_item_ids": ["e1"]
+            }
+          }
+        ]
+      },
+      "context": {
+        "polarity_routing": {
+          "slot_routings": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "rule2_record_id": "r1",
+              "disease_polarity": "NEGATIVE",
+              "required_therapeutic_polarity": "POSITIVE",
+              "resolution_status": "RESOLVED",
+              "pathway": "NEGATIVE_DISEASE_POSITIVE_THERAPEUTIC_GROUP",
+              "potency_status": "NOT_EVALUATED",
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": []
+            }
+          ]
+        },
+        "severity_resolution": {
+          "slot_resolutions": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "target_role": "STANDARD_FORMULA_TARGET",
+              "severity_status": "RESOLVED_NUMERIC",
+              "severity_score": 4,
+              "severity_band": "MODERATE",
+              "severity_resolution_source": "DOCTOR_STRUCTURED",
+              "binding_status": "BOUND",
+              "evidence_item_ids": ["e1"],
+              "corroborating_source_ids": [],
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": [],
+              "upstream_context_status": "NOT_EVALUATED"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "candidate_family": "NONE",
+        "selection_status": "NOT_STARTED"
+      }
+    },
+    {
+      "id": "synthetic-missing-gate-15",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase7-candidate-eligibility",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase7-candidate-eligibility-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_eligibility_bypass": true,
+        "formula_slot_ids": ["s1"],
+        "formula_eligibility_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "common_gate_bundle": {
+              "neg_complete": true,
+              "pos_complete": false,
+              "organ_system_resolved": true,
+              "evidence_item_ids": ["e1"]
+            }
+          }
+        ]
+      },
+      "context": {
+        "polarity_routing": {
+          "slot_routings": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "rule2_record_id": "r1",
+              "disease_polarity": "NEGATIVE",
+              "required_therapeutic_polarity": "POSITIVE",
+              "resolution_status": "RESOLVED",
+              "pathway": "NEGATIVE_DISEASE_POSITIVE_THERAPEUTIC_GROUP",
+              "potency_status": "NOT_EVALUATED",
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": []
+            }
+          ]
+        },
+        "severity_resolution": {
+          "slot_resolutions": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "target_role": "STANDARD_FORMULA_TARGET",
+              "severity_status": "RESOLVED_NUMERIC",
+              "severity_score": 4,
+              "severity_band": "MODERATE",
+              "severity_resolution_source": "DOCTOR_STRUCTURED",
+              "binding_status": "BOUND",
+              "evidence_item_ids": ["e1"],
+              "corroborating_source_ids": [],
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": [],
+              "upstream_context_status": "NOT_EVALUATED"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "candidate_family": "NONE",
+        "selection_status": "NOT_STARTED"
+      }
+    },
+    {
+      "id": "synthetic-missing-gate-16",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase7-candidate-eligibility",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase7-candidate-eligibility-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_eligibility_bypass": true,
+        "formula_slot_ids": ["s1"],
+        "formula_eligibility_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "common_gate_bundle": {
+              "neg_complete": true,
+              "pos_complete": false,
+              "organ_system_resolved": true,
+              "evidence_item_ids": ["e1"]
+            }
+          }
+        ]
+      },
+      "context": {
+        "polarity_routing": {
+          "slot_routings": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "rule2_record_id": "r1",
+              "disease_polarity": "NEGATIVE",
+              "required_therapeutic_polarity": "POSITIVE",
+              "resolution_status": "RESOLVED",
+              "pathway": "NEGATIVE_DISEASE_POSITIVE_THERAPEUTIC_GROUP",
+              "potency_status": "NOT_EVALUATED",
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": []
+            }
+          ]
+        },
+        "severity_resolution": {
+          "slot_resolutions": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "target_role": "STANDARD_FORMULA_TARGET",
+              "severity_status": "RESOLVED_NUMERIC",
+              "severity_score": 4,
+              "severity_band": "MODERATE",
+              "severity_resolution_source": "DOCTOR_STRUCTURED",
+              "binding_status": "BOUND",
+              "evidence_item_ids": ["e1"],
+              "corroborating_source_ids": [],
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": [],
+              "upstream_context_status": "NOT_EVALUATED"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "candidate_family": "NONE",
+        "selection_status": "NOT_STARTED"
+      }
+    },
+    {
+      "id": "synthetic-missing-gate-17",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase7-candidate-eligibility",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase7-candidate-eligibility-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_eligibility_bypass": true,
+        "formula_slot_ids": ["s1"],
+        "formula_eligibility_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "common_gate_bundle": {
+              "neg_complete": true,
+              "pos_complete": false,
+              "organ_system_resolved": true,
+              "evidence_item_ids": ["e1"]
+            }
+          }
+        ]
+      },
+      "context": {
+        "polarity_routing": {
+          "slot_routings": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "rule2_record_id": "r1",
+              "disease_polarity": "NEGATIVE",
+              "required_therapeutic_polarity": "POSITIVE",
+              "resolution_status": "RESOLVED",
+              "pathway": "NEGATIVE_DISEASE_POSITIVE_THERAPEUTIC_GROUP",
+              "potency_status": "NOT_EVALUATED",
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": []
+            }
+          ]
+        },
+        "severity_resolution": {
+          "slot_resolutions": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "target_role": "STANDARD_FORMULA_TARGET",
+              "severity_status": "RESOLVED_NUMERIC",
+              "severity_score": 4,
+              "severity_band": "MODERATE",
+              "severity_resolution_source": "DOCTOR_STRUCTURED",
+              "binding_status": "BOUND",
+              "evidence_item_ids": ["e1"],
+              "corroborating_source_ids": [],
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": [],
+              "upstream_context_status": "NOT_EVALUATED"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "candidate_family": "NONE",
+        "selection_status": "NOT_STARTED"
+      }
+    },
+    {
+      "id": "synthetic-missing-gate-18",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase7-candidate-eligibility",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase7-candidate-eligibility-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_eligibility_bypass": true,
+        "formula_slot_ids": ["s1"],
+        "formula_eligibility_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "common_gate_bundle": {
+              "neg_complete": true,
+              "pos_complete": false,
+              "organ_system_resolved": true,
+              "evidence_item_ids": ["e1"]
+            }
+          }
+        ]
+      },
+      "context": {
+        "polarity_routing": {
+          "slot_routings": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "rule2_record_id": "r1",
+              "disease_polarity": "NEGATIVE",
+              "required_therapeutic_polarity": "POSITIVE",
+              "resolution_status": "RESOLVED",
+              "pathway": "NEGATIVE_DISEASE_POSITIVE_THERAPEUTIC_GROUP",
+              "potency_status": "NOT_EVALUATED",
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": []
+            }
+          ]
+        },
+        "severity_resolution": {
+          "slot_resolutions": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "target_role": "STANDARD_FORMULA_TARGET",
+              "severity_status": "RESOLVED_NUMERIC",
+              "severity_score": 4,
+              "severity_band": "MODERATE",
+              "severity_resolution_source": "DOCTOR_STRUCTURED",
+              "binding_status": "BOUND",
+              "evidence_item_ids": ["e1"],
+              "corroborating_source_ids": [],
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": [],
+              "upstream_context_status": "NOT_EVALUATED"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "candidate_family": "NONE",
+        "selection_status": "NOT_STARTED"
+      }
+    },
+    {
+      "id": "synthetic-missing-gate-19",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase7-candidate-eligibility",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase7-candidate-eligibility-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_eligibility_bypass": true,
+        "formula_slot_ids": ["s1"],
+        "formula_eligibility_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "common_gate_bundle": {
+              "neg_complete": true,
+              "pos_complete": false,
+              "organ_system_resolved": true,
+              "evidence_item_ids": ["e1"]
+            }
+          }
+        ]
+      },
+      "context": {
+        "polarity_routing": {
+          "slot_routings": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "rule2_record_id": "r1",
+              "disease_polarity": "NEGATIVE",
+              "required_therapeutic_polarity": "POSITIVE",
+              "resolution_status": "RESOLVED",
+              "pathway": "NEGATIVE_DISEASE_POSITIVE_THERAPEUTIC_GROUP",
+              "potency_status": "NOT_EVALUATED",
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": []
+            }
+          ]
+        },
+        "severity_resolution": {
+          "slot_resolutions": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "target_role": "STANDARD_FORMULA_TARGET",
+              "severity_status": "RESOLVED_NUMERIC",
+              "severity_score": 4,
+              "severity_band": "MODERATE",
+              "severity_resolution_source": "DOCTOR_STRUCTURED",
+              "binding_status": "BOUND",
+              "evidence_item_ids": ["e1"],
+              "corroborating_source_ids": [],
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": [],
+              "upstream_context_status": "NOT_EVALUATED"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "candidate_family": "NONE",
+        "selection_status": "NOT_STARTED"
+      }
+    },
+    {
+      "id": "synthetic-missing-gate-20",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase7-candidate-eligibility",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase7-candidate-eligibility-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_eligibility_bypass": true,
+        "formula_slot_ids": ["s1"],
+        "formula_eligibility_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "common_gate_bundle": {
+              "neg_complete": true,
+              "pos_complete": false,
+              "organ_system_resolved": true,
+              "evidence_item_ids": ["e1"]
+            }
+          }
+        ]
+      },
+      "context": {
+        "polarity_routing": {
+          "slot_routings": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "rule2_record_id": "r1",
+              "disease_polarity": "NEGATIVE",
+              "required_therapeutic_polarity": "POSITIVE",
+              "resolution_status": "RESOLVED",
+              "pathway": "NEGATIVE_DISEASE_POSITIVE_THERAPEUTIC_GROUP",
+              "potency_status": "NOT_EVALUATED",
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": []
+            }
+          ]
+        },
+        "severity_resolution": {
+          "slot_resolutions": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "target_role": "STANDARD_FORMULA_TARGET",
+              "severity_status": "RESOLVED_NUMERIC",
+              "severity_score": 4,
+              "severity_band": "MODERATE",
+              "severity_resolution_source": "DOCTOR_STRUCTURED",
+              "binding_status": "BOUND",
+              "evidence_item_ids": ["e1"],
+              "corroborating_source_ids": [],
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": [],
+              "upstream_context_status": "NOT_EVALUATED"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "candidate_family": "NONE",
+        "selection_status": "NOT_STARTED"
+      }
+    },
+    {
+      "id": "synthetic-missing-gate-21",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase7-candidate-eligibility",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase7-candidate-eligibility-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_eligibility_bypass": true,
+        "formula_slot_ids": ["s1"],
+        "formula_eligibility_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "common_gate_bundle": {
+              "neg_complete": true,
+              "pos_complete": false,
+              "organ_system_resolved": true,
+              "evidence_item_ids": ["e1"]
+            }
+          }
+        ]
+      },
+      "context": {
+        "polarity_routing": {
+          "slot_routings": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "rule2_record_id": "r1",
+              "disease_polarity": "NEGATIVE",
+              "required_therapeutic_polarity": "POSITIVE",
+              "resolution_status": "RESOLVED",
+              "pathway": "NEGATIVE_DISEASE_POSITIVE_THERAPEUTIC_GROUP",
+              "potency_status": "NOT_EVALUATED",
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": []
+            }
+          ]
+        },
+        "severity_resolution": {
+          "slot_resolutions": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "target_role": "STANDARD_FORMULA_TARGET",
+              "severity_status": "RESOLVED_NUMERIC",
+              "severity_score": 4,
+              "severity_band": "MODERATE",
+              "severity_resolution_source": "DOCTOR_STRUCTURED",
+              "binding_status": "BOUND",
+              "evidence_item_ids": ["e1"],
+              "corroborating_source_ids": [],
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": [],
+              "upstream_context_status": "NOT_EVALUATED"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "candidate_family": "NONE",
+        "selection_status": "NOT_STARTED"
+      }
+    },
+    {
+      "id": "synthetic-missing-gate-22",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase7-candidate-eligibility",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase7-candidate-eligibility-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_eligibility_bypass": true,
+        "formula_slot_ids": ["s1"],
+        "formula_eligibility_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "common_gate_bundle": {
+              "neg_complete": true,
+              "pos_complete": false,
+              "organ_system_resolved": true,
+              "evidence_item_ids": ["e1"]
+            }
+          }
+        ]
+      },
+      "context": {
+        "polarity_routing": {
+          "slot_routings": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "rule2_record_id": "r1",
+              "disease_polarity": "NEGATIVE",
+              "required_therapeutic_polarity": "POSITIVE",
+              "resolution_status": "RESOLVED",
+              "pathway": "NEGATIVE_DISEASE_POSITIVE_THERAPEUTIC_GROUP",
+              "potency_status": "NOT_EVALUATED",
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": []
+            }
+          ]
+        },
+        "severity_resolution": {
+          "slot_resolutions": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "target_role": "STANDARD_FORMULA_TARGET",
+              "severity_status": "RESOLVED_NUMERIC",
+              "severity_score": 4,
+              "severity_band": "MODERATE",
+              "severity_resolution_source": "DOCTOR_STRUCTURED",
+              "binding_status": "BOUND",
+              "evidence_item_ids": ["e1"],
+              "corroborating_source_ids": [],
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": [],
+              "upstream_context_status": "NOT_EVALUATED"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "candidate_family": "NONE",
+        "selection_status": "NOT_STARTED"
+      }
+    },
+    {
+      "id": "synthetic-missing-gate-23",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase7-candidate-eligibility",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase7-candidate-eligibility-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_eligibility_bypass": true,
+        "formula_slot_ids": ["s1"],
+        "formula_eligibility_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "common_gate_bundle": {
+              "neg_complete": true,
+              "pos_complete": false,
+              "organ_system_resolved": true,
+              "evidence_item_ids": ["e1"]
+            }
+          }
+        ]
+      },
+      "context": {
+        "polarity_routing": {
+          "slot_routings": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "rule2_record_id": "r1",
+              "disease_polarity": "NEGATIVE",
+              "required_therapeutic_polarity": "POSITIVE",
+              "resolution_status": "RESOLVED",
+              "pathway": "NEGATIVE_DISEASE_POSITIVE_THERAPEUTIC_GROUP",
+              "potency_status": "NOT_EVALUATED",
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": []
+            }
+          ]
+        },
+        "severity_resolution": {
+          "slot_resolutions": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "target_role": "STANDARD_FORMULA_TARGET",
+              "severity_status": "RESOLVED_NUMERIC",
+              "severity_score": 4,
+              "severity_band": "MODERATE",
+              "severity_resolution_source": "DOCTOR_STRUCTURED",
+              "binding_status": "BOUND",
+              "evidence_item_ids": ["e1"],
+              "corroborating_source_ids": [],
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": [],
+              "upstream_context_status": "NOT_EVALUATED"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "candidate_family": "NONE",
+        "selection_status": "NOT_STARTED"
+      }
+    },
+    {
+      "id": "synthetic-missing-gate-24",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase7-candidate-eligibility",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase7-candidate-eligibility-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_eligibility_bypass": true,
+        "formula_slot_ids": ["s1"],
+        "formula_eligibility_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "common_gate_bundle": {
+              "neg_complete": true,
+              "pos_complete": false,
+              "organ_system_resolved": true,
+              "evidence_item_ids": ["e1"]
+            }
+          }
+        ]
+      },
+      "context": {
+        "polarity_routing": {
+          "slot_routings": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "rule2_record_id": "r1",
+              "disease_polarity": "NEGATIVE",
+              "required_therapeutic_polarity": "POSITIVE",
+              "resolution_status": "RESOLVED",
+              "pathway": "NEGATIVE_DISEASE_POSITIVE_THERAPEUTIC_GROUP",
+              "potency_status": "NOT_EVALUATED",
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": []
+            }
+          ]
+        },
+        "severity_resolution": {
+          "slot_resolutions": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "target_role": "STANDARD_FORMULA_TARGET",
+              "severity_status": "RESOLVED_NUMERIC",
+              "severity_score": 4,
+              "severity_band": "MODERATE",
+              "severity_resolution_source": "DOCTOR_STRUCTURED",
+              "binding_status": "BOUND",
+              "evidence_item_ids": ["e1"],
+              "corroborating_source_ids": [],
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": [],
+              "upstream_context_status": "NOT_EVALUATED"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "candidate_family": "NONE",
+        "selection_status": "NOT_STARTED"
+      }
+    },
+    {
+      "id": "synthetic-missing-gate-25",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase7-candidate-eligibility",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase7-candidate-eligibility-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_eligibility_bypass": true,
+        "formula_slot_ids": ["s1"],
+        "formula_eligibility_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "common_gate_bundle": {
+              "neg_complete": true,
+              "pos_complete": false,
+              "organ_system_resolved": true,
+              "evidence_item_ids": ["e1"]
+            }
+          }
+        ]
+      },
+      "context": {
+        "polarity_routing": {
+          "slot_routings": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "rule2_record_id": "r1",
+              "disease_polarity": "NEGATIVE",
+              "required_therapeutic_polarity": "POSITIVE",
+              "resolution_status": "RESOLVED",
+              "pathway": "NEGATIVE_DISEASE_POSITIVE_THERAPEUTIC_GROUP",
+              "potency_status": "NOT_EVALUATED",
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": []
+            }
+          ]
+        },
+        "severity_resolution": {
+          "slot_resolutions": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "target_role": "STANDARD_FORMULA_TARGET",
+              "severity_status": "RESOLVED_NUMERIC",
+              "severity_score": 4,
+              "severity_band": "MODERATE",
+              "severity_resolution_source": "DOCTOR_STRUCTURED",
+              "binding_status": "BOUND",
+              "evidence_item_ids": ["e1"],
+              "corroborating_source_ids": [],
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": [],
+              "upstream_context_status": "NOT_EVALUATED"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "candidate_family": "NONE",
+        "selection_status": "NOT_STARTED"
+      }
+    },
+    {
+      "id": "synthetic-missing-gate-26",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase7-candidate-eligibility",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase7-candidate-eligibility-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_eligibility_bypass": true,
+        "formula_slot_ids": ["s1"],
+        "formula_eligibility_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "common_gate_bundle": {
+              "neg_complete": true,
+              "pos_complete": false,
+              "organ_system_resolved": true,
+              "evidence_item_ids": ["e1"]
+            }
+          }
+        ]
+      },
+      "context": {
+        "polarity_routing": {
+          "slot_routings": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "rule2_record_id": "r1",
+              "disease_polarity": "NEGATIVE",
+              "required_therapeutic_polarity": "POSITIVE",
+              "resolution_status": "RESOLVED",
+              "pathway": "NEGATIVE_DISEASE_POSITIVE_THERAPEUTIC_GROUP",
+              "potency_status": "NOT_EVALUATED",
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": []
+            }
+          ]
+        },
+        "severity_resolution": {
+          "slot_resolutions": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "target_role": "STANDARD_FORMULA_TARGET",
+              "severity_status": "RESOLVED_NUMERIC",
+              "severity_score": 4,
+              "severity_band": "MODERATE",
+              "severity_resolution_source": "DOCTOR_STRUCTURED",
+              "binding_status": "BOUND",
+              "evidence_item_ids": ["e1"],
+              "corroborating_source_ids": [],
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": [],
+              "upstream_context_status": "NOT_EVALUATED"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "candidate_family": "NONE",
+        "selection_status": "NOT_STARTED"
+      }
+    },
+    {
+      "id": "synthetic-missing-gate-27",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase7-candidate-eligibility",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase7-candidate-eligibility-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_eligibility_bypass": true,
+        "formula_slot_ids": ["s1"],
+        "formula_eligibility_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "common_gate_bundle": {
+              "neg_complete": true,
+              "pos_complete": false,
+              "organ_system_resolved": true,
+              "evidence_item_ids": ["e1"]
+            }
+          }
+        ]
+      },
+      "context": {
+        "polarity_routing": {
+          "slot_routings": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "rule2_record_id": "r1",
+              "disease_polarity": "NEGATIVE",
+              "required_therapeutic_polarity": "POSITIVE",
+              "resolution_status": "RESOLVED",
+              "pathway": "NEGATIVE_DISEASE_POSITIVE_THERAPEUTIC_GROUP",
+              "potency_status": "NOT_EVALUATED",
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": []
+            }
+          ]
+        },
+        "severity_resolution": {
+          "slot_resolutions": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "target_role": "STANDARD_FORMULA_TARGET",
+              "severity_status": "RESOLVED_NUMERIC",
+              "severity_score": 4,
+              "severity_band": "MODERATE",
+              "severity_resolution_source": "DOCTOR_STRUCTURED",
+              "binding_status": "BOUND",
+              "evidence_item_ids": ["e1"],
+              "corroborating_source_ids": [],
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": [],
+              "upstream_context_status": "NOT_EVALUATED"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "candidate_family": "NONE",
+        "selection_status": "NOT_STARTED"
+      }
+    },
+    {
+      "id": "synthetic-missing-gate-28",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase7-candidate-eligibility",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase7-candidate-eligibility-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_eligibility_bypass": true,
+        "formula_slot_ids": ["s1"],
+        "formula_eligibility_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "common_gate_bundle": {
+              "neg_complete": true,
+              "pos_complete": false,
+              "organ_system_resolved": true,
+              "evidence_item_ids": ["e1"]
+            }
+          }
+        ]
+      },
+      "context": {
+        "polarity_routing": {
+          "slot_routings": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "rule2_record_id": "r1",
+              "disease_polarity": "NEGATIVE",
+              "required_therapeutic_polarity": "POSITIVE",
+              "resolution_status": "RESOLVED",
+              "pathway": "NEGATIVE_DISEASE_POSITIVE_THERAPEUTIC_GROUP",
+              "potency_status": "NOT_EVALUATED",
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": []
+            }
+          ]
+        },
+        "severity_resolution": {
+          "slot_resolutions": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "target_role": "STANDARD_FORMULA_TARGET",
+              "severity_status": "RESOLVED_NUMERIC",
+              "severity_score": 4,
+              "severity_band": "MODERATE",
+              "severity_resolution_source": "DOCTOR_STRUCTURED",
+              "binding_status": "BOUND",
+              "evidence_item_ids": ["e1"],
+              "corroborating_source_ids": [],
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": [],
+              "upstream_context_status": "NOT_EVALUATED"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "candidate_family": "NONE",
+        "selection_status": "NOT_STARTED"
+      }
+    },
+    {
+      "id": "synthetic-missing-gate-29",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase7-candidate-eligibility",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase7-candidate-eligibility-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_eligibility_bypass": true,
+        "formula_slot_ids": ["s1"],
+        "formula_eligibility_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "common_gate_bundle": {
+              "neg_complete": true,
+              "pos_complete": false,
+              "organ_system_resolved": true,
+              "evidence_item_ids": ["e1"]
+            }
+          }
+        ]
+      },
+      "context": {
+        "polarity_routing": {
+          "slot_routings": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "rule2_record_id": "r1",
+              "disease_polarity": "NEGATIVE",
+              "required_therapeutic_polarity": "POSITIVE",
+              "resolution_status": "RESOLVED",
+              "pathway": "NEGATIVE_DISEASE_POSITIVE_THERAPEUTIC_GROUP",
+              "potency_status": "NOT_EVALUATED",
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": []
+            }
+          ]
+        },
+        "severity_resolution": {
+          "slot_resolutions": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "target_role": "STANDARD_FORMULA_TARGET",
+              "severity_status": "RESOLVED_NUMERIC",
+              "severity_score": 4,
+              "severity_band": "MODERATE",
+              "severity_resolution_source": "DOCTOR_STRUCTURED",
+              "binding_status": "BOUND",
+              "evidence_item_ids": ["e1"],
+              "corroborating_source_ids": [],
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": [],
+              "upstream_context_status": "NOT_EVALUATED"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "candidate_family": "NONE",
+        "selection_status": "NOT_STARTED"
+      }
+    },
+    {
+      "id": "synthetic-missing-gate-30",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase7-candidate-eligibility",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase7-candidate-eligibility-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_eligibility_bypass": true,
+        "formula_slot_ids": ["s1"],
+        "formula_eligibility_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "common_gate_bundle": {
+              "neg_complete": true,
+              "pos_complete": false,
+              "organ_system_resolved": true,
+              "evidence_item_ids": ["e1"]
+            }
+          }
+        ]
+      },
+      "context": {
+        "polarity_routing": {
+          "slot_routings": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "rule2_record_id": "r1",
+              "disease_polarity": "NEGATIVE",
+              "required_therapeutic_polarity": "POSITIVE",
+              "resolution_status": "RESOLVED",
+              "pathway": "NEGATIVE_DISEASE_POSITIVE_THERAPEUTIC_GROUP",
+              "potency_status": "NOT_EVALUATED",
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": []
+            }
+          ]
+        },
+        "severity_resolution": {
+          "slot_resolutions": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "target_role": "STANDARD_FORMULA_TARGET",
+              "severity_status": "RESOLVED_NUMERIC",
+              "severity_score": 4,
+              "severity_band": "MODERATE",
+              "severity_resolution_source": "DOCTOR_STRUCTURED",
+              "binding_status": "BOUND",
+              "evidence_item_ids": ["e1"],
+              "corroborating_source_ids": [],
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": [],
+              "upstream_context_status": "NOT_EVALUATED"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "candidate_family": "NONE",
+        "selection_status": "NOT_STARTED"
+      }
+    },
+    {
+      "id": "synthetic-missing-gate-31",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase7-candidate-eligibility",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase7-candidate-eligibility-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_eligibility_bypass": true,
+        "formula_slot_ids": ["s1"],
+        "formula_eligibility_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "common_gate_bundle": {
+              "neg_complete": true,
+              "pos_complete": false,
+              "organ_system_resolved": true,
+              "evidence_item_ids": ["e1"]
+            }
+          }
+        ]
+      },
+      "context": {
+        "polarity_routing": {
+          "slot_routings": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "rule2_record_id": "r1",
+              "disease_polarity": "NEGATIVE",
+              "required_therapeutic_polarity": "POSITIVE",
+              "resolution_status": "RESOLVED",
+              "pathway": "NEGATIVE_DISEASE_POSITIVE_THERAPEUTIC_GROUP",
+              "potency_status": "NOT_EVALUATED",
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": []
+            }
+          ]
+        },
+        "severity_resolution": {
+          "slot_resolutions": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "target_role": "STANDARD_FORMULA_TARGET",
+              "severity_status": "RESOLVED_NUMERIC",
+              "severity_score": 4,
+              "severity_band": "MODERATE",
+              "severity_resolution_source": "DOCTOR_STRUCTURED",
+              "binding_status": "BOUND",
+              "evidence_item_ids": ["e1"],
+              "corroborating_source_ids": [],
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": [],
+              "upstream_context_status": "NOT_EVALUATED"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "candidate_family": "NONE",
+        "selection_status": "NOT_STARTED"
+      }
+    },
+    {
+      "id": "synthetic-missing-gate-32",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase7-candidate-eligibility",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase7-candidate-eligibility-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_eligibility_bypass": true,
+        "formula_slot_ids": ["s1"],
+        "formula_eligibility_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "common_gate_bundle": {
+              "neg_complete": true,
+              "pos_complete": false,
+              "organ_system_resolved": true,
+              "evidence_item_ids": ["e1"]
+            }
+          }
+        ]
+      },
+      "context": {
+        "polarity_routing": {
+          "slot_routings": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "rule2_record_id": "r1",
+              "disease_polarity": "NEGATIVE",
+              "required_therapeutic_polarity": "POSITIVE",
+              "resolution_status": "RESOLVED",
+              "pathway": "NEGATIVE_DISEASE_POSITIVE_THERAPEUTIC_GROUP",
+              "potency_status": "NOT_EVALUATED",
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": []
+            }
+          ]
+        },
+        "severity_resolution": {
+          "slot_resolutions": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "target_role": "STANDARD_FORMULA_TARGET",
+              "severity_status": "RESOLVED_NUMERIC",
+              "severity_score": 4,
+              "severity_band": "MODERATE",
+              "severity_resolution_source": "DOCTOR_STRUCTURED",
+              "binding_status": "BOUND",
+              "evidence_item_ids": ["e1"],
+              "corroborating_source_ids": [],
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": [],
+              "upstream_context_status": "NOT_EVALUATED"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "candidate_family": "NONE",
+        "selection_status": "NOT_STARTED"
+      }
+    },
+    {
+      "id": "synthetic-missing-gate-33",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase7-candidate-eligibility",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase7-candidate-eligibility-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_eligibility_bypass": true,
+        "formula_slot_ids": ["s1"],
+        "formula_eligibility_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "common_gate_bundle": {
+              "neg_complete": true,
+              "pos_complete": false,
+              "organ_system_resolved": true,
+              "evidence_item_ids": ["e1"]
+            }
+          }
+        ]
+      },
+      "context": {
+        "polarity_routing": {
+          "slot_routings": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "rule2_record_id": "r1",
+              "disease_polarity": "NEGATIVE",
+              "required_therapeutic_polarity": "POSITIVE",
+              "resolution_status": "RESOLVED",
+              "pathway": "NEGATIVE_DISEASE_POSITIVE_THERAPEUTIC_GROUP",
+              "potency_status": "NOT_EVALUATED",
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": []
+            }
+          ]
+        },
+        "severity_resolution": {
+          "slot_resolutions": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "target_role": "STANDARD_FORMULA_TARGET",
+              "severity_status": "RESOLVED_NUMERIC",
+              "severity_score": 4,
+              "severity_band": "MODERATE",
+              "severity_resolution_source": "DOCTOR_STRUCTURED",
+              "binding_status": "BOUND",
+              "evidence_item_ids": ["e1"],
+              "corroborating_source_ids": [],
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": [],
+              "upstream_context_status": "NOT_EVALUATED"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "candidate_family": "NONE",
+        "selection_status": "NOT_STARTED"
+      }
+    },
+    {
+      "id": "synthetic-missing-gate-34",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase7-candidate-eligibility",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase7-candidate-eligibility-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_eligibility_bypass": true,
+        "formula_slot_ids": ["s1"],
+        "formula_eligibility_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "common_gate_bundle": {
+              "neg_complete": true,
+              "pos_complete": false,
+              "organ_system_resolved": true,
+              "evidence_item_ids": ["e1"]
+            }
+          }
+        ]
+      },
+      "context": {
+        "polarity_routing": {
+          "slot_routings": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "rule2_record_id": "r1",
+              "disease_polarity": "NEGATIVE",
+              "required_therapeutic_polarity": "POSITIVE",
+              "resolution_status": "RESOLVED",
+              "pathway": "NEGATIVE_DISEASE_POSITIVE_THERAPEUTIC_GROUP",
+              "potency_status": "NOT_EVALUATED",
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": []
+            }
+          ]
+        },
+        "severity_resolution": {
+          "slot_resolutions": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "target_role": "STANDARD_FORMULA_TARGET",
+              "severity_status": "RESOLVED_NUMERIC",
+              "severity_score": 4,
+              "severity_band": "MODERATE",
+              "severity_resolution_source": "DOCTOR_STRUCTURED",
+              "binding_status": "BOUND",
+              "evidence_item_ids": ["e1"],
+              "corroborating_source_ids": [],
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": [],
+              "upstream_context_status": "NOT_EVALUATED"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "candidate_family": "NONE",
+        "selection_status": "NOT_STARTED"
+      }
+    },
+    {
+      "id": "synthetic-missing-gate-35",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase7-candidate-eligibility",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase7-candidate-eligibility-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_eligibility_bypass": true,
+        "formula_slot_ids": ["s1"],
+        "formula_eligibility_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "common_gate_bundle": {
+              "neg_complete": true,
+              "pos_complete": false,
+              "organ_system_resolved": true,
+              "evidence_item_ids": ["e1"]
+            }
+          }
+        ]
+      },
+      "context": {
+        "polarity_routing": {
+          "slot_routings": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "rule2_record_id": "r1",
+              "disease_polarity": "NEGATIVE",
+              "required_therapeutic_polarity": "POSITIVE",
+              "resolution_status": "RESOLVED",
+              "pathway": "NEGATIVE_DISEASE_POSITIVE_THERAPEUTIC_GROUP",
+              "potency_status": "NOT_EVALUATED",
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": []
+            }
+          ]
+        },
+        "severity_resolution": {
+          "slot_resolutions": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "target_role": "STANDARD_FORMULA_TARGET",
+              "severity_status": "RESOLVED_NUMERIC",
+              "severity_score": 4,
+              "severity_band": "MODERATE",
+              "severity_resolution_source": "DOCTOR_STRUCTURED",
+              "binding_status": "BOUND",
+              "evidence_item_ids": ["e1"],
+              "corroborating_source_ids": [],
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": [],
+              "upstream_context_status": "NOT_EVALUATED"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "candidate_family": "NONE",
+        "selection_status": "NOT_STARTED"
+      }
+    },
+    {
+      "id": "synthetic-missing-gate-36",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase7-candidate-eligibility",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase7-candidate-eligibility-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_eligibility_bypass": true,
+        "formula_slot_ids": ["s1"],
+        "formula_eligibility_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "common_gate_bundle": {
+              "neg_complete": true,
+              "pos_complete": false,
+              "organ_system_resolved": true,
+              "evidence_item_ids": ["e1"]
+            }
+          }
+        ]
+      },
+      "context": {
+        "polarity_routing": {
+          "slot_routings": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "rule2_record_id": "r1",
+              "disease_polarity": "NEGATIVE",
+              "required_therapeutic_polarity": "POSITIVE",
+              "resolution_status": "RESOLVED",
+              "pathway": "NEGATIVE_DISEASE_POSITIVE_THERAPEUTIC_GROUP",
+              "potency_status": "NOT_EVALUATED",
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": []
+            }
+          ]
+        },
+        "severity_resolution": {
+          "slot_resolutions": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "target_role": "STANDARD_FORMULA_TARGET",
+              "severity_status": "RESOLVED_NUMERIC",
+              "severity_score": 4,
+              "severity_band": "MODERATE",
+              "severity_resolution_source": "DOCTOR_STRUCTURED",
+              "binding_status": "BOUND",
+              "evidence_item_ids": ["e1"],
+              "corroborating_source_ids": [],
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": [],
+              "upstream_context_status": "NOT_EVALUATED"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "candidate_family": "NONE",
+        "selection_status": "NOT_STARTED"
+      }
+    },
+    {
+      "id": "synthetic-missing-gate-37",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase7-candidate-eligibility",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase7-candidate-eligibility-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_eligibility_bypass": true,
+        "formula_slot_ids": ["s1"],
+        "formula_eligibility_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "common_gate_bundle": {
+              "neg_complete": true,
+              "pos_complete": false,
+              "organ_system_resolved": true,
+              "evidence_item_ids": ["e1"]
+            }
+          }
+        ]
+      },
+      "context": {
+        "polarity_routing": {
+          "slot_routings": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "rule2_record_id": "r1",
+              "disease_polarity": "NEGATIVE",
+              "required_therapeutic_polarity": "POSITIVE",
+              "resolution_status": "RESOLVED",
+              "pathway": "NEGATIVE_DISEASE_POSITIVE_THERAPEUTIC_GROUP",
+              "potency_status": "NOT_EVALUATED",
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": []
+            }
+          ]
+        },
+        "severity_resolution": {
+          "slot_resolutions": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "target_role": "STANDARD_FORMULA_TARGET",
+              "severity_status": "RESOLVED_NUMERIC",
+              "severity_score": 4,
+              "severity_band": "MODERATE",
+              "severity_resolution_source": "DOCTOR_STRUCTURED",
+              "binding_status": "BOUND",
+              "evidence_item_ids": ["e1"],
+              "corroborating_source_ids": [],
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": [],
+              "upstream_context_status": "NOT_EVALUATED"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "candidate_family": "NONE",
+        "selection_status": "NOT_STARTED"
+      }
+    },
+    {
+      "id": "synthetic-missing-gate-38",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase7-candidate-eligibility",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase7-candidate-eligibility-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_eligibility_bypass": true,
+        "formula_slot_ids": ["s1"],
+        "formula_eligibility_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "common_gate_bundle": {
+              "neg_complete": true,
+              "pos_complete": false,
+              "organ_system_resolved": true,
+              "evidence_item_ids": ["e1"]
+            }
+          }
+        ]
+      },
+      "context": {
+        "polarity_routing": {
+          "slot_routings": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "rule2_record_id": "r1",
+              "disease_polarity": "NEGATIVE",
+              "required_therapeutic_polarity": "POSITIVE",
+              "resolution_status": "RESOLVED",
+              "pathway": "NEGATIVE_DISEASE_POSITIVE_THERAPEUTIC_GROUP",
+              "potency_status": "NOT_EVALUATED",
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": []
+            }
+          ]
+        },
+        "severity_resolution": {
+          "slot_resolutions": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "target_role": "STANDARD_FORMULA_TARGET",
+              "severity_status": "RESOLVED_NUMERIC",
+              "severity_score": 4,
+              "severity_band": "MODERATE",
+              "severity_resolution_source": "DOCTOR_STRUCTURED",
+              "binding_status": "BOUND",
+              "evidence_item_ids": ["e1"],
+              "corroborating_source_ids": [],
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": [],
+              "upstream_context_status": "NOT_EVALUATED"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "candidate_family": "NONE",
+        "selection_status": "NOT_STARTED"
+      }
+    },
+    {
+      "id": "synthetic-missing-gate-39",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase7-candidate-eligibility",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase7-candidate-eligibility-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_eligibility_bypass": true,
+        "formula_slot_ids": ["s1"],
+        "formula_eligibility_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "common_gate_bundle": {
+              "neg_complete": true,
+              "pos_complete": false,
+              "organ_system_resolved": true,
+              "evidence_item_ids": ["e1"]
+            }
+          }
+        ]
+      },
+      "context": {
+        "polarity_routing": {
+          "slot_routings": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "rule2_record_id": "r1",
+              "disease_polarity": "NEGATIVE",
+              "required_therapeutic_polarity": "POSITIVE",
+              "resolution_status": "RESOLVED",
+              "pathway": "NEGATIVE_DISEASE_POSITIVE_THERAPEUTIC_GROUP",
+              "potency_status": "NOT_EVALUATED",
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": []
+            }
+          ]
+        },
+        "severity_resolution": {
+          "slot_resolutions": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "target_role": "STANDARD_FORMULA_TARGET",
+              "severity_status": "RESOLVED_NUMERIC",
+              "severity_score": 4,
+              "severity_band": "MODERATE",
+              "severity_resolution_source": "DOCTOR_STRUCTURED",
+              "binding_status": "BOUND",
+              "evidence_item_ids": ["e1"],
+              "corroborating_source_ids": [],
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": [],
+              "upstream_context_status": "NOT_EVALUATED"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "candidate_family": "NONE",
+        "selection_status": "NOT_STARTED"
+      }
+    },
+    {
+      "id": "synthetic-missing-gate-40",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase7-candidate-eligibility",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase7-candidate-eligibility-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_eligibility_bypass": true,
+        "formula_slot_ids": ["s1"],
+        "formula_eligibility_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "common_gate_bundle": {
+              "neg_complete": true,
+              "pos_complete": false,
+              "organ_system_resolved": true,
+              "evidence_item_ids": ["e1"]
+            }
+          }
+        ]
+      },
+      "context": {
+        "polarity_routing": {
+          "slot_routings": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "rule2_record_id": "r1",
+              "disease_polarity": "NEGATIVE",
+              "required_therapeutic_polarity": "POSITIVE",
+              "resolution_status": "RESOLVED",
+              "pathway": "NEGATIVE_DISEASE_POSITIVE_THERAPEUTIC_GROUP",
+              "potency_status": "NOT_EVALUATED",
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": []
+            }
+          ]
+        },
+        "severity_resolution": {
+          "slot_resolutions": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "target_role": "STANDARD_FORMULA_TARGET",
+              "severity_status": "RESOLVED_NUMERIC",
+              "severity_score": 4,
+              "severity_band": "MODERATE",
+              "severity_resolution_source": "DOCTOR_STRUCTURED",
+              "binding_status": "BOUND",
+              "evidence_item_ids": ["e1"],
+              "corroborating_source_ids": [],
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": [],
+              "upstream_context_status": "NOT_EVALUATED"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "candidate_family": "NONE",
+        "selection_status": "NOT_STARTED"
+      }
+    },
+    {
+      "id": "synthetic-missing-gate-41",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase7-candidate-eligibility",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase7-candidate-eligibility-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_eligibility_bypass": true,
+        "formula_slot_ids": ["s1"],
+        "formula_eligibility_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "common_gate_bundle": {
+              "neg_complete": true,
+              "pos_complete": false,
+              "organ_system_resolved": true,
+              "evidence_item_ids": ["e1"]
+            }
+          }
+        ]
+      },
+      "context": {
+        "polarity_routing": {
+          "slot_routings": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "rule2_record_id": "r1",
+              "disease_polarity": "NEGATIVE",
+              "required_therapeutic_polarity": "POSITIVE",
+              "resolution_status": "RESOLVED",
+              "pathway": "NEGATIVE_DISEASE_POSITIVE_THERAPEUTIC_GROUP",
+              "potency_status": "NOT_EVALUATED",
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": []
+            }
+          ]
+        },
+        "severity_resolution": {
+          "slot_resolutions": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "target_role": "STANDARD_FORMULA_TARGET",
+              "severity_status": "RESOLVED_NUMERIC",
+              "severity_score": 4,
+              "severity_band": "MODERATE",
+              "severity_resolution_source": "DOCTOR_STRUCTURED",
+              "binding_status": "BOUND",
+              "evidence_item_ids": ["e1"],
+              "corroborating_source_ids": [],
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": [],
+              "upstream_context_status": "NOT_EVALUATED"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "candidate_family": "NONE",
+        "selection_status": "NOT_STARTED"
+      }
+    },
+    {
+      "id": "synthetic-missing-gate-42",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase7-candidate-eligibility",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase7-candidate-eligibility-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_eligibility_bypass": true,
+        "formula_slot_ids": ["s1"],
+        "formula_eligibility_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "common_gate_bundle": {
+              "neg_complete": true,
+              "pos_complete": false,
+              "organ_system_resolved": true,
+              "evidence_item_ids": ["e1"]
+            }
+          }
+        ]
+      },
+      "context": {
+        "polarity_routing": {
+          "slot_routings": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "rule2_record_id": "r1",
+              "disease_polarity": "NEGATIVE",
+              "required_therapeutic_polarity": "POSITIVE",
+              "resolution_status": "RESOLVED",
+              "pathway": "NEGATIVE_DISEASE_POSITIVE_THERAPEUTIC_GROUP",
+              "potency_status": "NOT_EVALUATED",
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": []
+            }
+          ]
+        },
+        "severity_resolution": {
+          "slot_resolutions": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "target_role": "STANDARD_FORMULA_TARGET",
+              "severity_status": "RESOLVED_NUMERIC",
+              "severity_score": 4,
+              "severity_band": "MODERATE",
+              "severity_resolution_source": "DOCTOR_STRUCTURED",
+              "binding_status": "BOUND",
+              "evidence_item_ids": ["e1"],
+              "corroborating_source_ids": [],
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": [],
+              "upstream_context_status": "NOT_EVALUATED"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "candidate_family": "NONE",
+        "selection_status": "NOT_STARTED"
+      }
+    },
+    {
+      "id": "synthetic-missing-gate-43",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase7-candidate-eligibility",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase7-candidate-eligibility-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_eligibility_bypass": true,
+        "formula_slot_ids": ["s1"],
+        "formula_eligibility_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "common_gate_bundle": {
+              "neg_complete": true,
+              "pos_complete": false,
+              "organ_system_resolved": true,
+              "evidence_item_ids": ["e1"]
+            }
+          }
+        ]
+      },
+      "context": {
+        "polarity_routing": {
+          "slot_routings": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "rule2_record_id": "r1",
+              "disease_polarity": "NEGATIVE",
+              "required_therapeutic_polarity": "POSITIVE",
+              "resolution_status": "RESOLVED",
+              "pathway": "NEGATIVE_DISEASE_POSITIVE_THERAPEUTIC_GROUP",
+              "potency_status": "NOT_EVALUATED",
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": []
+            }
+          ]
+        },
+        "severity_resolution": {
+          "slot_resolutions": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "target_role": "STANDARD_FORMULA_TARGET",
+              "severity_status": "RESOLVED_NUMERIC",
+              "severity_score": 4,
+              "severity_band": "MODERATE",
+              "severity_resolution_source": "DOCTOR_STRUCTURED",
+              "binding_status": "BOUND",
+              "evidence_item_ids": ["e1"],
+              "corroborating_source_ids": [],
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": [],
+              "upstream_context_status": "NOT_EVALUATED"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "candidate_family": "NONE",
+        "selection_status": "NOT_STARTED"
+      }
+    },
+    {
+      "id": "synthetic-missing-gate-44",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase7-candidate-eligibility",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase7-candidate-eligibility-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_eligibility_bypass": true,
+        "formula_slot_ids": ["s1"],
+        "formula_eligibility_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "common_gate_bundle": {
+              "neg_complete": true,
+              "pos_complete": false,
+              "organ_system_resolved": true,
+              "evidence_item_ids": ["e1"]
+            }
+          }
+        ]
+      },
+      "context": {
+        "polarity_routing": {
+          "slot_routings": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "rule2_record_id": "r1",
+              "disease_polarity": "NEGATIVE",
+              "required_therapeutic_polarity": "POSITIVE",
+              "resolution_status": "RESOLVED",
+              "pathway": "NEGATIVE_DISEASE_POSITIVE_THERAPEUTIC_GROUP",
+              "potency_status": "NOT_EVALUATED",
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": []
+            }
+          ]
+        },
+        "severity_resolution": {
+          "slot_resolutions": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "target_role": "STANDARD_FORMULA_TARGET",
+              "severity_status": "RESOLVED_NUMERIC",
+              "severity_score": 4,
+              "severity_band": "MODERATE",
+              "severity_resolution_source": "DOCTOR_STRUCTURED",
+              "binding_status": "BOUND",
+              "evidence_item_ids": ["e1"],
+              "corroborating_source_ids": [],
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": [],
+              "upstream_context_status": "NOT_EVALUATED"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "candidate_family": "NONE",
+        "selection_status": "NOT_STARTED"
+      }
+    },
+    {
+      "id": "synthetic-missing-gate-45",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase7-candidate-eligibility",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase7-candidate-eligibility-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_eligibility_bypass": true,
+        "formula_slot_ids": ["s1"],
+        "formula_eligibility_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "common_gate_bundle": {
+              "neg_complete": true,
+              "pos_complete": false,
+              "organ_system_resolved": true,
+              "evidence_item_ids": ["e1"]
+            }
+          }
+        ]
+      },
+      "context": {
+        "polarity_routing": {
+          "slot_routings": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "rule2_record_id": "r1",
+              "disease_polarity": "NEGATIVE",
+              "required_therapeutic_polarity": "POSITIVE",
+              "resolution_status": "RESOLVED",
+              "pathway": "NEGATIVE_DISEASE_POSITIVE_THERAPEUTIC_GROUP",
+              "potency_status": "NOT_EVALUATED",
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": []
+            }
+          ]
+        },
+        "severity_resolution": {
+          "slot_resolutions": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "target_role": "STANDARD_FORMULA_TARGET",
+              "severity_status": "RESOLVED_NUMERIC",
+              "severity_score": 4,
+              "severity_band": "MODERATE",
+              "severity_resolution_source": "DOCTOR_STRUCTURED",
+              "binding_status": "BOUND",
+              "evidence_item_ids": ["e1"],
+              "corroborating_source_ids": [],
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": [],
+              "upstream_context_status": "NOT_EVALUATED"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "candidate_family": "NONE",
+        "selection_status": "NOT_STARTED"
+      }
+    },
+    {
+      "id": "synthetic-missing-gate-46",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase7-candidate-eligibility",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase7-candidate-eligibility-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_eligibility_bypass": true,
+        "formula_slot_ids": ["s1"],
+        "formula_eligibility_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "common_gate_bundle": {
+              "neg_complete": true,
+              "pos_complete": false,
+              "organ_system_resolved": true,
+              "evidence_item_ids": ["e1"]
+            }
+          }
+        ]
+      },
+      "context": {
+        "polarity_routing": {
+          "slot_routings": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "rule2_record_id": "r1",
+              "disease_polarity": "NEGATIVE",
+              "required_therapeutic_polarity": "POSITIVE",
+              "resolution_status": "RESOLVED",
+              "pathway": "NEGATIVE_DISEASE_POSITIVE_THERAPEUTIC_GROUP",
+              "potency_status": "NOT_EVALUATED",
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": []
+            }
+          ]
+        },
+        "severity_resolution": {
+          "slot_resolutions": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "target_role": "STANDARD_FORMULA_TARGET",
+              "severity_status": "RESOLVED_NUMERIC",
+              "severity_score": 4,
+              "severity_band": "MODERATE",
+              "severity_resolution_source": "DOCTOR_STRUCTURED",
+              "binding_status": "BOUND",
+              "evidence_item_ids": ["e1"],
+              "corroborating_source_ids": [],
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": [],
+              "upstream_context_status": "NOT_EVALUATED"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "candidate_family": "NONE",
+        "selection_status": "NOT_STARTED"
+      }
+    },
+    {
+      "id": "synthetic-missing-gate-47",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase7-candidate-eligibility",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase7-candidate-eligibility-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_eligibility_bypass": true,
+        "formula_slot_ids": ["s1"],
+        "formula_eligibility_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "common_gate_bundle": {
+              "neg_complete": true,
+              "pos_complete": false,
+              "organ_system_resolved": true,
+              "evidence_item_ids": ["e1"]
+            }
+          }
+        ]
+      },
+      "context": {
+        "polarity_routing": {
+          "slot_routings": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "rule2_record_id": "r1",
+              "disease_polarity": "NEGATIVE",
+              "required_therapeutic_polarity": "POSITIVE",
+              "resolution_status": "RESOLVED",
+              "pathway": "NEGATIVE_DISEASE_POSITIVE_THERAPEUTIC_GROUP",
+              "potency_status": "NOT_EVALUATED",
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": []
+            }
+          ]
+        },
+        "severity_resolution": {
+          "slot_resolutions": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "target_role": "STANDARD_FORMULA_TARGET",
+              "severity_status": "RESOLVED_NUMERIC",
+              "severity_score": 4,
+              "severity_band": "MODERATE",
+              "severity_resolution_source": "DOCTOR_STRUCTURED",
+              "binding_status": "BOUND",
+              "evidence_item_ids": ["e1"],
+              "corroborating_source_ids": [],
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": [],
+              "upstream_context_status": "NOT_EVALUATED"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "candidate_family": "NONE",
+        "selection_status": "NOT_STARTED"
+      }
+    },
+    {
+      "id": "synthetic-missing-gate-48",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase7-candidate-eligibility",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase7-candidate-eligibility-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_eligibility_bypass": true,
+        "formula_slot_ids": ["s1"],
+        "formula_eligibility_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "common_gate_bundle": {
+              "neg_complete": true,
+              "pos_complete": false,
+              "organ_system_resolved": true,
+              "evidence_item_ids": ["e1"]
+            }
+          }
+        ]
+      },
+      "context": {
+        "polarity_routing": {
+          "slot_routings": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "rule2_record_id": "r1",
+              "disease_polarity": "NEGATIVE",
+              "required_therapeutic_polarity": "POSITIVE",
+              "resolution_status": "RESOLVED",
+              "pathway": "NEGATIVE_DISEASE_POSITIVE_THERAPEUTIC_GROUP",
+              "potency_status": "NOT_EVALUATED",
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": []
+            }
+          ]
+        },
+        "severity_resolution": {
+          "slot_resolutions": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "target_role": "STANDARD_FORMULA_TARGET",
+              "severity_status": "RESOLVED_NUMERIC",
+              "severity_score": 4,
+              "severity_band": "MODERATE",
+              "severity_resolution_source": "DOCTOR_STRUCTURED",
+              "binding_status": "BOUND",
+              "evidence_item_ids": ["e1"],
+              "corroborating_source_ids": [],
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": [],
+              "upstream_context_status": "NOT_EVALUATED"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "candidate_family": "NONE",
+        "selection_status": "NOT_STARTED"
+      }
+    },
+    {
+      "id": "synthetic-missing-gate-49",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase7-candidate-eligibility",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase7-candidate-eligibility-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_eligibility_bypass": true,
+        "formula_slot_ids": ["s1"],
+        "formula_eligibility_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "common_gate_bundle": {
+              "neg_complete": true,
+              "pos_complete": false,
+              "organ_system_resolved": true,
+              "evidence_item_ids": ["e1"]
+            }
+          }
+        ]
+      },
+      "context": {
+        "polarity_routing": {
+          "slot_routings": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "rule2_record_id": "r1",
+              "disease_polarity": "NEGATIVE",
+              "required_therapeutic_polarity": "POSITIVE",
+              "resolution_status": "RESOLVED",
+              "pathway": "NEGATIVE_DISEASE_POSITIVE_THERAPEUTIC_GROUP",
+              "potency_status": "NOT_EVALUATED",
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": []
+            }
+          ]
+        },
+        "severity_resolution": {
+          "slot_resolutions": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "target_role": "STANDARD_FORMULA_TARGET",
+              "severity_status": "RESOLVED_NUMERIC",
+              "severity_score": 4,
+              "severity_band": "MODERATE",
+              "severity_resolution_source": "DOCTOR_STRUCTURED",
+              "binding_status": "BOUND",
+              "evidence_item_ids": ["e1"],
+              "corroborating_source_ids": [],
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": [],
+              "upstream_context_status": "NOT_EVALUATED"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "candidate_family": "NONE",
+        "selection_status": "NOT_STARTED"
+      }
+    },
+    {
+      "id": "synthetic-missing-gate-50",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase7-candidate-eligibility",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase7-candidate-eligibility-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_eligibility_bypass": true,
+        "formula_slot_ids": ["s1"],
+        "formula_eligibility_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "common_gate_bundle": {
+              "neg_complete": true,
+              "pos_complete": false,
+              "organ_system_resolved": true,
+              "evidence_item_ids": ["e1"]
+            }
+          }
+        ]
+      },
+      "context": {
+        "polarity_routing": {
+          "slot_routings": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "rule2_record_id": "r1",
+              "disease_polarity": "NEGATIVE",
+              "required_therapeutic_polarity": "POSITIVE",
+              "resolution_status": "RESOLVED",
+              "pathway": "NEGATIVE_DISEASE_POSITIVE_THERAPEUTIC_GROUP",
+              "potency_status": "NOT_EVALUATED",
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": []
+            }
+          ]
+        },
+        "severity_resolution": {
+          "slot_resolutions": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "target_role": "STANDARD_FORMULA_TARGET",
+              "severity_status": "RESOLVED_NUMERIC",
+              "severity_score": 4,
+              "severity_band": "MODERATE",
+              "severity_resolution_source": "DOCTOR_STRUCTURED",
+              "binding_status": "BOUND",
+              "evidence_item_ids": ["e1"],
+              "corroborating_source_ids": [],
+              "selected_cascade": null,
+              "selected_dilution": null,
+              "reason_codes": [],
+              "limitation_codes": [],
+              "upstream_context_status": "NOT_EVALUATED"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "candidate_family": "NONE",
+        "selection_status": "NOT_STARTED"
+      }
+    }
+  ]
+}

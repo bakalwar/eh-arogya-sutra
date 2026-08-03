@@ -10,6 +10,7 @@ from .registry_paths import (
     RULE4_REGISTRY_FIXTURE_PHASE4_RELATIVE,
     RULE4_REGISTRY_FIXTURE_PHASE5_RELATIVE,
     RULE4_REGISTRY_FIXTURE_PHASE6_RELATIVE,
+    RULE4_REGISTRY_FIXTURE_PHASE7_RELATIVE,
     RULE4_REGISTRY_FIXTURE_RELATIVE,
 )
 
@@ -28,37 +29,44 @@ def load_reason_code_registry() -> dict:
     phase4 = _load_json(RULE4_REGISTRY_FIXTURE_PHASE4_RELATIVE)
     phase5 = _load_json(RULE4_REGISTRY_FIXTURE_PHASE5_RELATIVE)
     phase6 = _load_json(RULE4_REGISTRY_FIXTURE_PHASE6_RELATIVE)
+    phase7 = _load_json(RULE4_REGISTRY_FIXTURE_PHASE7_RELATIVE)
     reason_codes = merge_registry_entries(
         merge_registry_entries(
             merge_registry_entries(
                 merge_registry_entries(
-                    merge_registry_entries(phase1["reasonCodes"], phase2["reasonCodes"]),
-                    phase3["reasonCodes"],
+                    merge_registry_entries(
+                        merge_registry_entries(phase1["reasonCodes"], phase2["reasonCodes"]),
+                        phase3["reasonCodes"],
+                    ),
+                    phase4["reasonCodes"],
                 ),
-                phase4["reasonCodes"],
+                phase5["reasonCodes"],
             ),
-            phase5["reasonCodes"],
+            phase6["reasonCodes"],
         ),
-        phase6["reasonCodes"],
+        phase7["reasonCodes"],
     )
     limitation_codes = merge_registry_entries(
         merge_registry_entries(
             merge_registry_entries(
                 merge_registry_entries(
-                    merge_registry_entries(phase1["limitationCodes"], phase2["limitationCodes"]),
-                    phase3["limitationCodes"],
+                    merge_registry_entries(
+                        merge_registry_entries(phase1["limitationCodes"], phase2["limitationCodes"]),
+                        phase3["limitationCodes"],
+                    ),
+                    phase4["limitationCodes"],
                 ),
-                phase4["limitationCodes"],
+                phase5["limitationCodes"],
             ),
-            phase5["limitationCodes"],
+            phase6["limitationCodes"],
         ),
-        phase6["limitationCodes"],
+        phase7["limitationCodes"],
     )
     return {
-        "registryVersion": phase6["registryVersion"],
-        "scope": phase6["scope"],
-        "complete": phase6["complete"],
-        "clinicalRegistryStatus": phase6["clinicalRegistryStatus"],
+        "registryVersion": phase7["registryVersion"],
+        "scope": phase7["scope"],
+        "complete": phase7["complete"],
+        "clinicalRegistryStatus": phase7["clinicalRegistryStatus"],
         "documentationBaselineCommit": phase5["documentationBaselineCommit"],
         "unknownCodePolicy": phase5["unknownCodePolicy"],
         "fullRegistryStatus": phase5["fullRegistryStatus"],

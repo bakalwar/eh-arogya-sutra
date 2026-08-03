@@ -94,6 +94,8 @@ export type Rule4InputContract = {
   phaseAdapter?: import('./phase/types.js').Rule4PhaseAdapterInput;
   /** Phase 6 — shadow-only structured per-target severity envelope (in-memory). */
   severityAdapter?: import('./severity/types.js').Rule4SeverityAdapterInput;
+  /** Phase 7 — shadow-only candidate eligibility envelope (in-memory). */
+  eligibilityAdapter?: import('./eligibility/types.js').Rule4EligibilityAdapterInput;
 };
 
 export type Rule4InputContractPhase2 = Rule4InputContract & {
