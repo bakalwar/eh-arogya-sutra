@@ -90,6 +90,8 @@ export type Rule4InputContract = {
   evidenceAdapter?: import('./evidence/types.js').Rule4EvidenceAdapterInput;
   /** Phase 4 — shadow-only typed Rule 2 polarity envelope (in-memory). */
   polarityAdapter?: import('./polarity/types.js').Rule4PolarityAdapterInput;
+  /** Phase 5 — shadow-only structured disease-phase envelope (in-memory). */
+  phaseAdapter?: import('./phase/types.js').Rule4PhaseAdapterInput;
 };
 
 export type Rule4InputContractPhase2 = Rule4InputContract & {

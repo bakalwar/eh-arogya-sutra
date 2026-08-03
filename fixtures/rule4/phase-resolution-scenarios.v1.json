@@ -1,0 +1,1125 @@
+{
+  "fixtureVersion": "rule4-phase-resolution-scenarios-v1",
+  "scenarioCount": 38,
+  "fingerprintNote": "fingerprintV1References are fixed independently; scenarios do not embed runtime fingerprints.",
+  "fingerprintV1References": [
+    {
+      "reference_id": "day-band-acute-10",
+      "scenario_id": "day-band-acute-10",
+      "canonical_payload": "{\"fingerprint_version\":\"rule4-phase-resolution-fingerprint-v1\",\"limitation_codes\":[\"PHASE5_NO_NUMERIC_CASCADE\",\"TRUSTED_SYNTHETIC_BINDING_BYPASS_TEST_ONLY\"],\"reason_codes\":[\"PHASE_ALONE_NOT_A_POTENCY_SELECTOR\"],\"registry_version\":\"rule4-reason-codes-phase5-structured-phase-subset-v1\",\"ruleset_version\":\"ehas2-rule4-ruleset-v1-frozen-doc-4c35469\",\"slot_resolutions\":[{\"baseline_phase\":null,\"calculated_duration_days\":10,\"current_manifestation_phase\":null,\"duration_consistency_status\":\"CALCULATED_ONLY\",\"evidence_item_ids\":[],\"flare_status\":\"NOT_APPLICABLE\",\"formula_slot_id\":\"s1\",\"formula_target_id\":\"t1\",\"limitation_codes\":[\"PHASE5_NO_NUMERIC_CASCADE\",\"TRUSTED_SYNTHETIC_BINDING_BYPASS_TEST_ONLY\"],\"phase_resolution_source\":\"DAY_BAND\",\"phase_status\":\"RESOLVED_BY_DAY_BAND\",\"reason_codes\":[\"PHASE_ALONE_NOT_A_POTENCY_SELECTOR\"],\"resolved_phase\":\"ACUTE\",\"selected_cascade\":null,\"selected_dilution\":null,\"supplied_duration_days\":null,\"target_role\":\"STANDARD_FORMULA_TARGET\"}]}",
+      "phase_resolution_sha256": "2E3D42FFEB881DC7A3683AA9D68FE5501D07D0EB7396A8DD7B1E2508B5A27CC1"
+    },
+    {
+      "reference_id": "flare-verified-chronic-baseline",
+      "scenario_id": "flare-verified-chronic-baseline",
+      "canonical_payload": "{\"fingerprint_version\":\"rule4-phase-resolution-fingerprint-v1\",\"limitation_codes\":[\"PHASE5_NO_NUMERIC_CASCADE\",\"TRUSTED_SYNTHETIC_BINDING_BYPASS_TEST_ONLY\"],\"reason_codes\":[\"PHASE_ALONE_NOT_A_POTENCY_SELECTOR\"],\"registry_version\":\"rule4-reason-codes-phase5-structured-phase-subset-v1\",\"ruleset_version\":\"ehas2-rule4-ruleset-v1-frozen-doc-4c35469\",\"slot_resolutions\":[{\"baseline_phase\":\"CHRONIC_MODERATE\",\"calculated_duration_days\":null,\"current_manifestation_phase\":null,\"duration_consistency_status\":\"SUPPLIED_ONLY\",\"evidence_item_ids\":[],\"flare_status\":\"ACUTE_EXACERBATION_ON_CHRONIC\",\"formula_slot_id\":\"flare\",\"formula_target_id\":\"t-flare\",\"limitation_codes\":[\"PHASE5_NO_NUMERIC_CASCADE\",\"TRUSTED_SYNTHETIC_BINDING_BYPASS_TEST_ONLY\"],\"phase_resolution_source\":\"DAY_BAND\",\"phase_status\":\"RESOLVED_BY_DAY_BAND\",\"reason_codes\":[\"PHASE_ALONE_NOT_A_POTENCY_SELECTOR\"],\"resolved_phase\":\"ACUTE\",\"selected_cascade\":null,\"selected_dilution\":null,\"supplied_duration_days\":5,\"target_role\":\"CURRENT_ACUTE_FLARE\"}]}",
+      "phase_resolution_sha256": "70F98D513CAA085640899AF85F7ED3A2D4A2AF7F0E63C422B38A995F5E4C291A"
+    },
+    {
+      "reference_id": "phase-contradiction",
+      "scenario_id": "phase-contradiction",
+      "canonical_payload": "{\"fingerprint_version\":\"rule4-phase-resolution-fingerprint-v1\",\"limitation_codes\":[\"PHASE5_NO_NUMERIC_CASCADE\",\"TRUSTED_SYNTHETIC_BINDING_BYPASS_TEST_ONLY\"],\"reason_codes\":[\"PHASE_CONTRADICTORY\"],\"registry_version\":\"rule4-reason-codes-phase5-structured-phase-subset-v1\",\"ruleset_version\":\"ehas2-rule4-ruleset-v1-frozen-doc-4c35469\",\"slot_resolutions\":[{\"baseline_phase\":null,\"calculated_duration_days\":null,\"current_manifestation_phase\":null,\"duration_consistency_status\":\"SUPPLIED_ONLY\",\"evidence_item_ids\":[\"e1\",\"e2\",\"e3\",\"e4\"],\"flare_status\":\"NOT_APPLICABLE\",\"formula_slot_id\":\"s1\",\"formula_target_id\":\"t1\",\"limitation_codes\":[\"PHASE5_NO_NUMERIC_CASCADE\",\"TRUSTED_SYNTHETIC_BINDING_BYPASS_TEST_ONLY\"],\"phase_resolution_source\":\"NONE\",\"phase_status\":\"PHASE_CONTRADICTORY\",\"reason_codes\":[\"PHASE_CONTRADICTORY\"],\"resolved_phase\":null,\"selected_cascade\":null,\"selected_dilution\":null,\"supplied_duration_days\":10,\"target_role\":\"STANDARD_FORMULA_TARGET\"}]}",
+      "phase_resolution_sha256": "0A5F1A7469A43F9F3E2C38D2410FBA04784E91C1AE7836492EF7F996F808A022"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "day-band-acute-10",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase5-structured-phase",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase5-structured-phase-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_phase_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "phase_evidence_assertions": [],
+            "structured_onset_date": "2026-01-01",
+            "consultation_assessment_date": "2026-01-10"
+          }
+        ]
+      },
+      "expected": {
+        "phase_status": "RESOLVED_BY_DAY_BAND",
+        "resolved_phase": "ACUTE"
+      }
+    },
+    {
+      "id": "day-band-sub-20",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase5-structured-phase",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase5-structured-phase-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_phase_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "phase_evidence_assertions": [],
+            "raw_duration_days": 20
+          }
+        ]
+      },
+      "expected": {
+        "phase_status": "RESOLVED_BY_DAY_BAND",
+        "resolved_phase": "SUB_ACUTE"
+      }
+    },
+    {
+      "id": "chronic-moderate-60",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase5-structured-phase",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase5-structured-phase-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_phase_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "phase_evidence_assertions": [],
+            "raw_duration_days": 60
+          }
+        ]
+      },
+      "expected": {
+        "phase_status": "RESOLVED_BY_DAY_BAND",
+        "resolved_phase": "CHRONIC_MODERATE"
+      }
+    },
+    {
+      "id": "deep-chronic-100",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase5-structured-phase",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase5-structured-phase-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_phase_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "phase_evidence_assertions": [],
+            "raw_duration_days": 100
+          }
+        ]
+      },
+      "expected": {
+        "phase_status": "RESOLVED_BY_DAY_BAND",
+        "resolved_phase": "DEEP_CHRONIC"
+      }
+    },
+    {
+      "id": "same-day-day1",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase5-structured-phase",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase5-structured-phase-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_phase_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "phase_evidence_assertions": [],
+            "structured_onset_date": "2026-02-01",
+            "consultation_assessment_date": "2026-02-01"
+          }
+        ]
+      },
+      "expected": {
+        "calculated_duration_days": 1,
+        "resolved_phase": "ACUTE"
+      }
+    },
+    {
+      "id": "next-day-day2",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase5-structured-phase",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase5-structured-phase-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_phase_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "phase_evidence_assertions": [],
+            "structured_onset_date": "2026-02-01",
+            "consultation_assessment_date": "2026-02-02"
+          }
+        ]
+      },
+      "expected": {
+        "calculated_duration_days": 2,
+        "resolved_phase": "ACUTE"
+      }
+    },
+    {
+      "id": "duration-14-boundary",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase5-structured-phase",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase5-structured-phase-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_phase_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "phase_evidence_assertions": [],
+            "raw_duration_days": 14
+          }
+        ]
+      },
+      "expected": {
+        "resolved_phase": "ACUTE"
+      }
+    },
+    {
+      "id": "duration-15-boundary",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase5-structured-phase",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase5-structured-phase-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_phase_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "phase_evidence_assertions": [],
+            "raw_duration_days": 15
+          }
+        ]
+      },
+      "expected": {
+        "resolved_phase": "SUB_ACUTE"
+      }
+    },
+    {
+      "id": "duration-45-boundary",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase5-structured-phase",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase5-structured-phase-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_phase_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "phase_evidence_assertions": [],
+            "raw_duration_days": 45
+          }
+        ]
+      },
+      "expected": {
+        "resolved_phase": "SUB_ACUTE"
+      }
+    },
+    {
+      "id": "duration-46-chronic",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase5-structured-phase",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase5-structured-phase-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_phase_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "phase_evidence_assertions": [],
+            "raw_duration_days": 46
+          }
+        ]
+      },
+      "expected": {
+        "resolved_phase": "CHRONIC_MODERATE"
+      }
+    },
+    {
+      "id": "duration-90-chronic",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase5-structured-phase",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase5-structured-phase-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_phase_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "phase_evidence_assertions": [],
+            "raw_duration_days": 90
+          }
+        ]
+      },
+      "expected": {
+        "resolved_phase": "CHRONIC_MODERATE"
+      }
+    },
+    {
+      "id": "duration-91-deep",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase5-structured-phase",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase5-structured-phase-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_phase_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "phase_evidence_assertions": [],
+            "raw_duration_days": 91
+          }
+        ]
+      },
+      "expected": {
+        "resolved_phase": "DEEP_CHRONIC"
+      }
+    },
+    {
+      "id": "missing-duration-and-evidence",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase5-structured-phase",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase5-structured-phase-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_phase_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "phase_evidence_assertions": []
+          }
+        ]
+      },
+      "expected": {
+        "phase_status": "MISSING_EVIDENCE",
+        "resolved_phase": null
+      }
+    },
+    {
+      "id": "invalid-calendar-date",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase5-structured-phase",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase5-structured-phase-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_phase_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "phase_evidence_assertions": [],
+            "structured_onset_date": "2026-02-30",
+            "consultation_assessment_date": "2026-03-01"
+          }
+        ]
+      },
+      "expected": {
+        "phase_status": "INVALID_DURATION"
+      }
+    },
+    {
+      "id": "assessment-before-onset",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase5-structured-phase",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase5-structured-phase-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_phase_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "phase_evidence_assertions": [],
+            "structured_onset_date": "2026-03-05",
+            "consultation_assessment_date": "2026-03-01"
+          }
+        ]
+      },
+      "expected": {
+        "phase_status": "INVALID_DURATION"
+      }
+    },
+    {
+      "id": "ambiguous-phase-evidence",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase5-structured-phase",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase5-structured-phase-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_phase_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "phase_evidence_assertions": [
+              {
+                "evidence_item_id": "e1",
+                "phase_label": "ACUTE",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "e1",
+                "sequence_token": "1"
+              },
+              {
+                "evidence_item_id": "e2",
+                "phase_label": "SUB_ACUTE",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "e2",
+                "sequence_token": "1"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "phase_status": "PHASE_CONTRADICTORY"
+      }
+    },
+    {
+      "id": "phase-contradiction",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase5-structured-phase",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase5-structured-phase-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_phase_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "phase_evidence_assertions": [
+              {
+                "evidence_item_id": "e1",
+                "phase_label": "SUB_ACUTE",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "e1",
+                "sequence_token": "1"
+              },
+              {
+                "evidence_item_id": "e2",
+                "phase_label": "SUB_ACUTE",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "e2",
+                "sequence_token": "1"
+              },
+              {
+                "evidence_item_id": "e3",
+                "phase_label": "ACUTE",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "e3",
+                "sequence_token": "1"
+              },
+              {
+                "evidence_item_id": "e4",
+                "phase_label": "ACUTE",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "e4",
+                "sequence_token": "1"
+              }
+            ],
+            "raw_duration_days": 10
+          }
+        ]
+      },
+      "expected": {
+        "phase_status": "PHASE_CONTRADICTORY"
+      }
+    },
+    {
+      "id": "doctor-override-sub-acute",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase5-structured-phase",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase5-structured-phase-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_phase_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "phase_evidence_assertions": [
+              {
+                "evidence_item_id": "d1",
+                "phase_label": "SUB_ACUTE",
+                "source_tier": "DOCTOR_STRUCTURED",
+                "dedupe_key": "d1",
+                "sequence_token": "1"
+              }
+            ],
+            "raw_duration_days": 10
+          }
+        ]
+      },
+      "expected": {
+        "phase_status": "RESOLVED_BY_CROSS_BOUNDARY_OVERRIDE",
+        "resolved_phase": "SUB_ACUTE"
+      }
+    },
+    {
+      "id": "invalid-item-valid-pool",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase5-structured-phase",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase5-structured-phase-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_phase_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "phase_evidence_assertions": [
+              {
+                "evidence_item_id": "bad",
+                "phase_label": null,
+                "source_tier": "INVALID_ITEM",
+                "dedupe_key": "bad",
+                "sequence_token": "1"
+              },
+              {
+                "evidence_item_id": "good",
+                "phase_label": "ACUTE",
+                "source_tier": "DOCTOR_STRUCTURED",
+                "dedupe_key": "good",
+                "sequence_token": "1"
+              }
+            ],
+            "raw_duration_days": 10
+          }
+        ]
+      },
+      "expected": {
+        "resolved_phase": "ACUTE"
+      }
+    },
+    {
+      "id": "dates-and-duration-match",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase5-structured-phase",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase5-structured-phase-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_phase_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "phase_evidence_assertions": [],
+            "structured_onset_date": "2026-01-01",
+            "consultation_assessment_date": "2026-01-10",
+            "raw_duration_days": 10
+          }
+        ]
+      },
+      "expected": {
+        "duration_consistency_status": "MATCH",
+        "resolved_phase": "ACUTE"
+      }
+    },
+    {
+      "id": "dates-and-duration-mismatch",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase5-structured-phase",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase5-structured-phase-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_phase_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "phase_evidence_assertions": [],
+            "structured_onset_date": "2026-01-01",
+            "consultation_assessment_date": "2026-01-10",
+            "raw_duration_days": 20
+          }
+        ]
+      },
+      "expected": {
+        "phase_status": "PHASE_CONTRADICTORY",
+        "duration_consistency_status": "MISMATCH"
+      }
+    },
+    {
+      "id": "incomplete-date-pair-raw-fallback",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase5-structured-phase",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase5-structured-phase-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_phase_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "phase_evidence_assertions": [],
+            "structured_onset_date": "2026-01-01",
+            "raw_duration_days": 25
+          }
+        ]
+      },
+      "expected": {
+        "duration_consistency_status": "INCOMPLETE_DATES",
+        "resolved_phase": "SUB_ACUTE"
+      }
+    },
+    {
+      "id": "raw-duration-fallback-only",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase5-structured-phase",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase5-structured-phase-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_phase_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "phase_evidence_assertions": [],
+            "raw_duration_days": 7
+          }
+        ]
+      },
+      "expected": {
+        "duration_consistency_status": "SUPPLIED_ONLY",
+        "resolved_phase": "ACUTE"
+      }
+    },
+    {
+      "id": "vague-timeline-phrase",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase5-structured-phase",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase5-structured-phase-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_phase_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "phase_evidence_assertions": [
+              {
+                "evidence_item_id": "v1",
+                "phase_label": null,
+                "source_tier": "VAGUE_TIMELINE",
+                "dedupe_key": "v1",
+                "sequence_token": "1"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "reason_includes": ["VAGUE_TIMELINE_NOT_EXECUTABLE"]
+      }
+    },
+    {
+      "id": "registry-keyword-blocked",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase5-structured-phase",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase5-structured-phase-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_phase_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "phase_evidence_assertions": [
+              {
+                "evidence_item_id": "r1",
+                "phase_label": "ACUTE",
+                "source_tier": "REGISTRY_KEYWORD",
+                "dedupe_key": "r1",
+                "sequence_token": "1"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "reason_includes": ["REGISTRY_Q12_SELECTOR_BLOCKED"]
+      }
+    },
+    {
+      "id": "flare-verified-chronic-baseline",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase5-structured-phase",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase5-structured-phase-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["flare"],
+        "formula_phase_records": [
+          {
+            "formula_slot_id": "flare",
+            "formula_target_id": "t-flare",
+            "target_role": "CURRENT_ACUTE_FLARE",
+            "phase_evidence_assertions": [],
+            "verified_chronic_baseline": true,
+            "flare_separation_safe": true,
+            "baseline_phase": "CHRONIC_MODERATE",
+            "raw_duration_days": 5
+          }
+        ]
+      },
+      "expected": {
+        "flare_status": "ACUTE_EXACERBATION_ON_CHRONIC",
+        "resolved_phase": "ACUTE"
+      }
+    },
+    {
+      "id": "flare-without-chronic-baseline",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase5-structured-phase",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase5-structured-phase-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["flare"],
+        "formula_phase_records": [
+          {
+            "formula_slot_id": "flare",
+            "formula_target_id": "t-flare",
+            "target_role": "CURRENT_ACUTE_FLARE",
+            "phase_evidence_assertions": [],
+            "verified_chronic_baseline": false,
+            "flare_separation_safe": true,
+            "raw_duration_days": 5
+          }
+        ]
+      },
+      "expected": {
+        "phase_status": "PHASE_TARGET_CONTRADICTORY"
+      }
+    },
+    {
+      "id": "unsafe-flare-separation",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase5-structured-phase",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase5-structured-phase-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["flare"],
+        "formula_phase_records": [
+          {
+            "formula_slot_id": "flare",
+            "formula_target_id": "t-flare",
+            "target_role": "CURRENT_ACUTE_FLARE",
+            "phase_evidence_assertions": [],
+            "verified_chronic_baseline": true,
+            "flare_separation_safe": false
+          }
+        ]
+      },
+      "expected": {
+        "phase_status": "PHASE_TARGET_CONTRADICTORY"
+      }
+    },
+    {
+      "id": "patient-global-label-only",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase5-structured-phase",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase5-structured-phase-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_phase_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "phase_evidence_assertions": [],
+            "patient_global_acute_on_chronic_label_only": true
+          }
+        ]
+      },
+      "expected": {
+        "phase_status": "PHASE_TARGET_CONTRADICTORY"
+      }
+    },
+    {
+      "id": "q-l-dedupe-single-vote",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase5-structured-phase",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase5-structured-phase-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_phase_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "phase_evidence_assertions": [
+              {
+                "evidence_item_id": "a",
+                "phase_label": "SUB_ACUTE",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "dup-key",
+                "sequence_token": "1"
+              },
+              {
+                "evidence_item_id": "b",
+                "phase_label": "SUB_ACUTE",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "dup-key",
+                "sequence_token": "1"
+              }
+            ],
+            "raw_duration_days": 10
+          }
+        ]
+      },
+      "expected": {
+        "phase_status": "RESOLVED_BY_DAY_BAND",
+        "resolved_phase": "ACUTE"
+      }
+    },
+    {
+      "id": "newer-evidence-supersedes",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase5-structured-phase",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase5-structured-phase-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_phase_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "phase_evidence_assertions": [
+              {
+                "evidence_item_id": "old",
+                "phase_label": "ACUTE",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "k1",
+                "sequence_token": "1"
+              },
+              {
+                "evidence_item_id": "new",
+                "phase_label": "SUB_ACUTE",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "k1",
+                "sequence_token": "9"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "phase_status": "RESOLVED_BY_EVIDENCE",
+        "resolved_phase": "SUB_ACUTE"
+      }
+    },
+    {
+      "id": "leap-day-span",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase5-structured-phase",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase5-structured-phase-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_phase_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "phase_evidence_assertions": [],
+            "structured_onset_date": "2024-02-28",
+            "consultation_assessment_date": "2024-02-29"
+          }
+        ]
+      },
+      "expected": {
+        "calculated_duration_days": 2
+      }
+    },
+    {
+      "id": "structured-chronic-evidence",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase5-structured-phase",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase5-structured-phase-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_phase_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "phase_evidence_assertions": [
+              {
+                "evidence_item_id": "d1",
+                "phase_label": "CHRONIC_MODERATE",
+                "source_tier": "DOCTOR_STRUCTURED",
+                "dedupe_key": "d1",
+                "sequence_token": "1"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "phase_status": "RESOLVED_BY_EVIDENCE",
+        "resolved_phase": "CHRONIC_MODERATE"
+      }
+    },
+    {
+      "id": "duration-zero-invalid",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase5-structured-phase",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase5-structured-phase-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_phase_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "phase_evidence_assertions": [],
+            "raw_duration_days": 0
+          }
+        ]
+      },
+      "expected": {
+        "phase_status": "MISSING_EVIDENCE"
+      }
+    },
+    {
+      "id": "underlying-chronic-target",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase5-structured-phase",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase5-structured-phase-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["ch"],
+        "formula_phase_records": [
+          {
+            "formula_slot_id": "ch",
+            "formula_target_id": "t-ch",
+            "target_role": "UNDERLYING_CHRONIC_TARGET",
+            "phase_evidence_assertions": [],
+            "baseline_phase": "DEEP_CHRONIC",
+            "current_manifestation_phase": "STABLE_BASELINE",
+            "raw_duration_days": 200
+          }
+        ]
+      },
+      "expected": {
+        "resolved_phase": "DEEP_CHRONIC",
+        "flare_status": "STABLE_BASELINE"
+      }
+    },
+    {
+      "id": "structured-phase-explicit-ambiguous",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase5-structured-phase",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase5-structured-phase-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_phase_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "phase_evidence_assertions": [
+              {
+                "evidence_item_id": "amb1",
+                "phase_label": null,
+                "source_tier": "STRUCTURED_PHASE_AMBIGUOUS",
+                "dedupe_key": "amb1",
+                "sequence_token": "1"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "phase_status": "PHASE_AMBIGUOUS",
+        "resolved_phase": null,
+        "reason_includes": ["PHASE_EVIDENCE_AMBIGUOUS"]
+      }
+    },
+    {
+      "id": "invalid-evidence-only-pool",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase5-structured-phase",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase5-structured-phase-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_phase_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "phase_evidence_assertions": [
+              {
+                "evidence_item_id": "bad1",
+                "phase_label": "ACUTE",
+                "source_tier": "INVALID_ITEM",
+                "dedupe_key": "bad1",
+                "sequence_token": "1"
+              },
+              {
+                "evidence_item_id": "bad2",
+                "phase_label": "SUB_ACUTE",
+                "source_tier": "NEGATED",
+                "dedupe_key": "bad2",
+                "sequence_token": "1"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "phase_status": "INVALID_EVIDENCE",
+        "resolved_phase": null,
+        "reason_includes": ["PHASE_EVIDENCE_INVALID"]
+      }
+    },
+    {
+      "id": "d11-single-sub-acute-insufficient-corroboration",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase5-structured-phase",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase5-structured-phase-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_phase_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "raw_duration_days": 10,
+            "phase_evidence_assertions": [
+              {
+                "evidence_item_id": "nd1",
+                "phase_label": "SUB_ACUTE",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "nd1",
+                "sequence_token": "1"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "phase_status": "RESOLVED_BY_DAY_BAND",
+        "resolved_phase": "ACUTE",
+        "limitation_includes": ["INSUFFICIENT_CORROBORATION_FOR_CROSS_BOUNDARY_OVERRIDE"]
+      }
+    }
+  ]
+}

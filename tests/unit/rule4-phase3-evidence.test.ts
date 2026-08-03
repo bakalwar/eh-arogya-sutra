@@ -309,6 +309,7 @@ describe('Rule 4 Phase 3 evidence adapter', () => {
     );
     expect(withEvidence.evidenceAdapter).not.toBeNull();
     expect(withEvidence.polarityRouting).toBeNull();
+    expect(withEvidence.phaseResolution).toBeNull();
     expect(withEvidence.result.slots[0]?.selectedDilution).toBeNull();
   });
 });

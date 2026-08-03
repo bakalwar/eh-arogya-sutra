@@ -1,0 +1,53 @@
+{
+  "registryVersion": "rule4-reason-codes-phase5-structured-phase-subset-v1",
+  "scope": "PHASE5_STRUCTURED_PHASE_SUBSET",
+  "complete": false,
+  "clinicalRegistryStatus": "INCOMPLETE_NOT_EXECUTABLE_FOR_NUMERIC_CASCADE",
+  "documentationBaselineCommit": "4c35469b9e9ba104e4097ddc48649b0aaa3761b4",
+  "unknownCodePolicy": "REJECT_UNKNOWN_CODE",
+  "fullRegistryStatus": "FUTURE_MECHANICAL_HARVEST_PENDING",
+  "extendsRegistry": "rule4-reason-codes-phase4-polarity-subset-v1",
+  "reasonCodes": [
+    { "code": "PHASE_EVIDENCE_MISSING", "namespace": "reason", "source": "Q12-CLOSE Q12-E" },
+    { "code": "PHASE_EVIDENCE_INVALID", "namespace": "reason", "source": "Q12-CLOSE Q12-E" },
+    { "code": "PHASE_EVIDENCE_AMBIGUOUS", "namespace": "reason", "source": "Q12-CLOSE Q12-E" },
+    { "code": "PHASE_CONTRADICTORY", "namespace": "reason", "source": "Q12-CLOSE Q12-S" },
+    {
+      "code": "CROSS_FORMULA_PHASE_LEAKAGE_BLOCKED",
+      "namespace": "reason",
+      "source": "Q12-CLOSE Q12-S"
+    },
+    {
+      "code": "PHASE_ALONE_NOT_A_POTENCY_SELECTOR",
+      "namespace": "reason",
+      "source": "Q12-CLOSE Q12-F"
+    },
+    {
+      "code": "PRODUCTION_PHASE_RESOLUTION_NOT_CONNECTED",
+      "namespace": "reason",
+      "source": "Phase 5 binding gate"
+    },
+    {
+      "code": "LEGACY_MISSING_PHASE_ACUTE_DEFAULT_REJECTED",
+      "namespace": "reason",
+      "source": "Q12-CLOSE Q12-Q"
+    },
+    {
+      "code": "LEGACY_PHASE_KEYWORD_SELECTOR_BLOCKED",
+      "namespace": "reason",
+      "source": "Q12-CLOSE Q12-Q"
+    },
+    {
+      "code": "PARTIAL_PHASE_RESOLUTION_REQUIRES_DOCTOR_REVIEW",
+      "namespace": "reason",
+      "source": "Q12-CLOSE Q12-M"
+    }
+  ],
+  "limitationCodes": [
+    {
+      "code": "PHASE5_NO_NUMERIC_CASCADE",
+      "namespace": "limitation",
+      "source": "Phase 5 structured phase only"
+    }
+  ]
+}

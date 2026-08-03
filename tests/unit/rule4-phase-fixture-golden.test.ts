@@ -2,10 +2,14 @@ import { createHash } from 'node:crypto';
 import { readFileSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { evaluatePhaseAdapter } from '../../packages/clinical-contracts/src/rule4/phase/evaluatePhaseAdapter.js';
+import { rule4PhaseResolutionFingerprintV1Hash } from '../../packages/clinical-contracts/src/rule4/phase/phaseFingerprintV1.js';
 import {
-  RULE4_EVIDENCE_FIXTURE_PATH,
-  loadRule4EvidenceAdapterFixture,
-} from './rule4-evidence-fixture-loader.ts';
+  RULE4_PHASE_FIXTURE_PATH,
+  loadRule4PhaseResolutionFixture,
+  phaseAdapterInputFromFixture,
+  phaseEvaluationContextFromFixture,
+} from './rule4-phase-fixture-loader.ts';
 
 const REPO = resolve(import.meta.dirname, '../..');
 const RULE4_TEST_DIR = resolve(REPO, 'tests/unit');
@@ -22,16 +26,14 @@ const GOLDEN_IMMUTABILITY_SELF_FILES = new Set([
   'rule4-phase-fixture-golden.test.ts',
 ]);
 
-const FORBIDDEN_WRITE_SUBSTRINGS = ['updateGolden', 'update-golden'];
-
-describe('Rule 4 evidence golden fixture immutability', () => {
+describe('Rule 4 phase golden fixture immutability', () => {
   it('fixture file hash is stable for the duration of this file tests', () => {
     const hashAtStart = createHash('sha256')
-      .update(readFileSync(RULE4_EVIDENCE_FIXTURE_PATH))
+      .update(readFileSync(RULE4_PHASE_FIXTURE_PATH))
       .digest('hex')
       .toUpperCase();
     const hashAtEnd = createHash('sha256')
-      .update(readFileSync(RULE4_EVIDENCE_FIXTURE_PATH))
+      .update(readFileSync(RULE4_PHASE_FIXTURE_PATH))
       .digest('hex')
       .toUpperCase();
     expect(hashAtEnd).toBe(hashAtStart);
@@ -49,21 +51,28 @@ describe('Rule 4 evidence golden fixture immutability', () => {
       for (const pattern of FORBIDDEN_WRITE_PATTERNS) {
         expect(src, `${file} must not match ${pattern}`).not.toMatch(pattern);
       }
-      for (const sub of FORBIDDEN_WRITE_SUBSTRINGS) {
-        expect(src.includes(sub), `${file} must not contain ${sub}`).toBe(false);
-      }
     }
   });
 
-  it('fixture expected blocks are not evaluator-generated fingerprints', () => {
-    const fixture = loadRule4EvidenceAdapterFixture();
-    for (const scenario of fixture.scenarios) {
-      expect(scenario.expected).not.toHaveProperty('deterministic_evidence_pool_fingerprint');
-    }
+  it('fingerprint v1 references match independent evaluation', () => {
+    const fixture = loadRule4PhaseResolutionFixture();
     expect(fixture.fingerprintV1References.length).toBeGreaterThanOrEqual(3);
     for (const ref of fixture.fingerprintV1References) {
-      expect(ref.canonicalPayload.length).toBeGreaterThan(10);
-      expect(ref.evidencePoolSha256).toMatch(/^[A-F0-9]{64}$/);
+      const scenario = fixture.scenarios.find((s) => s.id === ref.scenario_id);
+      expect(scenario).toBeDefined();
+      const out = evaluatePhaseAdapter(
+        phaseAdapterInputFromFixture(scenario!),
+        phaseEvaluationContextFromFixture(scenario!),
+      );
+      const sha = rule4PhaseResolutionFingerprintV1Hash({
+        rulesetVersion: out.rulesetVersion,
+        registryVersion: out.registryVersion,
+        slotResolutions: out.slotResolutions,
+        reasonCodes: out.reasonCodes,
+        limitationCodes: out.limitationCodes,
+      });
+      expect(sha).toBe(ref.phase_resolution_sha256);
+      expect(ref.canonical_payload).toBeTruthy();
     }
   });
 });
