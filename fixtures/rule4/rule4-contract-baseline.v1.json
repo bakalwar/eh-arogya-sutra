@@ -1,0 +1,5 @@
+{
+  "contractVersion": "ehas2-rule4-contract-v1-phase1",
+  "rulesetVersionPlaceholder": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+  "registryPath": "fixtures/rule4/reason-code-registry.phase1-foundation-subset.v1.json"
+}

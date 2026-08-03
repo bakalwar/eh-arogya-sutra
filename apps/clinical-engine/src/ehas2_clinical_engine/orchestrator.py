@@ -5,7 +5,7 @@ import threading
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 from . import ENGINE_VERSION, RULE_SET_VERSION
 from .disease_package import DATASET_VERSION, DiseasePackage, DiseasePackageError, load_disease_package
@@ -20,6 +20,8 @@ from .interpretation import (
 )
 from .normalize import normalize_case
 from .retrieval import retrieve_diseases
+from .rule4.orchestrator_hook import apply_rule4_orchestrator_hook
+from .rule4.evaluator import Rule4ConfigurationError
 
 MEDICINE_REGISTRY_VERSION = "ehas2-medicine-registry-v1"
 ORCHESTRATOR_VERSION = "ehas2-nine-rule-orchestrator-v1-phase5c"
@@ -147,6 +149,7 @@ class OrchestratorRun:
     package_dir: Path | None = None
     require_full_package: bool = False
     allow_synthetic_package: bool = True
+    rule4_shadow_collector: Callable[[dict], None] | None = None
 
 
 class OrchestratorError(Exception):
@@ -550,6 +553,14 @@ class NineRuleOrchestrator:
             ),
         }
         # Deep copy outbound so callers cannot mutate orchestrator internals
+        try:
+            result = apply_rule4_orchestrator_hook(
+                result,
+                payload,
+                shadow_collector=run.rule4_shadow_collector,
+            )
+        except Rule4ConfigurationError as exc:
+            raise OrchestratorError(str(exc)) from exc
         return copy.deepcopy(result)
 
     def _fail_package(self, reason: str, payload: dict) -> dict:
