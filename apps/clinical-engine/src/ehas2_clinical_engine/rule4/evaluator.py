@@ -138,6 +138,7 @@ def evaluate_rule4_shadow_bundle(input_contract: dict) -> dict:
     evidence = None
     polarity = None
     phase_resolution = None
+    severity_resolution = None
     if input_contract.get("engine_mode") == "shadow":
         if input_contract.get("evidence_adapter"):
             from .evidence.evaluate_evidence_adapter import evaluate_evidence_adapter
@@ -162,11 +163,24 @@ def evaluate_rule4_shadow_bundle(input_contract: dict) -> dict:
                 polarity_routing=polarity,
                 binding_gate_mandatory=True,
             )
+        severity_resolution = None
+        if input_contract.get("severity_adapter"):
+            from .severity.evaluate_severity_adapter import evaluate_severity_adapter
+
+            severity_resolution = evaluate_severity_adapter(
+                input_contract["severity_adapter"],
+                safety_gate=result.get("safety_gate"),
+                evidence_adapter=evidence,
+                polarity_routing=polarity,
+                phase_resolution=phase_resolution,
+                binding_gate_mandatory=True,
+            )
     return {
         "result": result,
         "evidence_adapter": evidence,
         "polarity_routing": polarity,
         "phase_resolution": phase_resolution,
+        "severity_resolution": severity_resolution,
     }
 
 

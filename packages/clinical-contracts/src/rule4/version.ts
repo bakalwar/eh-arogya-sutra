@@ -12,6 +12,9 @@ export const RULE4_CONTRACT_VERSION_PHASE4_POLARITY =
 export const RULE4_CONTRACT_VERSION_PHASE5_STRUCTURED_PHASE =
   'ehas2-rule4-contract-v1-phase5-structured-phase' as const;
 
+export const RULE4_CONTRACT_VERSION_PHASE6_STRUCTURED_SEVERITY =
+  'ehas2-rule4-contract-v1-phase6-structured-severity' as const;
+
 export const RULE4_RULESET_VERSION_DOC_BASELINE =
   'ehas2-rule4-ruleset-v1-frozen-doc-4c35469' as const;
 
@@ -86,6 +89,19 @@ export const RULE4_REGISTRY_PHASE5_SCOPE = 'PHASE5_STRUCTURED_PHASE_SUBSET' as c
 export const RULE4_REGISTRY_PHASE5_COMPLETE = false as const;
 
 export const RULE4_REGISTRY_PHASE5_CLINICAL_STATUS =
+  'INCOMPLETE_NOT_EXECUTABLE_FOR_NUMERIC_CASCADE' as const;
+
+export const RULE4_REGISTRY_FIXTURE_PHASE6_RELATIVE =
+  'fixtures/rule4/reason-code-registry.phase6-structured-severity-subset.v1.json' as const;
+
+export const RULE4_REGISTRY_PHASE6_VERSION =
+  'rule4-reason-codes-phase6-structured-severity-subset-v1' as const;
+
+export const RULE4_REGISTRY_PHASE6_SCOPE = 'PHASE6_STRUCTURED_SEVERITY_SUBSET' as const;
+
+export const RULE4_REGISTRY_PHASE6_COMPLETE = false as const;
+
+export const RULE4_REGISTRY_PHASE6_CLINICAL_STATUS =
   'INCOMPLETE_NOT_EXECUTABLE_FOR_NUMERIC_CASCADE' as const;
 
 export const RULE4_FORBIDDEN_SELECTOR_INPUT_FIELDS = [

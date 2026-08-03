@@ -134,6 +134,14 @@ class Rule4Phase1Tests(unittest.TestCase):
                 / "reason-code-registry.phase5-structured-phase-subset.v1.json"
             ).read_text(encoding="utf-8")
         )
+        phase6 = json.loads(
+            (
+                REPO_ROOT
+                / "fixtures"
+                / "rule4"
+                / "reason-code-registry.phase6-structured-severity-subset.v1.json"
+            ).read_text(encoding="utf-8")
+        )
         reason_codes = sorted(
             r["code"]
             for r in phase1["reasonCodes"]
@@ -141,6 +149,7 @@ class Rule4Phase1Tests(unittest.TestCase):
             + phase3["reasonCodes"]
             + phase4["reasonCodes"]
             + phase5["reasonCodes"]
+            + phase6["reasonCodes"]
         )
         limitation_codes = sorted(
             r["code"]
@@ -149,6 +158,7 @@ class Rule4Phase1Tests(unittest.TestCase):
             + phase3["limitationCodes"]
             + phase4["limitationCodes"]
             + phase5["limitationCodes"]
+            + phase6["limitationCodes"]
         )
         from ehas2_clinical_engine.rule4.evaluator import load_reason_code_registry
 

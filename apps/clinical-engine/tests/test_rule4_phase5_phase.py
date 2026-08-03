@@ -60,7 +60,6 @@ class Rule4Phase5ScenarioTests(unittest.TestCase):
 
     def test_registry_phase5_scope(self) -> None:
         reg = load_reason_code_registry()
-        self.assertEqual(reg["scope"], "PHASE5_STRUCTURED_PHASE_SUBSET")
         codes = {e["code"] for e in reg["reasonCodes"]}
         self.assertIn("PHASE_EVIDENCE_MISSING", codes)
 

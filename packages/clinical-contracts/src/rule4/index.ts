@@ -14,4 +14,5 @@ export * from './evaluator.js';
 export * from './evidence/index.js';
 export * from './polarity/index.js';
 export * from './phase/index.js';
+export * from './severity/index.js';
 export * from './safety/index.js';

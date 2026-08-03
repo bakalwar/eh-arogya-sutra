@@ -1,0 +1,2657 @@
+{
+  "fixtureVersion": "rule4-severity-resolution-scenarios-v1",
+  "scenarioCount": 63,
+  "fingerprintNote": "fingerprintV1References are fixed independently; scenarios do not embed runtime fingerprints.",
+  "fingerprintV1References": [
+    {
+      "reference_id": "doctor-numeric-moderate-5",
+      "scenario_id": "doctor-numeric-moderate-5",
+      "canonical_payload": "{\"fingerprint_version\":\"rule4-severity-resolution-fingerprint-v1\",\"limitation_codes\":[\"PHASE6_NO_NUMERIC_CASCADE\",\"TRUSTED_SYNTHETIC_BINDING_BYPASS_TEST_ONLY\"],\"reason_codes\":[\"SEVERITY_ALONE_NOT_A_POTENCY_SELECTOR\"],\"registry_version\":\"rule4-reason-codes-phase6-structured-severity-subset-v1\",\"ruleset_version\":\"ehas2-rule4-ruleset-v1-frozen-doc-4c35469\",\"slot_resolutions\":[{\"binding_status\":\"BOUND\",\"corroborating_source_ids\":[\"ps-doc\"],\"evidence_item_ids\":[\"e1\"],\"formula_slot_id\":\"s1\",\"formula_target_id\":\"t1\",\"limitation_codes\":[\"PHASE6_NO_NUMERIC_CASCADE\",\"TRUSTED_SYNTHETIC_BINDING_BYPASS_TEST_ONLY\"],\"reason_codes\":[\"SEVERITY_ALONE_NOT_A_POTENCY_SELECTOR\"],\"selected_cascade\":null,\"selected_dilution\":null,\"severity_band\":\"MODERATE\",\"severity_resolution_source\":\"DOCTOR_STRUCTURED\",\"severity_score\":5,\"severity_status\":\"RESOLVED_NUMERIC\",\"target_role\":\"STANDARD_FORMULA_TARGET\",\"upstream_context_status\":\"NOT_EVALUATED\"}]}",
+      "severity_resolution_sha256": "CA33A686F3CA97DB4AE44C2818AD6ABE392E14CCAD06289F84AECB3F088B84F8"
+    },
+    {
+      "reference_id": "band-only-high-doctor",
+      "scenario_id": "band-only-high-doctor",
+      "canonical_payload": "{\"fingerprint_version\":\"rule4-severity-resolution-fingerprint-v1\",\"limitation_codes\":[\"PHASE6_NO_NUMERIC_CASCADE\",\"TRUSTED_SYNTHETIC_BINDING_BYPASS_TEST_ONLY\"],\"reason_codes\":[\"SEVERITY_ALONE_NOT_A_POTENCY_SELECTOR\"],\"registry_version\":\"rule4-reason-codes-phase6-structured-severity-subset-v1\",\"ruleset_version\":\"ehas2-rule4-ruleset-v1-frozen-doc-4c35469\",\"slot_resolutions\":[{\"binding_status\":\"BOUND\",\"corroborating_source_ids\":[\"ps-doc\"],\"evidence_item_ids\":[\"e1\"],\"formula_slot_id\":\"s1\",\"formula_target_id\":\"t1\",\"limitation_codes\":[\"PHASE6_NO_NUMERIC_CASCADE\",\"TRUSTED_SYNTHETIC_BINDING_BYPASS_TEST_ONLY\"],\"reason_codes\":[\"SEVERITY_ALONE_NOT_A_POTENCY_SELECTOR\"],\"selected_cascade\":null,\"selected_dilution\":null,\"severity_band\":\"HIGH\",\"severity_resolution_source\":\"DOCTOR_STRUCTURED\",\"severity_score\":null,\"severity_status\":\"RESOLVED_BAND_ONLY\",\"target_role\":\"STANDARD_FORMULA_TARGET\",\"upstream_context_status\":\"NOT_EVALUATED\"}]}",
+      "severity_resolution_sha256": "8BB5F399B5C7332044E85BE46D9796599F57AD9E2DC8DDB5F6771F731CEAB245"
+    },
+    {
+      "reference_id": "same-time-cross-band",
+      "scenario_id": "same-time-cross-band",
+      "canonical_payload": "{\"fingerprint_version\":\"rule4-severity-resolution-fingerprint-v1\",\"limitation_codes\":[\"PHASE6_NO_NUMERIC_CASCADE\",\"TRUSTED_SYNTHETIC_BINDING_BYPASS_TEST_ONLY\"],\"reason_codes\":[\"SEVERITY_ALONE_NOT_A_POTENCY_SELECTOR\"],\"registry_version\":\"rule4-reason-codes-phase6-structured-severity-subset-v1\",\"ruleset_version\":\"ehas2-rule4-ruleset-v1-frozen-doc-4c35469\",\"slot_resolutions\":[{\"binding_status\":\"BOUND\",\"corroborating_source_ids\":[\"ps1\",\"ps2\"],\"evidence_item_ids\":[\"e1\",\"e2\"],\"formula_slot_id\":\"s1\",\"formula_target_id\":\"t1\",\"limitation_codes\":[\"PHASE6_NO_NUMERIC_CASCADE\",\"TRUSTED_SYNTHETIC_BINDING_BYPASS_TEST_ONLY\"],\"reason_codes\":[\"SEVERITY_ALONE_NOT_A_POTENCY_SELECTOR\"],\"selected_cascade\":null,\"selected_dilution\":null,\"severity_band\":null,\"severity_resolution_source\":\"NONE\",\"severity_score\":null,\"severity_status\":\"SEVERITY_CONTRADICTORY\",\"target_role\":\"STANDARD_FORMULA_TARGET\",\"upstream_context_status\":\"NOT_EVALUATED\"}]}",
+      "severity_resolution_sha256": "5AAD9812D0BB48EDB64D7C5021F54AE010000AAE35EBA2F7BC06DC9AEB0B3D5C"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "doctor-numeric-moderate-5",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "e1",
+                "severity_score": 5,
+                "severity_band": "MODERATE",
+                "source_tier": "DOCTOR_STRUCTURED",
+                "dedupe_key": "d-e1",
+                "sequence_token": "t1",
+                "parent_source_id": "ps-doc"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "severity_status": "RESOLVED_NUMERIC",
+        "severity_score": 5,
+        "severity_band": "MODERATE"
+      }
+    },
+    {
+      "id": "score-band-mismatch",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "e1",
+                "severity_score": 5,
+                "severity_band": "HIGH",
+                "source_tier": "DOCTOR_STRUCTURED",
+                "dedupe_key": "d-e1",
+                "sequence_token": "t1",
+                "parent_source_id": "ps-doc"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "severity_status": "SEVERITY_CONTRADICTORY",
+        "reason_includes": ["SEVERITY_SCORE_BAND_MISMATCH"]
+      }
+    },
+    {
+      "id": "invalid-score-valid-band",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "bad",
+                "severity_score": 0,
+                "severity_band": null,
+                "source_tier": "INVALID_SCORE",
+                "dedupe_key": "x",
+                "sequence_token": "t1"
+              },
+              {
+                "evidence_item_id": "e-band",
+                "severity_score": null,
+                "severity_band": "MODERATE",
+                "source_tier": "DOCTOR_STRUCTURED",
+                "dedupe_key": "d-e-band",
+                "sequence_token": "t1",
+                "parent_source_id": "ps-doc"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "severity_status": "RESOLVED_BAND_ONLY",
+        "severity_band": "MODERATE"
+      }
+    },
+    {
+      "id": "valid-score-invalid-band-tier",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "bad",
+                "severity_score": null,
+                "severity_band": "HIGH",
+                "source_tier": "INVALID_BAND",
+                "dedupe_key": "x",
+                "sequence_token": "t1"
+              },
+              {
+                "evidence_item_id": "e-score",
+                "severity_score": 5,
+                "severity_band": null,
+                "source_tier": "DOCTOR_STRUCTURED",
+                "dedupe_key": "d-e-score",
+                "sequence_token": "t1",
+                "parent_source_id": "ps-doc"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "severity_status": "RESOLVED_NUMERIC",
+        "severity_score": 5
+      }
+    },
+    {
+      "id": "same-time-same-score",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "e1",
+                "severity_score": 5,
+                "severity_band": "MODERATE",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "d1",
+                "sequence_token": "t1",
+                "parent_source_id": "ps1"
+              },
+              {
+                "evidence_item_id": "e2",
+                "severity_score": 5,
+                "severity_band": "MODERATE",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "d2",
+                "sequence_token": "t1",
+                "parent_source_id": "ps2"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "severity_status": "RESOLVED_NUMERIC",
+        "severity_score": 5
+      }
+    },
+    {
+      "id": "same-time-diff-scores-same-band",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "e1",
+                "severity_score": 4,
+                "severity_band": "MODERATE",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "d1",
+                "sequence_token": "t1",
+                "parent_source_id": "ps1"
+              },
+              {
+                "evidence_item_id": "e2",
+                "severity_score": 6,
+                "severity_band": "MODERATE",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "d2",
+                "sequence_token": "t1",
+                "parent_source_id": "ps2"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "severity_status": "RESOLVED_BAND_ONLY",
+        "severity_score": null,
+        "severity_band": "MODERATE"
+      }
+    },
+    {
+      "id": "same-time-cross-band",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "e1",
+                "severity_score": 3,
+                "severity_band": "LOW",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "d1",
+                "sequence_token": "t1",
+                "parent_source_id": "ps1"
+              },
+              {
+                "evidence_item_id": "e2",
+                "severity_score": 8,
+                "severity_band": "HIGH",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "d2",
+                "sequence_token": "t1",
+                "parent_source_id": "ps2"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "severity_status": "SEVERITY_CONTRADICTORY"
+      }
+    },
+    {
+      "id": "structured-ambiguous-only",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "amb",
+                "severity_score": null,
+                "severity_band": null,
+                "source_tier": "STRUCTURED_SEVERITY_AMBIGUOUS",
+                "dedupe_key": "a",
+                "sequence_token": "t1"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "severity_status": "INSUFFICIENT_CORROBORATION",
+        "reason_includes": ["SEVERITY_EVIDENCE_AMBIGUOUS"],
+        "limitation_includes": ["SEVERITY_AMBIGUOUS"]
+      }
+    },
+    {
+      "id": "invalid-only-pool",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "i1",
+                "severity_score": null,
+                "severity_band": null,
+                "source_tier": "INVALID_ITEM",
+                "dedupe_key": "a",
+                "sequence_token": "t1"
+              },
+              {
+                "evidence_item_id": "i2",
+                "severity_score": null,
+                "severity_band": null,
+                "source_tier": "NEGATED",
+                "dedupe_key": "b",
+                "sequence_token": "t2"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "severity_status": "INVALID_EVIDENCE"
+      }
+    },
+    {
+      "id": "missing-evidence",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "severity_evidence_assertions": []
+          }
+        ]
+      },
+      "expected": {
+        "severity_status": "MISSING_EVIDENCE"
+      }
+    },
+    {
+      "id": "single-independent-insufficient",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "e1",
+                "severity_score": 5,
+                "severity_band": "MODERATE",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "d1",
+                "sequence_token": "t1",
+                "parent_source_id": "ps-a"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "severity_status": "INSUFFICIENT_CORROBORATION"
+      }
+    },
+    {
+      "id": "global-severity-leakage",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "severity_evidence_assertions": [],
+            "patient_global_max_severity_label_only": true
+          }
+        ]
+      },
+      "expected": {
+        "severity_status": "SEVERITY_CONTRADICTORY",
+        "reason_includes": ["GLOBAL_SEVERITY_LEAKAGE_BLOCKED"]
+      }
+    },
+    {
+      "id": "boundary-score-1",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "e1",
+                "severity_score": 1,
+                "severity_band": null,
+                "source_tier": "DOCTOR_STRUCTURED",
+                "dedupe_key": "d-e1",
+                "sequence_token": "t1",
+                "parent_source_id": "ps-doc"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "severity_status": "RESOLVED_NUMERIC",
+        "severity_score": 1
+      }
+    },
+    {
+      "id": "boundary-score-3",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "e1",
+                "severity_score": 3,
+                "severity_band": null,
+                "source_tier": "DOCTOR_STRUCTURED",
+                "dedupe_key": "d-e1",
+                "sequence_token": "t1",
+                "parent_source_id": "ps-doc"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "severity_status": "RESOLVED_NUMERIC",
+        "severity_score": 3
+      }
+    },
+    {
+      "id": "boundary-score-4",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "e1",
+                "severity_score": 4,
+                "severity_band": null,
+                "source_tier": "DOCTOR_STRUCTURED",
+                "dedupe_key": "d-e1",
+                "sequence_token": "t1",
+                "parent_source_id": "ps-doc"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "severity_status": "RESOLVED_NUMERIC",
+        "severity_score": 4
+      }
+    },
+    {
+      "id": "boundary-score-6",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "e1",
+                "severity_score": 6,
+                "severity_band": null,
+                "source_tier": "DOCTOR_STRUCTURED",
+                "dedupe_key": "d-e1",
+                "sequence_token": "t1",
+                "parent_source_id": "ps-doc"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "severity_status": "RESOLVED_NUMERIC",
+        "severity_score": 6
+      }
+    },
+    {
+      "id": "boundary-score-7",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "e1",
+                "severity_score": 7,
+                "severity_band": null,
+                "source_tier": "DOCTOR_STRUCTURED",
+                "dedupe_key": "d-e1",
+                "sequence_token": "t1",
+                "parent_source_id": "ps-doc"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "severity_status": "RESOLVED_NUMERIC",
+        "severity_score": 7
+      }
+    },
+    {
+      "id": "boundary-score-10",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "e1",
+                "severity_score": 10,
+                "severity_band": null,
+                "source_tier": "DOCTOR_STRUCTURED",
+                "dedupe_key": "d-e1",
+                "sequence_token": "t1",
+                "parent_source_id": "ps-doc"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "severity_status": "RESOLVED_NUMERIC",
+        "severity_score": 10
+      }
+    },
+    {
+      "id": "invalid-score-0",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "x",
+                "severity_score": 0,
+                "severity_band": null,
+                "source_tier": "DOCTOR_STRUCTURED",
+                "dedupe_key": "k",
+                "sequence_token": "t1"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "severity_status": "INVALID_EVIDENCE"
+      }
+    },
+    {
+      "id": "invalid-score-11",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "x",
+                "severity_score": 11,
+                "severity_band": null,
+                "source_tier": "DOCTOR_STRUCTURED",
+                "dedupe_key": "k",
+                "sequence_token": "t1"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "severity_status": "INVALID_EVIDENCE"
+      }
+    },
+    {
+      "id": "band-only-high-doctor",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "e1",
+                "severity_score": null,
+                "severity_band": "HIGH",
+                "source_tier": "DOCTOR_STRUCTURED",
+                "dedupe_key": "d-e1",
+                "sequence_token": "t1",
+                "parent_source_id": "ps-doc"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "severity_status": "RESOLVED_BAND_ONLY",
+        "severity_band": "HIGH"
+      }
+    },
+    {
+      "id": "vague-text-quarantine-reason",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "v",
+                "severity_score": null,
+                "severity_band": null,
+                "source_tier": "VAGUE_TEXT",
+                "dedupe_key": "v",
+                "sequence_token": "t1"
+              },
+              {
+                "evidence_item_id": "e2",
+                "severity_score": 5,
+                "severity_band": "MODERATE",
+                "source_tier": "DOCTOR_STRUCTURED",
+                "dedupe_key": "d-e2",
+                "sequence_token": "t1",
+                "parent_source_id": "ps-doc"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "severity_status": "RESOLVED_NUMERIC",
+        "reason_includes": ["VAGUE_TIMELINE_NOT_EXECUTABLE"]
+      }
+    },
+    {
+      "id": "dual-slot-flare-high",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["flare", "chronic"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "flare",
+            "formula_target_id": "t-flare",
+            "target_role": "CURRENT_ACUTE_FLARE",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "ef",
+                "severity_score": 8,
+                "severity_band": "HIGH",
+                "source_tier": "DOCTOR_STRUCTURED",
+                "dedupe_key": "d-ef",
+                "sequence_token": "t1",
+                "parent_source_id": "ps-doc"
+              }
+            ]
+          },
+          {
+            "formula_slot_id": "chronic",
+            "formula_target_id": "t-chronic",
+            "target_role": "UNDERLYING_CHRONIC_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "ec",
+                "severity_score": 4,
+                "severity_band": "MODERATE",
+                "source_tier": "DOCTOR_STRUCTURED",
+                "dedupe_key": "d-ec",
+                "sequence_token": "t1",
+                "parent_source_id": "ps-doc"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "formula_slot_id": "flare",
+        "severity_status": "RESOLVED_NUMERIC",
+        "severity_score": 8
+      }
+    },
+    {
+      "id": "dual-slot-chronic-moderate",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["flare", "chronic"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "flare",
+            "formula_target_id": "t-flare",
+            "target_role": "CURRENT_ACUTE_FLARE",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "ef",
+                "severity_score": 8,
+                "severity_band": "HIGH",
+                "source_tier": "DOCTOR_STRUCTURED",
+                "dedupe_key": "d-ef",
+                "sequence_token": "t1",
+                "parent_source_id": "ps-doc"
+              }
+            ]
+          },
+          {
+            "formula_slot_id": "chronic",
+            "formula_target_id": "t-chronic",
+            "target_role": "UNDERLYING_CHRONIC_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "ec",
+                "severity_score": 4,
+                "severity_band": "MODERATE",
+                "source_tier": "DOCTOR_STRUCTURED",
+                "dedupe_key": "d-ec",
+                "sequence_token": "t1",
+                "parent_source_id": "ps-doc"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "formula_slot_id": "chronic",
+        "severity_status": "RESOLVED_NUMERIC",
+        "severity_score": 4
+      }
+    },
+    {
+      "id": "binding-exact-match",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": false,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "e1",
+                "severity_score": 5,
+                "severity_band": "MODERATE",
+                "source_tier": "DOCTOR_STRUCTURED",
+                "dedupe_key": "d-e1",
+                "sequence_token": "t1",
+                "parent_source_id": "ps-doc"
+              }
+            ]
+          }
+        ]
+      },
+      "context": {
+        "binding_gate_mandatory": true,
+        "evidence_adapter": {
+          "contract_version": "ehas2-rule4-contract-v1-phase3-evidence",
+          "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+          "registry_version": "rule4-reason-codes-phase3-evidence-subset-v1",
+          "formula_bound_pools": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t1",
+              "usable_finding_ids": ["f1"],
+              "ignored_finding_ids": [],
+              "corroboration_distinct_parent_count": 1,
+              "corroborating_parent_source_ids": ["ps1"],
+              "contradiction": {
+                "evidence_status": "CLEAR",
+                "doctor_review_required": true,
+                "reason_codes": [],
+                "limitation_codes": []
+              }
+            }
+          ]
+        }
+      },
+      "expected": {
+        "severity_status": "RESOLVED_NUMERIC"
+      }
+    },
+    {
+      "id": "binding-target-mismatch",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": false,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "e1",
+                "severity_score": 5,
+                "severity_band": "MODERATE",
+                "source_tier": "DOCTOR_STRUCTURED",
+                "dedupe_key": "d-e1",
+                "sequence_token": "t1",
+                "parent_source_id": "ps-doc"
+              }
+            ]
+          }
+        ]
+      },
+      "context": {
+        "binding_gate_mandatory": true,
+        "evidence_adapter": {
+          "contract_version": "ehas2-rule4-contract-v1-phase3-evidence",
+          "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+          "registry_version": "rule4-reason-codes-phase3-evidence-subset-v1",
+          "formula_bound_pools": [
+            {
+              "formula_slot_id": "s1",
+              "formula_target_id": "t-other",
+              "usable_finding_ids": ["f1"],
+              "ignored_finding_ids": [],
+              "corroboration_distinct_parent_count": 1,
+              "corroborating_parent_source_ids": ["ps1"],
+              "contradiction": {
+                "evidence_status": "CLEAR",
+                "doctor_review_required": true,
+                "reason_codes": [],
+                "limitation_codes": []
+              }
+            }
+          ]
+        }
+      },
+      "expected": {
+        "severity_status": "NOT_EVALUATED",
+        "reason_includes": ["CROSS_FORMULA_SEVERITY_LEAKAGE_BLOCKED"]
+      }
+    },
+    {
+      "id": "binding-no-evidence-port",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": false,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "e1",
+                "severity_score": 5,
+                "severity_band": "MODERATE",
+                "source_tier": "DOCTOR_STRUCTURED",
+                "dedupe_key": "d-e1",
+                "sequence_token": "t1",
+                "parent_source_id": "ps-doc"
+              }
+            ]
+          }
+        ]
+      },
+      "context": {
+        "binding_gate_mandatory": true
+      },
+      "expected": {
+        "severity_status": "NOT_EVALUATED",
+        "reason_includes": ["RULE3_BINDING_PORT_NOT_RESOLVED"]
+      }
+    },
+    {
+      "id": "safety-patient-wide-hold",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "e1",
+                "severity_score": 5,
+                "severity_band": "MODERATE",
+                "source_tier": "DOCTOR_STRUCTURED",
+                "dedupe_key": "d-e1",
+                "sequence_token": "t1",
+                "parent_source_id": "ps-doc"
+              }
+            ]
+          }
+        ]
+      },
+      "context": {
+        "binding_gate_mandatory": false,
+        "safety_gate": {
+          "patient_wide_hold": true,
+          "reason_codes": [],
+          "limitation_codes": []
+        }
+      },
+      "expected": {
+        "severity_status": "BLOCKED_BY_PATIENT_WIDE_SAFETY_GATE"
+      }
+    },
+    {
+      "id": "cross-band-independent-diff-time",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "e1",
+                "severity_score": 3,
+                "severity_band": "LOW",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "d1",
+                "sequence_token": "t1",
+                "parent_source_id": "ps1"
+              },
+              {
+                "evidence_item_id": "e2",
+                "severity_score": 8,
+                "severity_band": "HIGH",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "d2",
+                "sequence_token": "t2",
+                "parent_source_id": "ps2"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "severity_status": "SEVERITY_CONTRADICTORY"
+      }
+    },
+    {
+      "id": "registry-keyword-with-doctor",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "rk",
+                "severity_score": null,
+                "severity_band": null,
+                "source_tier": "REGISTRY_KEYWORD",
+                "dedupe_key": "rk",
+                "sequence_token": "t1"
+              },
+              {
+                "evidence_item_id": "e1",
+                "severity_score": 7,
+                "severity_band": "HIGH",
+                "source_tier": "DOCTOR_STRUCTURED",
+                "dedupe_key": "d-e1",
+                "sequence_token": "t1",
+                "parent_source_id": "ps-doc"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "severity_status": "RESOLVED_NUMERIC",
+        "reason_includes": ["REGISTRY_Q13_SELECTOR_BLOCKED"]
+      }
+    },
+    {
+      "id": "negated-only-invalid",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "n1",
+                "severity_score": 5,
+                "severity_band": "MODERATE",
+                "source_tier": "NEGATED",
+                "dedupe_key": "n",
+                "sequence_token": "t1"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "severity_status": "INVALID_EVIDENCE"
+      }
+    },
+    {
+      "id": "dedupe-same-source",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "e1",
+                "severity_score": 5,
+                "severity_band": "MODERATE",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "same",
+                "sequence_token": "t1",
+                "parent_source_id": "ps1"
+              },
+              {
+                "evidence_item_id": "e2",
+                "severity_score": 6,
+                "severity_band": "MODERATE",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "same",
+                "sequence_token": "t2",
+                "parent_source_id": "ps1"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "severity_status": "INSUFFICIENT_CORROBORATION"
+      }
+    },
+    {
+      "id": "binding-slot-mismatch-pool-b",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": false,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s-a"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "s-a",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "e1",
+                "severity_score": 5,
+                "severity_band": "MODERATE",
+                "source_tier": "DOCTOR_STRUCTURED",
+                "dedupe_key": "d-e1",
+                "sequence_token": "t1",
+                "parent_source_id": "ps-doc"
+              }
+            ]
+          }
+        ]
+      },
+      "context": {
+        "binding_gate_mandatory": true,
+        "evidence_adapter": {
+          "contract_version": "ehas2-rule4-contract-v1-phase3-evidence",
+          "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+          "registry_version": "rule4-reason-codes-phase3-evidence-subset-v1",
+          "formula_bound_pools": [
+            {
+              "formula_slot_id": "s-b",
+              "formula_target_id": "t1",
+              "usable_finding_ids": ["f1"],
+              "ignored_finding_ids": [],
+              "corroboration_distinct_parent_count": 1,
+              "corroborating_parent_source_ids": ["ps1"],
+              "contradiction": {
+                "evidence_status": "CLEAR",
+                "doctor_review_required": true,
+                "reason_codes": [],
+                "limitation_codes": []
+              }
+            }
+          ]
+        }
+      },
+      "expected": {
+        "severity_status": "NOT_EVALUATED",
+        "reason_includes": ["RULE3_BINDING_PORT_NOT_RESOLVED"]
+      }
+    },
+    {
+      "id": "cross-flare-copied-to-chronic",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["flare", "chronic"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "flare",
+            "formula_target_id": "t-flare",
+            "target_role": "CURRENT_ACUTE_FLARE",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "shared-cr",
+                "severity_score": 8,
+                "severity_band": "HIGH",
+                "source_tier": "DOCTOR_STRUCTURED",
+                "dedupe_key": "d-shared-cr",
+                "sequence_token": "t1",
+                "parent_source_id": "ps-doc"
+              }
+            ]
+          },
+          {
+            "formula_slot_id": "chronic",
+            "formula_target_id": "t-chronic",
+            "target_role": "UNDERLYING_CHRONIC_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "shared-cr",
+                "severity_score": 8,
+                "severity_band": "HIGH",
+                "source_tier": "DOCTOR_STRUCTURED",
+                "dedupe_key": "d-sc",
+                "sequence_token": "t1",
+                "bound_target_role": "CURRENT_ACUTE_FLARE"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "formula_slot_id": "chronic",
+        "severity_status": "NOT_EVALUATED",
+        "reason_includes": ["CROSS_ACUTE_CHRONIC_SEVERITY_LEAKAGE_BLOCKED"]
+      }
+    },
+    {
+      "id": "same-evidence-id-both-roles",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["flare", "chronic"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "flare",
+            "formula_target_id": "t-flare",
+            "target_role": "CURRENT_ACUTE_FLARE",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "dup-id",
+                "severity_score": 7,
+                "severity_band": "HIGH",
+                "source_tier": "DOCTOR_STRUCTURED",
+                "dedupe_key": "d-dup-id",
+                "sequence_token": "t1",
+                "parent_source_id": "ps-doc"
+              }
+            ]
+          },
+          {
+            "formula_slot_id": "chronic",
+            "formula_target_id": "t-chronic",
+            "target_role": "UNDERLYING_CHRONIC_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "dup-id",
+                "severity_score": 7,
+                "severity_band": "HIGH",
+                "source_tier": "DOCTOR_STRUCTURED",
+                "dedupe_key": "d-dup-id",
+                "sequence_token": "t1",
+                "parent_source_id": "ps-doc"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "formula_slot_id": "flare",
+        "severity_status": "NOT_EVALUATED",
+        "reason_includes": ["CROSS_ACUTE_CHRONIC_SEVERITY_LEAKAGE_BLOCKED"]
+      }
+    },
+    {
+      "id": "production-missing-bound-flare",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "PRODUCTION",
+        "quarantine_probe": null,
+        "formula_slot_ids": ["flare"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "flare",
+            "formula_target_id": "t-flare",
+            "target_role": "CURRENT_ACUTE_FLARE",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "e-prod-flare",
+                "severity_score": 8,
+                "severity_band": "HIGH",
+                "source_tier": "DOCTOR_STRUCTURED",
+                "dedupe_key": "d-pf",
+                "sequence_token": "t1",
+                "parent_source_id": "ps-doc"
+              }
+            ]
+          }
+        ]
+      },
+      "context": {
+        "binding_gate_mandatory": false
+      },
+      "expected": {
+        "formula_slot_id": "flare",
+        "severity_status": "NOT_EVALUATED",
+        "severity_score": null,
+        "reason_includes": ["TARGET_BINDING_MISSING"]
+      }
+    },
+    {
+      "id": "production-missing-bound-chronic",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "PRODUCTION",
+        "quarantine_probe": null,
+        "formula_slot_ids": ["chronic"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "chronic",
+            "formula_target_id": "t-chronic",
+            "target_role": "UNDERLYING_CHRONIC_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "e-prod-chronic",
+                "severity_score": 4,
+                "severity_band": "MODERATE",
+                "source_tier": "DOCTOR_STRUCTURED",
+                "dedupe_key": "d-pc",
+                "sequence_token": "t1",
+                "parent_source_id": "ps-doc"
+              }
+            ]
+          }
+        ]
+      },
+      "context": {
+        "binding_gate_mandatory": false
+      },
+      "expected": {
+        "formula_slot_id": "chronic",
+        "severity_status": "NOT_EVALUATED",
+        "severity_score": null,
+        "reason_includes": ["TARGET_BINDING_MISSING"]
+      }
+    },
+    {
+      "id": "cross-chronic-copied-to-flare",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["flare", "chronic"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "chronic",
+            "formula_target_id": "t-chronic",
+            "target_role": "UNDERLYING_CHRONIC_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "shared-rc",
+                "severity_score": 4,
+                "severity_band": "MODERATE",
+                "source_tier": "DOCTOR_STRUCTURED",
+                "dedupe_key": "d-shared-rc",
+                "sequence_token": "t1",
+                "parent_source_id": "ps-doc"
+              }
+            ]
+          },
+          {
+            "formula_slot_id": "flare",
+            "formula_target_id": "t-flare",
+            "target_role": "CURRENT_ACUTE_FLARE",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "shared-rc",
+                "severity_score": 4,
+                "severity_band": "MODERATE",
+                "source_tier": "DOCTOR_STRUCTURED",
+                "dedupe_key": "d-sc",
+                "sequence_token": "t1",
+                "bound_target_role": "UNDERLYING_CHRONIC_TARGET"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "formula_slot_id": "flare",
+        "severity_status": "NOT_EVALUATED",
+        "reason_includes": ["CROSS_ACUTE_CHRONIC_SEVERITY_LEAKAGE_BLOCKED"]
+      }
+    },
+    {
+      "id": "correctly-bound-flare-chronic-pair",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["flare", "chronic"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "flare",
+            "formula_target_id": "t-flare",
+            "target_role": "CURRENT_ACUTE_FLARE",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "ef-explicit",
+                "severity_score": 8,
+                "severity_band": "HIGH",
+                "source_tier": "DOCTOR_STRUCTURED",
+                "dedupe_key": "d-ef",
+                "sequence_token": "t1",
+                "parent_source_id": "ps-doc",
+                "bound_target_role": "CURRENT_ACUTE_FLARE"
+              }
+            ]
+          },
+          {
+            "formula_slot_id": "chronic",
+            "formula_target_id": "t-chronic",
+            "target_role": "UNDERLYING_CHRONIC_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "ec-explicit",
+                "severity_score": 4,
+                "severity_band": "MODERATE",
+                "source_tier": "DOCTOR_STRUCTURED",
+                "dedupe_key": "d-ec",
+                "sequence_token": "t1",
+                "parent_source_id": "ps-doc",
+                "bound_target_role": "UNDERLYING_CHRONIC_TARGET"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "formula_slot_id": "flare",
+        "severity_status": "RESOLVED_NUMERIC",
+        "severity_score": 8
+      }
+    },
+    {
+      "id": "unrelated-sibling-cross-blocked",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1", "flare", "chronic"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "std-only",
+                "severity_score": 5,
+                "severity_band": "MODERATE",
+                "source_tier": "DOCTOR_STRUCTURED",
+                "dedupe_key": "d-std",
+                "sequence_token": "t1",
+                "parent_source_id": "ps-doc"
+              }
+            ]
+          },
+          {
+            "formula_slot_id": "flare",
+            "formula_target_id": "t-flare",
+            "target_role": "CURRENT_ACUTE_FLARE",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "dup-x",
+                "severity_score": 8,
+                "severity_band": "HIGH",
+                "source_tier": "DOCTOR_STRUCTURED",
+                "dedupe_key": "d-dup-x",
+                "sequence_token": "t1",
+                "parent_source_id": "ps-doc"
+              }
+            ]
+          },
+          {
+            "formula_slot_id": "chronic",
+            "formula_target_id": "t-chronic",
+            "target_role": "UNDERLYING_CHRONIC_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "dup-x",
+                "severity_score": 8,
+                "severity_band": "HIGH",
+                "source_tier": "DOCTOR_STRUCTURED",
+                "dedupe_key": "d-dup-x2",
+                "sequence_token": "t1",
+                "parent_source_id": "ps-doc"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "formula_slot_id": "s1",
+        "severity_status": "RESOLVED_NUMERIC",
+        "severity_score": 5
+      }
+    },
+    {
+      "id": "pad-independent-low-35",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "e35a",
+                "severity_score": 2,
+                "severity_band": "LOW",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "da35",
+                "sequence_token": "t1",
+                "parent_source_id": "ps35a"
+              },
+              {
+                "evidence_item_id": "e35b",
+                "severity_score": 2,
+                "severity_band": "LOW",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "db35",
+                "sequence_token": "t1",
+                "parent_source_id": "ps35b"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "severity_status": "RESOLVED_NUMERIC",
+        "severity_score": 2
+      }
+    },
+    {
+      "id": "pad-independent-low-36",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "e36a",
+                "severity_score": 2,
+                "severity_band": "LOW",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "da36",
+                "sequence_token": "t1",
+                "parent_source_id": "ps36a"
+              },
+              {
+                "evidence_item_id": "e36b",
+                "severity_score": 2,
+                "severity_band": "LOW",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "db36",
+                "sequence_token": "t1",
+                "parent_source_id": "ps36b"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "severity_status": "RESOLVED_NUMERIC",
+        "severity_score": 2
+      }
+    },
+    {
+      "id": "pad-independent-low-37",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "e37a",
+                "severity_score": 2,
+                "severity_band": "LOW",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "da37",
+                "sequence_token": "t1",
+                "parent_source_id": "ps37a"
+              },
+              {
+                "evidence_item_id": "e37b",
+                "severity_score": 2,
+                "severity_band": "LOW",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "db37",
+                "sequence_token": "t1",
+                "parent_source_id": "ps37b"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "severity_status": "RESOLVED_NUMERIC",
+        "severity_score": 2
+      }
+    },
+    {
+      "id": "pad-independent-low-38",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "e38a",
+                "severity_score": 2,
+                "severity_band": "LOW",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "da38",
+                "sequence_token": "t1",
+                "parent_source_id": "ps38a"
+              },
+              {
+                "evidence_item_id": "e38b",
+                "severity_score": 2,
+                "severity_band": "LOW",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "db38",
+                "sequence_token": "t1",
+                "parent_source_id": "ps38b"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "severity_status": "RESOLVED_NUMERIC",
+        "severity_score": 2
+      }
+    },
+    {
+      "id": "pad-independent-low-39",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "e39a",
+                "severity_score": 2,
+                "severity_band": "LOW",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "da39",
+                "sequence_token": "t1",
+                "parent_source_id": "ps39a"
+              },
+              {
+                "evidence_item_id": "e39b",
+                "severity_score": 2,
+                "severity_band": "LOW",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "db39",
+                "sequence_token": "t1",
+                "parent_source_id": "ps39b"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "severity_status": "RESOLVED_NUMERIC",
+        "severity_score": 2
+      }
+    },
+    {
+      "id": "pad-independent-low-40",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "e40a",
+                "severity_score": 2,
+                "severity_band": "LOW",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "da40",
+                "sequence_token": "t1",
+                "parent_source_id": "ps40a"
+              },
+              {
+                "evidence_item_id": "e40b",
+                "severity_score": 2,
+                "severity_band": "LOW",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "db40",
+                "sequence_token": "t1",
+                "parent_source_id": "ps40b"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "severity_status": "RESOLVED_NUMERIC",
+        "severity_score": 2
+      }
+    },
+    {
+      "id": "pad-independent-low-41",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "e41a",
+                "severity_score": 2,
+                "severity_band": "LOW",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "da41",
+                "sequence_token": "t1",
+                "parent_source_id": "ps41a"
+              },
+              {
+                "evidence_item_id": "e41b",
+                "severity_score": 2,
+                "severity_band": "LOW",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "db41",
+                "sequence_token": "t1",
+                "parent_source_id": "ps41b"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "severity_status": "RESOLVED_NUMERIC",
+        "severity_score": 2
+      }
+    },
+    {
+      "id": "pad-independent-low-42",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "e42a",
+                "severity_score": 2,
+                "severity_band": "LOW",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "da42",
+                "sequence_token": "t1",
+                "parent_source_id": "ps42a"
+              },
+              {
+                "evidence_item_id": "e42b",
+                "severity_score": 2,
+                "severity_band": "LOW",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "db42",
+                "sequence_token": "t1",
+                "parent_source_id": "ps42b"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "severity_status": "RESOLVED_NUMERIC",
+        "severity_score": 2
+      }
+    },
+    {
+      "id": "pad-independent-low-43",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "e43a",
+                "severity_score": 2,
+                "severity_band": "LOW",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "da43",
+                "sequence_token": "t1",
+                "parent_source_id": "ps43a"
+              },
+              {
+                "evidence_item_id": "e43b",
+                "severity_score": 2,
+                "severity_band": "LOW",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "db43",
+                "sequence_token": "t1",
+                "parent_source_id": "ps43b"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "severity_status": "RESOLVED_NUMERIC",
+        "severity_score": 2
+      }
+    },
+    {
+      "id": "pad-independent-low-44",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "e44a",
+                "severity_score": 2,
+                "severity_band": "LOW",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "da44",
+                "sequence_token": "t1",
+                "parent_source_id": "ps44a"
+              },
+              {
+                "evidence_item_id": "e44b",
+                "severity_score": 2,
+                "severity_band": "LOW",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "db44",
+                "sequence_token": "t1",
+                "parent_source_id": "ps44b"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "severity_status": "RESOLVED_NUMERIC",
+        "severity_score": 2
+      }
+    },
+    {
+      "id": "pad-independent-low-45",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "e45a",
+                "severity_score": 2,
+                "severity_band": "LOW",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "da45",
+                "sequence_token": "t1",
+                "parent_source_id": "ps45a"
+              },
+              {
+                "evidence_item_id": "e45b",
+                "severity_score": 2,
+                "severity_band": "LOW",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "db45",
+                "sequence_token": "t1",
+                "parent_source_id": "ps45b"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "severity_status": "RESOLVED_NUMERIC",
+        "severity_score": 2
+      }
+    },
+    {
+      "id": "pad-independent-low-46",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "e46a",
+                "severity_score": 2,
+                "severity_band": "LOW",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "da46",
+                "sequence_token": "t1",
+                "parent_source_id": "ps46a"
+              },
+              {
+                "evidence_item_id": "e46b",
+                "severity_score": 2,
+                "severity_band": "LOW",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "db46",
+                "sequence_token": "t1",
+                "parent_source_id": "ps46b"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "severity_status": "RESOLVED_NUMERIC",
+        "severity_score": 2
+      }
+    },
+    {
+      "id": "pad-independent-low-47",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "e47a",
+                "severity_score": 2,
+                "severity_band": "LOW",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "da47",
+                "sequence_token": "t1",
+                "parent_source_id": "ps47a"
+              },
+              {
+                "evidence_item_id": "e47b",
+                "severity_score": 2,
+                "severity_band": "LOW",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "db47",
+                "sequence_token": "t1",
+                "parent_source_id": "ps47b"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "severity_status": "RESOLVED_NUMERIC",
+        "severity_score": 2
+      }
+    },
+    {
+      "id": "pad-independent-low-48",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "e48a",
+                "severity_score": 2,
+                "severity_band": "LOW",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "da48",
+                "sequence_token": "t1",
+                "parent_source_id": "ps48a"
+              },
+              {
+                "evidence_item_id": "e48b",
+                "severity_score": 2,
+                "severity_band": "LOW",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "db48",
+                "sequence_token": "t1",
+                "parent_source_id": "ps48b"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "severity_status": "RESOLVED_NUMERIC",
+        "severity_score": 2
+      }
+    },
+    {
+      "id": "pad-independent-low-49",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "e49a",
+                "severity_score": 2,
+                "severity_band": "LOW",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "da49",
+                "sequence_token": "t1",
+                "parent_source_id": "ps49a"
+              },
+              {
+                "evidence_item_id": "e49b",
+                "severity_score": 2,
+                "severity_band": "LOW",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "db49",
+                "sequence_token": "t1",
+                "parent_source_id": "ps49b"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "severity_status": "RESOLVED_NUMERIC",
+        "severity_score": 2
+      }
+    },
+    {
+      "id": "pad-independent-low-50",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "e50a",
+                "severity_score": 2,
+                "severity_band": "LOW",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "da50",
+                "sequence_token": "t1",
+                "parent_source_id": "ps50a"
+              },
+              {
+                "evidence_item_id": "e50b",
+                "severity_score": 2,
+                "severity_band": "LOW",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "db50",
+                "sequence_token": "t1",
+                "parent_source_id": "ps50b"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "severity_status": "RESOLVED_NUMERIC",
+        "severity_score": 2
+      }
+    },
+    {
+      "id": "pad-independent-low-51",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "e51a",
+                "severity_score": 2,
+                "severity_band": "LOW",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "da51",
+                "sequence_token": "t1",
+                "parent_source_id": "ps51a"
+              },
+              {
+                "evidence_item_id": "e51b",
+                "severity_score": 2,
+                "severity_band": "LOW",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "db51",
+                "sequence_token": "t1",
+                "parent_source_id": "ps51b"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "severity_status": "RESOLVED_NUMERIC",
+        "severity_score": 2
+      }
+    },
+    {
+      "id": "pad-independent-low-52",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "e52a",
+                "severity_score": 2,
+                "severity_band": "LOW",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "da52",
+                "sequence_token": "t1",
+                "parent_source_id": "ps52a"
+              },
+              {
+                "evidence_item_id": "e52b",
+                "severity_score": 2,
+                "severity_band": "LOW",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "db52",
+                "sequence_token": "t1",
+                "parent_source_id": "ps52b"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "severity_status": "RESOLVED_NUMERIC",
+        "severity_score": 2
+      }
+    },
+    {
+      "id": "pad-independent-low-53",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "e53a",
+                "severity_score": 2,
+                "severity_band": "LOW",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "da53",
+                "sequence_token": "t1",
+                "parent_source_id": "ps53a"
+              },
+              {
+                "evidence_item_id": "e53b",
+                "severity_score": 2,
+                "severity_band": "LOW",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "db53",
+                "sequence_token": "t1",
+                "parent_source_id": "ps53b"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "severity_status": "RESOLVED_NUMERIC",
+        "severity_score": 2
+      }
+    },
+    {
+      "id": "pad-independent-low-54",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "e54a",
+                "severity_score": 2,
+                "severity_band": "LOW",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "da54",
+                "sequence_token": "t1",
+                "parent_source_id": "ps54a"
+              },
+              {
+                "evidence_item_id": "e54b",
+                "severity_score": 2,
+                "severity_band": "LOW",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "db54",
+                "sequence_token": "t1",
+                "parent_source_id": "ps54b"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "severity_status": "RESOLVED_NUMERIC",
+        "severity_score": 2
+      }
+    },
+    {
+      "id": "pad-independent-low-55",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "e55a",
+                "severity_score": 2,
+                "severity_band": "LOW",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "da55",
+                "sequence_token": "t1",
+                "parent_source_id": "ps55a"
+              },
+              {
+                "evidence_item_id": "e55b",
+                "severity_score": 2,
+                "severity_band": "LOW",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "db55",
+                "sequence_token": "t1",
+                "parent_source_id": "ps55b"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "severity_status": "RESOLVED_NUMERIC",
+        "severity_score": 2
+      }
+    },
+    {
+      "id": "pad-independent-low-56",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "e56a",
+                "severity_score": 2,
+                "severity_band": "LOW",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "da56",
+                "sequence_token": "t1",
+                "parent_source_id": "ps56a"
+              },
+              {
+                "evidence_item_id": "e56b",
+                "severity_score": 2,
+                "severity_band": "LOW",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "db56",
+                "sequence_token": "t1",
+                "parent_source_id": "ps56b"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "severity_status": "RESOLVED_NUMERIC",
+        "severity_score": 2
+      }
+    },
+    {
+      "id": "pad-independent-low-57",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase6-structured-severity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "quarantine_probe": null,
+        "formula_slot_ids": ["s1"],
+        "formula_severity_records": [
+          {
+            "formula_slot_id": "s1",
+            "formula_target_id": "t1",
+            "target_role": "STANDARD_FORMULA_TARGET",
+            "severity_evidence_assertions": [
+              {
+                "evidence_item_id": "e57a",
+                "severity_score": 2,
+                "severity_band": "LOW",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "da57",
+                "sequence_token": "t1",
+                "parent_source_id": "ps57a"
+              },
+              {
+                "evidence_item_id": "e57b",
+                "severity_score": 2,
+                "severity_band": "LOW",
+                "source_tier": "INDEPENDENT_USABLE",
+                "dedupe_key": "db57",
+                "sequence_token": "t1",
+                "parent_source_id": "ps57b"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "severity_status": "RESOLVED_NUMERIC",
+        "severity_score": 2
+      }
+    }
+  ]
+}

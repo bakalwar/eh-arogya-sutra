@@ -1,0 +1,64 @@
+{
+  "registryVersion": "rule4-reason-codes-phase6-structured-severity-subset-v1",
+  "scope": "PHASE6_STRUCTURED_SEVERITY_SUBSET",
+  "complete": false,
+  "clinicalRegistryStatus": "INCOMPLETE_NOT_EXECUTABLE_FOR_NUMERIC_CASCADE",
+  "documentationBaselineCommit": "4c35469b9e9ba104e4097ddc48649b0aaa3761b4",
+  "unknownCodePolicy": "REJECT_UNKNOWN_CODE",
+  "fullRegistryStatus": "FUTURE_MECHANICAL_HARVEST_PENDING",
+  "extendsRegistry": "rule4-reason-codes-phase5-structured-phase-subset-v1",
+  "reasonCodes": [
+    {
+      "code": "SEVERITY_SCORE_BAND_MISMATCH",
+      "namespace": "reason",
+      "source": "Q13-CLOSE Q13-T / D10-K"
+    },
+    {
+      "code": "GLOBAL_SEVERITY_LEAKAGE_BLOCKED",
+      "namespace": "reason",
+      "source": "Q13-CLOSE Q13-S"
+    },
+    {
+      "code": "CROSS_FORMULA_SEVERITY_LEAKAGE_BLOCKED",
+      "namespace": "reason",
+      "source": "Q13-CLOSE Q13-S"
+    },
+    {
+      "code": "SEVERITY_ALONE_NOT_A_POTENCY_SELECTOR",
+      "namespace": "reason",
+      "source": "Q13-CLOSE Q13-F"
+    },
+    {
+      "code": "PRODUCTION_SEVERITY_RESOLUTION_NOT_CONNECTED",
+      "namespace": "reason",
+      "source": "Phase 6 binding gate"
+    },
+    {
+      "code": "CROSS_ACUTE_CHRONIC_SEVERITY_LEAKAGE_BLOCKED",
+      "namespace": "reason",
+      "source": "Q12-CLOSE Q12-J"
+    },
+    {
+      "code": "TARGET_BINDING_MISSING",
+      "namespace": "reason",
+      "source": "Q13-CLOSE Q13-S / D10-J"
+    },
+    {
+      "code": "PARTIAL_SEVERITY_RESOLUTION_REQUIRES_DOCTOR_REVIEW",
+      "namespace": "reason",
+      "source": "Q13-CLOSE Q13-M"
+    }
+  ],
+  "limitationCodes": [
+    {
+      "code": "PHASE6_NO_NUMERIC_CASCADE",
+      "namespace": "limitation",
+      "source": "Phase 6 structured severity only"
+    },
+    {
+      "code": "PHASE6_UPSTREAM_CONTEXT_BOUNDARY",
+      "namespace": "limitation",
+      "source": "Phase 6 upstream polarity/phase context boundary"
+    }
+  ]
+}

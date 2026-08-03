@@ -73,8 +73,7 @@ class Rule4Phase4PolarityTests(unittest.TestCase):
         reg = load_reason_code_registry()
         codes = {e["code"] for e in reg["reasonCodes"]}
         self.assertIn("RULE4_POLARITY_PATHWAY_ROUTED", codes)
-        self.assertEqual(reg["scope"], "PHASE5_STRUCTURED_PHASE_SUBSET")
-        self.assertIn("PHASE5_NO_NUMERIC_CASCADE", {e["code"] for e in reg["limitationCodes"]})
+        self.assertIn("PHASE6_NO_NUMERIC_CASCADE", {e["code"] for e in reg["limitationCodes"]})
 
     def test_shared_scenario_parity(self) -> None:
         for scenario in self.scenarios:
