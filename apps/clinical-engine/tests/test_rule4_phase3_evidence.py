@@ -146,6 +146,8 @@ class Rule4Phase3EvidenceTests(unittest.TestCase):
             with_evidence["result"]["deterministic_fingerprint"],
         )
         self.assertIsNotNone(with_evidence["evidence_adapter"])
+
+        self.assertIsNone(with_evidence.get("polarity_routing"))
 
 
 if __name__ == "__main__":

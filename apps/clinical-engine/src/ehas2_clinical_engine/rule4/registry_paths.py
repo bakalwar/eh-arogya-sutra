@@ -12,9 +12,14 @@ RULE4_REGISTRY_FIXTURE_PHASE3_RELATIVE = (
     "fixtures/rule4/reason-code-registry.phase3-evidence-subset.v1.json"
 )
 
+RULE4_REGISTRY_FIXTURE_PHASE4_RELATIVE = (
+    "fixtures/rule4/reason-code-registry.phase4-polarity-subset.v1.json"
+)
+
 RULE4_CONTRACT_VERSION = "ehas2-rule4-contract-v1-phase1"
 RULE4_CONTRACT_VERSION_PHASE2 = "ehas2-rule4-contract-v1-phase2-safety"
 RULE4_CONTRACT_VERSION_PHASE3_EVIDENCE = "ehas2-rule4-contract-v1-phase3-evidence"
+RULE4_CONTRACT_VERSION_PHASE4_POLARITY = "ehas2-rule4-contract-v1-phase4-polarity"
 
 RULE4_REGISTRY_VERSION = "rule4-reason-codes-phase1-foundation-subset-v1"
 RULE4_REGISTRY_SCOPE = "PHASE1_FOUNDATION_SUBSET"

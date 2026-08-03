@@ -12,4 +12,5 @@ export * from './input.js';
 export * from './output.js';
 export * from './evaluator.js';
 export * from './evidence/index.js';
+export * from './polarity/index.js';
 export * from './safety/index.js';

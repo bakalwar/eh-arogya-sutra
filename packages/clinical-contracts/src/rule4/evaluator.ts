@@ -12,6 +12,8 @@ import { validateRule4OutputCodes } from './outputCodeValidation.js';
 import { evaluateRule4SafetyGate } from './safety/evaluateSafetyGate.js';
 import { evaluateEvidenceAdapter } from './evidence/evaluateEvidenceAdapter.js';
 import type { Rule4EvidenceAdapterOutput } from './evidence/types.js';
+import { evaluatePolarityAdapter } from './polarity/evaluatePolarityAdapter.js';
+import type { Rule4PolarityAdapterOutput } from './polarity/types.js';
 import {
   RULE4_CONTRACT_VERSION,
   RULE4_CONTRACT_VERSION_PHASE2,
@@ -237,6 +239,7 @@ export function evaluateRule4Phase2Safety(input: Rule4InputContract): Rule4Resul
 export type Rule4ShadowEvaluationBundle = {
   result: Rule4Result;
   evidenceAdapter: Rule4EvidenceAdapterOutput | null;
+  polarityRouting: Rule4PolarityAdapterOutput | null;
 };
 
 /**
@@ -244,9 +247,21 @@ export type Rule4ShadowEvaluationBundle = {
  */
 export function evaluateRule4ShadowBundle(input: Rule4InputContract): Rule4ShadowEvaluationBundle {
   const result = evaluateRule4Empty(input);
-  if (input.engineMode !== 'shadow' || !input.evidenceAdapter) {
-    return { result, evidenceAdapter: null };
+  let evidenceAdapter: Rule4EvidenceAdapterOutput | null = null;
+  let polarityRouting: Rule4PolarityAdapterOutput | null = null;
+
+  if (input.engineMode === 'shadow') {
+    if (input.evidenceAdapter) {
+      evidenceAdapter = evaluateEvidenceAdapter(input.evidenceAdapter);
+    }
+    if (input.polarityAdapter) {
+      polarityRouting = evaluatePolarityAdapter(input.polarityAdapter, {
+        safetyGate: result.safetyGate ?? null,
+        evidenceAdapter,
+        bindingGateMandatory: true,
+      });
+    }
   }
-  const evidenceAdapter = evaluateEvidenceAdapter(input.evidenceAdapter);
-  return { result, evidenceAdapter };
+
+  return { result, evidenceAdapter, polarityRouting };
 }

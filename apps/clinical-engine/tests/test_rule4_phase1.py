@@ -121,11 +121,24 @@ class Rule4Phase1Tests(unittest.TestCase):
                 encoding="utf-8"
             )
         )
+        phase4 = json.loads(
+            (REPO_ROOT / "fixtures" / "rule4" / "reason-code-registry.phase4-polarity-subset.v1.json").read_text(
+                encoding="utf-8"
+            )
+        )
         reason_codes = sorted(
-            r["code"] for r in phase1["reasonCodes"] + phase2["reasonCodes"] + phase3["reasonCodes"]
+            r["code"]
+            for r in phase1["reasonCodes"]
+            + phase2["reasonCodes"]
+            + phase3["reasonCodes"]
+            + phase4["reasonCodes"]
         )
         limitation_codes = sorted(
-            r["code"] for r in phase1["limitationCodes"] + phase2["limitationCodes"] + phase3["limitationCodes"]
+            r["code"]
+            for r in phase1["limitationCodes"]
+            + phase2["limitationCodes"]
+            + phase3["limitationCodes"]
+            + phase4["limitationCodes"]
         )
         from ehas2_clinical_engine.rule4.evaluator import load_reason_code_registry
 

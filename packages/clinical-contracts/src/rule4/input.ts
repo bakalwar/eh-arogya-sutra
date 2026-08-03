@@ -88,6 +88,8 @@ export type Rule4InputContract = {
   rawLabKeywordPresent?: boolean;
   /** Phase 3 — shadow-only structured evidence adapter input (in-memory). */
   evidenceAdapter?: import('./evidence/types.js').Rule4EvidenceAdapterInput;
+  /** Phase 4 — shadow-only typed Rule 2 polarity envelope (in-memory). */
+  polarityAdapter?: import('./polarity/types.js').Rule4PolarityAdapterInput;
 };
 
 export type Rule4InputContractPhase2 = Rule4InputContract & {

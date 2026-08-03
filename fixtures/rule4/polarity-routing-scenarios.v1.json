@@ -1,0 +1,709 @@
+{
+  "fixtureVersion": "rule4-polarity-routing-scenarios-v1",
+  "scenarioCount": 23,
+  "fingerprintNote": "fingerprintV1References are fixed independently; scenarios do not embed runtime fingerprints.",
+  "fingerprintV1References": [
+    {
+      "reference_id": "valid-positive-routing",
+      "scenario_id": "valid-positive-routing",
+      "canonical_payload": "{\"fingerprint_version\":\"rule4-polarity-routing-fingerprint-v1\",\"limitation_codes\":[\"PHASE4_NO_NUMERIC_CASCADE\",\"TRUSTED_SYNTHETIC_BINDING_BYPASS_TEST_ONLY\"],\"reason_codes\":[\"RULE4_POLARITY_PATHWAY_ROUTED\"],\"registry_version\":\"rule4-reason-codes-phase4-polarity-subset-v1\",\"ruleset_version\":\"ehas2-rule4-ruleset-v1-frozen-doc-4c35469\",\"slot_routings\":[{\"disease_polarity\":\"POSITIVE\",\"formula_slot_id\":\"s-pos\",\"formula_target_id\":\"t-pos-1\",\"limitation_codes\":[\"PHASE4_NO_NUMERIC_CASCADE\",\"TRUSTED_SYNTHETIC_BINDING_BYPASS_TEST_ONLY\"],\"pathway\":\"POSITIVE_DISEASE_NEGATIVE_THERAPEUTIC_GROUP\",\"potency_status\":\"NOT_EVALUATED\",\"reason_codes\":[\"RULE4_POLARITY_PATHWAY_ROUTED\"],\"required_therapeutic_polarity\":\"NEGATIVE\",\"resolution_status\":\"RESOLVED\",\"rule2_record_id\":\"r2-pos\",\"selected_cascade\":null,\"selected_dilution\":null}]}",
+      "polarity_routing_sha256": "69B627A561F3EDBE3CE576282742C20F61D0C3D3EF740CED7207858B3FEF5202"
+    },
+    {
+      "reference_id": "resolved-neutral-non-potency",
+      "scenario_id": "resolved-neutral-non-potency",
+      "canonical_payload": "{\"fingerprint_version\":\"rule4-polarity-routing-fingerprint-v1\",\"limitation_codes\":[\"PHASE4_NO_NUMERIC_CASCADE\"],\"reason_codes\":[\"POTENCY_NOT_APPLICABLE_FOR_NEUTRAL_TARGET\"],\"registry_version\":\"rule4-reason-codes-phase4-polarity-subset-v1\",\"ruleset_version\":\"ehas2-rule4-ruleset-v1-frozen-doc-4c35469\",\"slot_routings\":[{\"disease_polarity\":\"NEUTRAL\",\"formula_slot_id\":\"s-neu\",\"formula_target_id\":\"t-neu-1\",\"limitation_codes\":[\"PHASE4_NO_NUMERIC_CASCADE\"],\"pathway\":\"NEUTRAL_NON_POTENCY\",\"potency_status\":\"NOT_EVALUATED\",\"reason_codes\":[\"POTENCY_NOT_APPLICABLE_FOR_NEUTRAL_TARGET\"],\"required_therapeutic_polarity\":\"NEUTRAL\",\"resolution_status\":\"RESOLVED\",\"rule2_record_id\":\"r2-neu\",\"selected_cascade\":null,\"selected_dilution\":null}]}",
+      "polarity_routing_sha256": "AA0BD8FF790E683C37F5B84B90EB646B809D0F8BD70B21A65B1A4AA82CBCD9CE"
+    },
+    {
+      "reference_id": "same-target-contradiction",
+      "scenario_id": "same-target-contradiction",
+      "canonical_payload": "{\"fingerprint_version\":\"rule4-polarity-routing-fingerprint-v1\",\"limitation_codes\":[\"PHASE4_NO_NUMERIC_CASCADE\"],\"reason_codes\":[\"POLARITY_SAME_TARGET_CONTRADICTION\"],\"registry_version\":\"rule4-reason-codes-phase4-polarity-subset-v1\",\"ruleset_version\":\"ehas2-rule4-ruleset-v1-frozen-doc-4c35469\",\"slot_routings\":[{\"disease_polarity\":\"POSITIVE\",\"formula_slot_id\":\"s-a\",\"formula_target_id\":\"t-shared\",\"limitation_codes\":[\"PHASE4_NO_NUMERIC_CASCADE\"],\"pathway\":\"POLARITY_CONTRADICTORY\",\"potency_status\":\"UNRESOLVED\",\"reason_codes\":[\"POLARITY_SAME_TARGET_CONTRADICTION\"],\"required_therapeutic_polarity\":\"NEGATIVE\",\"resolution_status\":\"RESOLVED\",\"rule2_record_id\":\"r2-a\",\"selected_cascade\":null,\"selected_dilution\":null},{\"disease_polarity\":\"NEGATIVE\",\"formula_slot_id\":\"s-b\",\"formula_target_id\":\"t-shared\",\"limitation_codes\":[\"PHASE4_NO_NUMERIC_CASCADE\"],\"pathway\":\"POLARITY_CONTRADICTORY\",\"potency_status\":\"UNRESOLVED\",\"reason_codes\":[\"POLARITY_SAME_TARGET_CONTRADICTION\"],\"required_therapeutic_polarity\":\"POSITIVE\",\"resolution_status\":\"RESOLVED\",\"rule2_record_id\":\"r2-b\",\"selected_cascade\":null,\"selected_dilution\":null}]}",
+      "polarity_routing_sha256": "FF5B63894EC0DE1C5C295F222E2E643369B4520929D1A7DEA31F1FFD8C42CC0A"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "valid-positive-routing",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase4-polarity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase4-polarity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "formula_slot_ids": ["s-pos"],
+        "formula_polarities": [
+          {
+            "formula_slot_id": "s-pos",
+            "formula_target_id": "t-pos-1",
+            "rule2_record_id": "r2-pos",
+            "disease_polarity": "POSITIVE",
+            "required_therapeutic_polarity": "NEGATIVE",
+            "resolution_status": "RESOLVED"
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "pathways_by_slot": {
+          "s-pos": "POSITIVE_DISEASE_NEGATIVE_THERAPEUTIC_GROUP"
+        }
+      }
+    },
+    {
+      "id": "valid-negative-routing",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase4-polarity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase4-polarity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "formula_slot_ids": ["s-neg"],
+        "formula_polarities": [
+          {
+            "formula_slot_id": "s-neg",
+            "formula_target_id": "t-neg-1",
+            "rule2_record_id": "r2-neg",
+            "disease_polarity": "NEGATIVE",
+            "required_therapeutic_polarity": "POSITIVE",
+            "resolution_status": "RESOLVED"
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "pathways_by_slot": {
+          "s-neg": "NEGATIVE_DISEASE_POSITIVE_THERAPEUTIC_GROUP"
+        }
+      }
+    },
+    {
+      "id": "resolved-neutral-non-potency",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase4-polarity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase4-polarity-subset-v1",
+        "label": "SYNTHETIC",
+        "formula_slot_ids": ["s-neu"],
+        "formula_polarities": [
+          {
+            "formula_slot_id": "s-neu",
+            "formula_target_id": "t-neu-1",
+            "rule2_record_id": "r2-neu",
+            "disease_polarity": "NEUTRAL",
+            "required_therapeutic_polarity": "NEUTRAL",
+            "resolution_status": "RESOLVED"
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "pathways_by_slot": {
+          "s-neu": "NEUTRAL_NON_POTENCY"
+        }
+      }
+    },
+    {
+      "id": "missing-rule2-record",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase4-polarity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase4-polarity-subset-v1",
+        "label": "SYNTHETIC",
+        "formula_slot_ids": ["s-miss"],
+        "formula_polarities": [],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "pathways_by_slot": {
+          "s-miss": "UNRESOLVED_NO_CASCADE"
+        }
+      }
+    },
+    {
+      "id": "invalid-disease-enum",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase4-polarity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase4-polarity-subset-v1",
+        "label": "SYNTHETIC",
+        "formula_slot_ids": ["s-bad"],
+        "formula_polarities": [
+          {
+            "formula_slot_id": "s-bad",
+            "formula_target_id": "t-bad",
+            "rule2_record_id": "r2-bad",
+            "disease_polarity": "NOT_A_POLARITY",
+            "required_therapeutic_polarity": "NEGATIVE",
+            "resolution_status": "RESOLVED"
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "pathways_by_slot": {
+          "s-bad": "UNRESOLVED_NO_CASCADE"
+        }
+      }
+    },
+    {
+      "id": "ambiguous-resolution-status",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase4-polarity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase4-polarity-subset-v1",
+        "label": "SYNTHETIC",
+        "formula_slot_ids": ["s-amb"],
+        "formula_polarities": [
+          {
+            "formula_slot_id": "s-amb",
+            "formula_target_id": "t-amb",
+            "rule2_record_id": "r2-amb",
+            "disease_polarity": "POSITIVE",
+            "required_therapeutic_polarity": "NEGATIVE",
+            "resolution_status": "AMBIGUOUS"
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "pathways_by_slot": {
+          "s-amb": "UNRESOLVED_NO_CASCADE"
+        }
+      }
+    },
+    {
+      "id": "same-target-contradiction",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase4-polarity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase4-polarity-subset-v1",
+        "label": "SYNTHETIC",
+        "formula_slot_ids": ["s-a", "s-b"],
+        "formula_polarities": [
+          {
+            "formula_slot_id": "s-a",
+            "formula_target_id": "t-shared",
+            "rule2_record_id": "r2-a",
+            "disease_polarity": "POSITIVE",
+            "required_therapeutic_polarity": "NEGATIVE",
+            "resolution_status": "RESOLVED"
+          },
+          {
+            "formula_slot_id": "s-b",
+            "formula_target_id": "t-shared",
+            "rule2_record_id": "r2-b",
+            "disease_polarity": "NEGATIVE",
+            "required_therapeutic_polarity": "POSITIVE",
+            "resolution_status": "RESOLVED"
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "pathways_by_slot": {
+          "s-a": "POLARITY_CONTRADICTORY",
+          "s-b": "POLARITY_CONTRADICTORY"
+        }
+      }
+    },
+    {
+      "id": "separate-target-pos-neg",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase4-polarity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase4-polarity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "formula_slot_ids": ["s-pos2", "s-neg2"],
+        "formula_polarities": [
+          {
+            "formula_slot_id": "s-pos2",
+            "formula_target_id": "t-p",
+            "rule2_record_id": "r2-p",
+            "disease_polarity": "POSITIVE",
+            "required_therapeutic_polarity": "NEGATIVE",
+            "resolution_status": "RESOLVED"
+          },
+          {
+            "formula_slot_id": "s-neg2",
+            "formula_target_id": "t-n",
+            "rule2_record_id": "r2-n",
+            "disease_polarity": "NEGATIVE",
+            "required_therapeutic_polarity": "POSITIVE",
+            "resolution_status": "RESOLVED"
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "pathways_by_slot": {
+          "s-pos2": "POSITIVE_DISEASE_NEGATIVE_THERAPEUTIC_GROUP",
+          "s-neg2": "NEGATIVE_DISEASE_POSITIVE_THERAPEUTIC_GROUP"
+        }
+      }
+    },
+    {
+      "id": "valid-slot-unresolved-sibling",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase4-polarity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase4-polarity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "formula_slot_ids": ["s-ok", "s-un"],
+        "formula_polarities": [
+          {
+            "formula_slot_id": "s-ok",
+            "formula_target_id": "t-ok",
+            "rule2_record_id": "r2-ok",
+            "disease_polarity": "POSITIVE",
+            "required_therapeutic_polarity": "NEGATIVE",
+            "resolution_status": "RESOLVED"
+          },
+          {
+            "formula_slot_id": "s-un",
+            "formula_target_id": "t-un",
+            "rule2_record_id": "r2-un",
+            "disease_polarity": "UNRESOLVED",
+            "required_therapeutic_polarity": "NEUTRAL",
+            "resolution_status": "UNRESOLVED"
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "pathways_by_slot": {
+          "s-ok": "POSITIVE_DISEASE_NEGATIVE_THERAPEUTIC_GROUP",
+          "s-un": "UNRESOLVED_NO_CASCADE"
+        }
+      }
+    },
+    {
+      "id": "support-only-sibling",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase4-polarity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase4-polarity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "formula_slot_ids": ["s-main", "s-sup"],
+        "formula_polarities": [
+          {
+            "formula_slot_id": "s-main",
+            "formula_target_id": "t-main",
+            "rule2_record_id": "r2-main",
+            "disease_polarity": "NEGATIVE",
+            "required_therapeutic_polarity": "POSITIVE",
+            "resolution_status": "RESOLVED"
+          },
+          {
+            "formula_slot_id": "s-sup",
+            "formula_target_id": "t-sup",
+            "rule2_record_id": "r2-sup",
+            "disease_polarity": "SUPPORT_ONLY",
+            "required_therapeutic_polarity": "NEUTRAL",
+            "resolution_status": "RESOLVED_SUPPORT_ROLE"
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "pathways_by_slot": {
+          "s-main": "NEGATIVE_DISEASE_POSITIVE_THERAPEUTIC_GROUP",
+          "s-sup": "SUPPORT_ONLY_NON_POTENCY"
+        }
+      }
+    },
+    {
+      "id": "cross-slot-leakage-attempt",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase4-polarity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase4-polarity-subset-v1",
+        "label": "SYNTHETIC",
+        "formula_slot_ids": ["s-only"],
+        "formula_polarities": [
+          {
+            "formula_slot_id": "s-other",
+            "formula_target_id": "t-other",
+            "rule2_record_id": "r2-other",
+            "disease_polarity": "POSITIVE",
+            "required_therapeutic_polarity": "NEGATIVE",
+            "resolution_status": "RESOLVED"
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "pathways_by_slot": {
+          "s-only": "UNRESOLVED_NO_CASCADE"
+        }
+      }
+    },
+    {
+      "id": "patient-global-mixed-summary-only",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase4-polarity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase4-polarity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "formula_slot_ids": ["s-rec"],
+        "formula_polarities": [
+          {
+            "formula_slot_id": "s-rec",
+            "formula_target_id": "t-rec",
+            "rule2_record_id": "r2-rec",
+            "disease_polarity": "POSITIVE",
+            "required_therapeutic_polarity": "NEGATIVE",
+            "resolution_status": "RESOLVED"
+          }
+        ],
+        "quarantine_probe": null,
+        "case_polarity_summary": {
+          "display_only": true,
+          "must_not_drive_selection": true,
+          "headline": "MIXED"
+        }
+      },
+      "expected": {
+        "pathways_by_slot": {
+          "s-rec": "POSITIVE_DISEASE_NEGATIVE_THERAPEUTIC_GROUP"
+        }
+      }
+    },
+    {
+      "id": "crisis-safety-gate",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase4-polarity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase4-polarity-subset-v1",
+        "label": "SYNTHETIC",
+        "formula_slot_ids": ["s-crisis"],
+        "formula_polarities": [
+          {
+            "formula_slot_id": "s-crisis",
+            "formula_target_id": "t-c",
+            "rule2_record_id": "r2-c",
+            "disease_polarity": "POSITIVE",
+            "required_therapeutic_polarity": "NEGATIVE",
+            "resolution_status": "RESOLVED"
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "context": {
+        "safety_gate": {
+          "patient_wide_hold": true,
+          "d13_hard_stop_active": false,
+          "reason_codes": [],
+          "limitation_codes": ["PHASE2_NO_POTENCY_CASCADE"]
+        }
+      },
+      "expected": {
+        "pathways_by_slot": {
+          "s-crisis": "BLOCKED_BY_SAFETY_GATE"
+        }
+      }
+    },
+    {
+      "id": "d13-hard-stop",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase4-polarity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase4-polarity-subset-v1",
+        "label": "SYNTHETIC",
+        "formula_slot_ids": ["s-d13"],
+        "formula_polarities": [
+          {
+            "formula_slot_id": "s-d13",
+            "formula_target_id": "t-d13",
+            "rule2_record_id": "r2-d13",
+            "disease_polarity": "NEGATIVE",
+            "required_therapeutic_polarity": "POSITIVE",
+            "resolution_status": "RESOLVED"
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "context": {
+        "safety_gate": {
+          "patient_wide_hold": false,
+          "d13_hard_stop_active": true,
+          "reason_codes": [],
+          "limitation_codes": ["PHASE2_NO_POTENCY_CASCADE"]
+        }
+      },
+      "expected": {
+        "pathways_by_slot": {
+          "s-d13": "BLOCKED_BY_SAFETY_GATE"
+        }
+      }
+    },
+    {
+      "id": "registry-global-text-quarantine",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase4-polarity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase4-polarity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "formula_slot_ids": ["s-q"],
+        "formula_polarities": [
+          {
+            "formula_slot_id": "s-q",
+            "formula_target_id": "t-q",
+            "rule2_record_id": "r2-q",
+            "disease_polarity": "POSITIVE",
+            "required_therapeutic_polarity": "NEGATIVE",
+            "resolution_status": "RESOLVED"
+          }
+        ],
+        "quarantine_probe": {
+          "global_text": true
+        }
+      },
+      "expected": {
+        "pathways_by_slot": {
+          "s-q": "POSITIVE_DISEASE_NEGATIVE_THERAPEUTIC_GROUP"
+        }
+      }
+    },
+    {
+      "id": "duplicate-target-records",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase4-polarity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase4-polarity-subset-v1",
+        "label": "SYNTHETIC",
+        "trusted_synthetic_binding_bypass": true,
+        "formula_slot_ids": ["s-dup"],
+        "formula_polarities": [
+          {
+            "formula_slot_id": "s-dup",
+            "formula_target_id": "t-dup",
+            "rule2_record_id": "r2-dup",
+            "disease_polarity": "POSITIVE",
+            "required_therapeutic_polarity": "NEGATIVE",
+            "resolution_status": "RESOLVED"
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "pathways_by_slot": {
+          "s-dup": "POSITIVE_DISEASE_NEGATIVE_THERAPEUTIC_GROUP"
+        }
+      }
+    },
+    {
+      "id": "absent-rule2-empty-polarities",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase4-polarity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase4-polarity-subset-v1",
+        "label": "SYNTHETIC",
+        "formula_slot_ids": ["s-empty"],
+        "formula_polarities": [],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "pathways_by_slot": {
+          "s-empty": "UNRESOLVED_NO_CASCADE"
+        }
+      }
+    },
+    {
+      "id": "therapeutic-polarity-mismatch",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase4-polarity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase4-polarity-subset-v1",
+        "label": "SYNTHETIC",
+        "formula_slot_ids": ["s-mis"],
+        "formula_polarities": [
+          {
+            "formula_slot_id": "s-mis",
+            "formula_target_id": "t-mis",
+            "rule2_record_id": "r2-mis",
+            "disease_polarity": "POSITIVE",
+            "required_therapeutic_polarity": "POSITIVE",
+            "resolution_status": "RESOLVED"
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "pathways_by_slot": {
+          "s-mis": "POLARITY_CONTRADICTORY"
+        }
+      }
+    },
+    {
+      "id": "phase3-binding-no-usable-evidence",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase4-polarity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase4-polarity-subset-v1",
+        "label": "SYNTHETIC",
+        "formula_slot_ids": ["s-ev"],
+        "formula_polarities": [
+          {
+            "formula_slot_id": "s-ev",
+            "formula_target_id": "t-ev",
+            "rule2_record_id": "r2-ev",
+            "disease_polarity": "POSITIVE",
+            "required_therapeutic_polarity": "NEGATIVE",
+            "resolution_status": "RESOLVED"
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "context": {
+        "evidence_adapter": {
+          "formula_bound_pools": [
+            {
+              "formula_slot_id": "s-ev",
+              "formula_target_id": "t-ev",
+              "usable_finding_ids": []
+            }
+          ]
+        }
+      },
+      "expected": {
+        "pathways_by_slot": {
+          "s-ev": "NOT_EVALUATED"
+        }
+      }
+    },
+    {
+      "id": "evidence-present-polarity-absent",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase4-polarity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase4-polarity-subset-v1",
+        "label": "SYNTHETIC",
+        "formula_slot_ids": ["s-no-pol"],
+        "formula_polarities": [],
+        "quarantine_probe": null
+      },
+      "context": {
+        "evidence_adapter": {
+          "formula_bound_pools": [
+            {
+              "formula_slot_id": "s-no-pol",
+              "formula_target_id": "t-x",
+              "usable_finding_ids": ["f1"]
+            }
+          ]
+        }
+      },
+      "expected": {
+        "pathways_by_slot": {
+          "s-no-pol": "UNRESOLVED_NO_CASCADE"
+        }
+      }
+    },
+    {
+      "id": "evidence-exact-binding-group-route",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase4-polarity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase4-polarity-subset-v1",
+        "label": "SYNTHETIC",
+        "formula_slot_ids": ["s-bind"],
+        "formula_polarities": [
+          {
+            "formula_slot_id": "s-bind",
+            "formula_target_id": "t-bind-1",
+            "rule2_record_id": "r2-bind",
+            "disease_polarity": "POSITIVE",
+            "required_therapeutic_polarity": "NEGATIVE",
+            "resolution_status": "RESOLVED"
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "context": {
+        "evidence_adapter": {
+          "formula_bound_pools": [
+            {
+              "formula_slot_id": "s-bind",
+              "formula_target_id": "t-bind-1",
+              "usable_finding_ids": ["f-bind-1"]
+            }
+          ]
+        }
+      },
+      "expected": {
+        "pathways_by_slot": {
+          "s-bind": "POSITIVE_DISEASE_NEGATIVE_THERAPEUTIC_GROUP"
+        }
+      }
+    },
+    {
+      "id": "evidence-target-mismatch-no-group",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase4-polarity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase4-polarity-subset-v1",
+        "label": "SYNTHETIC",
+        "formula_slot_ids": ["s-tgt"],
+        "formula_polarities": [
+          {
+            "formula_slot_id": "s-tgt",
+            "formula_target_id": "t-polarity",
+            "rule2_record_id": "r2-tgt",
+            "disease_polarity": "POSITIVE",
+            "required_therapeutic_polarity": "NEGATIVE",
+            "resolution_status": "RESOLVED"
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "context": {
+        "evidence_adapter": {
+          "formula_bound_pools": [
+            {
+              "formula_slot_id": "s-tgt",
+              "formula_target_id": "t-evidence-other",
+              "usable_finding_ids": ["f1"]
+            }
+          ]
+        }
+      },
+      "expected": {
+        "pathways_by_slot": {
+          "s-tgt": "NOT_EVALUATED"
+        }
+      }
+    },
+    {
+      "id": "disease-mixed-slot",
+      "input": {
+        "contract_version": "ehas2-rule4-contract-v1-phase4-polarity",
+        "ruleset_version": "ehas2-rule4-ruleset-v1-frozen-doc-4c35469",
+        "registry_version": "rule4-reason-codes-phase4-polarity-subset-v1",
+        "label": "SYNTHETIC",
+        "formula_slot_ids": ["s-mix"],
+        "formula_polarities": [
+          {
+            "formula_slot_id": "s-mix",
+            "formula_target_id": "t-mix",
+            "rule2_record_id": "r2-mix",
+            "disease_polarity": "MIXED",
+            "required_therapeutic_polarity": "NEUTRAL",
+            "resolution_status": "RESOLVED"
+          }
+        ],
+        "quarantine_probe": null
+      },
+      "expected": {
+        "pathways_by_slot": {
+          "s-mix": "UNRESOLVED_NO_CASCADE"
+        }
+      }
+    }
+  ]
+}

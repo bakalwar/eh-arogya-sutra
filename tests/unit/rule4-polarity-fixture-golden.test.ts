@@ -3,9 +3,9 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
-  RULE4_EVIDENCE_FIXTURE_PATH,
-  loadRule4EvidenceAdapterFixture,
-} from './rule4-evidence-fixture-loader.ts';
+  RULE4_POLARITY_FIXTURE_PATH,
+  loadRule4PolarityRoutingFixture,
+} from './rule4-polarity-fixture-loader.ts';
 
 const REPO = resolve(import.meta.dirname, '../..');
 const RULE4_TEST_DIR = resolve(REPO, 'tests/unit');
@@ -23,14 +23,14 @@ const GOLDEN_IMMUTABILITY_SELF_FILES = new Set([
 
 const FORBIDDEN_WRITE_SUBSTRINGS = ['updateGolden', 'update-golden'];
 
-describe('Rule 4 evidence golden fixture immutability', () => {
+describe('Rule 4 polarity golden fixture immutability', () => {
   it('fixture file hash is stable for the duration of this file tests', () => {
     const hashAtStart = createHash('sha256')
-      .update(readFileSync(RULE4_EVIDENCE_FIXTURE_PATH))
+      .update(readFileSync(RULE4_POLARITY_FIXTURE_PATH))
       .digest('hex')
       .toUpperCase();
     const hashAtEnd = createHash('sha256')
-      .update(readFileSync(RULE4_EVIDENCE_FIXTURE_PATH))
+      .update(readFileSync(RULE4_POLARITY_FIXTURE_PATH))
       .digest('hex')
       .toUpperCase();
     expect(hashAtEnd).toBe(hashAtStart);
@@ -55,14 +55,14 @@ describe('Rule 4 evidence golden fixture immutability', () => {
   });
 
   it('fixture expected blocks are not evaluator-generated fingerprints', () => {
-    const fixture = loadRule4EvidenceAdapterFixture();
+    const fixture = loadRule4PolarityRoutingFixture();
     for (const scenario of fixture.scenarios) {
-      expect(scenario.expected).not.toHaveProperty('deterministic_evidence_pool_fingerprint');
+      expect(scenario.expected).not.toHaveProperty('deterministic_polarity_routing_fingerprint');
     }
     expect(fixture.fingerprintV1References.length).toBeGreaterThanOrEqual(3);
     for (const ref of fixture.fingerprintV1References) {
-      expect(ref.canonicalPayload.length).toBeGreaterThan(10);
-      expect(ref.evidencePoolSha256).toMatch(/^[A-F0-9]{64}$/);
+      expect(ref.canonical_payload.length).toBeGreaterThan(10);
+      expect(ref.polarity_routing_sha256).toMatch(/^[A-F0-9]{64}$/);
     }
   });
 });

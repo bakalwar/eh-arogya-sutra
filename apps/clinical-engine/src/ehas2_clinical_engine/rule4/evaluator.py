@@ -136,11 +136,22 @@ def _evaluate_phase2(input_contract: dict) -> dict:
 def evaluate_rule4_shadow_bundle(input_contract: dict) -> dict:
     result = evaluate_rule4_empty(input_contract)
     evidence = None
-    if input_contract.get("engine_mode") == "shadow" and input_contract.get("evidence_adapter"):
-        from .evidence.evaluate_evidence_adapter import evaluate_evidence_adapter
+    polarity = None
+    if input_contract.get("engine_mode") == "shadow":
+        if input_contract.get("evidence_adapter"):
+            from .evidence.evaluate_evidence_adapter import evaluate_evidence_adapter
 
-        evidence = evaluate_evidence_adapter(input_contract["evidence_adapter"])
-    return {"result": result, "evidence_adapter": evidence}
+            evidence = evaluate_evidence_adapter(input_contract["evidence_adapter"])
+        if input_contract.get("polarity_adapter"):
+            from .polarity.evaluate_polarity_adapter import evaluate_polarity_adapter
+
+            polarity = evaluate_polarity_adapter(
+                input_contract["polarity_adapter"],
+                safety_gate=result.get("safety_gate"),
+                evidence_adapter=evidence,
+                binding_gate_mandatory=True,
+            )
+    return {"result": result, "evidence_adapter": evidence, "polarity_routing": polarity}
 
 
 def evaluate_rule4_empty(input_contract: dict) -> dict:
