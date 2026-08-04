@@ -1,24 +1,21 @@
 /**
  * Isolated Phase 4A auth test DB helpers (synthetic labelled identities only).
  */
-export function buildIsolatedTestDatabaseUrl(): string {
-  const host = process.env.EHAS2_TEST_PG_HOST ?? '127.0.0.1';
-  const port = process.env.EHAS2_TEST_PG_PORT ?? '55432';
-  const user = process.env.EHAS2_TEST_PG_USER ?? 'ehas2';
-  const db = process.env.EHAS2_TEST_PG_DB ?? 'ehas2_phase4a_preflight';
-  const scheme = ['postgre', 'sql'].join('');
-  return `${scheme}://${user}@${host}:${port}/${db}`;
+import { buildIsolatedTestDatabaseUrl, isolatedPostgresTestEnv } from './isolated-postgres-env.ts';
+
+const PHASE4A_DB = 'ehas2_phase4a_preflight';
+
+export function buildIsolatedTestDatabaseUrlPhase4a(
+  env: Record<string, string | undefined> = process.env,
+): string {
+  const db = env.EHAS2_TEST_PG_DB ?? PHASE4A_DB;
+  return buildIsolatedTestDatabaseUrl(db, env);
 }
 
 export function phase4aTestEnv(): Record<string, string | undefined> {
+  const db = process.env.EHAS2_TEST_PG_DB ?? PHASE4A_DB;
   return {
-    ...process.env,
-    EHAS2_NODE_ENV: 'test',
-    EHAS2_DATABASE_URL: buildIsolatedTestDatabaseUrl(),
-    EHAS2_DATABASE_POOL_MIN: '0',
-    EHAS2_DATABASE_POOL_MAX: '5',
-    EHAS2_DATABASE_SSL_MODE: 'disable',
-    EHAS2_DATABASE_STATEMENT_TIMEOUT_MS: '12000',
+    ...isolatedPostgresTestEnv(db),
     EHAS2_AUTH_PEPPER: 'EHAS2_TEST_AUTH_PEPPER_SYNTHETIC_ONLY_DO_NOT_USE_IN_PROD_32',
   };
 }
@@ -28,7 +25,7 @@ export async function canConnectPhase4aDb(): Promise<boolean> {
     const pg = await import('pg');
     const Client =
       pg.default?.Client ?? (pg as unknown as { Client: typeof pg.default.Client }).Client;
-    const client = new Client({ connectionString: buildIsolatedTestDatabaseUrl() });
+    const client = new Client({ connectionString: buildIsolatedTestDatabaseUrlPhase4a() });
     await client.connect();
     await client.query('SELECT 1');
     await client.end();

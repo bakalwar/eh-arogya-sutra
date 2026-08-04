@@ -15,7 +15,7 @@ import {
   ValidationError,
   closePool,
   getOrderedMigrationIds,
-  migrateDownLast,
+  migrateDownLastForIsolatedTest,
   migrateUp,
   resetDatabaseSchema,
   withAdminClient,
@@ -297,7 +297,7 @@ describe('Phase 3D profile/clinic services + API (synthetic)', () => {
   it('migration clean + latest down/up', async () => {
     requireDb();
     expect(getOrderedMigrationIds()).toHaveLength(9);
-    const downId = await migrateDownLast(env);
+    const downId = await migrateDownLastForIsolatedTest(env);
     expect(downId).toBe('009_auth_foundation');
     const reup = await migrateUp(env);
     expect(reup.applied).toEqual(['009_auth_foundation']);

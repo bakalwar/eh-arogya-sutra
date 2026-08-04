@@ -1,25 +1,20 @@
 /**
  * Isolated Phase 3D test DB helpers (synthetic only).
  */
-export function buildIsolatedTestDatabaseUrl(): string {
-  const host = process.env.EHAS2_TEST_PG_HOST ?? '127.0.0.1';
-  const port = process.env.EHAS2_TEST_PG_PORT ?? '55432';
-  const user = process.env.EHAS2_TEST_PG_USER ?? 'ehas2';
-  const db = process.env.EHAS2_TEST_PG_DB ?? 'ehas2_phase3d_test';
-  const scheme = ['postgre', 'sql'].join('');
-  return `${scheme}://${user}@${host}:${port}/${db}`;
+import { buildIsolatedTestDatabaseUrl, isolatedPostgresTestEnv } from './isolated-postgres-env.ts';
+
+const PHASE3D_DB = 'ehas2_phase3d_test';
+
+export function buildIsolatedTestDatabaseUrlPhase3d(
+  env: Record<string, string | undefined> = process.env,
+): string {
+  const db = env.EHAS2_TEST_PG_DB ?? PHASE3D_DB;
+  return buildIsolatedTestDatabaseUrl(db, env);
 }
 
 export function phase3dTestEnv(): Record<string, string | undefined> {
-  return {
-    ...process.env,
-    EHAS2_NODE_ENV: 'test',
-    EHAS2_DATABASE_URL: buildIsolatedTestDatabaseUrl(),
-    EHAS2_DATABASE_POOL_MIN: '0',
-    EHAS2_DATABASE_POOL_MAX: '5',
-    EHAS2_DATABASE_SSL_MODE: 'disable',
-    EHAS2_DATABASE_STATEMENT_TIMEOUT_MS: '12000',
-  };
+  const db = process.env.EHAS2_TEST_PG_DB ?? PHASE3D_DB;
+  return isolatedPostgresTestEnv(db);
 }
 
 export async function canConnectPhase3dDb(): Promise<boolean> {
@@ -27,7 +22,7 @@ export async function canConnectPhase3dDb(): Promise<boolean> {
     const pg = await import('pg');
     const Client =
       pg.default?.Client ?? (pg as unknown as { Client: typeof pg.default.Client }).Client;
-    const client = new Client({ connectionString: buildIsolatedTestDatabaseUrl() });
+    const client = new Client({ connectionString: buildIsolatedTestDatabaseUrlPhase3d() });
     await client.connect();
     await client.query('SELECT 1');
     await client.end();

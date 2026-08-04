@@ -2,25 +2,18 @@
  * Isolated Phase 3A test DB helpers.
  * Connection URL is assembled at runtime so committed sources never contain a live URI scheme.
  */
-export function buildIsolatedTestDatabaseUrl(): string {
-  const host = process.env.EHAS2_TEST_PG_HOST ?? '127.0.0.1';
-  const port = process.env.EHAS2_TEST_PG_PORT ?? '55432';
-  const user = process.env.EHAS2_TEST_PG_USER ?? 'ehas2';
-  const db = process.env.EHAS2_TEST_PG_DB ?? 'ehas2_phase3a_test';
-  const scheme = ['postgre', 'sql'].join('');
-  return `${scheme}://${user}@${host}:${port}/${db}`;
+import { buildIsolatedTestDatabaseUrl, isolatedPostgresTestEnv } from './isolated-postgres-env.ts';
+
+const PHASE3A_DB = 'ehas2_phase3a_test';
+
+export function buildIsolatedTestDatabaseUrlPhase3a(
+  env: Record<string, string | undefined> = process.env,
+): string {
+  return buildIsolatedTestDatabaseUrl(PHASE3A_DB, env);
 }
 
 export function phase3aTestEnv(): Record<string, string | undefined> {
-  return {
-    ...process.env,
-    EHAS2_NODE_ENV: 'test',
-    EHAS2_DATABASE_URL: buildIsolatedTestDatabaseUrl(),
-    EHAS2_DATABASE_POOL_MIN: '0',
-    EHAS2_DATABASE_POOL_MAX: '5',
-    EHAS2_DATABASE_SSL_MODE: 'disable',
-    EHAS2_DATABASE_STATEMENT_TIMEOUT_MS: '12000',
-  };
+  return isolatedPostgresTestEnv(PHASE3A_DB);
 }
 
 export async function canConnectPhase3aDb(): Promise<boolean> {
@@ -28,7 +21,7 @@ export async function canConnectPhase3aDb(): Promise<boolean> {
     const pg = await import('pg');
     const Client =
       pg.default?.Client ?? (pg as unknown as { Client: typeof pg.default.Client }).Client;
-    const client = new Client({ connectionString: buildIsolatedTestDatabaseUrl() });
+    const client = new Client({ connectionString: buildIsolatedTestDatabaseUrlPhase3a() });
     await client.connect();
     await client.query('SELECT 1');
     await client.end();

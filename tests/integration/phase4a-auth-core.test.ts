@@ -8,7 +8,7 @@ import {
   AuthService,
   closePool,
   getOrderedMigrationIds,
-  migrateDownLast,
+  migrateDownLastForIsolatedTest,
   migrateUp,
   resetDatabaseSchema,
   withAdminClient,
@@ -786,7 +786,7 @@ describe('Phase 4A authentication core', () => {
   it('38-39 clean migration and latest migration down/up', async () => {
     requireDb();
     expect(getOrderedMigrationIds()).toHaveLength(9);
-    const downId = await migrateDownLast(env);
+    const downId = await migrateDownLastForIsolatedTest(env);
     expect(downId).toBe('009_auth_foundation');
     const up = await migrateUp(env);
     expect(up.applied).toContain('009_auth_foundation');

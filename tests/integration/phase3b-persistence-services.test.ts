@@ -2,7 +2,7 @@ import { describe, expect, it, beforeAll, afterAll } from 'vitest';
 import {
   closePool,
   migrateUp,
-  migrateDownLast,
+  migrateDownLastForIsolatedTest,
   resetDatabaseSchema,
   withTenantTransaction,
   withAdminClient,
@@ -129,7 +129,7 @@ describe('Phase 3B patient and consultation persistence services', () => {
     // Reverse all ups that are applied (after beforeAll migrateUp)
     const reversed: string[] = [];
     for (let i = 0; i < 9; i++) {
-      const id = await migrateDownLast(env);
+      const id = await migrateDownLastForIsolatedTest(env);
       if (!id) break;
       reversed.push(id);
     }

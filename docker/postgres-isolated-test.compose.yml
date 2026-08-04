@@ -1,0 +1,30 @@
+# Optional isolated PostgreSQL for EHAS2 integration tests only.
+# Requires Docker. Does NOT install Docker. Never use for production data.
+#
+# Start:
+#   docker compose -f docker/postgres-isolated-test.compose.yml up -d
+# Stop:
+#   docker compose -f docker/postgres-isolated-test.compose.yml down -v
+
+services:
+  ehas2-postgres-isolated-test:
+    image: postgres:16-alpine
+    container_name: ehas2_postgres_isolated_test
+    labels:
+      ehas2.role: isolated-test-database
+      ehas2.data-class: synthetic-test-only
+    environment:
+      POSTGRES_USER: ehas2
+      POSTGRES_PASSWORD: ehas2_isolated_test_only
+      POSTGRES_DB: postgres
+    ports:
+      - '127.0.0.1:55432:5432'
+    volumes:
+      - ./postgres-isolated-test/init-databases.sql:/docker-entrypoint-initdb.d/01-init-databases.sql:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ehas2 -d postgres']
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    tmpfs:
+      - /var/lib/postgresql/data
