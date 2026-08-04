@@ -2,8 +2,13 @@ name: EHAS2 CI
 
 on:
   push:
-    branches: [main, develop, master]
+    branches:
+      - main
+      - develop
+      - master
+      - hardening/full-repo-test-environment-audit
   pull_request:
+  workflow_dispatch:
 
 jobs:
   quality:
