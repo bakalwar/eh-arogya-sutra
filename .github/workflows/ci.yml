@@ -67,6 +67,16 @@ jobs:
         run: npm run typecheck
       - name: Tests
         run: npm run test
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: apps/clinical-engine/requirements.txt
+      - name: Install clinical-engine dependencies
+        run: python -m pip install --disable-pip-version-check -r apps/clinical-engine/requirements.txt
+      - name: Test clinical engine
+        run: npm run test:clinical-engine
       - name: Production build
         run: npm run build
       - name: Dependency audit (fail on high+ in production deps)
