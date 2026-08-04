@@ -140,6 +140,7 @@ def evaluate_rule4_shadow_bundle(input_contract: dict) -> dict:
     phase_resolution = None
     severity_resolution = None
     eligibility_resolution = None
+    selection_resolution = None
     if input_contract.get("engine_mode") == "shadow":
         if input_contract.get("evidence_adapter"):
             from .evidence.evaluate_evidence_adapter import evaluate_evidence_adapter
@@ -188,6 +189,23 @@ def evaluate_rule4_shadow_bundle(input_contract: dict) -> dict:
                 severity_resolution=severity_resolution,
                 binding_gate_mandatory=True,
             )
+        if input_contract.get("selection_adapter"):
+            from .selection.evaluate_selection_adapter import evaluate_selection_adapter
+
+            evidence_items = None
+            if input_contract.get("evidence_adapter"):
+                evidence_items = input_contract["evidence_adapter"].get("items")
+            selection_resolution = evaluate_selection_adapter(
+                input_contract["selection_adapter"],
+                {
+                    "safety_gate": result.get("safety_gate"),
+                    "verified_age": input_contract.get("verified_age"),
+                    "eligibility_resolution": eligibility_resolution,
+                    "evidence_adapter": evidence,
+                    "evidence_items": evidence_items,
+                    "binding_gate_mandatory": True,
+                },
+            )
     return {
         "result": result,
         "evidence_adapter": evidence,
@@ -195,6 +213,7 @@ def evaluate_rule4_shadow_bundle(input_contract: dict) -> dict:
         "phase_resolution": phase_resolution,
         "severity_resolution": severity_resolution,
         "eligibility_resolution": eligibility_resolution,
+        "selection_resolution": selection_resolution,
     }
 
 

@@ -20,6 +20,8 @@ import { evaluateSeverityAdapter } from './severity/evaluateSeverityAdapter.js';
 import type { Rule4SeverityAdapterOutput } from './severity/types.js';
 import { evaluateEligibilityAdapter } from './eligibility/evaluateEligibilityAdapter.js';
 import type { Rule4EligibilityAdapterOutput } from './eligibility/types.js';
+import { evaluateSelectionAdapter } from './selection/evaluateSelectionAdapter.js';
+import type { Rule4SelectionAdapterOutput } from './selection/types.js';
 import {
   RULE4_CONTRACT_VERSION,
   RULE4_CONTRACT_VERSION_PHASE2,
@@ -249,6 +251,7 @@ export type Rule4ShadowEvaluationBundle = {
   phaseResolution: Rule4PhaseAdapterOutput | null;
   severityResolution: Rule4SeverityAdapterOutput | null;
   eligibilityResolution: Rule4EligibilityAdapterOutput | null;
+  selectionResolution: Rule4SelectionAdapterOutput | null;
 };
 
 /**
@@ -261,6 +264,7 @@ export function evaluateRule4ShadowBundle(input: Rule4InputContract): Rule4Shado
   let phaseResolution: Rule4PhaseAdapterOutput | null = null;
   let severityResolution: Rule4SeverityAdapterOutput | null = null;
   let eligibilityResolution: Rule4EligibilityAdapterOutput | null = null;
+  let selectionResolution: Rule4SelectionAdapterOutput | null = null;
 
   if (input.engineMode === 'shadow') {
     if (input.evidenceAdapter) {
@@ -300,6 +304,16 @@ export function evaluateRule4ShadowBundle(input: Rule4InputContract): Rule4Shado
         bindingGateMandatory: true,
       });
     }
+    if (input.selectionAdapter) {
+      selectionResolution = evaluateSelectionAdapter(input.selectionAdapter, {
+        safetyGate: result.safetyGate ?? null,
+        verifiedAge: input.verifiedAge,
+        eligibilityResolution,
+        evidenceAdapter: evidenceAdapter,
+        evidenceItems: input.evidenceAdapter?.items ?? null,
+        bindingGateMandatory: true,
+      });
+    }
   }
 
   return {
@@ -309,5 +323,6 @@ export function evaluateRule4ShadowBundle(input: Rule4InputContract): Rule4Shado
     phaseResolution,
     severityResolution,
     eligibilityResolution,
+    selectionResolution,
   };
 }

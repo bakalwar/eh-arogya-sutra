@@ -18,6 +18,9 @@ export const RULE4_CONTRACT_VERSION_PHASE6_STRUCTURED_SEVERITY =
 export const RULE4_CONTRACT_VERSION_PHASE7_CANDIDATE_ELIGIBILITY =
   'ehas2-rule4-contract-v1-phase7-candidate-eligibility' as const;
 
+export const RULE4_CONTRACT_VERSION_PHASE8_NUMERIC_SELECTION =
+  'ehas2-rule4-contract-v1-phase8-numeric-selection' as const;
+
 export const RULE4_RULESET_VERSION_DOC_BASELINE =
   'ehas2-rule4-ruleset-v1-frozen-doc-4c35469' as const;
 
@@ -118,6 +121,19 @@ export const RULE4_REGISTRY_PHASE7_SCOPE = 'PHASE7_CANDIDATE_ELIGIBILITY_SUBSET'
 export const RULE4_REGISTRY_PHASE7_COMPLETE = false as const;
 
 export const RULE4_REGISTRY_PHASE7_CLINICAL_STATUS = 'INCOMPLETE_NO_NUMERIC_SELECTION' as const;
+
+export const RULE4_REGISTRY_FIXTURE_PHASE8_RELATIVE =
+  'fixtures/rule4/reason-code-registry.phase8-numeric-selection-subset.v1.json' as const;
+
+export const RULE4_REGISTRY_PHASE8_VERSION =
+  'rule4-reason-codes-phase8-numeric-selection-subset-v1' as const;
+
+export const RULE4_REGISTRY_PHASE8_SCOPE = 'PHASE8_NUMERIC_SELECTION_SUBSET' as const;
+
+export const RULE4_REGISTRY_PHASE8_COMPLETE = false as const;
+
+export const RULE4_REGISTRY_PHASE8_CLINICAL_STATUS =
+  'SHADOW_DRAFT_SELECTION_NOT_PRODUCTION_ACTIVE' as const;
 
 export const RULE4_FORBIDDEN_SELECTOR_INPUT_FIELDS = [
   'global_text',

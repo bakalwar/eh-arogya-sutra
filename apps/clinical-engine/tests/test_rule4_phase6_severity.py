@@ -116,11 +116,11 @@ class Rule4Phase6FixtureShaTests(unittest.TestCase):
 
 
 class Rule4Phase6RegistryTests(unittest.TestCase):
-    def test_merged_registry_head_is_phase7(self) -> None:
+    def test_merged_registry_head_is_phase8(self) -> None:
         from ehas2_clinical_engine.rule4.registry_loader import load_reason_code_registry
 
         reg = load_reason_code_registry()
-        self.assertEqual(reg["scope"], "PHASE7_CANDIDATE_ELIGIBILITY_SUBSET")
+        self.assertEqual(reg["scope"], "PHASE8_NUMERIC_SELECTION_SUBSET")
         codes = {e["code"] for e in reg["reasonCodes"]}
         self.assertIn("CROSS_ACUTE_CHRONIC_SEVERITY_LEAKAGE_BLOCKED", codes)
 

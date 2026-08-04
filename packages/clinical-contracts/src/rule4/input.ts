@@ -96,6 +96,8 @@ export type Rule4InputContract = {
   severityAdapter?: import('./severity/types.js').Rule4SeverityAdapterInput;
   /** Phase 7 — shadow-only candidate eligibility envelope (in-memory). */
   eligibilityAdapter?: import('./eligibility/types.js').Rule4EligibilityAdapterInput;
+  /** Phase 8 — shadow-only numeric draft selection envelope (in-memory). */
+  selectionAdapter?: import('./selection/types.js').Rule4SelectionAdapterInput;
 };
 
 export type Rule4InputContractPhase2 = Rule4InputContract & {
