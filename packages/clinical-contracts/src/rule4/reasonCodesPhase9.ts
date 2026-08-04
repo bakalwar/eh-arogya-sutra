@@ -1,0 +1,117 @@
+import type { Rule4LimitationCodeEntry, Rule4ReasonCodeEntry } from './reasonCodes.js';
+
+export const RULE4_PHASE9_REASON_CODE_REGISTRY: readonly Rule4ReasonCodeEntry[] = [
+  {
+    code: 'PEDIATRIC_OVERLAY_SHADOW_DRAFT_ONLY',
+    namespace: 'reason',
+    source: 'Phase 9 boundary',
+  },
+  {
+    code: 'PEDIATRIC_OVERLAY_NOT_PRESCRIPTION_ISSUANCE',
+    namespace: 'reason',
+    source: 'Phase 9 boundary',
+  },
+  {
+    code: 'PRODUCTION_PEDIATRIC_OVERLAY_NOT_EVALUATED',
+    namespace: 'reason',
+    source: 'Phase 9 production boundary',
+  },
+  {
+    code: 'PEDIATRIC_D13_HS_BLOCKS_OVERLAY',
+    namespace: 'reason',
+    source: 'D13-HS',
+  },
+  {
+    code: 'PEDIATRIC_OVERLAY_ALLOW',
+    namespace: 'reason',
+    source: 'D13-C',
+  },
+  {
+    code: 'PEDIATRIC_OVERLAY_RESTRICT_SATISFIED',
+    namespace: 'reason',
+    source: 'D13-C D13-D',
+  },
+  {
+    code: 'PEDIATRIC_OVERLAY_PROHIBIT',
+    namespace: 'reason',
+    source: 'D13-C Q8-H',
+  },
+  {
+    code: 'PEDIATRIC_OVERLAY_RESTRICT_FAILED',
+    namespace: 'reason',
+    source: 'D13-D',
+  },
+  {
+    code: 'PEDIATRIC_Q8_D_GATE_LEDGER_INCOMPLETE',
+    namespace: 'reason',
+    source: 'Q8-H P13-C D2',
+  },
+  {
+    code: 'PEDIATRIC_Q8_CD_GATE_LEDGER_INCOMPLETE',
+    namespace: 'reason',
+    source: 'Q8-H P13-D D1',
+  },
+  {
+    code: 'PEDIATRIC_D13_D_JUSTIFICATION_REQUIRED',
+    namespace: 'reason',
+    source: 'D13-D',
+  },
+  {
+    code: 'PEDIATRIC_D10F_GATE_LEDGER_INCOMPLETE',
+    namespace: 'reason',
+    source: 'Q07C-D10F',
+  },
+  {
+    code: 'PEDIATRIC_D30F_GATE_LEDGER_INCOMPLETE',
+    namespace: 'reason',
+    source: 'Q07C-D30F',
+  },
+  {
+    code: 'PEDIATRIC_OVERLAY_CELL_NOT_APPLICABLE',
+    namespace: 'reason',
+    source: 'Phase 9',
+  },
+  {
+    code: 'PEDIATRIC_OVERLAY_NOT_APPLICABLE_P13_E',
+    namespace: 'reason',
+    source: 'Q14 P13-E',
+  },
+  {
+    code: 'PHASE8_SELECTION_RESOLUTION_MISSING',
+    namespace: 'reason',
+    source: 'Phase 9 auth',
+  },
+  {
+    code: 'PHASE8_SELECTION_SLOT_MISSING',
+    namespace: 'reason',
+    source: 'Phase 9 auth',
+  },
+  {
+    code: 'PHASE8_SELECTION_FINGERPRINT_MISMATCH',
+    namespace: 'reason',
+    source: 'Phase 9 auth',
+  },
+  {
+    code: 'PEDIATRIC_OVERLAY_SLOT_TARGET_MISMATCH',
+    namespace: 'reason',
+    source: 'Q15 isolation',
+  },
+  {
+    code: 'PHASE8_SELECTION_NOT_RESOLVED_DRAFT',
+    namespace: 'reason',
+    source: 'Phase 9 auth',
+  },
+  {
+    code: 'PEDIATRIC_OVERLAY_RESTRICT_UNCONFIGURED',
+    namespace: 'reason',
+    source: 'Phase 9',
+  },
+];
+
+export const RULE4_PHASE9_LIMITATION_CODE_REGISTRY: readonly Rule4LimitationCodeEntry[] = [
+  {
+    code: 'SHADOW_PEDIATRIC_DRAFT_OVERLAY_ONLY',
+    namespace: 'limitation',
+    source: 'Phase 9 boundary',
+  },
+];

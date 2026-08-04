@@ -22,6 +22,8 @@ import { evaluateEligibilityAdapter } from './eligibility/evaluateEligibilityAda
 import type { Rule4EligibilityAdapterOutput } from './eligibility/types.js';
 import { evaluateSelectionAdapter } from './selection/evaluateSelectionAdapter.js';
 import type { Rule4SelectionAdapterOutput } from './selection/types.js';
+import { evaluatePediatricOverlayAdapter } from './pediatricOverlay/evaluatePediatricOverlayAdapter.js';
+import type { Rule4PediatricOverlayAdapterOutput } from './pediatricOverlay/types.js';
 import {
   RULE4_CONTRACT_VERSION,
   RULE4_CONTRACT_VERSION_PHASE2,
@@ -252,6 +254,7 @@ export type Rule4ShadowEvaluationBundle = {
   severityResolution: Rule4SeverityAdapterOutput | null;
   eligibilityResolution: Rule4EligibilityAdapterOutput | null;
   selectionResolution: Rule4SelectionAdapterOutput | null;
+  pediatricOverlayResolution: Rule4PediatricOverlayAdapterOutput | null;
 };
 
 /**
@@ -265,6 +268,7 @@ export function evaluateRule4ShadowBundle(input: Rule4InputContract): Rule4Shado
   let severityResolution: Rule4SeverityAdapterOutput | null = null;
   let eligibilityResolution: Rule4EligibilityAdapterOutput | null = null;
   let selectionResolution: Rule4SelectionAdapterOutput | null = null;
+  let pediatricOverlayResolution: Rule4PediatricOverlayAdapterOutput | null = null;
 
   if (input.engineMode === 'shadow') {
     if (input.evidenceAdapter) {
@@ -314,6 +318,15 @@ export function evaluateRule4ShadowBundle(input: Rule4InputContract): Rule4Shado
         bindingGateMandatory: true,
       });
     }
+    if (input.pediatricOverlayAdapter && selectionResolution) {
+      pediatricOverlayResolution = evaluatePediatricOverlayAdapter(input.pediatricOverlayAdapter, {
+        safetyGate: result.safetyGate ?? null,
+        verifiedAge: input.verifiedAge,
+        selectionResolution,
+        upstreamEligibilityFingerprint:
+          eligibilityResolution?.deterministicCandidateEligibilityFingerprint ?? null,
+      });
+    }
   }
 
   return {
@@ -324,5 +337,6 @@ export function evaluateRule4ShadowBundle(input: Rule4InputContract): Rule4Shado
     severityResolution,
     eligibilityResolution,
     selectionResolution,
+    pediatricOverlayResolution,
   };
 }

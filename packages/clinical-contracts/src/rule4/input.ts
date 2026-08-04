@@ -98,6 +98,8 @@ export type Rule4InputContract = {
   eligibilityAdapter?: import('./eligibility/types.js').Rule4EligibilityAdapterInput;
   /** Phase 8 — shadow-only numeric draft selection envelope (in-memory). */
   selectionAdapter?: import('./selection/types.js').Rule4SelectionAdapterInput;
+  /** Phase 9 — shadow-only pediatric overlay envelope (in-memory). */
+  pediatricOverlayAdapter?: import('./pediatricOverlay/types.js').Rule4PediatricOverlayAdapterInput;
 };
 
 export type Rule4InputContractPhase2 = Rule4InputContract & {

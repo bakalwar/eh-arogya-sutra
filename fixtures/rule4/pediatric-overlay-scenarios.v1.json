@@ -1,0 +1,1474 @@
+{
+  "fixtureVersion": "rule4-pediatric-overlay-scenarios-v1",
+  "scenarioCount": 56,
+  "fingerprintNote": "fingerprintV1References fixed independently",
+  "fingerprintV1References": [
+    {
+      "reference_id": "ref-p13c-d5-allow",
+      "scenario_id": "p13c-d5-allow",
+      "canonical_payload": "{\"d13_hs_active\":false,\"fingerprint_version\":\"rule4-pediatric-overlay-fingerprint-v1\",\"limitation_codes\":[\"SHADOW_PEDIATRIC_DRAFT_OVERLAY_ONLY\"],\"patient_wide_hold\":false,\"reason_codes\":[\"PEDIATRIC_OVERLAY_ALLOW\",\"PEDIATRIC_OVERLAY_NOT_PRESCRIPTION_ISSUANCE\",\"PEDIATRIC_OVERLAY_SHADOW_DRAFT_ONLY\"],\"registry_version\":\"rule4-reason-codes-phase9-pediatric-overlay-subset-v1\",\"ruleset_version\":\"ehas2-rule4-ruleset-v1-frozen-doc-4c35469\",\"slot_resolutions\":[{\"age_provenance_digest\":\"1C78BE4BF88708B408821DB40814026C200E4768426B7BE39A77098B00388D70\",\"age_verification_status\":\"VERIFIED\",\"base_selected_cascade\":\"POSITIVE_ACUTE_D3_D5_SELECTION\",\"base_selected_dilution\":\"D5\",\"d13_d_justification_status\":\"NOT_REQUIRED\",\"final_draft_cascade\":\"POSITIVE_ACUTE_D3_D5_SELECTION\",\"final_draft_dilution\":\"D5\",\"formula_slot_id\":\"s1\",\"formula_target_id\":\"t1\",\"limitation_codes\":[\"SHADOW_PEDIATRIC_DRAFT_OVERLAY_ONLY\"],\"overlay_gate_results\":[{\"dilution\":\"D5\",\"matrix_cell\":\"ALLOW\",\"outcome\":\"RETAINED\"}],\"pediatric_matrix_authority\":\"D13_C_POSITIVE\",\"pediatric_overlay_status\":\"OVERLAY_APPLIED\",\"phase8_selection_fingerprint\":\"067B47A165AA573B04DA2428B781A2E73D6B330DEBF0913648B53111567D8C30\",\"prescription_issue_allowed\":false,\"reason_codes\":[\"PEDIATRIC_OVERLAY_ALLOW\"],\"verified_age_band\":\"P13_C\"}],\"urgent_escalation_required\":false}",
+      "pediatric_overlay_sha256": "5188502E7E4A58657F7AD587042D8AB998FB72F955FBE1468D003C38DA0308B3"
+    },
+    {
+      "reference_id": "ref-p13c-d10-restrict-pass",
+      "scenario_id": "p13c-d10-restrict-pass",
+      "canonical_payload": "{\"d13_hs_active\":false,\"fingerprint_version\":\"rule4-pediatric-overlay-fingerprint-v1\",\"limitation_codes\":[\"SHADOW_PEDIATRIC_DRAFT_OVERLAY_ONLY\"],\"patient_wide_hold\":false,\"reason_codes\":[\"PEDIATRIC_OVERLAY_NOT_PRESCRIPTION_ISSUANCE\",\"PEDIATRIC_OVERLAY_RESTRICT_SATISFIED\",\"PEDIATRIC_OVERLAY_SHADOW_DRAFT_ONLY\"],\"registry_version\":\"rule4-reason-codes-phase9-pediatric-overlay-subset-v1\",\"ruleset_version\":\"ehas2-rule4-ruleset-v1-frozen-doc-4c35469\",\"slot_resolutions\":[{\"age_provenance_digest\":\"1C78BE4BF88708B408821DB40814026C200E4768426B7BE39A77098B00388D70\",\"age_verification_status\":\"VERIFIED\",\"base_selected_cascade\":\"POSITIVE_D10_SELECTION\",\"base_selected_dilution\":\"D10\",\"d13_d_justification_status\":\"PASS\",\"final_draft_cascade\":\"POSITIVE_D10_SELECTION\",\"final_draft_dilution\":\"D10\",\"formula_slot_id\":\"s1\",\"formula_target_id\":\"t1\",\"limitation_codes\":[\"SHADOW_PEDIATRIC_DRAFT_OVERLAY_ONLY\"],\"overlay_gate_results\":[{\"dilution\":\"D10\",\"matrix_cell\":\"RESTRICT\",\"outcome\":\"RETAINED\"}],\"pediatric_matrix_authority\":\"D13_C_POSITIVE\",\"pediatric_overlay_status\":\"OVERLAY_APPLIED\",\"phase8_selection_fingerprint\":\"B677D9E72A7B90E5589E4F225423C67B107681EA45276C997172C71754D44A18\",\"prescription_issue_allowed\":false,\"reason_codes\":[\"PEDIATRIC_OVERLAY_RESTRICT_SATISFIED\"],\"verified_age_band\":\"P13_C\"}],\"urgent_escalation_required\":false}",
+      "pediatric_overlay_sha256": "F81C02D2C980A5F59B2E0D1F87F9E98F50C57D1CF387D4DCB5AFB77DF0F18471"
+    },
+    {
+      "reference_id": "ref-p13c-d30-prohibit",
+      "scenario_id": "p13c-d30-prohibit",
+      "canonical_payload": "{\"d13_hs_active\":false,\"fingerprint_version\":\"rule4-pediatric-overlay-fingerprint-v1\",\"limitation_codes\":[\"SHADOW_PEDIATRIC_DRAFT_OVERLAY_ONLY\"],\"patient_wide_hold\":false,\"reason_codes\":[\"PEDIATRIC_OVERLAY_NOT_PRESCRIPTION_ISSUANCE\",\"PEDIATRIC_OVERLAY_PROHIBIT\",\"PEDIATRIC_OVERLAY_SHADOW_DRAFT_ONLY\"],\"registry_version\":\"rule4-reason-codes-phase9-pediatric-overlay-subset-v1\",\"ruleset_version\":\"ehas2-rule4-ruleset-v1-frozen-doc-4c35469\",\"slot_resolutions\":[{\"age_provenance_digest\":\"1C78BE4BF88708B408821DB40814026C200E4768426B7BE39A77098B00388D70\",\"age_verification_status\":\"VERIFIED\",\"base_selected_cascade\":\"POSITIVE_D30_SELECTION\",\"base_selected_dilution\":\"D30\",\"d13_d_justification_status\":\"NOT_REQUIRED\",\"final_draft_cascade\":null,\"final_draft_dilution\":null,\"formula_slot_id\":\"s1\",\"formula_target_id\":\"t1\",\"limitation_codes\":[\"SHADOW_PEDIATRIC_DRAFT_OVERLAY_ONLY\"],\"overlay_gate_results\":[{\"dilution\":\"D30\",\"matrix_cell\":\"PROHIBIT\",\"outcome\":\"BLOCKED\"}],\"pediatric_matrix_authority\":\"D13_C_POSITIVE\",\"pediatric_overlay_status\":\"OVERLAY_BLOCKED\",\"phase8_selection_fingerprint\":\"E3FE1CF2C5D2B9CBF711BDFC9BE57CCD2413FCF74350A0736EE5E8AC13B22AA5\",\"prescription_issue_allowed\":false,\"reason_codes\":[\"PEDIATRIC_OVERLAY_PROHIBIT\"],\"verified_age_band\":\"P13_C\"}],\"urgent_escalation_required\":false}",
+      "pediatric_overlay_sha256": "CCE75EE45BA50C5AD1E4BE935D1190DD662C4FA807FFF61B3BAA1C8D6D7E5678"
+    },
+    {
+      "reference_id": "ref-p13d-d30-restrict-pass",
+      "scenario_id": "p13d-d30-restrict-pass",
+      "canonical_payload": "{\"d13_hs_active\":false,\"fingerprint_version\":\"rule4-pediatric-overlay-fingerprint-v1\",\"limitation_codes\":[\"SHADOW_PEDIATRIC_DRAFT_OVERLAY_ONLY\"],\"patient_wide_hold\":false,\"reason_codes\":[\"PEDIATRIC_OVERLAY_NOT_PRESCRIPTION_ISSUANCE\",\"PEDIATRIC_OVERLAY_RESTRICT_SATISFIED\",\"PEDIATRIC_OVERLAY_SHADOW_DRAFT_ONLY\"],\"registry_version\":\"rule4-reason-codes-phase9-pediatric-overlay-subset-v1\",\"ruleset_version\":\"ehas2-rule4-ruleset-v1-frozen-doc-4c35469\",\"slot_resolutions\":[{\"age_provenance_digest\":\"485F970449F86AAC1BF2C3B399A5DE12BAFAA110AB806CA8A0B78A09372B73E8\",\"age_verification_status\":\"VERIFIED\",\"base_selected_cascade\":\"POSITIVE_D30_SELECTION\",\"base_selected_dilution\":\"D30\",\"d13_d_justification_status\":\"PASS\",\"final_draft_cascade\":\"POSITIVE_D30_SELECTION\",\"final_draft_dilution\":\"D30\",\"formula_slot_id\":\"s1\",\"formula_target_id\":\"t1\",\"limitation_codes\":[\"SHADOW_PEDIATRIC_DRAFT_OVERLAY_ONLY\"],\"overlay_gate_results\":[{\"dilution\":\"D30\",\"matrix_cell\":\"RESTRICT\",\"outcome\":\"RETAINED\"}],\"pediatric_matrix_authority\":\"D13_C_POSITIVE\",\"pediatric_overlay_status\":\"OVERLAY_APPLIED\",\"phase8_selection_fingerprint\":\"E3FE1CF2C5D2B9CBF711BDFC9BE57CCD2413FCF74350A0736EE5E8AC13B22AA5\",\"prescription_issue_allowed\":false,\"reason_codes\":[\"PEDIATRIC_OVERLAY_RESTRICT_SATISFIED\"],\"verified_age_band\":\"P13_D\"}],\"urgent_escalation_required\":false}",
+      "pediatric_overlay_sha256": "ABA5B24ABC9A76AA45B21CE301538E150E34FB284DC15CC0D6C45E7ABCCAFD64"
+    },
+    {
+      "reference_id": "ref-p13e-pass-through",
+      "scenario_id": "p13e-d30-pass-through",
+      "canonical_payload": "{\"d13_hs_active\":false,\"fingerprint_version\":\"rule4-pediatric-overlay-fingerprint-v1\",\"limitation_codes\":[\"SHADOW_PEDIATRIC_DRAFT_OVERLAY_ONLY\"],\"patient_wide_hold\":false,\"reason_codes\":[\"PEDIATRIC_OVERLAY_NOT_APPLICABLE_P13_E\",\"PEDIATRIC_OVERLAY_NOT_PRESCRIPTION_ISSUANCE\",\"PEDIATRIC_OVERLAY_SHADOW_DRAFT_ONLY\"],\"registry_version\":\"rule4-reason-codes-phase9-pediatric-overlay-subset-v1\",\"ruleset_version\":\"ehas2-rule4-ruleset-v1-frozen-doc-4c35469\",\"slot_resolutions\":[{\"age_provenance_digest\":\"E9C209B72FB3A4F7307F1F6DBF47EA667A8D70AC94FD986D0E6FAECDE4D14771\",\"age_verification_status\":\"VERIFIED\",\"base_selected_cascade\":\"POSITIVE_D30_SELECTION\",\"base_selected_dilution\":\"D30\",\"d13_d_justification_status\":\"NOT_REQUIRED\",\"final_draft_cascade\":\"POSITIVE_D30_SELECTION\",\"final_draft_dilution\":\"D30\",\"formula_slot_id\":\"s1\",\"formula_target_id\":\"t1\",\"limitation_codes\":[\"SHADOW_PEDIATRIC_DRAFT_OVERLAY_ONLY\"],\"overlay_gate_results\":[{\"dilution\":\"D30\",\"matrix_cell\":\"NOT_APPLICABLE\",\"outcome\":\"RETAINED\"}],\"pediatric_matrix_authority\":\"NOT_APPLICABLE\",\"pediatric_overlay_status\":\"NOT_APPLICABLE\",\"phase8_selection_fingerprint\":\"E3FE1CF2C5D2B9CBF711BDFC9BE57CCD2413FCF74350A0736EE5E8AC13B22AA5\",\"prescription_issue_allowed\":false,\"reason_codes\":[\"PEDIATRIC_OVERLAY_NOT_APPLICABLE_P13_E\"],\"verified_age_band\":\"P13_E\"}],\"urgent_escalation_required\":false}",
+      "pediatric_overlay_sha256": "49DA17DED7938F0AB85F1DB4F1EB0264690394620B9864AA71C40280865439BE"
+    },
+    {
+      "reference_id": "ref-p13b-d13hs",
+      "scenario_id": "p13b-d10-d13hs",
+      "canonical_payload": "{\"d13_hs_active\":false,\"fingerprint_version\":\"rule4-pediatric-overlay-fingerprint-v1\",\"limitation_codes\":[\"SHADOW_PEDIATRIC_DRAFT_OVERLAY_ONLY\"],\"patient_wide_hold\":false,\"reason_codes\":[\"PEDIATRIC_D13_HS_BLOCKS_OVERLAY\",\"PEDIATRIC_OVERLAY_NOT_PRESCRIPTION_ISSUANCE\",\"PEDIATRIC_OVERLAY_SHADOW_DRAFT_ONLY\"],\"registry_version\":\"rule4-reason-codes-phase9-pediatric-overlay-subset-v1\",\"ruleset_version\":\"ehas2-rule4-ruleset-v1-frozen-doc-4c35469\",\"slot_resolutions\":[{\"age_provenance_digest\":\"0092BDDB77DFEFDA93D02451833A4AE3383FFE37E6E1508AE89419BDD3804F47\",\"age_verification_status\":\"VERIFIED\",\"base_selected_cascade\":null,\"base_selected_dilution\":null,\"d13_d_justification_status\":\"NOT_APPLICABLE\",\"final_draft_cascade\":null,\"final_draft_dilution\":null,\"formula_slot_id\":\"s1\",\"formula_target_id\":\"t1\",\"limitation_codes\":[\"SHADOW_PEDIATRIC_DRAFT_OVERLAY_ONLY\"],\"overlay_gate_results\":[],\"pediatric_matrix_authority\":\"NOT_APPLICABLE\",\"pediatric_overlay_status\":\"BLOCKED_D13_HS\",\"phase8_selection_fingerprint\":null,\"prescription_issue_allowed\":false,\"reason_codes\":[\"PEDIATRIC_D13_HS_BLOCKS_OVERLAY\"],\"verified_age_band\":\"P13_B\"}],\"urgent_escalation_required\":false}",
+      "pediatric_overlay_sha256": "A98E966945EA5A76C10ED327B8CE63EAA72F915AA72AB2EAE8EB40FAEB0245A5"
+    },
+    {
+      "reference_id": "ref-p13b-crisis-d13hs",
+      "scenario_id": "p13b-crisis-d13hs",
+      "canonical_payload": "{\"d13_hs_active\":true,\"fingerprint_version\":\"rule4-pediatric-overlay-fingerprint-v1\",\"limitation_codes\":[\"SHADOW_PEDIATRIC_DRAFT_OVERLAY_ONLY\"],\"patient_wide_hold\":true,\"reason_codes\":[\"PEDIATRIC_D13_HS_BLOCKS_OVERLAY\",\"PEDIATRIC_OVERLAY_NOT_PRESCRIPTION_ISSUANCE\",\"PEDIATRIC_OVERLAY_SHADOW_DRAFT_ONLY\"],\"registry_version\":\"rule4-reason-codes-phase9-pediatric-overlay-subset-v1\",\"ruleset_version\":\"ehas2-rule4-ruleset-v1-frozen-doc-4c35469\",\"slot_resolutions\":[{\"age_provenance_digest\":\"0092BDDB77DFEFDA93D02451833A4AE3383FFE37E6E1508AE89419BDD3804F47\",\"age_verification_status\":\"VERIFIED\",\"base_selected_cascade\":null,\"base_selected_dilution\":null,\"d13_d_justification_status\":\"NOT_APPLICABLE\",\"final_draft_cascade\":null,\"final_draft_dilution\":null,\"formula_slot_id\":\"s1\",\"formula_target_id\":\"t1\",\"limitation_codes\":[\"SHADOW_PEDIATRIC_DRAFT_OVERLAY_ONLY\"],\"overlay_gate_results\":[],\"pediatric_matrix_authority\":\"NOT_APPLICABLE\",\"pediatric_overlay_status\":\"BLOCKED_D13_HS\",\"phase8_selection_fingerprint\":null,\"prescription_issue_allowed\":false,\"reason_codes\":[\"PEDIATRIC_D13_HS_BLOCKS_OVERLAY\"],\"verified_age_band\":\"P13_B\"}],\"urgent_escalation_required\":true}",
+      "pediatric_overlay_sha256": "0CD7556C6E6452E3A26B765096406B4D8B779AF780E47B639C4544DFB270D836"
+    },
+    {
+      "reference_id": "ref-phase8-fp-mismatch",
+      "scenario_id": "phase8-fp-mismatch",
+      "canonical_payload": "{\"d13_hs_active\":false,\"fingerprint_version\":\"rule4-pediatric-overlay-fingerprint-v1\",\"limitation_codes\":[\"SHADOW_PEDIATRIC_DRAFT_OVERLAY_ONLY\"],\"patient_wide_hold\":false,\"reason_codes\":[\"PEDIATRIC_OVERLAY_NOT_PRESCRIPTION_ISSUANCE\",\"PEDIATRIC_OVERLAY_SHADOW_DRAFT_ONLY\",\"PHASE8_SELECTION_FINGERPRINT_MISMATCH\"],\"registry_version\":\"rule4-reason-codes-phase9-pediatric-overlay-subset-v1\",\"ruleset_version\":\"ehas2-rule4-ruleset-v1-frozen-doc-4c35469\",\"slot_resolutions\":[{\"age_provenance_digest\":\"1C78BE4BF88708B408821DB40814026C200E4768426B7BE39A77098B00388D70\",\"age_verification_status\":\"VERIFIED\",\"base_selected_cascade\":\"POSITIVE_ACUTE_D3_D5_SELECTION\",\"base_selected_dilution\":\"D5\",\"d13_d_justification_status\":\"NOT_APPLICABLE\",\"final_draft_cascade\":null,\"final_draft_dilution\":null,\"formula_slot_id\":\"s1\",\"formula_target_id\":\"t1\",\"limitation_codes\":[\"SHADOW_PEDIATRIC_DRAFT_OVERLAY_ONLY\"],\"overlay_gate_results\":[],\"pediatric_matrix_authority\":\"NOT_APPLICABLE\",\"pediatric_overlay_status\":\"PHASE8_AUTH_FAILED\",\"phase8_selection_fingerprint\":\"067B47A165AA573B04DA2428B781A2E73D6B330DEBF0913648B53111567D8C30\",\"prescription_issue_allowed\":false,\"reason_codes\":[\"PHASE8_SELECTION_FINGERPRINT_MISMATCH\"],\"verified_age_band\":\"P13_C\"}],\"urgent_escalation_required\":false}",
+      "pediatric_overlay_sha256": "C35E1B09F48498392F22BC5D24C0B634228A82926D2BA8B878C775DC25EF5BB3"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "p13a-d5-d13hs",
+      "phase8_ref": "d5-selected",
+      "verified_age": {
+        "verified_date_of_birth": "2026-06-10",
+        "consultation_assessment_date": "2026-07-01",
+        "verification_status": "VERIFIED",
+        "age_source": "VERIFIED_DOB_CALENDAR",
+        "pediatric_band_verification_status": "VERIFIED",
+        "upstream_verified_pediatric_band": "P13_A"
+      },
+      "restrict_gate_ledger": null,
+      "phase8_fingerprint_override": null,
+      "slot_target_override": null,
+      "safety_gate": null,
+      "expected": {
+        "pediatric_overlay_status": "BLOCKED_D13_HS",
+        "final_draft_dilution": null,
+        "final_draft_cascade": null,
+        "verified_age_band": "P13_A",
+        "pediatric_matrix_authority": "NOT_APPLICABLE",
+        "d13_d_justification_status": "NOT_APPLICABLE"
+      }
+    },
+    {
+      "id": "p13b-d10-d13hs",
+      "phase8_ref": "d10-selected",
+      "verified_age": {
+        "verified_date_of_birth": "2025-08-01",
+        "consultation_assessment_date": "2026-07-01",
+        "verification_status": "VERIFIED",
+        "age_source": "VERIFIED_DOB_CALENDAR",
+        "pediatric_band_verification_status": "VERIFIED",
+        "upstream_verified_pediatric_band": "P13_B"
+      },
+      "restrict_gate_ledger": null,
+      "phase8_fingerprint_override": null,
+      "slot_target_override": null,
+      "safety_gate": null,
+      "expected": {
+        "pediatric_overlay_status": "BLOCKED_D13_HS",
+        "final_draft_dilution": null,
+        "final_draft_cascade": null,
+        "verified_age_band": "P13_B",
+        "pediatric_matrix_authority": "NOT_APPLICABLE",
+        "d13_d_justification_status": "NOT_APPLICABLE"
+      }
+    },
+    {
+      "id": "p13b-crisis-d13hs",
+      "phase8_ref": "d5-selected",
+      "verified_age": {
+        "verified_date_of_birth": "2025-08-01",
+        "consultation_assessment_date": "2026-07-01",
+        "verification_status": "VERIFIED",
+        "age_source": "VERIFIED_DOB_CALENDAR",
+        "pediatric_band_verification_status": "VERIFIED",
+        "upstream_verified_pediatric_band": "P13_B"
+      },
+      "restrict_gate_ledger": null,
+      "phase8_fingerprint_override": null,
+      "slot_target_override": null,
+      "safety_gate": {
+        "d13HardStopActive": true,
+        "patientWideHold": true,
+        "urgentEscalationRequired": true,
+        "pediatricBand": "P13_B"
+      },
+      "expected": {
+        "pediatric_overlay_status": "BLOCKED_D13_HS",
+        "final_draft_dilution": null,
+        "final_draft_cascade": null,
+        "verified_age_band": "P13_B",
+        "pediatric_matrix_authority": "NOT_APPLICABLE",
+        "d13_d_justification_status": "NOT_APPLICABLE"
+      }
+    },
+    {
+      "id": "p13c-d1-prohibit",
+      "phase8_ref": "d1-only",
+      "verified_age": {
+        "verified_date_of_birth": "2021-06-01",
+        "consultation_assessment_date": "2026-07-01",
+        "verification_status": "VERIFIED",
+        "age_source": "VERIFIED_DOB_CALENDAR",
+        "pediatric_band_verification_status": "VERIFIED",
+        "upstream_verified_pediatric_band": "P13_C"
+      },
+      "restrict_gate_ledger": null,
+      "phase8_fingerprint_override": null,
+      "slot_target_override": null,
+      "safety_gate": null,
+      "expected": {
+        "pediatric_overlay_status": "OVERLAY_BLOCKED",
+        "final_draft_dilution": null,
+        "final_draft_cascade": null,
+        "verified_age_band": "P13_C",
+        "pediatric_matrix_authority": "Q8_H_NEGATIVE",
+        "d13_d_justification_status": "NOT_REQUIRED"
+      }
+    },
+    {
+      "id": "p13c-d2-restrict-pass",
+      "phase8_ref": "tie-sanguine",
+      "verified_age": {
+        "verified_date_of_birth": "2021-06-01",
+        "consultation_assessment_date": "2026-07-01",
+        "verification_status": "VERIFIED",
+        "age_source": "VERIFIED_DOB_CALENDAR",
+        "pediatric_band_verification_status": "VERIFIED",
+        "upstream_verified_pediatric_band": "P13_C"
+      },
+      "restrict_gate_ledger": {
+        "q8_d_gates": [
+          {
+            "gate_id": "Q8D_COMPLETE",
+            "outcome": "PASS"
+          }
+        ]
+      },
+      "phase8_fingerprint_override": null,
+      "slot_target_override": null,
+      "safety_gate": null,
+      "expected": {
+        "pediatric_overlay_status": "OVERLAY_APPLIED",
+        "final_draft_dilution": "D2",
+        "final_draft_cascade": "NEGATIVE_D1_D2_SELECTION",
+        "verified_age_band": "P13_C",
+        "pediatric_matrix_authority": "Q8_H_NEGATIVE",
+        "d13_d_justification_status": "PASS"
+      }
+    },
+    {
+      "id": "p13c-d2-restrict-fail",
+      "phase8_ref": "tie-sanguine",
+      "verified_age": {
+        "verified_date_of_birth": "2021-06-01",
+        "consultation_assessment_date": "2026-07-01",
+        "verification_status": "VERIFIED",
+        "age_source": "VERIFIED_DOB_CALENDAR",
+        "pediatric_band_verification_status": "VERIFIED",
+        "upstream_verified_pediatric_band": "P13_C"
+      },
+      "restrict_gate_ledger": null,
+      "phase8_fingerprint_override": null,
+      "slot_target_override": null,
+      "safety_gate": null,
+      "expected": {
+        "pediatric_overlay_status": "OVERLAY_UNRESOLVED",
+        "final_draft_dilution": null,
+        "final_draft_cascade": null,
+        "verified_age_band": "P13_C",
+        "pediatric_matrix_authority": "Q8_H_NEGATIVE",
+        "d13_d_justification_status": "FAIL"
+      }
+    },
+    {
+      "id": "p13c-d3-restrict-pass",
+      "phase8_ref": "d3-selected",
+      "verified_age": {
+        "verified_date_of_birth": "2021-06-01",
+        "consultation_assessment_date": "2026-07-01",
+        "verification_status": "VERIFIED",
+        "age_source": "VERIFIED_DOB_CALENDAR",
+        "pediatric_band_verification_status": "VERIFIED",
+        "upstream_verified_pediatric_band": "P13_C"
+      },
+      "restrict_gate_ledger": {
+        "d13_d_justification": {
+          "status": "PASS"
+        }
+      },
+      "phase8_fingerprint_override": null,
+      "slot_target_override": null,
+      "safety_gate": null,
+      "expected": {
+        "pediatric_overlay_status": "OVERLAY_APPLIED",
+        "final_draft_dilution": "D3",
+        "final_draft_cascade": "POSITIVE_ACUTE_D3_D5_SELECTION",
+        "verified_age_band": "P13_C",
+        "pediatric_matrix_authority": "D13_C_POSITIVE",
+        "d13_d_justification_status": "PASS"
+      }
+    },
+    {
+      "id": "p13c-d3-restrict-fail",
+      "phase8_ref": "d3-selected",
+      "verified_age": {
+        "verified_date_of_birth": "2021-06-01",
+        "consultation_assessment_date": "2026-07-01",
+        "verification_status": "VERIFIED",
+        "age_source": "VERIFIED_DOB_CALENDAR",
+        "pediatric_band_verification_status": "VERIFIED",
+        "upstream_verified_pediatric_band": "P13_C"
+      },
+      "restrict_gate_ledger": null,
+      "phase8_fingerprint_override": null,
+      "slot_target_override": null,
+      "safety_gate": null,
+      "expected": {
+        "pediatric_overlay_status": "OVERLAY_UNRESOLVED",
+        "final_draft_dilution": null,
+        "final_draft_cascade": null,
+        "verified_age_band": "P13_C",
+        "pediatric_matrix_authority": "D13_C_POSITIVE",
+        "d13_d_justification_status": "FAIL"
+      }
+    },
+    {
+      "id": "p13c-d5-allow",
+      "phase8_ref": "d5-selected",
+      "verified_age": {
+        "verified_date_of_birth": "2021-06-01",
+        "consultation_assessment_date": "2026-07-01",
+        "verification_status": "VERIFIED",
+        "age_source": "VERIFIED_DOB_CALENDAR",
+        "pediatric_band_verification_status": "VERIFIED",
+        "upstream_verified_pediatric_band": "P13_C"
+      },
+      "restrict_gate_ledger": null,
+      "phase8_fingerprint_override": null,
+      "slot_target_override": null,
+      "safety_gate": null,
+      "expected": {
+        "pediatric_overlay_status": "OVERLAY_APPLIED",
+        "final_draft_dilution": "D5",
+        "final_draft_cascade": "POSITIVE_ACUTE_D3_D5_SELECTION",
+        "verified_age_band": "P13_C",
+        "pediatric_matrix_authority": "D13_C_POSITIVE",
+        "d13_d_justification_status": "NOT_REQUIRED"
+      }
+    },
+    {
+      "id": "p13c-d10-restrict-pass",
+      "phase8_ref": "d10-selected",
+      "verified_age": {
+        "verified_date_of_birth": "2021-06-01",
+        "consultation_assessment_date": "2026-07-01",
+        "verification_status": "VERIFIED",
+        "age_source": "VERIFIED_DOB_CALENDAR",
+        "pediatric_band_verification_status": "VERIFIED",
+        "upstream_verified_pediatric_band": "P13_C"
+      },
+      "restrict_gate_ledger": {
+        "d13_d_justification": {
+          "status": "PASS"
+        },
+        "d10f_gates": [
+          {
+            "gate_id": "D10F_COMPLETE",
+            "outcome": "PASS"
+          }
+        ]
+      },
+      "phase8_fingerprint_override": null,
+      "slot_target_override": null,
+      "safety_gate": null,
+      "expected": {
+        "pediatric_overlay_status": "OVERLAY_APPLIED",
+        "final_draft_dilution": "D10",
+        "final_draft_cascade": "POSITIVE_D10_SELECTION",
+        "verified_age_band": "P13_C",
+        "pediatric_matrix_authority": "D13_C_POSITIVE",
+        "d13_d_justification_status": "PASS"
+      }
+    },
+    {
+      "id": "p13c-d10-restrict-fail",
+      "phase8_ref": "d10-selected",
+      "verified_age": {
+        "verified_date_of_birth": "2021-06-01",
+        "consultation_assessment_date": "2026-07-01",
+        "verification_status": "VERIFIED",
+        "age_source": "VERIFIED_DOB_CALENDAR",
+        "pediatric_band_verification_status": "VERIFIED",
+        "upstream_verified_pediatric_band": "P13_C"
+      },
+      "restrict_gate_ledger": {
+        "d13_d_justification": {
+          "status": "PASS"
+        }
+      },
+      "phase8_fingerprint_override": null,
+      "slot_target_override": null,
+      "safety_gate": null,
+      "expected": {
+        "pediatric_overlay_status": "OVERLAY_UNRESOLVED",
+        "final_draft_dilution": null,
+        "final_draft_cascade": null,
+        "verified_age_band": "P13_C",
+        "pediatric_matrix_authority": "D13_C_POSITIVE",
+        "d13_d_justification_status": "FAIL"
+      }
+    },
+    {
+      "id": "p13c-d30-prohibit",
+      "phase8_ref": "d30-selected",
+      "verified_age": {
+        "verified_date_of_birth": "2021-06-01",
+        "consultation_assessment_date": "2026-07-01",
+        "verification_status": "VERIFIED",
+        "age_source": "VERIFIED_DOB_CALENDAR",
+        "pediatric_band_verification_status": "VERIFIED",
+        "upstream_verified_pediatric_band": "P13_C"
+      },
+      "restrict_gate_ledger": null,
+      "phase8_fingerprint_override": null,
+      "slot_target_override": null,
+      "safety_gate": null,
+      "expected": {
+        "pediatric_overlay_status": "OVERLAY_BLOCKED",
+        "final_draft_dilution": null,
+        "final_draft_cascade": null,
+        "verified_age_band": "P13_C",
+        "pediatric_matrix_authority": "D13_C_POSITIVE",
+        "d13_d_justification_status": "NOT_REQUIRED"
+      }
+    },
+    {
+      "id": "p13c-d60-prohibit",
+      "phase8_ref": "d60-selected",
+      "verified_age": {
+        "verified_date_of_birth": "2021-06-01",
+        "consultation_assessment_date": "2026-07-01",
+        "verification_status": "VERIFIED",
+        "age_source": "VERIFIED_DOB_CALENDAR",
+        "pediatric_band_verification_status": "VERIFIED",
+        "upstream_verified_pediatric_band": "P13_C"
+      },
+      "restrict_gate_ledger": null,
+      "phase8_fingerprint_override": null,
+      "slot_target_override": null,
+      "safety_gate": null,
+      "expected": {
+        "pediatric_overlay_status": "OVERLAY_BLOCKED",
+        "final_draft_dilution": null,
+        "final_draft_cascade": null,
+        "verified_age_band": "P13_C",
+        "pediatric_matrix_authority": "D13_C_POSITIVE",
+        "d13_d_justification_status": "NOT_REQUIRED"
+      }
+    },
+    {
+      "id": "p13c-d10-fallback-restrict-pass",
+      "phase8_ref": "d10-fallback-selected",
+      "verified_age": {
+        "verified_date_of_birth": "2021-06-01",
+        "consultation_assessment_date": "2026-07-01",
+        "verification_status": "VERIFIED",
+        "age_source": "VERIFIED_DOB_CALENDAR",
+        "pediatric_band_verification_status": "VERIFIED",
+        "upstream_verified_pediatric_band": "P13_C"
+      },
+      "restrict_gate_ledger": {
+        "d13_d_justification": {
+          "status": "PASS"
+        },
+        "d10f_gates": [
+          {
+            "gate_id": "D10F_COMPLETE",
+            "outcome": "PASS"
+          }
+        ]
+      },
+      "phase8_fingerprint_override": null,
+      "slot_target_override": null,
+      "safety_gate": null,
+      "expected": {
+        "pediatric_overlay_status": "OVERLAY_APPLIED",
+        "final_draft_dilution": "D10",
+        "final_draft_cascade": "POSITIVE_D60_TO_D10_FALLBACK",
+        "verified_age_band": "P13_C",
+        "pediatric_matrix_authority": "D13_C_POSITIVE",
+        "d13_d_justification_status": "PASS"
+      }
+    },
+    {
+      "id": "p13d-d1-restrict-pass",
+      "phase8_ref": "d1-only",
+      "verified_age": {
+        "verified_date_of_birth": "2014-06-01",
+        "consultation_assessment_date": "2026-07-01",
+        "verification_status": "VERIFIED",
+        "age_source": "VERIFIED_DOB_CALENDAR",
+        "pediatric_band_verification_status": "VERIFIED",
+        "upstream_verified_pediatric_band": "P13_D"
+      },
+      "restrict_gate_ledger": {
+        "q8_c_d_gates": [
+          {
+            "gate_id": "Q8CD_COMPLETE",
+            "outcome": "PASS"
+          }
+        ]
+      },
+      "phase8_fingerprint_override": null,
+      "slot_target_override": null,
+      "safety_gate": null,
+      "expected": {
+        "pediatric_overlay_status": "OVERLAY_APPLIED",
+        "final_draft_dilution": "D1",
+        "final_draft_cascade": "NEGATIVE_D1_D2_SELECTION",
+        "verified_age_band": "P13_D",
+        "pediatric_matrix_authority": "Q8_H_NEGATIVE",
+        "d13_d_justification_status": "PASS"
+      }
+    },
+    {
+      "id": "p13d-d1-restrict-fail",
+      "phase8_ref": "d1-only",
+      "verified_age": {
+        "verified_date_of_birth": "2014-06-01",
+        "consultation_assessment_date": "2026-07-01",
+        "verification_status": "VERIFIED",
+        "age_source": "VERIFIED_DOB_CALENDAR",
+        "pediatric_band_verification_status": "VERIFIED",
+        "upstream_verified_pediatric_band": "P13_D"
+      },
+      "restrict_gate_ledger": null,
+      "phase8_fingerprint_override": null,
+      "slot_target_override": null,
+      "safety_gate": null,
+      "expected": {
+        "pediatric_overlay_status": "OVERLAY_UNRESOLVED",
+        "final_draft_dilution": null,
+        "final_draft_cascade": null,
+        "verified_age_band": "P13_D",
+        "pediatric_matrix_authority": "Q8_H_NEGATIVE",
+        "d13_d_justification_status": "FAIL"
+      }
+    },
+    {
+      "id": "p13d-d2-allow",
+      "phase8_ref": "tie-sanguine",
+      "verified_age": {
+        "verified_date_of_birth": "2014-06-01",
+        "consultation_assessment_date": "2026-07-01",
+        "verification_status": "VERIFIED",
+        "age_source": "VERIFIED_DOB_CALENDAR",
+        "pediatric_band_verification_status": "VERIFIED",
+        "upstream_verified_pediatric_band": "P13_D"
+      },
+      "restrict_gate_ledger": null,
+      "phase8_fingerprint_override": null,
+      "slot_target_override": null,
+      "safety_gate": null,
+      "expected": {
+        "pediatric_overlay_status": "OVERLAY_APPLIED",
+        "final_draft_dilution": "D2",
+        "final_draft_cascade": "NEGATIVE_D1_D2_SELECTION",
+        "verified_age_band": "P13_D",
+        "pediatric_matrix_authority": "Q8_H_NEGATIVE",
+        "d13_d_justification_status": "NOT_REQUIRED"
+      }
+    },
+    {
+      "id": "p13d-d3-restrict-pass",
+      "phase8_ref": "d3-selected",
+      "verified_age": {
+        "verified_date_of_birth": "2014-06-01",
+        "consultation_assessment_date": "2026-07-01",
+        "verification_status": "VERIFIED",
+        "age_source": "VERIFIED_DOB_CALENDAR",
+        "pediatric_band_verification_status": "VERIFIED",
+        "upstream_verified_pediatric_band": "P13_D"
+      },
+      "restrict_gate_ledger": {
+        "d13_d_justification": {
+          "status": "PASS"
+        }
+      },
+      "phase8_fingerprint_override": null,
+      "slot_target_override": null,
+      "safety_gate": null,
+      "expected": {
+        "pediatric_overlay_status": "OVERLAY_APPLIED",
+        "final_draft_dilution": "D3",
+        "final_draft_cascade": "POSITIVE_ACUTE_D3_D5_SELECTION",
+        "verified_age_band": "P13_D",
+        "pediatric_matrix_authority": "D13_C_POSITIVE",
+        "d13_d_justification_status": "PASS"
+      }
+    },
+    {
+      "id": "p13d-d5-allow",
+      "phase8_ref": "d5-selected",
+      "verified_age": {
+        "verified_date_of_birth": "2014-06-01",
+        "consultation_assessment_date": "2026-07-01",
+        "verification_status": "VERIFIED",
+        "age_source": "VERIFIED_DOB_CALENDAR",
+        "pediatric_band_verification_status": "VERIFIED",
+        "upstream_verified_pediatric_band": "P13_D"
+      },
+      "restrict_gate_ledger": null,
+      "phase8_fingerprint_override": null,
+      "slot_target_override": null,
+      "safety_gate": null,
+      "expected": {
+        "pediatric_overlay_status": "OVERLAY_APPLIED",
+        "final_draft_dilution": "D5",
+        "final_draft_cascade": "POSITIVE_ACUTE_D3_D5_SELECTION",
+        "verified_age_band": "P13_D",
+        "pediatric_matrix_authority": "D13_C_POSITIVE",
+        "d13_d_justification_status": "NOT_REQUIRED"
+      }
+    },
+    {
+      "id": "p13d-d10-restrict-pass",
+      "phase8_ref": "d10-selected",
+      "verified_age": {
+        "verified_date_of_birth": "2014-06-01",
+        "consultation_assessment_date": "2026-07-01",
+        "verification_status": "VERIFIED",
+        "age_source": "VERIFIED_DOB_CALENDAR",
+        "pediatric_band_verification_status": "VERIFIED",
+        "upstream_verified_pediatric_band": "P13_D"
+      },
+      "restrict_gate_ledger": {
+        "d13_d_justification": {
+          "status": "PASS"
+        },
+        "d10f_gates": [
+          {
+            "gate_id": "D10F_COMPLETE",
+            "outcome": "PASS"
+          }
+        ]
+      },
+      "phase8_fingerprint_override": null,
+      "slot_target_override": null,
+      "safety_gate": null,
+      "expected": {
+        "pediatric_overlay_status": "OVERLAY_APPLIED",
+        "final_draft_dilution": "D10",
+        "final_draft_cascade": "POSITIVE_D10_SELECTION",
+        "verified_age_band": "P13_D",
+        "pediatric_matrix_authority": "D13_C_POSITIVE",
+        "d13_d_justification_status": "PASS"
+      }
+    },
+    {
+      "id": "p13d-d30-restrict-pass",
+      "phase8_ref": "d30-selected",
+      "verified_age": {
+        "verified_date_of_birth": "2014-06-01",
+        "consultation_assessment_date": "2026-07-01",
+        "verification_status": "VERIFIED",
+        "age_source": "VERIFIED_DOB_CALENDAR",
+        "pediatric_band_verification_status": "VERIFIED",
+        "upstream_verified_pediatric_band": "P13_D"
+      },
+      "restrict_gate_ledger": {
+        "d13_d_justification": {
+          "status": "PASS"
+        },
+        "d30f_gates": [
+          {
+            "gate_id": "D30F_COMPLETE",
+            "outcome": "PASS"
+          }
+        ]
+      },
+      "phase8_fingerprint_override": null,
+      "slot_target_override": null,
+      "safety_gate": null,
+      "expected": {
+        "pediatric_overlay_status": "OVERLAY_APPLIED",
+        "final_draft_dilution": "D30",
+        "final_draft_cascade": "POSITIVE_D30_SELECTION",
+        "verified_age_band": "P13_D",
+        "pediatric_matrix_authority": "D13_C_POSITIVE",
+        "d13_d_justification_status": "PASS"
+      }
+    },
+    {
+      "id": "p13d-d30-restrict-fail",
+      "phase8_ref": "d30-selected",
+      "verified_age": {
+        "verified_date_of_birth": "2014-06-01",
+        "consultation_assessment_date": "2026-07-01",
+        "verification_status": "VERIFIED",
+        "age_source": "VERIFIED_DOB_CALENDAR",
+        "pediatric_band_verification_status": "VERIFIED",
+        "upstream_verified_pediatric_band": "P13_D"
+      },
+      "restrict_gate_ledger": {
+        "d13_d_justification": {
+          "status": "PASS"
+        }
+      },
+      "phase8_fingerprint_override": null,
+      "slot_target_override": null,
+      "safety_gate": null,
+      "expected": {
+        "pediatric_overlay_status": "OVERLAY_UNRESOLVED",
+        "final_draft_dilution": null,
+        "final_draft_cascade": null,
+        "verified_age_band": "P13_D",
+        "pediatric_matrix_authority": "D13_C_POSITIVE",
+        "d13_d_justification_status": "FAIL"
+      }
+    },
+    {
+      "id": "p13d-d60-prohibit",
+      "phase8_ref": "d60-selected",
+      "verified_age": {
+        "verified_date_of_birth": "2014-06-01",
+        "consultation_assessment_date": "2026-07-01",
+        "verification_status": "VERIFIED",
+        "age_source": "VERIFIED_DOB_CALENDAR",
+        "pediatric_band_verification_status": "VERIFIED",
+        "upstream_verified_pediatric_band": "P13_D"
+      },
+      "restrict_gate_ledger": null,
+      "phase8_fingerprint_override": null,
+      "slot_target_override": null,
+      "safety_gate": null,
+      "expected": {
+        "pediatric_overlay_status": "OVERLAY_BLOCKED",
+        "final_draft_dilution": null,
+        "final_draft_cascade": null,
+        "verified_age_band": "P13_D",
+        "pediatric_matrix_authority": "D13_C_POSITIVE",
+        "d13_d_justification_status": "NOT_REQUIRED"
+      }
+    },
+    {
+      "id": "p13e-d5-pass-through",
+      "phase8_ref": "d5-selected",
+      "verified_age": {
+        "verified_date_of_birth": "2010-06-01",
+        "consultation_assessment_date": "2026-07-01",
+        "verification_status": "VERIFIED",
+        "age_source": "VERIFIED_DOB_CALENDAR",
+        "pediatric_band_verification_status": "VERIFIED",
+        "upstream_verified_pediatric_band": "P13_E"
+      },
+      "restrict_gate_ledger": null,
+      "phase8_fingerprint_override": null,
+      "slot_target_override": null,
+      "safety_gate": null,
+      "expected": {
+        "pediatric_overlay_status": "NOT_APPLICABLE",
+        "final_draft_dilution": "D5",
+        "final_draft_cascade": "POSITIVE_ACUTE_D3_D5_SELECTION",
+        "verified_age_band": "P13_E",
+        "pediatric_matrix_authority": "NOT_APPLICABLE",
+        "d13_d_justification_status": "NOT_REQUIRED"
+      }
+    },
+    {
+      "id": "p13e-d30-pass-through",
+      "phase8_ref": "d30-selected",
+      "verified_age": {
+        "verified_date_of_birth": "2010-06-01",
+        "consultation_assessment_date": "2026-07-01",
+        "verification_status": "VERIFIED",
+        "age_source": "VERIFIED_DOB_CALENDAR",
+        "pediatric_band_verification_status": "VERIFIED",
+        "upstream_verified_pediatric_band": "P13_E"
+      },
+      "restrict_gate_ledger": null,
+      "phase8_fingerprint_override": null,
+      "slot_target_override": null,
+      "safety_gate": null,
+      "expected": {
+        "pediatric_overlay_status": "NOT_APPLICABLE",
+        "final_draft_dilution": "D30",
+        "final_draft_cascade": "POSITIVE_D30_SELECTION",
+        "verified_age_band": "P13_E",
+        "pediatric_matrix_authority": "NOT_APPLICABLE",
+        "d13_d_justification_status": "NOT_REQUIRED"
+      }
+    },
+    {
+      "id": "p13e-d1-pass-through",
+      "phase8_ref": "d1-only",
+      "verified_age": {
+        "verified_date_of_birth": "2010-06-01",
+        "consultation_assessment_date": "2026-07-01",
+        "verification_status": "VERIFIED",
+        "age_source": "VERIFIED_DOB_CALENDAR",
+        "pediatric_band_verification_status": "VERIFIED",
+        "upstream_verified_pediatric_band": "P13_E"
+      },
+      "restrict_gate_ledger": null,
+      "phase8_fingerprint_override": null,
+      "slot_target_override": null,
+      "safety_gate": null,
+      "expected": {
+        "pediatric_overlay_status": "NOT_APPLICABLE",
+        "final_draft_dilution": "D1",
+        "final_draft_cascade": "NEGATIVE_D1_D2_SELECTION",
+        "verified_age_band": "P13_E",
+        "pediatric_matrix_authority": "NOT_APPLICABLE",
+        "d13_d_justification_status": "NOT_REQUIRED"
+      }
+    },
+    {
+      "id": "age-missing",
+      "phase8_ref": "d5-selected",
+      "verified_age": {
+        "verification_status": "MISSING"
+      },
+      "restrict_gate_ledger": null,
+      "phase8_fingerprint_override": null,
+      "slot_target_override": null,
+      "safety_gate": null,
+      "expected": {
+        "pediatric_overlay_status": "AGE_UNRESOLVED",
+        "final_draft_dilution": null,
+        "final_draft_cascade": null,
+        "verified_age_band": null,
+        "pediatric_matrix_authority": "NOT_APPLICABLE",
+        "d13_d_justification_status": "NOT_APPLICABLE"
+      }
+    },
+    {
+      "id": "age-invalid-future-dob",
+      "phase8_ref": "d5-selected",
+      "verified_age": {
+        "verified_date_of_birth": "2099-01-01",
+        "consultation_assessment_date": "2026-07-01",
+        "verification_status": "VERIFIED",
+        "age_source": "VERIFIED_DOB_CALENDAR"
+      },
+      "restrict_gate_ledger": null,
+      "phase8_fingerprint_override": null,
+      "slot_target_override": null,
+      "safety_gate": null,
+      "expected": {
+        "pediatric_overlay_status": "AGE_UNRESOLVED",
+        "final_draft_dilution": null,
+        "final_draft_cascade": null,
+        "verified_age_band": null,
+        "pediatric_matrix_authority": "NOT_APPLICABLE",
+        "d13_d_justification_status": "NOT_APPLICABLE"
+      }
+    },
+    {
+      "id": "age-contradictory-band",
+      "phase8_ref": "d5-selected",
+      "verified_age": {
+        "verified_date_of_birth": "2021-06-01",
+        "consultation_assessment_date": "2026-07-01",
+        "verification_status": "VERIFIED",
+        "age_source": "VERIFIED_DOB_CALENDAR",
+        "pediatric_band_verification_status": "VERIFIED",
+        "upstream_verified_pediatric_band": "P13_D"
+      },
+      "restrict_gate_ledger": null,
+      "phase8_fingerprint_override": null,
+      "slot_target_override": null,
+      "safety_gate": null,
+      "expected": {
+        "pediatric_overlay_status": "AGE_UNRESOLVED",
+        "final_draft_dilution": null,
+        "final_draft_cascade": null,
+        "verified_age_band": null,
+        "pediatric_matrix_authority": "NOT_APPLICABLE",
+        "d13_d_justification_status": "NOT_APPLICABLE"
+      }
+    },
+    {
+      "id": "phase8-fp-mismatch",
+      "phase8_ref": "d5-selected",
+      "verified_age": {
+        "verified_date_of_birth": "2021-06-01",
+        "consultation_assessment_date": "2026-07-01",
+        "verification_status": "VERIFIED",
+        "age_source": "VERIFIED_DOB_CALENDAR",
+        "pediatric_band_verification_status": "VERIFIED",
+        "upstream_verified_pediatric_band": "P13_C"
+      },
+      "restrict_gate_ledger": null,
+      "phase8_fingerprint_override": "DEADBEEF",
+      "slot_target_override": null,
+      "safety_gate": null,
+      "expected": {
+        "pediatric_overlay_status": "PHASE8_AUTH_FAILED",
+        "final_draft_dilution": null,
+        "final_draft_cascade": null,
+        "verified_age_band": "P13_C",
+        "pediatric_matrix_authority": "NOT_APPLICABLE",
+        "d13_d_justification_status": "NOT_APPLICABLE"
+      }
+    },
+    {
+      "id": "phase8-unresolved-tie",
+      "phase8_ref": "tie-mixed",
+      "verified_age": {
+        "verified_date_of_birth": "2021-06-01",
+        "consultation_assessment_date": "2026-07-01",
+        "verification_status": "VERIFIED",
+        "age_source": "VERIFIED_DOB_CALENDAR",
+        "pediatric_band_verification_status": "VERIFIED",
+        "upstream_verified_pediatric_band": "P13_C"
+      },
+      "restrict_gate_ledger": null,
+      "phase8_fingerprint_override": null,
+      "slot_target_override": null,
+      "safety_gate": null,
+      "expected": {
+        "pediatric_overlay_status": "PHASE8_AUTH_FAILED",
+        "final_draft_dilution": null,
+        "final_draft_cascade": null,
+        "verified_age_band": "P13_C",
+        "pediatric_matrix_authority": "NOT_APPLICABLE",
+        "d13_d_justification_status": "NOT_APPLICABLE"
+      }
+    },
+    {
+      "id": "slot-target-mismatch",
+      "phase8_ref": "d5-selected",
+      "verified_age": {
+        "verified_date_of_birth": "2021-06-01",
+        "consultation_assessment_date": "2026-07-01",
+        "verification_status": "VERIFIED",
+        "age_source": "VERIFIED_DOB_CALENDAR",
+        "pediatric_band_verification_status": "VERIFIED",
+        "upstream_verified_pediatric_band": "P13_C"
+      },
+      "restrict_gate_ledger": null,
+      "phase8_fingerprint_override": null,
+      "slot_target_override": "wrong-target",
+      "safety_gate": null,
+      "expected": {
+        "pediatric_overlay_status": "PHASE8_AUTH_FAILED",
+        "final_draft_dilution": null,
+        "final_draft_cascade": null,
+        "verified_age_band": "P13_C",
+        "pediatric_matrix_authority": "NOT_APPLICABLE",
+        "d13_d_justification_status": "NOT_APPLICABLE"
+      }
+    },
+    {
+      "id": "production-not-evaluated",
+      "phase8_ref": "d5-selected",
+      "verified_age": {
+        "verified_date_of_birth": "2021-06-01",
+        "consultation_assessment_date": "2026-07-01",
+        "verification_status": "VERIFIED",
+        "age_source": "VERIFIED_DOB_CALENDAR",
+        "pediatric_band_verification_status": "VERIFIED",
+        "upstream_verified_pediatric_band": "P13_C"
+      },
+      "restrict_gate_ledger": null,
+      "overlay_label": "PRODUCTION",
+      "phase8_fingerprint_override": null,
+      "slot_target_override": null,
+      "safety_gate": null,
+      "expected": {
+        "pediatric_overlay_status": "NOT_EVALUATED",
+        "final_draft_dilution": null,
+        "final_draft_cascade": null,
+        "verified_age_band": "P13_C",
+        "pediatric_matrix_authority": "NOT_APPLICABLE",
+        "d13_d_justification_status": "NOT_APPLICABLE"
+      }
+    },
+    {
+      "id": "safety-hold-blocks",
+      "phase8_ref": "d5-selected",
+      "verified_age": {
+        "verified_date_of_birth": "2021-06-01",
+        "consultation_assessment_date": "2026-07-01",
+        "verification_status": "VERIFIED",
+        "age_source": "VERIFIED_DOB_CALENDAR",
+        "pediatric_band_verification_status": "VERIFIED",
+        "upstream_verified_pediatric_band": "P13_C"
+      },
+      "restrict_gate_ledger": null,
+      "phase8_fingerprint_override": null,
+      "slot_target_override": null,
+      "safety_gate": {
+        "patientWideHold": true,
+        "d13HardStopActive": false,
+        "pediatricBand": "P13_C"
+      },
+      "expected": {
+        "pediatric_overlay_status": "BLOCKED_BY_SAFETY",
+        "final_draft_dilution": null,
+        "final_draft_cascade": null,
+        "verified_age_band": "P13_C",
+        "pediatric_matrix_authority": "NOT_APPLICABLE",
+        "d13_d_justification_status": "NOT_APPLICABLE"
+      }
+    },
+    {
+      "id": "matrix-p13c-d1",
+      "phase8_ref": "d1-only",
+      "verified_age": {
+        "verified_date_of_birth": "2021-06-01",
+        "consultation_assessment_date": "2026-07-01",
+        "verification_status": "VERIFIED",
+        "age_source": "VERIFIED_DOB_CALENDAR",
+        "pediatric_band_verification_status": "VERIFIED",
+        "upstream_verified_pediatric_band": "P13_C"
+      },
+      "restrict_gate_ledger": null,
+      "phase8_fingerprint_override": null,
+      "slot_target_override": null,
+      "safety_gate": null,
+      "expected": {
+        "pediatric_overlay_status": "OVERLAY_BLOCKED",
+        "final_draft_dilution": null,
+        "final_draft_cascade": null,
+        "verified_age_band": "P13_C",
+        "pediatric_matrix_authority": "Q8_H_NEGATIVE",
+        "d13_d_justification_status": "NOT_REQUIRED"
+      }
+    },
+    {
+      "id": "matrix-p13c-d2-fail",
+      "phase8_ref": "tie-sanguine",
+      "verified_age": {
+        "verified_date_of_birth": "2021-06-01",
+        "consultation_assessment_date": "2026-07-01",
+        "verification_status": "VERIFIED",
+        "age_source": "VERIFIED_DOB_CALENDAR",
+        "pediatric_band_verification_status": "VERIFIED",
+        "upstream_verified_pediatric_band": "P13_C"
+      },
+      "restrict_gate_ledger": null,
+      "phase8_fingerprint_override": null,
+      "slot_target_override": null,
+      "safety_gate": null,
+      "expected": {
+        "pediatric_overlay_status": "OVERLAY_UNRESOLVED",
+        "final_draft_dilution": null,
+        "final_draft_cascade": null,
+        "verified_age_band": "P13_C",
+        "pediatric_matrix_authority": "Q8_H_NEGATIVE",
+        "d13_d_justification_status": "FAIL"
+      }
+    },
+    {
+      "id": "matrix-p13c-d3-fail",
+      "phase8_ref": "d3-selected",
+      "verified_age": {
+        "verified_date_of_birth": "2021-06-01",
+        "consultation_assessment_date": "2026-07-01",
+        "verification_status": "VERIFIED",
+        "age_source": "VERIFIED_DOB_CALENDAR",
+        "pediatric_band_verification_status": "VERIFIED",
+        "upstream_verified_pediatric_band": "P13_C"
+      },
+      "restrict_gate_ledger": null,
+      "phase8_fingerprint_override": null,
+      "slot_target_override": null,
+      "safety_gate": null,
+      "expected": {
+        "pediatric_overlay_status": "OVERLAY_UNRESOLVED",
+        "final_draft_dilution": null,
+        "final_draft_cascade": null,
+        "verified_age_band": "P13_C",
+        "pediatric_matrix_authority": "D13_C_POSITIVE",
+        "d13_d_justification_status": "FAIL"
+      }
+    },
+    {
+      "id": "matrix-p13c-d10-fail",
+      "phase8_ref": "d10-selected",
+      "verified_age": {
+        "verified_date_of_birth": "2021-06-01",
+        "consultation_assessment_date": "2026-07-01",
+        "verification_status": "VERIFIED",
+        "age_source": "VERIFIED_DOB_CALENDAR",
+        "pediatric_band_verification_status": "VERIFIED",
+        "upstream_verified_pediatric_band": "P13_C"
+      },
+      "restrict_gate_ledger": null,
+      "phase8_fingerprint_override": null,
+      "slot_target_override": null,
+      "safety_gate": null,
+      "expected": {
+        "pediatric_overlay_status": "OVERLAY_UNRESOLVED",
+        "final_draft_dilution": null,
+        "final_draft_cascade": null,
+        "verified_age_band": "P13_C",
+        "pediatric_matrix_authority": "D13_C_POSITIVE",
+        "d13_d_justification_status": "FAIL"
+      }
+    },
+    {
+      "id": "matrix-p13c-d30",
+      "phase8_ref": "d30-selected",
+      "verified_age": {
+        "verified_date_of_birth": "2021-06-01",
+        "consultation_assessment_date": "2026-07-01",
+        "verification_status": "VERIFIED",
+        "age_source": "VERIFIED_DOB_CALENDAR",
+        "pediatric_band_verification_status": "VERIFIED",
+        "upstream_verified_pediatric_band": "P13_C"
+      },
+      "restrict_gate_ledger": null,
+      "phase8_fingerprint_override": null,
+      "slot_target_override": null,
+      "safety_gate": null,
+      "expected": {
+        "pediatric_overlay_status": "OVERLAY_BLOCKED",
+        "final_draft_dilution": null,
+        "final_draft_cascade": null,
+        "verified_age_band": "P13_C",
+        "pediatric_matrix_authority": "D13_C_POSITIVE",
+        "d13_d_justification_status": "NOT_REQUIRED"
+      }
+    },
+    {
+      "id": "matrix-p13c-d60",
+      "phase8_ref": "d60-selected",
+      "verified_age": {
+        "verified_date_of_birth": "2021-06-01",
+        "consultation_assessment_date": "2026-07-01",
+        "verification_status": "VERIFIED",
+        "age_source": "VERIFIED_DOB_CALENDAR",
+        "pediatric_band_verification_status": "VERIFIED",
+        "upstream_verified_pediatric_band": "P13_C"
+      },
+      "restrict_gate_ledger": null,
+      "phase8_fingerprint_override": null,
+      "slot_target_override": null,
+      "safety_gate": null,
+      "expected": {
+        "pediatric_overlay_status": "OVERLAY_BLOCKED",
+        "final_draft_dilution": null,
+        "final_draft_cascade": null,
+        "verified_age_band": "P13_C",
+        "pediatric_matrix_authority": "D13_C_POSITIVE",
+        "d13_d_justification_status": "NOT_REQUIRED"
+      }
+    },
+    {
+      "id": "matrix-p13d-d1-fail",
+      "phase8_ref": "d1-only",
+      "verified_age": {
+        "verified_date_of_birth": "2014-06-01",
+        "consultation_assessment_date": "2026-07-01",
+        "verification_status": "VERIFIED",
+        "age_source": "VERIFIED_DOB_CALENDAR",
+        "pediatric_band_verification_status": "VERIFIED",
+        "upstream_verified_pediatric_band": "P13_D"
+      },
+      "restrict_gate_ledger": null,
+      "phase8_fingerprint_override": null,
+      "slot_target_override": null,
+      "safety_gate": null,
+      "expected": {
+        "pediatric_overlay_status": "OVERLAY_UNRESOLVED",
+        "final_draft_dilution": null,
+        "final_draft_cascade": null,
+        "verified_age_band": "P13_D",
+        "pediatric_matrix_authority": "Q8_H_NEGATIVE",
+        "d13_d_justification_status": "FAIL"
+      }
+    },
+    {
+      "id": "matrix-p13d-d2",
+      "phase8_ref": "tie-sanguine",
+      "verified_age": {
+        "verified_date_of_birth": "2014-06-01",
+        "consultation_assessment_date": "2026-07-01",
+        "verification_status": "VERIFIED",
+        "age_source": "VERIFIED_DOB_CALENDAR",
+        "pediatric_band_verification_status": "VERIFIED",
+        "upstream_verified_pediatric_band": "P13_D"
+      },
+      "restrict_gate_ledger": null,
+      "phase8_fingerprint_override": null,
+      "slot_target_override": null,
+      "safety_gate": null,
+      "expected": {
+        "pediatric_overlay_status": "OVERLAY_APPLIED",
+        "final_draft_dilution": "D2",
+        "final_draft_cascade": "NEGATIVE_D1_D2_SELECTION",
+        "verified_age_band": "P13_D",
+        "pediatric_matrix_authority": "Q8_H_NEGATIVE",
+        "d13_d_justification_status": "NOT_REQUIRED"
+      }
+    },
+    {
+      "id": "matrix-p13d-d3-fail",
+      "phase8_ref": "d3-selected",
+      "verified_age": {
+        "verified_date_of_birth": "2014-06-01",
+        "consultation_assessment_date": "2026-07-01",
+        "verification_status": "VERIFIED",
+        "age_source": "VERIFIED_DOB_CALENDAR",
+        "pediatric_band_verification_status": "VERIFIED",
+        "upstream_verified_pediatric_band": "P13_D"
+      },
+      "restrict_gate_ledger": null,
+      "phase8_fingerprint_override": null,
+      "slot_target_override": null,
+      "safety_gate": null,
+      "expected": {
+        "pediatric_overlay_status": "OVERLAY_UNRESOLVED",
+        "final_draft_dilution": null,
+        "final_draft_cascade": null,
+        "verified_age_band": "P13_D",
+        "pediatric_matrix_authority": "D13_C_POSITIVE",
+        "d13_d_justification_status": "FAIL"
+      }
+    },
+    {
+      "id": "matrix-p13d-d10-fail",
+      "phase8_ref": "d10-selected",
+      "verified_age": {
+        "verified_date_of_birth": "2014-06-01",
+        "consultation_assessment_date": "2026-07-01",
+        "verification_status": "VERIFIED",
+        "age_source": "VERIFIED_DOB_CALENDAR",
+        "pediatric_band_verification_status": "VERIFIED",
+        "upstream_verified_pediatric_band": "P13_D"
+      },
+      "restrict_gate_ledger": null,
+      "phase8_fingerprint_override": null,
+      "slot_target_override": null,
+      "safety_gate": null,
+      "expected": {
+        "pediatric_overlay_status": "OVERLAY_UNRESOLVED",
+        "final_draft_dilution": null,
+        "final_draft_cascade": null,
+        "verified_age_band": "P13_D",
+        "pediatric_matrix_authority": "D13_C_POSITIVE",
+        "d13_d_justification_status": "FAIL"
+      }
+    },
+    {
+      "id": "matrix-p13d-d30-fail",
+      "phase8_ref": "d30-selected",
+      "verified_age": {
+        "verified_date_of_birth": "2014-06-01",
+        "consultation_assessment_date": "2026-07-01",
+        "verification_status": "VERIFIED",
+        "age_source": "VERIFIED_DOB_CALENDAR",
+        "pediatric_band_verification_status": "VERIFIED",
+        "upstream_verified_pediatric_band": "P13_D"
+      },
+      "restrict_gate_ledger": null,
+      "phase8_fingerprint_override": null,
+      "slot_target_override": null,
+      "safety_gate": null,
+      "expected": {
+        "pediatric_overlay_status": "OVERLAY_UNRESOLVED",
+        "final_draft_dilution": null,
+        "final_draft_cascade": null,
+        "verified_age_band": "P13_D",
+        "pediatric_matrix_authority": "D13_C_POSITIVE",
+        "d13_d_justification_status": "FAIL"
+      }
+    },
+    {
+      "id": "matrix-p13d-d60",
+      "phase8_ref": "d60-selected",
+      "verified_age": {
+        "verified_date_of_birth": "2014-06-01",
+        "consultation_assessment_date": "2026-07-01",
+        "verification_status": "VERIFIED",
+        "age_source": "VERIFIED_DOB_CALENDAR",
+        "pediatric_band_verification_status": "VERIFIED",
+        "upstream_verified_pediatric_band": "P13_D"
+      },
+      "restrict_gate_ledger": null,
+      "phase8_fingerprint_override": null,
+      "slot_target_override": null,
+      "safety_gate": null,
+      "expected": {
+        "pediatric_overlay_status": "OVERLAY_BLOCKED",
+        "final_draft_dilution": null,
+        "final_draft_cascade": null,
+        "verified_age_band": "P13_D",
+        "pediatric_matrix_authority": "D13_C_POSITIVE",
+        "d13_d_justification_status": "NOT_REQUIRED"
+      }
+    },
+    {
+      "id": "pad-d5-46",
+      "phase8_ref": "d5-selected",
+      "verified_age": {
+        "verified_date_of_birth": "2021-06-01",
+        "consultation_assessment_date": "2026-07-01",
+        "verification_status": "VERIFIED",
+        "age_source": "VERIFIED_DOB_CALENDAR",
+        "pediatric_band_verification_status": "VERIFIED",
+        "upstream_verified_pediatric_band": "P13_C"
+      },
+      "restrict_gate_ledger": null,
+      "phase8_fingerprint_override": null,
+      "slot_target_override": null,
+      "safety_gate": null,
+      "expected": {
+        "pediatric_overlay_status": "OVERLAY_APPLIED",
+        "final_draft_dilution": "D5",
+        "final_draft_cascade": "POSITIVE_ACUTE_D3_D5_SELECTION",
+        "verified_age_band": "P13_C",
+        "pediatric_matrix_authority": "D13_C_POSITIVE",
+        "d13_d_justification_status": "NOT_REQUIRED"
+      }
+    },
+    {
+      "id": "pad-d5-47",
+      "phase8_ref": "d5-selected",
+      "verified_age": {
+        "verified_date_of_birth": "2021-06-01",
+        "consultation_assessment_date": "2026-07-01",
+        "verification_status": "VERIFIED",
+        "age_source": "VERIFIED_DOB_CALENDAR",
+        "pediatric_band_verification_status": "VERIFIED",
+        "upstream_verified_pediatric_band": "P13_C"
+      },
+      "restrict_gate_ledger": null,
+      "phase8_fingerprint_override": null,
+      "slot_target_override": null,
+      "safety_gate": null,
+      "expected": {
+        "pediatric_overlay_status": "OVERLAY_APPLIED",
+        "final_draft_dilution": "D5",
+        "final_draft_cascade": "POSITIVE_ACUTE_D3_D5_SELECTION",
+        "verified_age_band": "P13_C",
+        "pediatric_matrix_authority": "D13_C_POSITIVE",
+        "d13_d_justification_status": "NOT_REQUIRED"
+      }
+    },
+    {
+      "id": "pad-d5-48",
+      "phase8_ref": "d5-selected",
+      "verified_age": {
+        "verified_date_of_birth": "2021-06-01",
+        "consultation_assessment_date": "2026-07-01",
+        "verification_status": "VERIFIED",
+        "age_source": "VERIFIED_DOB_CALENDAR",
+        "pediatric_band_verification_status": "VERIFIED",
+        "upstream_verified_pediatric_band": "P13_C"
+      },
+      "restrict_gate_ledger": null,
+      "phase8_fingerprint_override": null,
+      "slot_target_override": null,
+      "safety_gate": null,
+      "expected": {
+        "pediatric_overlay_status": "OVERLAY_APPLIED",
+        "final_draft_dilution": "D5",
+        "final_draft_cascade": "POSITIVE_ACUTE_D3_D5_SELECTION",
+        "verified_age_band": "P13_C",
+        "pediatric_matrix_authority": "D13_C_POSITIVE",
+        "d13_d_justification_status": "NOT_REQUIRED"
+      }
+    },
+    {
+      "id": "pad-d5-49",
+      "phase8_ref": "d5-selected",
+      "verified_age": {
+        "verified_date_of_birth": "2021-06-01",
+        "consultation_assessment_date": "2026-07-01",
+        "verification_status": "VERIFIED",
+        "age_source": "VERIFIED_DOB_CALENDAR",
+        "pediatric_band_verification_status": "VERIFIED",
+        "upstream_verified_pediatric_band": "P13_C"
+      },
+      "restrict_gate_ledger": null,
+      "phase8_fingerprint_override": null,
+      "slot_target_override": null,
+      "safety_gate": null,
+      "expected": {
+        "pediatric_overlay_status": "OVERLAY_APPLIED",
+        "final_draft_dilution": "D5",
+        "final_draft_cascade": "POSITIVE_ACUTE_D3_D5_SELECTION",
+        "verified_age_band": "P13_C",
+        "pediatric_matrix_authority": "D13_C_POSITIVE",
+        "d13_d_justification_status": "NOT_REQUIRED"
+      }
+    },
+    {
+      "id": "pad-d5-50",
+      "phase8_ref": "d5-selected",
+      "verified_age": {
+        "verified_date_of_birth": "2021-06-01",
+        "consultation_assessment_date": "2026-07-01",
+        "verification_status": "VERIFIED",
+        "age_source": "VERIFIED_DOB_CALENDAR",
+        "pediatric_band_verification_status": "VERIFIED",
+        "upstream_verified_pediatric_band": "P13_C"
+      },
+      "restrict_gate_ledger": null,
+      "phase8_fingerprint_override": null,
+      "slot_target_override": null,
+      "safety_gate": null,
+      "expected": {
+        "pediatric_overlay_status": "OVERLAY_APPLIED",
+        "final_draft_dilution": "D5",
+        "final_draft_cascade": "POSITIVE_ACUTE_D3_D5_SELECTION",
+        "verified_age_band": "P13_C",
+        "pediatric_matrix_authority": "D13_C_POSITIVE",
+        "d13_d_justification_status": "NOT_REQUIRED"
+      }
+    },
+    {
+      "id": "pad-d5-51",
+      "phase8_ref": "d5-selected",
+      "verified_age": {
+        "verified_date_of_birth": "2021-06-01",
+        "consultation_assessment_date": "2026-07-01",
+        "verification_status": "VERIFIED",
+        "age_source": "VERIFIED_DOB_CALENDAR",
+        "pediatric_band_verification_status": "VERIFIED",
+        "upstream_verified_pediatric_band": "P13_C"
+      },
+      "restrict_gate_ledger": null,
+      "phase8_fingerprint_override": null,
+      "slot_target_override": null,
+      "safety_gate": null,
+      "expected": {
+        "pediatric_overlay_status": "OVERLAY_APPLIED",
+        "final_draft_dilution": "D5",
+        "final_draft_cascade": "POSITIVE_ACUTE_D3_D5_SELECTION",
+        "verified_age_band": "P13_C",
+        "pediatric_matrix_authority": "D13_C_POSITIVE",
+        "d13_d_justification_status": "NOT_REQUIRED"
+      }
+    },
+    {
+      "id": "pad-d5-52",
+      "phase8_ref": "d5-selected",
+      "verified_age": {
+        "verified_date_of_birth": "2021-06-01",
+        "consultation_assessment_date": "2026-07-01",
+        "verification_status": "VERIFIED",
+        "age_source": "VERIFIED_DOB_CALENDAR",
+        "pediatric_band_verification_status": "VERIFIED",
+        "upstream_verified_pediatric_band": "P13_C"
+      },
+      "restrict_gate_ledger": null,
+      "phase8_fingerprint_override": null,
+      "slot_target_override": null,
+      "safety_gate": null,
+      "expected": {
+        "pediatric_overlay_status": "OVERLAY_APPLIED",
+        "final_draft_dilution": "D5",
+        "final_draft_cascade": "POSITIVE_ACUTE_D3_D5_SELECTION",
+        "verified_age_band": "P13_C",
+        "pediatric_matrix_authority": "D13_C_POSITIVE",
+        "d13_d_justification_status": "NOT_REQUIRED"
+      }
+    },
+    {
+      "id": "pad-d5-53",
+      "phase8_ref": "d5-selected",
+      "verified_age": {
+        "verified_date_of_birth": "2021-06-01",
+        "consultation_assessment_date": "2026-07-01",
+        "verification_status": "VERIFIED",
+        "age_source": "VERIFIED_DOB_CALENDAR",
+        "pediatric_band_verification_status": "VERIFIED",
+        "upstream_verified_pediatric_band": "P13_C"
+      },
+      "restrict_gate_ledger": null,
+      "phase8_fingerprint_override": null,
+      "slot_target_override": null,
+      "safety_gate": null,
+      "expected": {
+        "pediatric_overlay_status": "OVERLAY_APPLIED",
+        "final_draft_dilution": "D5",
+        "final_draft_cascade": "POSITIVE_ACUTE_D3_D5_SELECTION",
+        "verified_age_band": "P13_C",
+        "pediatric_matrix_authority": "D13_C_POSITIVE",
+        "d13_d_justification_status": "NOT_REQUIRED"
+      }
+    },
+    {
+      "id": "pad-d5-54",
+      "phase8_ref": "d5-selected",
+      "verified_age": {
+        "verified_date_of_birth": "2021-06-01",
+        "consultation_assessment_date": "2026-07-01",
+        "verification_status": "VERIFIED",
+        "age_source": "VERIFIED_DOB_CALENDAR",
+        "pediatric_band_verification_status": "VERIFIED",
+        "upstream_verified_pediatric_band": "P13_C"
+      },
+      "restrict_gate_ledger": null,
+      "phase8_fingerprint_override": null,
+      "slot_target_override": null,
+      "safety_gate": null,
+      "expected": {
+        "pediatric_overlay_status": "OVERLAY_APPLIED",
+        "final_draft_dilution": "D5",
+        "final_draft_cascade": "POSITIVE_ACUTE_D3_D5_SELECTION",
+        "verified_age_band": "P13_C",
+        "pediatric_matrix_authority": "D13_C_POSITIVE",
+        "d13_d_justification_status": "NOT_REQUIRED"
+      }
+    },
+    {
+      "id": "pad-d5-55",
+      "phase8_ref": "d5-selected",
+      "verified_age": {
+        "verified_date_of_birth": "2021-06-01",
+        "consultation_assessment_date": "2026-07-01",
+        "verification_status": "VERIFIED",
+        "age_source": "VERIFIED_DOB_CALENDAR",
+        "pediatric_band_verification_status": "VERIFIED",
+        "upstream_verified_pediatric_band": "P13_C"
+      },
+      "restrict_gate_ledger": null,
+      "phase8_fingerprint_override": null,
+      "slot_target_override": null,
+      "safety_gate": null,
+      "expected": {
+        "pediatric_overlay_status": "OVERLAY_APPLIED",
+        "final_draft_dilution": "D5",
+        "final_draft_cascade": "POSITIVE_ACUTE_D3_D5_SELECTION",
+        "verified_age_band": "P13_C",
+        "pediatric_matrix_authority": "D13_C_POSITIVE",
+        "d13_d_justification_status": "NOT_REQUIRED"
+      }
+    }
+  ]
+}

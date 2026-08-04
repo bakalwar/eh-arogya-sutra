@@ -21,6 +21,9 @@ export const RULE4_CONTRACT_VERSION_PHASE7_CANDIDATE_ELIGIBILITY =
 export const RULE4_CONTRACT_VERSION_PHASE8_NUMERIC_SELECTION =
   'ehas2-rule4-contract-v1-phase8-numeric-selection' as const;
 
+export const RULE4_CONTRACT_VERSION_PHASE9_PEDIATRIC_OVERLAY =
+  'ehas2-rule4-contract-v1-phase9-pediatric-overlay' as const;
+
 export const RULE4_RULESET_VERSION_DOC_BASELINE =
   'ehas2-rule4-ruleset-v1-frozen-doc-4c35469' as const;
 
@@ -134,6 +137,19 @@ export const RULE4_REGISTRY_PHASE8_COMPLETE = false as const;
 
 export const RULE4_REGISTRY_PHASE8_CLINICAL_STATUS =
   'SHADOW_DRAFT_SELECTION_NOT_PRODUCTION_ACTIVE' as const;
+
+export const RULE4_REGISTRY_FIXTURE_PHASE9_RELATIVE =
+  'fixtures/rule4/reason-code-registry.phase9-pediatric-overlay-subset.v1.json' as const;
+
+export const RULE4_REGISTRY_PHASE9_VERSION =
+  'rule4-reason-codes-phase9-pediatric-overlay-subset-v1' as const;
+
+export const RULE4_REGISTRY_PHASE9_SCOPE = 'PHASE9_PEDIATRIC_OVERLAY_SUBSET' as const;
+
+export const RULE4_REGISTRY_PHASE9_COMPLETE = false as const;
+
+export const RULE4_REGISTRY_PHASE9_CLINICAL_STATUS =
+  'SHADOW_PEDIATRIC_DRAFT_NOT_PRODUCTION_ACTIVE' as const;
 
 export const RULE4_FORBIDDEN_SELECTOR_INPUT_FIELDS = [
   'global_text',

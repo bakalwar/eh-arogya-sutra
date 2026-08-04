@@ -32,6 +32,10 @@ RULE4_REGISTRY_FIXTURE_PHASE8_RELATIVE = (
     "fixtures/rule4/reason-code-registry.phase8-numeric-selection-subset.v1.json"
 )
 
+RULE4_REGISTRY_FIXTURE_PHASE9_RELATIVE = (
+    "fixtures/rule4/reason-code-registry.phase9-pediatric-overlay-subset.v1.json"
+)
+
 RULE4_CONTRACT_VERSION = "ehas2-rule4-contract-v1-phase1"
 RULE4_CONTRACT_VERSION_PHASE2 = "ehas2-rule4-contract-v1-phase2-safety"
 RULE4_CONTRACT_VERSION_PHASE3_EVIDENCE = "ehas2-rule4-contract-v1-phase3-evidence"
@@ -47,6 +51,9 @@ RULE4_CONTRACT_VERSION_PHASE7_CANDIDATE_ELIGIBILITY = (
 )
 RULE4_CONTRACT_VERSION_PHASE8_NUMERIC_SELECTION = (
     "ehas2-rule4-contract-v1-phase8-numeric-selection"
+)
+RULE4_CONTRACT_VERSION_PHASE9_PEDIATRIC_OVERLAY = (
+    "ehas2-rule4-contract-v1-phase9-pediatric-overlay"
 )
 
 RULE4_REGISTRY_VERSION = "rule4-reason-codes-phase1-foundation-subset-v1"

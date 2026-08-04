@@ -82,19 +82,57 @@ export function selectionAdapterInputFromFixture(
 export function selectionEvaluationContextFromFixture(
   scenario: Rule4NumericSelectionFixtureScenario,
 ): Rule4SelectionEvaluationContext {
-  const ctx = scenario.context ?? {};
-  const mapped = snakeToCamelDeep(ctx) as Rule4SelectionEvaluationContext;
-  if (ctx.evidence_items != null) {
+  return selectionEvaluationContextFromPhase8Context(scenario.context);
+}
+
+/** Phase 8 parity context — maps evidence_resolution → evidenceAdapter (mandated). */
+export function selectionEvaluationContextFromPhase8Context(
+  ctx: Record<string, unknown> | undefined,
+): Rule4SelectionEvaluationContext {
+  const raw = ctx ?? {};
+  const mapped = snakeToCamelDeep(raw) as Rule4SelectionEvaluationContext;
+  if (raw.evidence_items != null) {
     mapped.evidenceItems = snakeToCamelDeep(
-      ctx.evidence_items,
+      raw.evidence_items,
     ) as Rule4SelectionEvaluationContext['evidenceItems'];
   }
-  if (ctx.evidence_resolution != null) {
+  if (raw.evidence_resolution != null) {
     mapped.evidenceAdapter = snakeToCamelDeep(
-      ctx.evidence_resolution,
+      raw.evidence_resolution,
     ) as Rule4SelectionEvaluationContext['evidenceAdapter'];
   }
+  for (const key of [
+    'polarity_context',
+    'phase_context',
+    'severity_context',
+    'safety_context',
+    'selection_records',
+  ] as const) {
+    if (raw[key] != null) {
+      (mapped as Record<string, unknown>)[snakeToCamelKey(key)] = snakeToCamelDeep(raw[key]);
+    }
+  }
+  if (raw.binding_gate_mandatory != null) {
+    mapped.bindingGateMandatory = raw.binding_gate_mandatory as boolean;
+  }
   return mapped;
+}
+
+/** Incomplete Phase 8 context (negative tests only — no evidence adapter binding). */
+export function selectionEvaluationContextIncompleteFromPhase8Context(
+  ctx: Record<string, unknown> | undefined,
+): Rule4SelectionEvaluationContext {
+  const raw = ctx ?? {};
+  return {
+    safetyGate: snakeToCamelDeep(raw.safety_gate) as Rule4SelectionEvaluationContext['safetyGate'],
+    verifiedAge: snakeToCamelDeep(
+      raw.verified_age,
+    ) as Rule4SelectionEvaluationContext['verifiedAge'],
+    eligibilityResolution: snakeToCamelDeep(
+      raw.eligibility_resolution,
+    ) as Rule4SelectionEvaluationContext['eligibilityResolution'],
+    bindingGateMandatory: (raw.binding_gate_mandatory as boolean | undefined) ?? true,
+  };
 }
 
 export function slotSelectionView(
