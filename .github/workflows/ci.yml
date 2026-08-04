@@ -2,20 +2,61 @@ name: EHAS2 CI
 
 on:
   push:
-    branches: [main, develop, master]
+    branches:
+      - main
+      - develop
+      - master
+      - hardening/full-repo-test-environment-audit
   pull_request:
+  workflow_dispatch:
 
 jobs:
   quality:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: ehas2
+          POSTGRES_PASSWORD: ehas2_isolated_test_only
+          POSTGRES_DB: postgres
+        ports:
+          - 55432:5432
+        options: >-
+          --health-cmd "pg_isready -U ehas2 -d postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+          --label ehas2.role=isolated-test-database
+    env:
+      EHAS2_NODE_ENV: test
+      NODE_ENV: test
+      EHAS2_ALLOW_DESTRUCTIVE_TEST_DB_RESET: 'true'
+      EHAS2_TEST_PG_HOST: 127.0.0.1
+      EHAS2_TEST_PG_PORT: '55432'
+      EHAS2_TEST_PG_USER: ehas2
+      EHAS2_TEST_PG_PASSWORD: ehas2_isolated_test_only
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '20.20.2'
           cache: npm
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+      - name: Create isolated test databases
+        env:
+          PGPASSWORD: ehas2_isolated_test_only
+        run: |
+          set -e
+          for db in ehas2_phase3a_test ehas2_phase3b_test ehas2_phase3c_test ehas2_phase3d_test ehas2_phase4a_preflight; do
+            psql -h 127.0.0.1 -p 55432 -U ehas2 -d postgres -tc "SELECT 1 FROM pg_database WHERE datname = '${db}'" | grep -q 1 \
+              || psql -h 127.0.0.1 -p 55432 -U ehas2 -d postgres -c "CREATE DATABASE ${db} OWNER ehas2;"
+          done
       - name: Install (lockfile)
         run: npm ci
+      - name: Bootstrap clinical extract tools
+        run: npm run bootstrap:clinical-extract
       - name: Boundary verification
         run: npm run verify:boundary
       - name: Format check
@@ -26,6 +67,16 @@ jobs:
         run: npm run typecheck
       - name: Tests
         run: npm run test
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: apps/clinical-engine/requirements.txt
+      - name: Install clinical-engine dependencies
+        run: python -m pip install --disable-pip-version-check -r apps/clinical-engine/requirements.txt
+      - name: Test clinical engine
+        run: npm run test:clinical-engine
       - name: Production build
         run: npm run build
       - name: Dependency audit (fail on high+ in production deps)

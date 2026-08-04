@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import {
   closePool,
   migrateUp,
-  migrateDownLast,
+  migrateDownLastForIsolatedTest,
   resetDatabaseSchema,
   withTenantTransaction,
   withAdminClient,
@@ -216,7 +216,7 @@ describe('Phase 3A PostgreSQL persistence integration', () => {
     expect(second.applied).toEqual([]);
     expect(second.skipped.length).toBe(9);
 
-    const downId = await migrateDownLast(env);
+    const downId = await migrateDownLastForIsolatedTest(env);
     expect(downId).toBe('009_auth_foundation');
     const reup = await migrateUp(env);
     expect(reup.applied).toEqual(['009_auth_foundation']);

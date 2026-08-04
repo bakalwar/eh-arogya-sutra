@@ -2,7 +2,7 @@ import { describe, expect, it, beforeAll, afterAll } from 'vitest';
 import {
   closePool,
   migrateUp,
-  migrateDownLast,
+  migrateDownLastForIsolatedTest,
   resetDatabaseSchema,
   withTenantTransaction,
   withAdminClient,
@@ -172,7 +172,7 @@ describe('Phase 3C doctor and clinic profile persistence', () => {
   it('migration 009 down/up on isolated DB', async () => {
     requireDb();
     expect(getOrderedMigrationIds()).toHaveLength(9);
-    const downId = await migrateDownLast(env);
+    const downId = await migrateDownLastForIsolatedTest(env);
     expect(downId).toBe('009_auth_foundation');
     const reup = await migrateUp(env);
     expect(reup.applied).toEqual(['009_auth_foundation']);

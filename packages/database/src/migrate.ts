@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { assertDestructiveTestDatabaseOperationAllowed } from './destructiveTestDbGuard.js';
 import { withAdminClient } from './pool.js';
 
 const MIGRATION_IDS = [
@@ -161,6 +162,7 @@ export async function migrateDownLast(
 export async function resetDatabaseSchema(
   env: Record<string, string | undefined> = process.env,
 ): Promise<void> {
+  assertDestructiveTestDatabaseOperationAllowed(env);
   await withAdminClient(async (query) => {
     await query(`
       DROP SCHEMA public CASCADE;
@@ -168,6 +170,14 @@ export async function resetDatabaseSchema(
       GRANT ALL ON SCHEMA public TO public;
     `);
   }, env);
+}
+
+/** Test-only: rollback last migration after isolated-test guard (integration suites). */
+export async function migrateDownLastForIsolatedTest(
+  env: Record<string, string | undefined> = process.env,
+): Promise<string | null> {
+  assertDestructiveTestDatabaseOperationAllowed(env);
+  return migrateDownLast(env);
 }
 
 export function getOrderedMigrationIds(): readonly MigrationId[] {

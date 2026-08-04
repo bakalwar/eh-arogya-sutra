@@ -43,11 +43,18 @@ export { getPool, closePool, withTenantTransaction, withAdminClient } from './po
 export {
   migrateUp,
   migrateDownLast,
+  migrateDownLastForIsolatedTest,
   resetDatabaseSchema,
   listMigrationFiles,
   getOrderedMigrationIds,
   checksumFile,
 } from './migrate.js';
+export {
+  assertDestructiveTestDatabaseOperationAllowed,
+  DestructiveTestDatabaseGuardError,
+  ISOLATED_TEST_PG_ALLOWLIST_DATABASES,
+  type DestructiveTestDatabaseGuardReason,
+} from './destructiveTestDbGuard.js';
 export {
   REVIEW_STATES,
   assertValidReviewTransition,
