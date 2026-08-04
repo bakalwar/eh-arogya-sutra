@@ -142,6 +142,7 @@ def evaluate_rule4_shadow_bundle(input_contract: dict) -> dict:
     eligibility_resolution = None
     selection_resolution = None
     pediatric_overlay_resolution = None
+    doctor_review_resolution = None
     if input_contract.get("engine_mode") == "shadow":
         if input_contract.get("evidence_adapter"):
             from .evidence.evaluate_evidence_adapter import evaluate_evidence_adapter
@@ -226,6 +227,13 @@ def evaluate_rule4_shadow_bundle(input_contract: dict) -> dict:
                     "upstream_eligibility_fingerprint": upstream_fp,
                 },
             )
+        if input_contract.get("doctor_review_adapter"):
+            from .doctor_review.evaluate_doctor_review_adapter import evaluate_doctor_review_adapter
+
+            doctor_review_resolution = evaluate_doctor_review_adapter(
+                input_contract["doctor_review_adapter"],
+                input_contract.get("doctor_review_context") or {},
+            )
     return {
         "result": result,
         "evidence_adapter": evidence,
@@ -235,6 +243,7 @@ def evaluate_rule4_shadow_bundle(input_contract: dict) -> dict:
         "eligibility_resolution": eligibility_resolution,
         "selection_resolution": selection_resolution,
         "pediatric_overlay_resolution": pediatric_overlay_resolution,
+        "doctor_review_resolution": doctor_review_resolution,
     }
 
 

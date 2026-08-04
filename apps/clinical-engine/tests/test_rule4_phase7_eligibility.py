@@ -146,11 +146,11 @@ class Rule4Phase7EligibilityTests(unittest.TestCase):
         )
         self.assertIn("PRODUCTION_ELIGIBILITY_STRUCTURED_INPUT_REQUIRED", out["reason_codes"])
 
-    def test_merged_registry_head_is_phase9(self) -> None:
+    def test_merged_registry_head_is_phase10(self) -> None:
         reg = load_reason_code_registry()
-        self.assertEqual(reg["scope"], "PHASE9_PEDIATRIC_OVERLAY_SUBSET")
+        self.assertEqual(reg["scope"], "PHASE10_DOCTOR_REVIEW_ISSUANCE_SUBSET")
         codes = {e["code"] for e in reg["reasonCodes"]}
-        self.assertIn("ELIGIBILITY_ALONE_NOT_A_POTENCY_SELECTOR", codes)
+        self.assertIn("ISSUANCE_GATE_MANDATORY_FAIL", codes)
 
 
 if __name__ == "__main__":

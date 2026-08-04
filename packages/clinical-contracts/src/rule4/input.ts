@@ -100,6 +100,10 @@ export type Rule4InputContract = {
   selectionAdapter?: import('./selection/types.js').Rule4SelectionAdapterInput;
   /** Phase 9 — shadow-only pediatric overlay envelope (in-memory). */
   pediatricOverlayAdapter?: import('./pediatricOverlay/types.js').Rule4PediatricOverlayAdapterInput;
+  /** Phase 10 — shadow-only doctor review / Q18 issuance gate envelope (in-memory). */
+  doctorReviewAdapter?: import('./doctorReview/types.js').Rule4DoctorReviewAdapterInput;
+  /** Phase 10 — shadow doctor review evaluation context (in-memory). */
+  doctorReviewContext?: import('./doctorReview/types.js').Rule4DoctorReviewEvaluationContext;
 };
 
 export type Rule4InputContractPhase2 = Rule4InputContract & {

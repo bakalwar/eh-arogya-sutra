@@ -166,6 +166,14 @@ class Rule4Phase1Tests(unittest.TestCase):
                 / "reason-code-registry.phase9-pediatric-overlay-subset.v1.json"
             ).read_text(encoding="utf-8")
         )
+        phase10 = json.loads(
+            (
+                REPO_ROOT
+                / "fixtures"
+                / "rule4"
+                / "reason-code-registry.phase10-doctor-review-issuance-subset.v1.json"
+            ).read_text(encoding="utf-8")
+        )
         reason_codes = sorted(
             r["code"]
             for r in phase1["reasonCodes"]
@@ -177,6 +185,7 @@ class Rule4Phase1Tests(unittest.TestCase):
             + phase7["reasonCodes"]
             + phase8["reasonCodes"]
             + phase9["reasonCodes"]
+            + phase10["reasonCodes"]
         )
         limitation_codes = sorted(
             r["code"]
@@ -189,6 +198,7 @@ class Rule4Phase1Tests(unittest.TestCase):
             + phase7["limitationCodes"]
             + phase8["limitationCodes"]
             + phase9["limitationCodes"]
+            + phase10["limitationCodes"]
         )
         from ehas2_clinical_engine.rule4.evaluator import load_reason_code_registry
 

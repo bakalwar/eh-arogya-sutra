@@ -24,6 +24,8 @@ import { evaluateSelectionAdapter } from './selection/evaluateSelectionAdapter.j
 import type { Rule4SelectionAdapterOutput } from './selection/types.js';
 import { evaluatePediatricOverlayAdapter } from './pediatricOverlay/evaluatePediatricOverlayAdapter.js';
 import type { Rule4PediatricOverlayAdapterOutput } from './pediatricOverlay/types.js';
+import { evaluateDoctorReviewAdapter } from './doctorReview/evaluateDoctorReviewAdapter.js';
+import type { Rule4DoctorReviewAdapterOutput } from './doctorReview/types.js';
 import {
   RULE4_CONTRACT_VERSION,
   RULE4_CONTRACT_VERSION_PHASE2,
@@ -255,6 +257,7 @@ export type Rule4ShadowEvaluationBundle = {
   eligibilityResolution: Rule4EligibilityAdapterOutput | null;
   selectionResolution: Rule4SelectionAdapterOutput | null;
   pediatricOverlayResolution: Rule4PediatricOverlayAdapterOutput | null;
+  doctorReviewResolution: Rule4DoctorReviewAdapterOutput | null;
 };
 
 /**
@@ -269,6 +272,7 @@ export function evaluateRule4ShadowBundle(input: Rule4InputContract): Rule4Shado
   let eligibilityResolution: Rule4EligibilityAdapterOutput | null = null;
   let selectionResolution: Rule4SelectionAdapterOutput | null = null;
   let pediatricOverlayResolution: Rule4PediatricOverlayAdapterOutput | null = null;
+  let doctorReviewResolution: Rule4DoctorReviewAdapterOutput | null = null;
 
   if (input.engineMode === 'shadow') {
     if (input.evidenceAdapter) {
@@ -327,6 +331,12 @@ export function evaluateRule4ShadowBundle(input: Rule4InputContract): Rule4Shado
           eligibilityResolution?.deterministicCandidateEligibilityFingerprint ?? null,
       });
     }
+    if (input.doctorReviewAdapter) {
+      doctorReviewResolution = evaluateDoctorReviewAdapter(
+        input.doctorReviewAdapter,
+        input.doctorReviewContext ?? {},
+      );
+    }
   }
 
   return {
@@ -338,5 +348,6 @@ export function evaluateRule4ShadowBundle(input: Rule4InputContract): Rule4Shado
     eligibilityResolution,
     selectionResolution,
     pediatricOverlayResolution,
+    doctorReviewResolution,
   };
 }

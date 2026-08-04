@@ -1,0 +1,109 @@
+import type { Rule4LimitationCodeEntry, Rule4ReasonCodeEntry } from './reasonCodes.js';
+
+export const RULE4_PHASE10_REASON_CODE_REGISTRY: readonly Rule4ReasonCodeEntry[] = [
+  { code: 'DOCTOR_REVIEW_SHADOW_DRAFT_ONLY', namespace: 'reason', source: 'Phase 10 boundary' },
+  {
+    code: 'DOCTOR_REVIEW_NOT_PRESCRIPTION_ISSUANCE',
+    namespace: 'reason',
+    source: 'Phase 10 boundary',
+  },
+  {
+    code: 'PRODUCTION_DOCTOR_REVIEW_NOT_EVALUATED',
+    namespace: 'reason',
+    source: 'Phase 10 production boundary',
+  },
+  {
+    code: 'PRODUCTION_ISSUANCE_NOT_CONNECTED',
+    namespace: 'reason',
+    source: 'Phase 10 production boundary',
+  },
+  {
+    code: 'PROFESSIONAL_REGISTRATION_VERIFICATION_NOT_CONNECTED',
+    namespace: 'reason',
+    source: 'Q18 production blocker',
+  },
+  {
+    code: 'CLINIC_ADMIN_CLINICAL_APPROVAL_FORBIDDEN',
+    namespace: 'reason',
+    source: 'Owner decision 1',
+  },
+  { code: 'REVIEWER_AUTHORITY_INVALID', namespace: 'reason', source: 'Phase 10 authority' },
+  { code: 'CONSULTATION_BINDING_MISMATCH', namespace: 'reason', source: 'Phase 10 authority' },
+  { code: 'TENANT_BINDING_MISMATCH', namespace: 'reason', source: 'Phase 10 authority' },
+  { code: 'DRAFT_AUTHENTICITY_MISMATCH', namespace: 'reason', source: 'Phase 10 authenticity' },
+  {
+    code: 'EXPECTED_DRAFT_AUTHENTICITY_MISSING',
+    namespace: 'reason',
+    source: 'Phase 10 authenticity authority',
+  },
+  {
+    code: 'EXPECTED_AUTHENTICITY_FIELD_MISSING',
+    namespace: 'reason',
+    source: 'Phase 10 authenticity authority',
+  },
+  {
+    code: 'EXPECTED_REVIEWER_BINDING_MISSING',
+    namespace: 'reason',
+    source: 'Phase 10 authenticity authority',
+  },
+  { code: 'STALE_EVIDENCE_FINGERPRINT', namespace: 'reason', source: 'Phase 10 authenticity' },
+  { code: 'STALE_SUMMARY_FINGERPRINT', namespace: 'reason', source: 'Phase 10 authenticity' },
+  {
+    code: 'STALE_PHASE8_SELECTION_FINGERPRINT',
+    namespace: 'reason',
+    source: 'Phase 10 authenticity',
+  },
+  {
+    code: 'STALE_PHASE9_PEDIATRIC_FINGERPRINT',
+    namespace: 'reason',
+    source: 'Phase 10 authenticity',
+  },
+  { code: 'STALE_DRAFT_VERSION', namespace: 'reason', source: 'Phase 10 concurrency' },
+  { code: 'REVIEW_VERSION_CONFLICT', namespace: 'reason', source: 'Phase 10 concurrency' },
+  { code: 'IDEMPOTENCY_PAYLOAD_MISMATCH', namespace: 'reason', source: 'Phase 10 concurrency' },
+  { code: 'IDEMPOTENCY_REPLAY', namespace: 'reason', source: 'Phase 10 concurrency' },
+  { code: 'APPROVAL_SUPERSEDED', namespace: 'reason', source: 'Phase 10 concurrency' },
+  { code: 'MISSING_DOCTOR_APPROVAL', namespace: 'reason', source: 'Phase 10 Q18' },
+  {
+    code: 'UNRESOLVED_MEDICATED_SLOT_BLOCKS_ISSUANCE',
+    namespace: 'reason',
+    source: 'Q18-F partial slot',
+  },
+  {
+    code: 'EXCLUDE_SLOT_REVALIDATION_REQUIRED',
+    namespace: 'reason',
+    source: 'Q18-F partial slot',
+  },
+  { code: 'MODIFY_REVALIDATION_REQUIRED', namespace: 'reason', source: 'Q18-D modify' },
+  {
+    code: 'PEDIATRIC_PROHIBIT_BLOCKS_ISSUANCE',
+    namespace: 'reason',
+    source: 'Phase 9 non-overridable',
+  },
+  { code: 'PHASE8_PHASE9_AUTH_FAILURE', namespace: 'reason', source: 'Phase 8/9 auth' },
+  { code: 'LEGACY_AUTHORITY_QUARANTINE', namespace: 'reason', source: 'Phase 10 quarantine' },
+  { code: 'RULESET_REGISTRY_MISMATCH', namespace: 'reason', source: 'Phase 10 registry' },
+  { code: 'FORMULA_ISOLATION_FAILURE', namespace: 'reason', source: 'Q15 isolation' },
+  { code: 'NON_OVERRIDABLE_SAFETY_BLOCK', namespace: 'reason', source: 'Q18-E' },
+  {
+    code: 'MODIFICATION_ENVELOPE_INVALID',
+    namespace: 'reason',
+    source: 'Phase 10 modification',
+  },
+  {
+    code: 'MODIFICATION_JUSTIFICATION_REQUIRED',
+    namespace: 'reason',
+    source: 'Phase 10 modification',
+  },
+  { code: 'ENGINE_REVALIDATION_FAILED', namespace: 'reason', source: 'Phase 10 revalidation' },
+  { code: 'ENGINE_REVALIDATION_PENDING', namespace: 'reason', source: 'Phase 10 revalidation' },
+  { code: 'ISSUANCE_GATE_MANDATORY_FAIL', namespace: 'reason', source: 'Q18 gate ledger' },
+];
+
+export const RULE4_PHASE10_LIMITATION_CODE_REGISTRY: readonly Rule4LimitationCodeEntry[] = [
+  {
+    code: 'SHADOW_DOCTOR_REVIEW_DRAFT_ONLY',
+    namespace: 'limitation',
+    source: 'Phase 10 boundary',
+  },
+];

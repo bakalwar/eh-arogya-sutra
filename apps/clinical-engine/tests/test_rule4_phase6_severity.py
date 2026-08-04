@@ -116,13 +116,13 @@ class Rule4Phase6FixtureShaTests(unittest.TestCase):
 
 
 class Rule4Phase6RegistryTests(unittest.TestCase):
-    def test_merged_registry_head_is_phase9(self) -> None:
+    def test_merged_registry_head_is_phase10(self) -> None:
         from ehas2_clinical_engine.rule4.registry_loader import load_reason_code_registry
 
         reg = load_reason_code_registry()
-        self.assertEqual(reg["scope"], "PHASE9_PEDIATRIC_OVERLAY_SUBSET")
+        self.assertEqual(reg["scope"], "PHASE10_DOCTOR_REVIEW_ISSUANCE_SUBSET")
         codes = {e["code"] for e in reg["reasonCodes"]}
-        self.assertIn("PEDIATRIC_OVERLAY_ALLOW", codes)
+        self.assertIn("DOCTOR_REVIEW_SHADOW_DRAFT_ONLY", codes)
 
 
 if __name__ == "__main__":
