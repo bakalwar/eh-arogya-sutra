@@ -136,6 +136,18 @@ Oral formulas:
 - formula-specific electricity
 - **no default WE**
 
+#### OD-013 — Oral mixture count clarification
+
+**Status:** OWNER-APPROVED clarification · recorded 2026-08-05 · documentation only.
+
+- EHAS2 uses one total oral-mixture count per complexity tier: Simple → exactly **3**, Moderate → exactly **4**, Complex/multi-system → exactly **5**.
+- “3+1”, “4+1”, and “5+1” are not authorized EHAS2 oral-mixture-count variants, composition rules, or presentation labels.
+- Tablet A, Tablet B, and external treatment are separate prescription sections; none is the “+1” in an oral-mixture count.
+- `SUPPORT_ONLY` / `RESOLVED_SUPPORT_ROLE` is a Rule 2 polarity classification and must not add an oral mixture or change the settled count.
+- Formula 1 / Formula 2 / Formula 3 temperament-evidence roles do not define oral-mixture composition.
+- Implementers must not generate an extra oral mixture from undefined “+1” shorthand, change the settled 3/4/5 totals, add filler or unsupported medicines, or count tablet/external sections as oral mixtures.
+- The separate fail-closed / insufficient-evidence policy remains subject to its own documented Phase 5D sign-off; this clarification does not approve or alter that policy.
+
 Tablet A/B:
 
 - independent selection from verified full **39**-medicine pool
