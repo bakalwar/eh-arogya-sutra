@@ -35,6 +35,21 @@ When evidence cannot support the required 3/4/5 mixtures without fillers:
 
 Legacy `decide_mixture_count` may return **0** when untreatable — align EHAS2 with that fail-closed posture rather than fabricating mixtures.
 
+## Owner clarification (OD-013)
+
+The owner approved this documentation clarification on 2026-08-05:
+
+- Simple, Moderate, and Complex/multi-system cases use exactly **3**, **4**, and **5** total oral mixtures respectively.
+- “3+1”, “4+1”, and “5+1” are not authorized oral-mixture-count rules.
+- Tablet A/B, external treatment, Rule 2 support polarity, and Rule 1 Formula 1/2/3 evidence roles do not add a “+1” oral mixture.
+- No filler or unsupported medicine may be added, and no settled tier total may be increased or reduced through undefined shorthand.
+
+This records and disambiguates the existing 3/4/5 rule only. It does not approve the separate fail-closed behavior below, start Phase 5D, freeze the nine-rule specification, authorize deployment, or change the legacy engine.
+
+Primary normative record: [Clinical Product Constitution §F](./CLINICAL_PRODUCT_CONSTITUTION.md#f-dynamic-prescription).
+
 ## Status
 
-Documented as **OWNER_DECISION_REQUIRED** until owner explicitly confirms this fail-closed clarification for Phase 5D.
+The OD-013 oral-mixture-count clarification is **OWNER_APPROVED** and recorded.
+
+The separate fail-closed clarification remains **OWNER_DECISION_REQUIRED** until the owner explicitly confirms it for Phase 5D.
