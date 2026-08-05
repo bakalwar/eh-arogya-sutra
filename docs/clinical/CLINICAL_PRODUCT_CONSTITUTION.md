@@ -148,6 +148,22 @@ Oral formulas:
 - Implementers must not generate an extra oral mixture from undefined “+1” shorthand, change the settled 3/4/5 totals, add filler or unsupported medicines, or count tablet/external sections as oral mixtures.
 - The separate fail-closed / insufficient-evidence policy remains subject to its own documented Phase 5D sign-off; this clarification does not approve or alter that policy.
 
+#### OD-014 — Insufficient-evidence fail-closed policy
+
+**Status:** OWNER-APPROVED safety policy · recorded 2026-08-05 · documentation only.
+
+When the available clinical evidence cannot justify the required 3/4/5 oral mixtures without filler or unsupported medicines:
+
+- EHAS2 must not issue a prescription or represent generation as successful.
+- EHAS2 must not add filler, fixed, weakly supported, or fabricated medicines merely to satisfy the required count.
+- The result must return the typed state `INSUFFICIENT_CLINICAL_EVIDENCE`.
+- The result must set `DOCTOR_REVIEW_REQUIRED` and identify the additional information/evidence required.
+- The result must emit zero fake or partial oral formulas; an empty formula set must not be presented as successful generation.
+- After additional evidence is supplied, the complete clinical assessment and prescription evaluation must run again under the applicable versioned rules.
+- This policy resolves the safety conflict between mandatory 3/4/5 totals and the prohibition on unsupported fillers by failing closed rather than fabricating treatment.
+
+This approval closes the policy decision only. It does not formally freeze the nine-rule bundle, start Phase 5D implementation, connect the production clinical engine, authorize prescription issuance, deploy the system, or modify the legacy engine.
+
 Tablet A/B:
 
 - independent selection from verified full **39**-medicine pool
