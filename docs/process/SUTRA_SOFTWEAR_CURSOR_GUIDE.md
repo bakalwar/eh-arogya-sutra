@@ -20,7 +20,7 @@ Do not start any of the following unless the owner gives a new, exact approval:
 - deployment or production infrastructure mutation;
 - real OTP/passkey/provider activation;
 - legacy engine changes;
-- production data migration or real-patient processing.
+- production data migration or processing of identifiable clinical data.
 
 ### Mandatory start protocol for every task
 
@@ -43,7 +43,7 @@ Do not start any of the following unless the owner gives a new, exact approval:
 - Do not add a dependency when the platform or an existing package already safely provides the capability.
 - Preserve tenant isolation, authorization, immutable clinical history and auditability.
 - Original report/image bytes must follow approved temporary-processing and deletion rules.
-- Synthetic fixtures must be clearly labelled; never use real patient records.
+- Synthetic fixtures must be clearly labelled; never use identifiable clinical records.
 
 ### Clinical safety rules
 
