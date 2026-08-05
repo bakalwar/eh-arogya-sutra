@@ -21,7 +21,7 @@ describe('Phase 5C nine-rule orchestration contracts', () => {
       'Polarity',
       'Organ / System Affinity',
       'Potency',
-      'Dosage',
+      'Monitoring, Follow-up & Post-Release Safety Surveillance',
       'Multi-Disease / Organ-System Triad',
       'External Use Routes',
       'Disease-level Prakruti Inference',

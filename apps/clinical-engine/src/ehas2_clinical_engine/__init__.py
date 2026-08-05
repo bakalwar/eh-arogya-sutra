@@ -9,4 +9,4 @@ from __future__ import annotations
 
 __version__ = "0.2.0-phase5c"
 ENGINE_VERSION = "ehas2-clinical-engine-v1-phase5c"
-RULE_SET_VERSION = "ehas2-nine-rule-interfaces-v1"
+RULE_SET_VERSION = "ehas2-nine-rule-interfaces-v2-rule5-monitoring"
