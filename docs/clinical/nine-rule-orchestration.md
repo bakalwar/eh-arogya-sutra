@@ -2,17 +2,33 @@
 
 Isolated, deterministic nine-rule clinical orchestration for **synthetic validation only**.
 
+> **R5-M1a:** Documentation alignment only. Current v1 contract, synthetic orchestration, dashboard, and test surfaces retain pre-migration Rule 5 metadata until separately authorized **R5-M1b**. No runtime or clinical behavior changes in R5-M1a.
+
 ## Canonical names (EH_9 — do not invent)
 
 1. Temperament (Prakriti)  
 2. Polarity  
 3. Organ / System Affinity  
 4. Potency  
-5. Dosage  
+5. Monitoring, Follow-up & Post-Release Safety Surveillance
 6. Multi-Disease / Organ-System Triad  
 7. External Use Routes  
 8. Disease-level Prakruti Inference  
 9. Master Pipeline  
+
+## Rule 5 — documentation identity (R5-M0)
+
+| Field | Value |
+|-------|--------|
+| **Canonical name** | Monitoring, Follow-up & Post-Release Safety Surveillance |
+| **Responsibility** | Post-release monitoring, follow-up, adverse-event processing, treatment-state tracking, and safety surveillance (governance — not selection or issuance) |
+| **EHAS2 implementation** | **NOT_IMPLEMENTED** |
+| **Production / orchestration** | **NOT_CONNECTED** (validation orchestrator only; no Rule 5 clinical evaluator) |
+| **Clinical selection** | Rule 5 must **not** perform dosage, potency, medicine, or mixture selection or change them |
+| **Dosage engine** | Separate **`DOSAGE_ENGINE_AUDIT_PENDING`** (unnumbered, non-authoritative pending its own audit) |
+| **Authority** | [rules/rule-05-owner-decisions-R5-M0.md](./rules/rule-05-owner-decisions-R5-M0.md) |
+
+**Implementation metadata (unchanged in R5-M1a):** v1 contracts and the Phase 5C synthetic orchestrator still expose pre–R5-M1b **Dosage** labels and prescription-boundary stubs for rule number 5. Correcting those surfaces requires separately authorized **R5-M1b** (not started in R5-M1a).
 
 ## Display vs live execution order
 
