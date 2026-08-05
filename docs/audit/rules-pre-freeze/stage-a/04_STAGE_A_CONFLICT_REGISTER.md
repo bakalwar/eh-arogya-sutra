@@ -1,6 +1,6 @@
-# Stage A — Conflict register (correction pass)
+# Stage A — Conflict register (micro-correction pass)
 
-**Baseline:** `658f3fd` · **Conflicts:** **6** · **Stage B blockers:** **2** (SAC-001, SAC-003)
+**Baseline:** `658f3fd` · **Total conflicts:** **7** · **Stage B blockers:** **2** (SAC-001, SAC-003) · **Owner decisions required:** **2**
 
 ## SAC-001 — Rule 5 identity
 
@@ -12,7 +12,9 @@ Unchanged.
 
 ## SAC-003 — Rule 4 freeze status
 
-Stage A labels: **FREEZE_STATUS_CONFLICT** · **NORMATIVE_CANDIDATE** · **not** formally frozen. Historical “DOCUMENTATION FROZEN” = **CONFLICTING_HISTORICAL_STATUS_CLAIM**.
+Stage A labels: **FREEZE_STATUS_CONFLICT** · **NORMATIVE_CANDIDATE** · **not** formally frozen in Stage A conclusions. Historical “DOCUMENTATION FROZEN” = **CONFLICTING_HISTORICAL_STATUS_CLAIM**.
+
+**EOF evidence:** `rule-04-owner-decisions-DRAFT.md` read complete (5707 lines) — see `01_AUTHORITY_AND_SOURCE_INVENTORY.md` § Rule 4 owner decisions.
 
 ## SAC-004 — Matrix legacy column
 
@@ -26,7 +28,7 @@ Clarified: OD-014 is current fail-closed authority; OD-013 tail is stale orderin
 
 Unchanged; Rule 8 identity **IDENTITY_CANDIDATE_ONLY** in matrix.
 
-## SAC-007 — Dependency risk register vs local npm audit (correction)
+## SAC-007 — Dependency risk register vs local npm audit
 
 | Field | Value |
 |-------|--------|
@@ -35,6 +37,6 @@ Unchanged; Rule 8 identity **IDENTITY_CANDIDATE_ONLY** in matrix.
 | Source B | Local `npm audit` on Node **24** — **5 high** (brace-expansion/eslint chain) |
 | Classification | **DEPENDENCY_RISK_REGISTER_GAP** for Node 24 local tree **or** environment mismatch — register not updated in this PR (outside six-file scope) |
 | PR #5 introduced? | **No** — docs only |
-| CI on `136ca9e` | Audit step **success** (Node 20 in CI) |
+| CI on correction-pass reviewed head `d44375e` | Run **16** audit step **success** (Node 20 in CI) |
 
 **Stage B impact:** Non-blocking for Stage A doc merge; follow-up register update on Node 20 separately.

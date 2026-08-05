@@ -1,6 +1,8 @@
-# Stage A — Runtime and data connectivity
+# Stage A — Runtime and data connectivity (micro-correction pass)
 
-**Baseline SHA:** `658f3fd97e1e00fcafef74ddd3788d2cfa3bf1d7`
+**Stage A base main:** `658f3fd97e1e00fcafef74ddd3788d2cfa3bf1d7`  
+**Correction-pass reviewed head:** `d44375ea0234f73a0bc6172d24ca2685bd3e408a`  
+**Total conflicts:** **7** · **Stage B blockers:** SAC-001, SAC-003
 
 Unchanged runtime verdict from initial Stage A: production API **NOT_CONNECTED**; synthetic 5C only; Rule 4 **SHADOW_ONLY** default off.
 

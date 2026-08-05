@@ -1,6 +1,8 @@
-# Stage A — Rule number identity matrix (correction pass)
+# Stage A — Rule number identity matrix (micro-correction pass)
 
-**Baseline:** `658f3fd97e1e00fcafef74ddd3788d2cfa3bf1d7`
+**Stage A base main:** `658f3fd97e1e00fcafef74ddd3788d2cfa3bf1d7`  
+**Correction-pass reviewed head:** `d44375ea0234f73a0bc6172d24ca2685bd3e408a`  
+**Total conflicts:** **7** · **Stage B blockers:** SAC-001, SAC-003
 
 ## Rule 4 — unified Stage A classification (SAC-003)
 
@@ -13,6 +15,8 @@
 | Runtime | **SHADOW_ONLY** / **PRODUCTION_NOT_CONNECTED** |
 
 Do **not** call Rule 4 formally frozen in Stage A conclusions. Status table “DOCUMENTATION FROZEN” = **CONFLICTING_HISTORICAL_STATUS_CLAIM**.
+
+**Authority EOF read:** `docs/clinical/rules/rule-04-owner-decisions-DRAFT.md` — **complete** (5707 lines); internal **NOT_FROZEN** vs **FROZEN** markers documented in `01_…` (SAC-003).
 
 ## Rule 5 — main vs unmerged candidate (SAC-001)
 
