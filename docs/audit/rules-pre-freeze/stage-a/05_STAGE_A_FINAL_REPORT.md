@@ -1,113 +1,91 @@
-# Stage A — Final report
+# Stage A — Final report (correction pass)
 
-**Audit:** EHAS2 Rules 1–9 pre-freeze — Stage A (baseline + inventory)  
-**Date:** 2026-08-06  
-**Owner:** Dr. Ghanshyam Bakalwar  
-**Baseline:** `658f3fd97e1e00fcafef74ddd3788d2cfa3bf1d7` (`origin/main` after PR #4 merge)
+**Baseline:** `658f3fd97e1e00fcafef74ddd3788d2cfa3bf1d7`  
+**Prior head:** `136ca9e78c4d6ec738df4097f95ff875c7ca5aa6`  
+**Date:** 2026-08-06
 
-## Executive summary (सरल हिंदी)
+## Executive summary (Hindi)
 
-E.H. AROGYA SUTRA 2 का **GitHub `main`** अब **`658f3fd`** पर है — Phase 5D **fail-closed** policy (OD-014) documentation merge के बाद। Stage A ने साबित किया: **production clinical engine और prescription अभी जुड़े नहीं** हैं; Rules 1–3 के **owner-approved** specs मौजूद हैं पर **implement नहीं**; Rule 4 के **104** contract files और tests **`main`** पर हैं पर evaluator **production में active नहीं**; Rule 5 पर **`main`** पर अभी भी **Dosage** identity है — **Monitoring** spec इस baseline में **नहीं** मिला; Phase 5C **synthetic** validation अलग है production से। **Formal freeze नहीं** किया गया। Stage B तभी सुरक्षित शुरू हो सकता है जब owner **Rule 5 identity** और **Rule 4 freeze status** स्पष्ट करें।
+Stage A की report में अब **326** tracked sources की **पूरी row-level inventory** है। Rule 4 को हर जगह **FREEZE_STATUS_CONFLICT** / **NORMATIVE_CANDIDATE** लिखा गया — formally frozen **नहीं**। Rule 5 पर `main` **Dosage** है; Monitoring spec **`b1ccfb5` branch** पर **UNMERGED_CANDIDATE_EVIDENCE** है — owner decision अभी बाकी। Rule 8 नाम constitution में नहीं; **IDENTITY_CANDIDATE_ONLY**। Local validation **Node 24** पर incomplete; **GitHub CI run 14** on `136ca9e` **success** (PostgreSQL + clinical-engine + tests)।
 
-## Exact baseline
+## Inventory correction
+
+| Metric | Value |
+|--------|------:|
+| Exact relevant-source count | **326** |
+| Row-level complete | **Yes** (`01_…` manifest) |
+| Bundled manifests | rule4 **104** paths listed in manifest rows |
+
+## Validation environment
 
 | Item | Value |
 |------|--------|
-| Repository | `bakalwar/EH_AROGYA_SUTRA_2` |
-| Branch | `audit/rules-1-9-stage-a-inventory` from `origin/main` |
-| SHA | `658f3fd97e1e00fcafef74ddd3788d2cfa3bf1d7` |
+| Node | **v24.16.0** — **NODE20_ENVIRONMENT_NOT_AVAILABLE** |
+| npm | 11.17.0 |
+| Complete local validation on Node 20 | **Not claimed** |
 
-## Files created (Stage A)
+## Local validation (Node 24, post–`npm ci`)
 
-```text
-docs/audit/rules-pre-freeze/stage-a/00_REPOSITORY_BASELINE.md
-docs/audit/rules-pre-freeze/stage-a/01_AUTHORITY_AND_SOURCE_INVENTORY.md
-docs/audit/rules-pre-freeze/stage-a/02_RULE_NUMBER_IDENTITY_MATRIX.md
-docs/audit/rules-pre-freeze/stage-a/03_RUNTIME_AND_DATA_CONNECTIVITY.md
-docs/audit/rules-pre-freeze/stage-a/04_STAGE_A_CONFLICT_REGISTER.md
-docs/audit/rules-pre-freeze/stage-a/05_STAGE_A_FINAL_REPORT.md
-```
+| Command | Exit | Classification |
+|---------|-----:|----------------|
+| `npm ci` | 0 | PASS (EBADENGINE warn) |
+| `verify:boundary` | 0 | PASS |
+| `format:check` | 0 | PASS (after doc edits) |
+| `lint` | 0 | PASS |
+| `typecheck` | 0 | PASS |
+| `test` | 1 | **1000 pass / 32 fail** — see below |
+| `build` | 0 | PASS |
+| `npm audit` | 1 | 5 high — see SAC-007 |
 
-## Rules 1–9 identity summary
+### Test failure breakdown (32)
 
-| Rule | Stage A identity status |
-|------|-------------------------|
-| 1 | IDENTITY_OWNER_APPROVED |
-| 2 | IDENTITY_OWNER_APPROVED |
-| 3 | IDENTITY_OWNER_APPROVED |
-| 4 | IDENTITY_CANDIDATE_ONLY |
-| 5 | **IDENTITY_CONFLICT** |
-| 6 | IDENTITY_CANDIDATE_ONLY |
-| 7 | IDENTITY_CANDIDATE_ONLY |
-| 8 | IDENTITY_OWNER_APPROVED (name); NOT_IMPLEMENTED |
-| 9 | IDENTITY_CANDIDATE_ONLY |
+| Class | Count | Detail |
+|-------|------:|--------|
+| PostgreSQL-related integration | **30** | phase3a/b/c, phase3d (partial), phase4a — `ENVIRONMENT_PREREQUISITE_MISSING` locally |
+| better-sqlite3 extract | **2** | phase5b clinical-packages — missing native module locally |
+| Other | **0** | |
 
-## Runtime connectivity (verdict)
+**GitHub CI run 14** on `136ca9e`: **success** — includes PostgreSQL service, extract bootstrap, full test + clinical-engine steps → **LOCAL_ENVIRONMENT_FAILURE** · **CI_PASS_ON_PR_HEAD** (pre-correction).
 
-**Production API:** NOT_CONNECTED for clinical rules.  
-**Synthetic orchestrator:** Phase 5C only.  
-**Prescription engine:** NOT_CONNECTED.  
-**Rule 4 shadow:** Available in contracts; default off.
+### Clinical-engine tests
 
-## Data connectivity (verdict)
+| Item | Value |
+|------|--------|
+| Script | `npm run test:clinical-engine` |
+| Local | **CLINICAL_ENGINE_TESTS_NOT_PROVEN** on Node 24 host (venv path) |
+| CI | **Pass** on run 14 step “Test clinical engine” |
 
-116k disease package: **NOT_INSTALLED** live (tooling/contracts).  
-39-medicine registry: **present, not prescription-connected**.
+## Dependency advisories (local Node 24)
 
-## Conflicts
+| Item | Value |
+|------|--------|
+| High count | **5** (brace-expansion / eslint / minimatch chain) |
+| Risk-register matched | Partial — register documents override at Node **20.20.2** with **0** |
+| Gap | **DEPENDENCY_RISK_REGISTER_GAP** for local Node 24 audit snapshot |
+| Introduced by PR #5 | **No** |
 
-**Total:** 6 (SAC-001 … SAC-006) — see `04_STAGE_A_CONFLICT_REGISTER.md`.  
-**Blocking Stage B:** SAC-001 (Rule 5), SAC-003 (Rule 4 freeze labeling).
+## GitHub CI
 
-## Owner decisions required
+| Field | Pre-correction (`136ca9e`) |
+|-------|---------------------------|
+| Run | **14** / **31037043082** |
+| Conclusion | **success** |
+| Post-correction head | **Pending new run** after correction push |
 
-1. Canonical **Rule 5** identity on `main` (Dosage vs Monitoring track).  
-2. Whether Rule 4 potency spec is **FORMALLY_FROZEN** despite DRAFT paths.
+## Conflicts / owner decisions
 
-## Stage A limitations
+**Total:** 6 · **Stage B blockers:** SAC-001, SAC-003 · **Owner decisions:** 2 (unchanged)
 
-- Single baseline checkout; unmerged branches not merged or checked out.  
-- No live test re-run recorded in this file until Step 15 validation completes (see commit/PR).  
-- No patient data or secrets collected.
+## Stage B
 
-## Can Stage B start safely?
+**Not authorized** until SAC-001 and SAC-003 resolved.
 
-**Not yet** — resolve **SAC-001** and **SAC-003** with owner decisions before formal freeze work.
+## Recommended next action
 
-## Recommended next action (exactly one)
+Owner reviews **corrected draft PR #5**; then explicit decisions on Rule 5 `main` identity and Rule 4 freeze status before Stage B.
 
-**Owner review of this Stage A draft PR**, then explicit decision on **Rule 5 canonical identity on `main`** and **Rule 4 formal freeze status** before authorizing **Stage B**.
+## Final verdict (Stage A correction)
 
-## Explicit non-claims
+**EHAS2_STAGE_A_CORRECTED_READY_FOR_OWNER_REVIEW**
 
-- No Rule was formally frozen.  
-- No clinical implementation occurred in Stage A.  
-- Phase 5D implementation **NOT_STARTED** (OD-014 is policy documentation only).  
-- Production clinical engine remains **disconnected**.  
-- No prescription generated or issued.  
-- No deployment.  
-- Legacy engine **not modified**.  
-- Stage B **not started**.
-
-## Validation results (isolated worktree, 2026-08-06)
-
-| Command | Exit | Result | Notes |
-|---------|-----:|--------|--------|
-| `npm ci` | 0 | PASS | Node **v24.16.0** (project requests **20.x**) — **EBADENGINE** warning |
-| `npm run verify:boundary` | 0 | PASS | Folder name TEMP warning only |
-| `npm run format:check` | 0 | PASS | Includes new audit docs |
-| `npm run lint` | 0 | PASS | |
-| `npm run typecheck` | 0 | PASS | |
-| `npm run test` | 1 | **FAIL (environment)** | **32 failed** — PostgreSQL integration (Phase 3A–4A) + **better-sqlite3** missing for Phase 5B extract (2 tests); **1000 passed** |
-| `npm run build` | 0 | PASS | |
-| `npm audit` | 1 | Advisory | 5 high (brace-expansion chain); **no `npm audit fix` run** |
-| `git diff --check` | 0 | PASS | Docs only |
-| `npm run test:clinical-engine` | — | **NOT_RUN** | Windows venv path not verified in this session |
-
-**CI note:** Stage A documentation expects **GitHub EHAS2 CI** on push (same gate suite as `main`).
-
-## Final verdict
-
-**EHAS2_STAGE_A_COMPLETE_NOT_READY_FOR_STAGE_B** — inventory complete for owner review; **Stage B blocked** on SAC-001 / SAC-003 until owner decisions. Local `npm test` failures are **pre-existing environment limitations**, not caused by audit docs.
-
-**Draft PR verdict for merge review:** **EHAS2_STAGE_A_COMPLETE_READY_FOR_OWNER_REVIEW** (documentation-only scope).
+(Does **not** authorize Stage B or formal freeze.)

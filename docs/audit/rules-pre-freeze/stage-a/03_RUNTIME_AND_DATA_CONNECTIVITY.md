@@ -2,6 +2,12 @@
 
 **Baseline SHA:** `658f3fd97e1e00fcafef74ddd3788d2cfa3bf1d7`
 
+Unchanged runtime verdict from initial Stage A: production API **NOT_CONNECTED**; synthetic 5C only; Rule 4 **SHADOW_ONLY** default off.
+
+## Rule 5 branch (read-only, not checked out)
+
+See `02_RULE_NUMBER_IDENTITY_MATRIX.md` — `b1ccfb5` is **16** commits ahead of `main`; Monitoring contracts/docs on branch only.
+
 ## API connectivity (`/api/eh-as-2/v1/`)
 
 | Path / surface | Evidence | Classification |

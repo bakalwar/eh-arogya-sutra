@@ -1,114 +1,363 @@
-# Stage A — Authority and source inventory
+# Stage A — Authority and source inventory (correction pass)
 
 **Baseline SHA:** `658f3fd97e1e00fcafef74ddd3788d2cfa3bf1d7` (`origin/main`)  
-**Method:** `git ls-files`, repository search (`rg`), full read of constitution + mixture policy + key status docs, sampled complete reads of rule specs and orchestration docs.
+**Prior audit commit:** `136ca9e78c4d6ec738df4097f95ff875c7ca5aa6`  
+**Inventory date:** 2026-08-06
 
-## Authority hierarchy (Stage A)
+## Authority hierarchy
 
-1. Explicit owner approval (constitution OD-013, OD-014; rule owner-decision registers where marked OWNER-APPROVED)
-2. `docs/clinical/CLINICAL_PRODUCT_CONSTITUTION.md`
-3. Approved owner decisions (OD-013, OD-014; rule-0x-owner-decisions.md)
-4. Formally owner-approved / frozen rule specifications (Rules 1–3 non-DRAFT; Rule 4 **DRAFT** filename)
-5. Security / patient-safety requirements (constitution, mixture-evidence-safety-policy)
-6. ADRs (`docs/adr/*.md`)
-7. Current EHAS2 implementation (`packages/clinical-contracts`, `apps/clinical-engine`, API shell)
-8. Tests, golden fixtures, Phase 5C synthetic validation
-9. Legacy references (`nine-rule-engine-matrix.md` MDE column, old-engine audits)
+Owner approval → constitution → OD-013/OD-014 → rule owner registers → specs → ADRs → implementation → tests/synthetic → legacy. Code/tests are not automatic clinical authority.
 
-Code and tests are **not** automatically normative clinical authority.
+## Reproducible counts
 
-## Source counts (tracked files, baseline)
+| Metric | Exact count |
+|--------|------------:|
+| **Row-level manifest (below)** | **326** |
+| `packages/clinical-contracts/src/rule4/**` | 104 |
+| `docs/clinical/rules/**` on `main` | 17 (no `rule-05-*`) |
+| `tests/unit/rule4*` | 56 |
+| Tracked `apps/clinical-engine/**` | 118 |
 
-| Category | Count (git ls-files) | Notes |
-|----------|----------------------|--------|
-| `packages/clinical-contracts/src/rule4/**` | 104 | Rule 4 contracts/adapters only on `main` |
-| `docs/clinical/rules/**` | 17 | Rules 1–4 specs; **no** `rule-05-*` on `main` |
-| `tests/unit/rule4*` | 56 | Rule 4 unit coverage |
-| `apps/clinical-engine/**` (tracked) | 118 | Python orchestrator + tests (excludes `.venv` if untracked) |
-| Rule 5 monitoring spec on `main` | **0** | Not found at baseline |
+Discovery: union of documented `git ls-files` prefixes + paths matching `nineRules|nine-rule|orchestrator.py|rules.py` (HashSet, no double-count in manifest).
 
-## Representative inventory (by authority tier)
+## Full-read authority documents
 
-Full row-level inventory for every file would exceed Stage A readability; below are **indexed anchors** plus **bundled groups**. Every Rules 1–9 claim in Stage A traces to one of these IDs or the identity matrix (file 02).
+EOF reads: `CLINICAL_PRODUCT_CONSTITUTION.md`, `mixture-evidence-safety-policy.md`, all `rule-01-*`, `rule-02-*`, `rule-03-*`, `rule-04-*` DRAFT trio files, `rule-by-rule-implementation-status.md`, `nine-rule-engine-matrix.md`, `nine-rule-orchestration.md`, `nine-rule-interface-status.md`, `rule-8-readiness-decision.md`, `prescription-boundary.md`. **Partial:** `rule-04-owner-decisions-DRAFT.md` (size; freeze-conflict excerpts only).
 
-### Tier 1 — Owner-approved normative (documentation)
+## Rule 4 Stage A classification (consistent)
 
-| ID | Rule | Path | Section / symbol | Authority | Runtime reach |
-|----|------|------|------------------|-----------|---------------|
-| AUTH-001 | All | `docs/clinical/CLINICAL_PRODUCT_CONSTITUTION.md` | §D Rules 1–3; §F oral mixtures; OD-013; OD-014 | **OWNER_APPROVED** | **CONTRACT_ONLY** — guard strings; not production engine |
-| AUTH-002 | All | `docs/clinical/mixture-evidence-safety-policy.md` | OD-014; OD-013 cross-ref | **OWNER_APPROVED** | **CONTRACT_ONLY** |
-| AUTH-003 | 1 | `docs/clinical/rules/rule-01-temperament-engine.md` | Full spec | **FORMALLY_FROZEN_SPEC** (5R-1F) | **NOT_IMPLEMENTED** production |
-| AUTH-004 | 1 | `docs/clinical/rules/rule-01-owner-decisions.md` | Owner register | **OWNER_APPROVED** | Docs |
-| AUTH-005 | 2 | `docs/clinical/rules/rule-02-polarity-engine.md` | Full spec | **FORMALLY_FROZEN_SPEC** (5R-2F) | **NOT_IMPLEMENTED** production |
-| AUTH-006 | 2 | `docs/clinical/rules/rule-02-owner-decisions.md` | Owner register | **OWNER_APPROVED** | Docs |
-| AUTH-007 | 3 | `docs/clinical/rules/rule-03-organ-system-affinity.md` | Full spec | **FORMALLY_FROZEN_SPEC** (5R-3F) | **NOT_IMPLEMENTED** production |
-| AUTH-008 | 3 | `docs/clinical/rules/rule-03-owner-decisions.md` | Owner register | **OWNER_APPROVED** | Docs |
-| AUTH-009 | 4 | `docs/clinical/rules/rule-04-potency-engine-DRAFT.md` | Potency spec body | **NORMATIVE_CANDIDATE** (filename **DRAFT**; status doc says frozen 5R-4D) | **NOT_IMPLEMENTED** evaluator |
-| AUTH-010 | 4 | `docs/clinical/rules/rule-04-owner-decisions-DRAFT.md` | Q1–Q16 registers | **NORMATIVE_CANDIDATE** / mixed CLOSED NOT_IMPLEMENTED | Docs |
-| AUTH-011 | — | `docs/architecture/SUTRA_SOFTWEAR_MASTER_PLAN.md` | Engineering plan | **SUPPORTING** — not clinical rule authority | N/A |
-| AUTH-012 | — | `docs/process/SUTRA_SOFTWEAR_CURSOR_GUIDE.md` | Process guide | **SUPPORTING** | N/A |
+- Identity: **IDENTITY_CANDIDATE_ONLY**
+- Specification authority: **NORMATIVE_CANDIDATE**
+- Freeze status: **FREEZE_STATUS_CONFLICT** (not formally frozen in Stage A conclusions)
+- Historical “DOCUMENTATION FROZEN” in status table: **CONFLICTING_HISTORICAL_STATUS_CLAIM**
 
-### Tier 2 — Status, matrix, orchestration (mixed authority)
+## Complete row-level inventory (326 rows)
 
-| ID | Rule | Path | Authority | Notes |
-|----|------|------|-----------|--------|
-| STAT-001 | 1–9 | `docs/clinical/rule-by-rule-implementation-status.md` | **SUPPORTING** | Production NOT_CONNECTED; per-rule status table |
-| STAT-002 | 1–9 | `docs/clinical/nine-rule-engine-matrix.md` | **LEGACY_REFERENCE_ONLY** + **STALE_OR_CONFLICTING** | EH_9 list + **legacy MDE** execution column |
-| STAT-003 | 1–9 | `docs/clinical/nine-rule-orchestration.md` | **SYNTHETIC_VALIDATION_ONLY** | Phase 5C; analyze-complete 501 |
-| STAT-004 | 1–9 | `docs/clinical/nine-rule-interface-status.md` | **SUPPORTING** | Interface honesty table |
-| STAT-005 | 8 | `docs/clinical/rule-8-readiness-decision.md` | **OWNER_APPROVED** / **SUPPORTING** | NOT_REQUIRED_FOR_PRESCRIPTION recommendation |
-| STAT-006 | 5–7 | `docs/clinical/prescription-boundary.md` | **SUPPORTING** | Prescription not connected |
-
-### Tier 3 — TypeScript contracts (implementation current, not owner clinical freeze)
-
-| ID | Rule | Path | Authority | Runtime |
-|----|------|------|-----------|---------|
-| IMPL-001 | 1–9 | `packages/clinical-contracts/src/nineRules.ts` | **IMPLEMENTATION_CURRENT** | **CONTRACT_ONLY**; `ORCHESTRATION_STATUS=NOT_CONNECTED` |
-| IMPL-002 | 1–9 | `packages/clinical-contracts/src/analyze.ts` | **IMPLEMENTATION_CURRENT** | AnalyzeComplete **NOT_CONNECTED** helpers |
-| IMPL-003 | 4 | `packages/clinical-contracts/src/rule4/**` (104 files) | **IMPLEMENTATION_CURRENT** | Shadow/off modes; **RULE4_ENGINE_MODE=off** default per phase reports |
-| IMPL-004 | 5–9 | No `rule5`–`rule9` package dirs on `main` | **NOT_IMPLEMENTED** | Rule 5 name in `nineRules.ts` only |
-
-### Tier 4 — Python clinical engine (synthetic validation)
-
-| ID | Rule | Path | Authority | Runtime |
-|----|------|------|-----------|---------|
-| PY-001 | 1–9 | `apps/clinical-engine/src/ehas2_clinical_engine/orchestrator.py` | **SYNTHETIC_VALIDATION_ONLY** | Used by tests/preview; not production API |
-| PY-002 | 1–9 | `apps/clinical-engine/src/ehas2_clinical_engine/rules.py` | **SYNTHETIC_VALIDATION_ONLY** | Rule metadata in orchestration |
-| PY-003 | 1–9 | `apps/clinical-engine/src/ehas2_clinical_engine/interpretation.py` | **SYNTHETIC_VALIDATION_ONLY** | Phase 5C interpretation path |
-
-### Tier 5 — Tests and fixtures
-
-| ID | Rule | Path | Authority | Runtime |
-|----|------|------|-----------|---------|
-| TST-001 | 1–9 | `tests/unit/phase5c-nine-rule-orchestration.test.ts` | **TEST_EVIDENCE** | Asserts NOT_CONNECTED production |
-| TST-002 | 4 | `tests/unit/rule4-*.test.ts` (56 files) | **TEST_EVIDENCE** | Contract/shadow behavior |
-| TST-003 | 1–9 | `fixtures/` golden / rule4 scenario JSON | **SYNTHETIC_VALIDATION_ONLY** | Synthetic CI subset |
-
-### Tier 6 — API / adapter (disconnected)
-
-| ID | Rule | Path | Authority | Runtime |
-|----|------|------|-----------|---------|
-| API-001 | 9 | `packages/engine-adapter/src/index.ts` | **PLACEHOLDER** | `EHAS2ClinicalEngineAdapter: NOT_IMPLEMENTED (Phase 6)` |
-| API-002 | 9 | `apps/api/src/createApp.ts` | **IMPLEMENTATION_CURRENT** | No live analyze-complete route wired to engine |
-| API-003 | — | `README.md` | **SUPPORTING** | `/api/eh-as-2/v1/analysis` — **501 NOT_IMPLEMENTED** |
-
-## Unknown / stale / conflicting (summary)
-
-| Class | Examples |
-|-------|----------|
-| **STALE_OR_CONFLICTING** | `nineRules.ts` Rule 5 = **Dosage** vs owner monitoring identity **not present on `main`**; matrix legacy MDE column vs 5R specs |
-| **UNKNOWN_AUTHORITY** | Rule 5 canonical identity on **`main`** (Dosage label only; no OD-R5 monitoring spec in tree) |
-| **LEGACY_REFERENCE_ONLY** | Matrix rows citing `calc_dosage`, MDE order |
-
-## Limitations
-
-- Inventory performed on **single baseline** `658f3fd`; unmerged branches (e.g. `phase-5r/rule5-phase1-contract-foundation`) were **not** checked out (per Stage A scope on `main`).
-- `.venv` under clinical-engine may exist locally but is not normative authority.
-- No `.env` contents were read.
-
-## Evidence references
-
-- Constitution OD-013/OD-014: `CLINICAL_PRODUCT_CONSTITUTION.md` L139–165 (baseline)
-- `nineRules.ts`: L34–89, L119–122
-- `rule-by-rule-implementation-status.md`: full table L7–17
-- `engine-adapter/src/index.ts`: NOT_IMPLEMENTED throw
+| ID | Rule | Path | Lang | Authority |
+|----|------|------|------|-----------|
+| SRC-0001 | ALL | `apps/clinical-engine/README.md` | DOC | UNKNOWN_AUTHORITY |
+| SRC-0002 | ALL | `apps/clinical-engine/requirements.txt` | DOC | UNKNOWN_AUTHORITY |
+| SRC-0003 | ALL | `apps/clinical-engine/src/ehas2_clinical_engine/__init__.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0004 | ALL | `apps/clinical-engine/src/ehas2_clinical_engine/app.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0005 | ALL | `apps/clinical-engine/src/ehas2_clinical_engine/disease_package.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0006 | ALL | `apps/clinical-engine/src/ehas2_clinical_engine/fingerprints.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0007 | ALL | `apps/clinical-engine/src/ehas2_clinical_engine/golden.py` | PY | SYNTHETIC_VALIDATION_ONLY |
+| SRC-0008 | ALL | `apps/clinical-engine/src/ehas2_clinical_engine/interpretation.py` | PY | SYNTHETIC_VALIDATION_ONLY |
+| SRC-0009 | ALL | `apps/clinical-engine/src/ehas2_clinical_engine/logging_safe.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0010 | ALL | `apps/clinical-engine/src/ehas2_clinical_engine/models.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0011 | ALL | `apps/clinical-engine/src/ehas2_clinical_engine/normalize.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0012 | 9 | `apps/clinical-engine/src/ehas2_clinical_engine/orchestrator.py` | PY | SYNTHETIC_VALIDATION_ONLY |
+| SRC-0013 | ALL | `apps/clinical-engine/src/ehas2_clinical_engine/retrieval.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0014 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/__init__.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0015 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/canonical_json.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0016 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/doctor_review/__init__.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0017 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/doctor_review/build_shadow_audit_events.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0018 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/doctor_review/evaluate_doctor_review_adapter.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0019 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/doctor_review/expected_authenticity_authority.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0020 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/doctor_review/gate_ledger.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0021 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/doctor_review/review_code_validation.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0022 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/eligibility/__init__.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0023 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/eligibility/eligibility_code_validation.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0024 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/eligibility/eligibility_fingerprint_v1.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0025 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/eligibility/evaluate_eligibility_adapter.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0026 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/eligibility/formula_bp_gate.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0027 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/eligibility/gate_ledger.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0028 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/eligibility/resolve_slot_eligibility.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0029 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/eligibility/types.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0030 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/empty_result_fingerprint_v1.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0031 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/evaluator.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0032 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/evidence/__init__.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0033 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/evidence/evaluate_evidence_adapter.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0034 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/evidence/evidence_fingerprint_v1.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0035 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/evidence/supersession.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0036 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/mode.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0037 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/orchestrator_hook.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0038 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/pediatric_overlay/__init__.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0039 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/pediatric_overlay/evaluate_pediatric_overlay_adapter.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0040 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/pediatric_overlay/overlay_code_validation.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0041 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/pediatric_overlay/overlay_matrix.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0042 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/pediatric_overlay/pediatric_overlay_fingerprint_v1.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0043 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/pediatric_overlay/resolve_slot_pediatric_overlay.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0044 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/phase/__init__.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0045 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/phase/binding_gate.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0046 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/phase/day_bands.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0047 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/phase/duration_calendar.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0048 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/phase/evaluate_phase_adapter.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0049 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/phase/phase_fingerprint_v1.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0050 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/phase/resolve_slot_phase.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0051 | 2 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/polarity/__init__.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0052 | 2 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/polarity/binding_gate.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0053 | 2 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/polarity/evaluate_polarity_adapter.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0054 | 2 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/polarity/pathway_router.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0055 | 2 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/polarity/polarity_fingerprint_v1.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0056 | 2 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/polarity/quarantine_probe.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0057 | 2 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/polarity/rule2_validate.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0058 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/registry_loader.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0059 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/registry_merge.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0060 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/registry_paths.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0061 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/registry_validation.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0062 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/safety/__init__.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0063 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/safety/age_validator.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0064 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/safety/date_calendar.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0065 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/safety/evaluate_safety_gate.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0066 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/safety/structured_critical.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0067 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/safety_fingerprint_v1.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0068 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/selection/__init__.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0069 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/selection/d3_d5_discriminator_fingerprint_v1.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0070 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/selection/d3_d5_evidence_provenance.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0071 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/selection/evaluate_selection_adapter.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0072 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/selection/q7bf_gate_ids.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0073 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/selection/resolve_slot_selection.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0074 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/selection/selection_code_validation.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0075 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/selection/selection_fingerprint_v1.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0076 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/selection/validate_d3_d5_discriminator.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0077 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/severity/__init__.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0078 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/severity/assertion_binding.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0079 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/severity/binding_gate.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0080 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/severity/cross_role_leakage_guard.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0081 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/severity/evaluate_severity_adapter.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0082 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/severity/resolve_slot_severity.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0083 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/severity/severity_fingerprint_v1.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0084 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/severity/severity_scale.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0085 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/severity/upstream_context_boundary.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0086 | 4 | `apps/clinical-engine/src/ehas2_clinical_engine/rule4/validate.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0087 | ALL | `apps/clinical-engine/src/ehas2_clinical_engine/rules.py` | PY | UNKNOWN_AUTHORITY |
+| SRC-0088 | 4 | `apps/clinical-engine/tests/rule4_phase10_context.py` | PY | TEST_EVIDENCE |
+| SRC-0089 | 4 | `apps/clinical-engine/tests/rule4_phase9_context.py` | PY | TEST_EVIDENCE |
+| SRC-0090 | 4 | `apps/clinical-engine/tests/test_rule4_fingerprint_v1.py` | PY | TEST_EVIDENCE |
+| SRC-0091 | 4 | `apps/clinical-engine/tests/test_rule4_phase1.py` | PY | TEST_EVIDENCE |
+| SRC-0092 | 4 | `apps/clinical-engine/tests/test_rule4_phase10_authenticity_audit.py` | PY | TEST_EVIDENCE |
+| SRC-0093 | 4 | `apps/clinical-engine/tests/test_rule4_phase10_registry_codes.py` | PY | TEST_EVIDENCE |
+| SRC-0094 | 4 | `apps/clinical-engine/tests/test_rule4_phase10_scenario_parity.py` | PY | TEST_EVIDENCE |
+| SRC-0095 | 4 | `apps/clinical-engine/tests/test_rule4_phase10_supersession_parity.py` | PY | TEST_EVIDENCE |
+| SRC-0096 | 4 | `apps/clinical-engine/tests/test_rule4_phase2_safety.py` | PY | TEST_EVIDENCE |
+| SRC-0097 | 4 | `apps/clinical-engine/tests/test_rule4_phase3_evidence.py` | PY | TEST_EVIDENCE |
+| SRC-0098 | 4 | `apps/clinical-engine/tests/test_rule4_phase4_binding_gate.py` | PY | TEST_EVIDENCE |
+| SRC-0099 | 2 | `apps/clinical-engine/tests/test_rule4_phase4_polarity.py` | PY | TEST_EVIDENCE |
+| SRC-0100 | 4 | `apps/clinical-engine/tests/test_rule4_phase5_binding_gate.py` | PY | TEST_EVIDENCE |
+| SRC-0101 | 4 | `apps/clinical-engine/tests/test_rule4_phase5_phase.py` | PY | TEST_EVIDENCE |
+| SRC-0102 | 2 | `apps/clinical-engine/tests/test_rule4_phase5_safety_polarity.py` | PY | TEST_EVIDENCE |
+| SRC-0103 | 4 | `apps/clinical-engine/tests/test_rule4_phase6_corrections.py` | PY | TEST_EVIDENCE |
+| SRC-0104 | 4 | `apps/clinical-engine/tests/test_rule4_phase6_fingerprint_collision.py` | PY | TEST_EVIDENCE |
+| SRC-0105 | 2 | `apps/clinical-engine/tests/test_rule4_phase6_safety_polarity.py` | PY | TEST_EVIDENCE |
+| SRC-0106 | 4 | `apps/clinical-engine/tests/test_rule4_phase6_severity.py` | PY | TEST_EVIDENCE |
+| SRC-0107 | 4 | `apps/clinical-engine/tests/test_rule4_phase7_eligibility.py` | PY | TEST_EVIDENCE |
+| SRC-0108 | 4 | `apps/clinical-engine/tests/test_rule4_phase7_fingerprint_collision.py` | PY | TEST_EVIDENCE |
+| SRC-0109 | 4 | `apps/clinical-engine/tests/test_rule4_phase7_scenario_parity.py` | PY | TEST_EVIDENCE |
+| SRC-0110 | 4 | `apps/clinical-engine/tests/test_rule4_phase8_d3d5_discriminator_fingerprint_tamper.py` | PY | TEST_EVIDENCE |
+| SRC-0111 | 4 | `apps/clinical-engine/tests/test_rule4_phase8_d3d5_evidence_provenance.py` | PY | TEST_EVIDENCE |
+| SRC-0112 | 4 | `apps/clinical-engine/tests/test_rule4_phase8_scenario_parity.py` | PY | TEST_EVIDENCE |
+| SRC-0113 | 4 | `apps/clinical-engine/tests/test_rule4_phase9_context_regression.py` | PY | TEST_EVIDENCE |
+| SRC-0114 | 4 | `apps/clinical-engine/tests/test_rule4_phase9_d13hs_cross_phase.py` | PY | TEST_EVIDENCE |
+| SRC-0115 | 4 | `apps/clinical-engine/tests/test_rule4_phase9_fingerprint_parity.py` | PY | TEST_EVIDENCE |
+| SRC-0116 | 4 | `apps/clinical-engine/tests/test_rule4_phase9_scenario_parity.py` | PY | TEST_EVIDENCE |
+| SRC-0117 | 4 | `apps/clinical-engine/tests/test_rule4_scenario_parity.py` | PY | TEST_EVIDENCE |
+| SRC-0118 | ALL | `apps/clinical-engine/tests/test_scaffold.py` | PY | TEST_EVIDENCE |
+| SRC-0119 | ALL | `apps/web/src/lib/clinical-validation/dashboard.ts` | TS | UNKNOWN_AUTHORITY |
+| SRC-0120 | ALL | `docs/adr/001-monorepo-and-separation.md` | DOC | UNKNOWN_AUTHORITY |
+| SRC-0121 | ALL | `docs/adr/002-api-namespace.md` | DOC | UNKNOWN_AUTHORITY |
+| SRC-0122 | ALL | `docs/adr/003-postgresql-application-db.md` | DOC | UNKNOWN_AUTHORITY |
+| SRC-0123 | ALL | `docs/adr/004-super-admin-separate-control-plane.md` | DOC | UNKNOWN_AUTHORITY |
+| SRC-0124 | ALL | `docs/adr/005-security-event-and-audit-boundary.md` | DOC | UNKNOWN_AUTHORITY |
+| SRC-0125 | ALL | `docs/adr/008-management-admin-boundary.md` | DOC | UNKNOWN_AUTHORITY |
+| SRC-0126 | ALL | `docs/adr/009-private-feedback-vs-testimonial.md` | DOC | UNKNOWN_AUTHORITY |
+| SRC-0127 | ALL | `docs/adr/010-structured-clinical-data-and-snapshots.md` | DOC | UNKNOWN_AUTHORITY |
+| SRC-0128 | ALL | `docs/adr/011-report-file-non-retention.md` | DOC | UNKNOWN_AUTHORITY |
+| SRC-0129 | ALL | `docs/adr/012-provider-portable-deployment.md` | DOC | UNKNOWN_AUTHORITY |
+| SRC-0130 | ALL | `docs/adr/013-authentication-provider-decision.md` | DOC | UNKNOWN_AUTHORITY |
+| SRC-0131 | ALL | `docs/adr/014-postgresql-access-layer.md` | DOC | UNKNOWN_AUTHORITY |
+| SRC-0132 | ALL | `docs/adr/015-identifier-strategy.md` | DOC | UNKNOWN_AUTHORITY |
+| SRC-0133 | ALL | `docs/adr/016-tenant-rls-strategy.md` | DOC | UNKNOWN_AUTHORITY |
+| SRC-0134 | ALL | `docs/clinical/CLINICAL_PRODUCT_CONSTITUTION.md` | DOC | OWNER_APPROVED |
+| SRC-0135 | ALL | `docs/clinical/clinical-interpretation-validation.md` | DOC | UNKNOWN_AUTHORITY |
+| SRC-0136 | ALL | `docs/clinical/clinical-migration-architecture.md` | DOC | UNKNOWN_AUTHORITY |
+| SRC-0137 | ALL | `docs/clinical/clinical-service-contract.md` | DOC | UNKNOWN_AUTHORITY |
+| SRC-0138 | ALL | `docs/clinical/determinism-and-fingerprints.md` | DOC | UNKNOWN_AUTHORITY |
+| SRC-0139 | ALL | `docs/clinical/disease-dataset-audit.md` | DOC | UNKNOWN_AUTHORITY |
+| SRC-0140 | ALL | `docs/clinical/disease-extraction-procedure.md` | DOC | UNKNOWN_AUTHORITY |
+| SRC-0141 | ALL | `docs/clinical/disease-package-manifest.md` | DOC | UNKNOWN_AUTHORITY |
+| SRC-0142 | ALL | `docs/clinical/disease-package-schema.md` | DOC | UNKNOWN_AUTHORITY |
+| SRC-0143 | ALL | `docs/clinical/disease-retrieval-validation.md` | DOC | UNKNOWN_AUTHORITY |
+| SRC-0144 | ALL | `docs/clinical/disease-search-lineage.md` | DOC | UNKNOWN_AUTHORITY |
+| SRC-0145 | ALL | `docs/clinical/golden-case-catalog.md` | DOC | SYNTHETIC_VALIDATION_ONLY |
+| SRC-0146 | ALL | `docs/clinical/golden-comparison-results.md` | DOC | SYNTHETIC_VALIDATION_ONLY |
+| SRC-0147 | ALL | `docs/clinical/golden-validation-plan.md` | DOC | SYNTHETIC_VALIDATION_ONLY |
+| SRC-0148 | ALL | `docs/clinical/medicine-registry-audit.md` | DOC | UNKNOWN_AUTHORITY |
+| SRC-0149 | ALL | `docs/clinical/medicine-registry-lineage.md` | DOC | UNKNOWN_AUTHORITY |
+| SRC-0150 | 6 | `docs/clinical/mixture-evidence-safety-policy.md` | DOC | OWNER_APPROVED |
+| SRC-0151 | ALL | `docs/clinical/multimodal-boundary-audit.md` | DOC | UNKNOWN_AUTHORITY |
+| SRC-0152 | ALL | `docs/clinical/multimodal-reconstruction-status.md` | DOC | UNKNOWN_AUTHORITY |
+| SRC-0153 | 9 | `docs/clinical/nine-rule-engine-matrix.md` | DOC | LEGACY_REFERENCE_ONLY |
+| SRC-0154 | 9 | `docs/clinical/nine-rule-interface-status.md` | DOC | UNKNOWN_AUTHORITY |
+| SRC-0155 | 9 | `docs/clinical/nine-rule-orchestration.md` | DOC | UNKNOWN_AUTHORITY |
+| SRC-0156 | ALL | `docs/clinical/old-engine-source-inventory.md` | DOC | LEGACY_REFERENCE_ONLY |
+| SRC-0157 | ALL | `docs/clinical/phase5c-golden-assertion-review.md` | DOC | SYNTHETIC_VALIDATION_ONLY |
+| SRC-0158 | ALL | `docs/clinical/phase-f-separation.md` | DOC | UNKNOWN_AUTHORITY |
+| SRC-0159 | ALL | `docs/clinical/prescription-boundary.md` | DOC | UNKNOWN_AUTHORITY |
+| SRC-0160 | ALL | `docs/clinical/prescription-pipeline-audit.md` | DOC | LEGACY_REFERENCE_ONLY |
+| SRC-0161 | ALL | `docs/clinical/prescription-readiness-matrix.md` | DOC | UNKNOWN_AUTHORITY |
+| SRC-0162 | ALL | `docs/clinical/README.md` | DOC | UNKNOWN_AUTHORITY |
+| SRC-0163 | 8 | `docs/clinical/rule-8-decision.md` | DOC | UNKNOWN_AUTHORITY |
+| SRC-0164 | 8 | `docs/clinical/rule-8-readiness-decision.md` | DOC | UNKNOWN_AUTHORITY |
+| SRC-0165 | ALL | `docs/clinical/rule-by-rule-implementation-status.md` | DOC | UNKNOWN_AUTHORITY |
+| SRC-0166 | 1 | `docs/clinical/rules/rule-01-legacy-conflicts.md` | DOC | UNKNOWN_AUTHORITY |
+| SRC-0167 | 1 | `docs/clinical/rules/rule-01-owner-decisions.md` | DOC | OWNER_APPROVED |
+| SRC-0168 | 1 | `docs/clinical/rules/rule-01-temperament-engine.md` | DOC | OWNER_APPROVED |
+| SRC-0169 | 1 | `docs/clinical/rules/rule-01-test-requirements.md` | DOC | UNKNOWN_AUTHORITY |
+| SRC-0170 | 2 | `docs/clinical/rules/rule-02-data-contract.md` | DOC | UNKNOWN_AUTHORITY |
+| SRC-0171 | 2 | `docs/clinical/rules/rule-02-legacy-conflicts.md` | DOC | UNKNOWN_AUTHORITY |
+| SRC-0172 | 2 | `docs/clinical/rules/rule-02-owner-decisions.md` | DOC | OWNER_APPROVED |
+| SRC-0173 | 2 | `docs/clinical/rules/rule-02-polarity-engine.md` | DOC | OWNER_APPROVED |
+| SRC-0174 | 2 | `docs/clinical/rules/rule-02-test-requirements.md` | DOC | UNKNOWN_AUTHORITY |
+| SRC-0175 | 3 | `docs/clinical/rules/rule-03-data-contract.md` | DOC | UNKNOWN_AUTHORITY |
+| SRC-0176 | 3 | `docs/clinical/rules/rule-03-legacy-conflicts.md` | DOC | UNKNOWN_AUTHORITY |
+| SRC-0177 | 3 | `docs/clinical/rules/rule-03-organ-system-affinity.md` | DOC | OWNER_APPROVED |
+| SRC-0178 | 3 | `docs/clinical/rules/rule-03-owner-decisions.md` | DOC | OWNER_APPROVED |
+| SRC-0179 | 3 | `docs/clinical/rules/rule-03-test-requirements.md` | DOC | UNKNOWN_AUTHORITY |
+| SRC-0180 | 4 | `docs/clinical/rules/rule-04-owner-decisions-DRAFT.md` | DOC | NORMATIVE_CANDIDATE |
+| SRC-0181 | 4 | `docs/clinical/rules/rule-04-potency-engine-DRAFT.md` | DOC | NORMATIVE_CANDIDATE |
+| SRC-0182 | 4 | `docs/clinical/rules/rule-04-unresolved-clinical-questions-DRAFT.md` | DOC | NORMATIVE_CANDIDATE |
+| SRC-0183 | ALL | `docs/clinical/tablet-full-pool-reconstruction.md` | DOC | UNKNOWN_AUTHORITY |
+| SRC-0184 | 4 | `fixtures/rule4/candidate-eligibility-scenarios.v1.json` | DATA | SYNTHETIC_VALIDATION_ONLY |
+| SRC-0185 | 4 | `fixtures/rule4/doctor-review-issuance-scenarios.v1.json` | DATA | SYNTHETIC_VALIDATION_ONLY |
+| SRC-0186 | 4 | `fixtures/rule4/evidence-adapter-scenarios.v1.json` | DATA | SYNTHETIC_VALIDATION_ONLY |
+| SRC-0187 | 4 | `fixtures/rule4/numeric-selection-scenarios.v1.json` | DATA | SYNTHETIC_VALIDATION_ONLY |
+| SRC-0188 | 4 | `fixtures/rule4/pediatric-overlay-scenarios.v1.json` | DATA | SYNTHETIC_VALIDATION_ONLY |
+| SRC-0189 | 4 | `fixtures/rule4/phase2-allowed-critical-codes.v1.json` | DATA | SYNTHETIC_VALIDATION_ONLY |
+| SRC-0190 | 4 | `fixtures/rule4/phase-resolution-scenarios.v1.json` | DATA | SYNTHETIC_VALIDATION_ONLY |
+| SRC-0191 | 2 | `fixtures/rule4/polarity-routing-scenarios.v1.json` | DATA | SYNTHETIC_VALIDATION_ONLY |
+| SRC-0192 | 4 | `fixtures/rule4/reason-code-registry.phase10-doctor-review-issuance-subset.v1.json` | DATA | SYNTHETIC_VALIDATION_ONLY |
+| SRC-0193 | 4 | `fixtures/rule4/reason-code-registry.phase1-foundation-subset.v1.json` | DATA | SYNTHETIC_VALIDATION_ONLY |
+| SRC-0194 | 4 | `fixtures/rule4/reason-code-registry.phase2-safety-subset.v1.json` | DATA | SYNTHETIC_VALIDATION_ONLY |
+| SRC-0195 | 4 | `fixtures/rule4/reason-code-registry.phase3-evidence-subset.v1.json` | DATA | SYNTHETIC_VALIDATION_ONLY |
+| SRC-0196 | 2 | `fixtures/rule4/reason-code-registry.phase4-polarity-subset.v1.json` | DATA | SYNTHETIC_VALIDATION_ONLY |
+| SRC-0197 | 4 | `fixtures/rule4/reason-code-registry.phase5-structured-phase-subset.v1.json` | DATA | SYNTHETIC_VALIDATION_ONLY |
+| SRC-0198 | 4 | `fixtures/rule4/reason-code-registry.phase6-structured-severity-subset.v1.json` | DATA | SYNTHETIC_VALIDATION_ONLY |
+| SRC-0199 | 4 | `fixtures/rule4/reason-code-registry.phase7-candidate-eligibility-subset.v1.json` | DATA | SYNTHETIC_VALIDATION_ONLY |
+| SRC-0200 | 4 | `fixtures/rule4/reason-code-registry.phase8-numeric-selection-subset.v1.json` | DATA | SYNTHETIC_VALIDATION_ONLY |
+| SRC-0201 | 4 | `fixtures/rule4/reason-code-registry.phase9-pediatric-overlay-subset.v1.json` | DATA | SYNTHETIC_VALIDATION_ONLY |
+| SRC-0202 | 4 | `fixtures/rule4/rule4-contract-baseline.v1.json` | DATA | SYNTHETIC_VALIDATION_ONLY |
+| SRC-0203 | 4 | `fixtures/rule4/safety-gate-scenarios.v1.json` | DATA | SYNTHETIC_VALIDATION_ONLY |
+| SRC-0204 | 4 | `fixtures/rule4/severity-resolution-scenarios.v1.json` | DATA | SYNTHETIC_VALIDATION_ONLY |
+| SRC-0205 | ALL | `packages/clinical-contracts/package.json` | DATA | UNKNOWN_AUTHORITY |
+| SRC-0206 | ALL | `packages/clinical-contracts/src/analyze.ts` | TS | UNKNOWN_AUTHORITY |
+| SRC-0207 | ALL | `packages/clinical-contracts/src/constitution.ts` | TS | UNKNOWN_AUTHORITY |
+| SRC-0208 | ALL | `packages/clinical-contracts/src/index.ts` | TS | UNKNOWN_AUTHORITY |
+| SRC-0209 | 9 | `packages/clinical-contracts/src/nineRules.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0210 | 4 | `packages/clinical-contracts/src/rule4/canonicalJson.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0211 | 4 | `packages/clinical-contracts/src/rule4/doctorReview/auditEvents.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0212 | 4 | `packages/clinical-contracts/src/rule4/doctorReview/buildShadowAuditEvents.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0213 | 4 | `packages/clinical-contracts/src/rule4/doctorReview/doctorReviewFingerprintV1.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0214 | 4 | `packages/clinical-contracts/src/rule4/doctorReview/evaluateDoctorReviewAdapter.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0215 | 4 | `packages/clinical-contracts/src/rule4/doctorReview/expectedAuthenticityAuthority.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0216 | 4 | `packages/clinical-contracts/src/rule4/doctorReview/gateLedger.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0217 | 4 | `packages/clinical-contracts/src/rule4/doctorReview/index.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0218 | 4 | `packages/clinical-contracts/src/rule4/doctorReview/reviewCodeValidation.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0219 | 4 | `packages/clinical-contracts/src/rule4/doctorReview/types.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0220 | 4 | `packages/clinical-contracts/src/rule4/eligibility/eligibilityCodeValidation.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0221 | 4 | `packages/clinical-contracts/src/rule4/eligibility/eligibilityFingerprintV1.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0222 | 4 | `packages/clinical-contracts/src/rule4/eligibility/evaluateEligibilityAdapter.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0223 | 4 | `packages/clinical-contracts/src/rule4/eligibility/formulaBpGate.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0224 | 4 | `packages/clinical-contracts/src/rule4/eligibility/gateLedger.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0225 | 4 | `packages/clinical-contracts/src/rule4/eligibility/index.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0226 | 4 | `packages/clinical-contracts/src/rule4/eligibility/resolveSlotEligibility.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0227 | 4 | `packages/clinical-contracts/src/rule4/eligibility/types.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0228 | 4 | `packages/clinical-contracts/src/rule4/emptyResultFingerprintV1.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0229 | 4 | `packages/clinical-contracts/src/rule4/evaluator.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0230 | 4 | `packages/clinical-contracts/src/rule4/evidence/assertionValidator.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0231 | 4 | `packages/clinical-contracts/src/rule4/evidence/contradictionResolver.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0232 | 4 | `packages/clinical-contracts/src/rule4/evidence/dedupe.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0233 | 4 | `packages/clinical-contracts/src/rule4/evidence/documentGate.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0234 | 4 | `packages/clinical-contracts/src/rule4/evidence/evaluateEvidenceAdapter.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0235 | 4 | `packages/clinical-contracts/src/rule4/evidence/evidenceFingerprintV1.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0236 | 4 | `packages/clinical-contracts/src/rule4/evidence/index.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0237 | 4 | `packages/clinical-contracts/src/rule4/evidence/itemGate.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0238 | 4 | `packages/clinical-contracts/src/rule4/evidence/quarantine.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0239 | 4 | `packages/clinical-contracts/src/rule4/evidence/rule3BindingPort.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0240 | 4 | `packages/clinical-contracts/src/rule4/evidence/sourceComparabilityTier.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0241 | 4 | `packages/clinical-contracts/src/rule4/evidence/supersession.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0242 | 4 | `packages/clinical-contracts/src/rule4/evidence/types.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0243 | 4 | `packages/clinical-contracts/src/rule4/fingerprint.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0244 | 4 | `packages/clinical-contracts/src/rule4/index.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0245 | 4 | `packages/clinical-contracts/src/rule4/input.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0246 | 4 | `packages/clinical-contracts/src/rule4/output.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0247 | 4 | `packages/clinical-contracts/src/rule4/outputCodeValidation.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0248 | 4 | `packages/clinical-contracts/src/rule4/pediatricOverlay/evaluatePediatricOverlayAdapter.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0249 | 4 | `packages/clinical-contracts/src/rule4/pediatricOverlay/index.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0250 | 4 | `packages/clinical-contracts/src/rule4/pediatricOverlay/overlayCodeValidation.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0251 | 4 | `packages/clinical-contracts/src/rule4/pediatricOverlay/overlayMatrix.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0252 | 4 | `packages/clinical-contracts/src/rule4/pediatricOverlay/pediatricOverlayFingerprintV1.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0253 | 4 | `packages/clinical-contracts/src/rule4/pediatricOverlay/resolveSlotPediatricOverlay.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0254 | 4 | `packages/clinical-contracts/src/rule4/pediatricOverlay/types.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0255 | 4 | `packages/clinical-contracts/src/rule4/phase/bindingGate.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0256 | 4 | `packages/clinical-contracts/src/rule4/phase/dayBands.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0257 | 4 | `packages/clinical-contracts/src/rule4/phase/durationCalendar.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0258 | 4 | `packages/clinical-contracts/src/rule4/phase/evaluatePhaseAdapter.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0259 | 4 | `packages/clinical-contracts/src/rule4/phase/index.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0260 | 4 | `packages/clinical-contracts/src/rule4/phase/phaseCodeValidation.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0261 | 4 | `packages/clinical-contracts/src/rule4/phase/phaseFingerprintV1.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0262 | 4 | `packages/clinical-contracts/src/rule4/phase/resolveSlotPhase.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0263 | 4 | `packages/clinical-contracts/src/rule4/phase/types.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0264 | 2 | `packages/clinical-contracts/src/rule4/polarity/bindingGate.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0265 | 2 | `packages/clinical-contracts/src/rule4/polarity/evaluatePolarityAdapter.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0266 | 2 | `packages/clinical-contracts/src/rule4/polarity/index.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0267 | 2 | `packages/clinical-contracts/src/rule4/polarity/pathwayRouter.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0268 | 2 | `packages/clinical-contracts/src/rule4/polarity/polarityCodeValidation.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0269 | 2 | `packages/clinical-contracts/src/rule4/polarity/polarityFingerprintV1.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0270 | 2 | `packages/clinical-contracts/src/rule4/polarity/rule2Validate.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0271 | 2 | `packages/clinical-contracts/src/rule4/polarity/types.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0272 | 4 | `packages/clinical-contracts/src/rule4/reasonCodes.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0273 | 4 | `packages/clinical-contracts/src/rule4/reasonCodesPhase10.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0274 | 4 | `packages/clinical-contracts/src/rule4/reasonCodesPhase2.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0275 | 4 | `packages/clinical-contracts/src/rule4/reasonCodesPhase3.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0276 | 4 | `packages/clinical-contracts/src/rule4/reasonCodesPhase4.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0277 | 4 | `packages/clinical-contracts/src/rule4/reasonCodesPhase5.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0278 | 4 | `packages/clinical-contracts/src/rule4/reasonCodesPhase6.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0279 | 4 | `packages/clinical-contracts/src/rule4/reasonCodesPhase7.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0280 | 4 | `packages/clinical-contracts/src/rule4/reasonCodesPhase8.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0281 | 4 | `packages/clinical-contracts/src/rule4/reasonCodesPhase9.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0282 | 4 | `packages/clinical-contracts/src/rule4/registryMerge.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0283 | 4 | `packages/clinical-contracts/src/rule4/safety/ageValidator.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0284 | 4 | `packages/clinical-contracts/src/rule4/safety/bpCrisis.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0285 | 4 | `packages/clinical-contracts/src/rule4/safety/dateCalendar.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0286 | 4 | `packages/clinical-contracts/src/rule4/safety/evaluateSafetyGate.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0287 | 4 | `packages/clinical-contracts/src/rule4/safety/holdAggregator.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0288 | 4 | `packages/clinical-contracts/src/rule4/safety/index.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0289 | 4 | `packages/clinical-contracts/src/rule4/safety/structuredCritical.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0290 | 4 | `packages/clinical-contracts/src/rule4/safety/types.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0291 | 4 | `packages/clinical-contracts/src/rule4/safetyFingerprintV1.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0292 | 4 | `packages/clinical-contracts/src/rule4/selection/d3D5DiscriminatorFingerprintV1.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0293 | 4 | `packages/clinical-contracts/src/rule4/selection/d3D5EvidenceProvenance.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0294 | 4 | `packages/clinical-contracts/src/rule4/selection/evaluateSelectionAdapter.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0295 | 4 | `packages/clinical-contracts/src/rule4/selection/index.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0296 | 4 | `packages/clinical-contracts/src/rule4/selection/q7bfGateIds.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0297 | 4 | `packages/clinical-contracts/src/rule4/selection/resolveSlotSelection.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0298 | 4 | `packages/clinical-contracts/src/rule4/selection/selectionCodeValidation.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0299 | 4 | `packages/clinical-contracts/src/rule4/selection/selectionFingerprintV1.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0300 | 4 | `packages/clinical-contracts/src/rule4/selection/types.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0301 | 4 | `packages/clinical-contracts/src/rule4/selection/validateD3D5Discriminator.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0302 | 4 | `packages/clinical-contracts/src/rule4/severity/assertionBinding.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0303 | 4 | `packages/clinical-contracts/src/rule4/severity/bindingGate.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0304 | 4 | `packages/clinical-contracts/src/rule4/severity/crossRoleLeakageGuard.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0305 | 4 | `packages/clinical-contracts/src/rule4/severity/evaluateSeverityAdapter.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0306 | 4 | `packages/clinical-contracts/src/rule4/severity/index.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0307 | 4 | `packages/clinical-contracts/src/rule4/severity/resolveSlotSeverity.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0308 | 4 | `packages/clinical-contracts/src/rule4/severity/severityCodeValidation.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0309 | 4 | `packages/clinical-contracts/src/rule4/severity/severityFingerprintV1.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0310 | 4 | `packages/clinical-contracts/src/rule4/severity/severityScale.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0311 | 4 | `packages/clinical-contracts/src/rule4/severity/types.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0312 | 4 | `packages/clinical-contracts/src/rule4/severity/upstreamContextBoundary.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0313 | 4 | `packages/clinical-contracts/src/rule4/version.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0314 | ALL | `packages/clinical-contracts/tsconfig.json` | DATA | UNKNOWN_AUTHORITY |
+| SRC-0315 | ALL | `packages/clinical-data-manifest/package.json` | DATA | UNKNOWN_AUTHORITY |
+| SRC-0316 | ALL | `packages/clinical-data-manifest/src/index.ts` | TS | UNKNOWN_AUTHORITY |
+| SRC-0317 | ALL | `packages/clinical-data-manifest/tsconfig.json` | DATA | UNKNOWN_AUTHORITY |
+| SRC-0318 | ALL | `packages/engine-adapter/package.json` | DATA | IMPLEMENTATION_CURRENT |
+| SRC-0319 | ALL | `packages/engine-adapter/src/index.ts` | TS | IMPLEMENTATION_CURRENT |
+| SRC-0320 | ALL | `packages/engine-adapter/tsconfig.json` | DATA | IMPLEMENTATION_CURRENT |
+| SRC-0321 | ALL | `packages/medicine-registry/package.json` | DATA | UNKNOWN_AUTHORITY |
+| SRC-0322 | ALL | `packages/medicine-registry/src/index.ts` | TS | UNKNOWN_AUTHORITY |
+| SRC-0323 | ALL | `packages/medicine-registry/src/medicines.v1.json` | DATA | UNKNOWN_AUTHORITY |
+| SRC-0324 | ALL | `packages/medicine-registry/src/registry.manifest.json` | DATA | UNKNOWN_AUTHORITY |
+| SRC-0325 | ALL | `packages/medicine-registry/tsconfig.json` | DATA | UNKNOWN_AUTHORITY |
+| SRC-0326 | 9 | `tests/unit/phase5c-nine-rule-orchestration.test.ts` | TS | SYNTHETIC_VALIDATION_ONLY |
