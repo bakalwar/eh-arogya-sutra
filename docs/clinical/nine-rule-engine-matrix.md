@@ -5,6 +5,8 @@
 **Clean isolated nine engines:** NO — one orchestrator (`MultiDiseaseEngine`) with interleaved modules  
 **Conflicting naming maps:** ≥4 (EH_9 audit, EH_CORE Siddhant, MASTER_9 UCKB, consensus/PDF)
 
+> **R5-M1a:** Documentation alignment only. Current v1 contract, synthetic orchestration, dashboard, and test surfaces retain pre-migration Rule 5 metadata until separately authorized **R5-M1b**. No runtime or clinical behavior changes in R5-M1a.
+
 ## Canonical names (EH_9 audit — do not invent)
 
 From `docs/EH_9_RULE_ENGINE_AUDIT/01_RULE_ENGINE_LIST.md` in the old project:
@@ -13,11 +15,13 @@ From `docs/EH_9_RULE_ENGINE_AUDIT/01_RULE_ENGINE_LIST.md` in the old project:
 2. Polarity  
 3. Organ / System Affinity  
 4. Potency  
-5. Dosage  
+5. Monitoring, Follow-up & Post-Release Safety Surveillance
 6. Multi-Disease / Organ-System Triad  
 7. External Use Routes  
 8. Disease-level Prakruti Inference  
 9. Master Pipeline  
+
+**EHAS2 Rule 5 authority (R5-M0):** Rule 5 is **not** Dosage. Owner-approved identity and post-release scope: [rules/rule-05-owner-decisions-R5-M0.md](./rules/rule-05-owner-decisions-R5-M0.md). EHAS2 implementation **NOT_IMPLEMENTED** · runtime **NOT_CONNECTED**. Dosage scheduling/generation remains **`DOSAGE_ENGINE_AUDIT_PENDING`** (unnumbered, non-authoritative). Legacy `calc_dosage` and related MDE dosage paths below are **LEGACY_REFERENCE_ONLY** — not EHAS2 clinical authority for Rule 5. v1 code metadata may still say **Dosage** until **R5-M1b**.
 
 ## Live execution order (truthful)
 
@@ -31,6 +35,8 @@ chief_complaint → systems (R3) → prakriti (R1) → constitution
 → optional eh_master_clinical_state (shadow, non-mutating)
 ```
 
+*(Legacy diagram: “dosage (R5 hybrid)” describes old MDE interleaving — **LEGACY_REFERENCE_ONLY**; EHAS2 Rule 5 canonical responsibility is post-release monitoring per R5-M0.)*
+
 ## Rule matrix
 
 | Rule | Source | Inputs | Outputs | Clinical effect | Fallback | Test | Migration decision |
@@ -39,7 +45,7 @@ chief_complaint → systems (R3) → prakriti (R1) → constitution
 | 2 Polarity | Live: `formula_polarity_policy_engine`; legacy `detect_polarity` | slot/case context | POSITIVE/NEGATIVE/MIXED/UNRESOLVED | Selection + potency | UNRESOLVED→MIXED for legacy scoring | `test_formula_polarity_policy_engine.py` | Keep policy engine; deprecate dual path |
 | 3 Organ/System | `integrated_engine.detect_systems`; `detect_active_systems` | symptoms, gender, CC | systems + details | Plans + boosts | keyword / METABOLIC last resort | Partial | First detector; disease-pack only |
 | 4 Potency | `potency_engine.get_unified_clinical_potency` | polarity, phase, BP, severity, age, system | dilution | Mixture dilution | Internal defaults | potency metadata tests | Single SoT |
-| 5 Dosage | `calc_dosage` then MDE potency-band override | age, polarity, phase, dilution | drops + schedule | Admin + schedule | age→40; polarity→MIXED | Weak | Split drops helper vs schedule |
+| 5 Monitoring (EHAS2 canonical) · legacy dosage path **LEGACY_REFERENCE_ONLY** | **Legacy (not Rule 5 authority):** `calc_dosage` then MDE potency-band override | age, polarity, phase, dilution | drops + schedule (legacy app) | Legacy admin + schedule only | age→40; polarity→MIXED | Weak | **Dosage engine:** **`DOSAGE_ENGINE_AUDIT_PENDING`**. **Rule 5 EHAS2:** post-release monitoring — **NOT_IMPLEMENTED** / **NOT_CONNECTED**; do not treat legacy helpers as EHAS2 Rule 5 implementation |
 | 6 Multi-Disease/Triad | `disease_registry` / synthesizer / `medicine_confidence_engine` / `formula_generator` | diseases, systems, CC, temperament, polarity | `mixture_plans` + liquids | **Primary oral selection** | fill/replace controls | fixtures + suite | Core selection package |
 | 7 External | `external_application_engine.build_external_routes` | systems, symptoms, BP, phase, CC | routes or NOT_CLINICALLY_INDICATED | Route selection | NOT_CLINICALLY_INDICATED valid | `test_external_*` | Keep evidence-gated |
 | 8 Disease Prakruti | `infer_disease_prakruti` / `resolve_prakriti` | disease name / DB votes | temperament label | **Docs claim clinical; live MDE does not call** | Balanced | Docs only | Wire deliberately or demote dormant |
@@ -72,7 +78,7 @@ chief_complaint → systems (R3) → prakriti (R1) → constitution
 2. Rule 6 triad vs Complexis vs PDF aggravation  
 3. Rule 8 APIs unwired on live MDE path  
 4. Dual polarity engines  
-5. Dual dosage (helper vs potency-band override)  
+5. Dual dosage (helper vs potency-band override) — **Dosage track `DOSAGE_ENGINE_AUDIT_PENDING`**; not conflated with EHAS2 Rule 5 monitoring identity
 6. Isolation suite marks “9 Rule Engines (isolated)” as PARTIAL  
 
 ## Migration decision summary
