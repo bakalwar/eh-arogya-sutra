@@ -23,7 +23,7 @@
 
 These conflict when ranked evidence supports fewer than the required mixture count.
 
-## Recommended safe behavior (owner-rule clarification)
+## Owner-approved fail-closed behavior (OD-014)
 
 When evidence cannot support the required 3/4/5 mixtures without fillers:
 
@@ -33,7 +33,18 @@ When evidence cannot support the required 3/4/5 mixtures without fillers:
 4. Emit **zero** fake/filler formulas  
 5. Do **not** return empty arrays as successful generation  
 
-Legacy `decide_mixture_count` may return **0** when untreatable — align EHAS2 with that fail-closed posture rather than fabricating mixtures.
+Legacy `decide_mixture_count` may return **0** when untreatable; this is reference evidence only. EHAS2 independently adopts the fail-closed posture above and must not fabricate mixtures.
+
+## Owner approval (OD-014)
+
+The owner approved this fail-closed safety policy on 2026-08-05:
+
+- Insufficient evidence for the required 3/4/5 clinically justified oral mixtures returns `INSUFFICIENT_CLINICAL_EVIDENCE`.
+- `DOCTOR_REVIEW_REQUIRED` is mandatory and the response must identify the additional information/evidence required.
+- No filler, unsupported, fake, or partial prescription may be issued or presented as successful.
+- The formula result contains zero fake formulas until sufficient evidence is supplied and the complete versioned evaluation is run again.
+
+This approval closes the policy decision only. It does not freeze all nine rules, start Phase 5D implementation, connect production analysis or prescription issuance, authorize deployment, or change the legacy engine.
 
 ## Owner clarification (OD-013)
 
@@ -52,4 +63,4 @@ Primary normative record: [Clinical Product Constitution §F](./CLINICAL_PRODUCT
 
 The OD-013 oral-mixture-count clarification is **OWNER_APPROVED** and recorded.
 
-The separate fail-closed clarification remains **OWNER_DECISION_REQUIRED** until the owner explicitly confirms it for Phase 5D.
+The separate fail-closed clarification is **OWNER_APPROVED** as OD-014 and is a required safety constraint for any future Phase 5D specification or implementation. Phase 5D itself remains **NOT_STARTED** and requires a separate authorization.
