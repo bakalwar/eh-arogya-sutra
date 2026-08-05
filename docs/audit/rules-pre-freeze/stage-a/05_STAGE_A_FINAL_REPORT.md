@@ -2,11 +2,12 @@
 
 **Baseline:** `658f3fd97e1e00fcafef74ddd3788d2cfa3bf1d7`  
 **Prior head:** `136ca9e78c4d6ec738df4097f95ff875c7ca5aa6`  
+**Correction head:** `19dd5bedca43601abf2eee0356e48270e3d74a82`  
 **Date:** 2026-08-06
 
 ## Executive summary (Hindi)
 
-Stage A की report में अब **326** tracked sources की **पूरी row-level inventory** है। Rule 4 को हर जगह **FREEZE_STATUS_CONFLICT** / **NORMATIVE_CANDIDATE** लिखा गया — formally frozen **नहीं**। Rule 5 पर `main` **Dosage** है; Monitoring spec **`b1ccfb5` branch** पर **UNMERGED_CANDIDATE_EVIDENCE** है — owner decision अभी बाकी। Rule 8 नाम constitution में नहीं; **IDENTITY_CANDIDATE_ONLY**। Local validation **Node 24** पर incomplete; **GitHub CI run 14** on `136ca9e` **success** (PostgreSQL + clinical-engine + tests)।
+Stage A की report में अब **326** tracked sources की **पूरी row-level inventory** है। Rule 4 को हर जगह **FREEZE_STATUS_CONFLICT** / **NORMATIVE_CANDIDATE** लिखा गया — formally frozen **नहीं**। Rule 5 पर `main` **Dosage** है; Monitoring spec **`b1ccfb5` branch** पर **UNMERGED_CANDIDATE_EVIDENCE** है — owner decision अभी बाकी। Rule 8 नाम constitution में नहीं; **IDENTITY_CANDIDATE_ONLY**। Local validation **Node 24** पर incomplete; **GitHub CI run 15** on `19dd5be` **success** (PostgreSQL + clinical-engine + tests)।
 
 ## Inventory correction
 
@@ -45,7 +46,7 @@ Stage A की report में अब **326** tracked sources की **पू�
 | better-sqlite3 extract | **2** | phase5b clinical-packages — missing native module locally |
 | Other | **0** | |
 
-**GitHub CI run 14** on `136ca9e`: **success** — includes PostgreSQL service, extract bootstrap, full test + clinical-engine steps → **LOCAL_ENVIRONMENT_FAILURE** · **CI_PASS_ON_PR_HEAD** (pre-correction).
+**GitHub CI run 15** on `19dd5be`: **success** — includes PostgreSQL service, extract bootstrap, full test + clinical-engine steps → **LOCAL_ENVIRONMENT_FAILURE** · **CI_PASS_ON_PR_HEAD** (correction head).
 
 ### Clinical-engine tests
 
@@ -53,7 +54,7 @@ Stage A की report में अब **326** tracked sources की **पू�
 |------|--------|
 | Script | `npm run test:clinical-engine` |
 | Local | **CLINICAL_ENGINE_TESTS_NOT_PROVEN** on Node 24 host (venv path) |
-| CI | **Pass** on run 14 step “Test clinical engine” |
+| CI | **Pass** on run 15 step “Test clinical engine” |
 
 ## Dependency advisories (local Node 24)
 
@@ -66,11 +67,14 @@ Stage A की report में अब **326** tracked sources की **पू�
 
 ## GitHub CI
 
-| Field | Pre-correction (`136ca9e`) |
-|-------|---------------------------|
-| Run | **14** / **31037043082** |
+| Field | Correction head (`19dd5be`) |
+|-------|------------------------------|
+| Run | **15** / **31038083277** |
 | Conclusion | **success** |
-| Post-correction head | **Pending new run** after correction push |
+| PostgreSQL tests | **Ran** (service + DB steps success) |
+| better-sqlite3 / extract | **Ran** (bootstrap + tests success) |
+| Clinical-engine tests | **Ran** — step success |
+| Dependency audit | **Ran** — production high gate **success** |
 
 ## Conflicts / owner decisions
 
