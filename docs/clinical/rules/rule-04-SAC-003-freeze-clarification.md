@@ -1,4 +1,4 @@
-# Rule 4 — SAC-003 documentation freeze clarification (owner-approved)
+# Rule 4 — SAC-003 Limited Freeze clarification (owner-approved)
 
 **Product:** E.H. AROGYA SUTRA 2  
 **Owner:** Dr. Ghanshyam Bakalwar  
@@ -22,13 +22,15 @@ Dr. Ghanshyam Bakalwar authorizes **limited documentation clarification** to res
 | Rule 4 runtime | **Shadow-only**, **`RULE4_ENGINE_MODE=off` default**, **production-disconnected** |
 | Production activation, prescription issuance, Stage B, Phase 5D | **Not authorized** by this clarification |
 
+**Explicit Limited Freeze decision:** Q1–Q18 clinical decision bodies are frozen as the documentation baseline. **TH-01–TH-04** thresholds and **DA-01–DA-07** data assets are excluded; they must not be used in clinical selection without separate owner approval. SAC-003 is resolved only within this limited scope.
+
 This file **records** owner interpretation of existing markers. It **does not** edit [rule-04-owner-decisions-DRAFT.md](./rule-04-owner-decisions-DRAFT.md), [rule-04-potency-engine-DRAFT.md](./rule-04-potency-engine-DRAFT.md), or [rule-04-unresolved-clinical-questions-DRAFT.md](./rule-04-unresolved-clinical-questions-DRAFT.md).
 
 ---
 
-## 2. What is formally frozen (clinical specification documentation)
+## 2. Limited Freeze scope — what is frozen
 
-Under owner Option A (SAC-003 decision audit, 2026-08-06), the **Rule 4 clinical specification documentation bundle** on `main` is **owner-confirmed formally frozen**, meaning:
+Under the owner's explicit **Limited Freeze** decision (2026-08-06), the existing **Q1–Q18 Rule 4 clinical decision bodies** on `main` are frozen as the documentation baseline, subject to the exclusions in §4 and §5:
 
 - **Q7** — **FULLY_RESOLVED** · decision closures **14/14 CLOSED** (`Q07C-CLOSE-D07` … `Q07C-CLOSE-D14`).
 - **Q8–Q18** — each **CLOSED** · **OWNER_DECISION_RECORDED** · clinical bodies in the existing files govern design authority.
@@ -37,7 +39,7 @@ Under owner Option A (SAC-003 decision audit, 2026-08-06), the **Rule 4 clinical
 - **Documentation-freeze anchor commit:** `4c35469` (`docs(ehas2): freeze Rule 4 potency specification`).
 - **Authoritative freeze statements** already present in existing files (header/footer **DOCUMENTATION FROZEN**, [rule-by-rule-implementation-status.md](../rule-by-rule-implementation-status.md) Rule 4 row, EOF **“Rule 4 documentation formally frozen: YES”** in owner-decisions).
 
-**Frozen scope is documentation/specification text and closed decision IDs above — not runtime production, not pending thresholds listed in §4, not pending data assets in §5.**
+**This is a Limited Freeze only:** the documentation baseline and closed decision IDs above are frozen. Runtime production, TH-01–TH-04 thresholds (§4), and DA-01–DA-07 data assets (§5) are expressly excluded and may not influence clinical selection without separate owner approval.
 
 ---
 
@@ -99,7 +101,7 @@ These are **deferred engineering/data tracks** already registered in existing Ru
 | Axis | Rule 4 status after this clarification |
 |------|----------------------------------------|
 | **A. Identity** | **Potency Engine** (Rule 4) — name consistent in frozen Rule 4 docs; constitution §D does not yet mirror Rules 1–3 spec links (product identity alignment remains a **separate** documentation task if desired). |
-| **B. Clinical specification (documentation)** | **FORMALLY_FROZEN** (bundle per §2), with §4–§5 exclusions explicit. |
+| **B. Clinical specification (documentation)** | **LIMITED_FREEZE** — existing Q1–Q18 decision bodies are the frozen baseline; TH-01–TH-04 and DA-01–DA-07 are excluded pending separate owner approval. |
 | **C. Implementation** | **VALIDATED_SHADOW** (Phases 1–10 shadow on `main` per phase reports); **not** production clinical evaluator. |
 | **D. Production** | **NOT_CONNECTED** — default **`RULE4_ENGINE_MODE=off`**; no prescription issuance. |
 
@@ -107,11 +109,11 @@ These are **deferred engineering/data tracks** already registered in existing Ru
 
 ## 7. SAC-003 resolution statement
 
-**SAC-003** is **owner-resolved** by this clarification document for **documentation-freeze status**, without modifying underlying Rule 4 source files.
+**SAC-003** is **owner-resolved only within this Limited Freeze governance scope**, without modifying underlying Rule 4 source files. This resolution does not freeze TH-01–TH-04, DA-01–DA-07, runtime wiring, or production behavior.
 
 | Item | Resolution |
 |------|------------|
-| Stage A label **FREEZE_STATUS_CONFLICT** | Superseded for **owner governance** by §2–§3; Stage A audit files on `main` remain historical evidence. |
+| Stage A label **FREEZE_STATUS_CONFLICT** | Resolved only for the **Limited Freeze governance scope** by §2–§3; Stage A audit files on `main` remain historical evidence. |
 | Stage B | **Still not authorized** by this document alone (other Stage A blockers, e.g. SAC-001, and explicit Stage B approval remain). |
 | Filename hygiene (`*-DRAFT.md`) | May be addressed in a **future documentation-only** PR **without** changing clinical rule meaning. |
 
