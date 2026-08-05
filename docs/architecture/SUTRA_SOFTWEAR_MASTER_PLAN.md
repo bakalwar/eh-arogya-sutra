@@ -51,7 +51,7 @@ Preview data, tests, old prompts, comments and legacy behavior are evidence only
 - EHAS2 remains separate from the legacy repository and legacy runtime.
 - The legacy engine is reference-only and must not be modified without a separate explicit owner instruction.
 - No patient-name hardcoding, fixed prescription, fake clinical success or silent fallback.
-- No real patient data in source, fixtures, logs, screenshots, reports or pull requests.
+- No identifiable clinical data in source, fixtures, logs, screenshots, reports or pull requests.
 - No secrets, `.env` files, tokens, database strings or private keys in Git.
 - Original medical reports/images must not be permanently retained.
 - Clinical uncertainty must return typed `UNKNOWN`, `UNRESOLVED`, `NOT_IMPLEMENTED`, `NOT_CONNECTED` or another approved fail-closed state.
@@ -173,7 +173,7 @@ Implement in small rule/contract increments. Preserve assessment/prescription se
 
 ### Gate 4 — Clinical verification and safety validation
 
-Run golden cases, synthetic boundary cases, mutation tests, reproducibility checks, cross-rule conflict tests, unresolved/fail-closed tests, version migration tests and clinician review. Record defects and do not tune against named real patients.
+Run golden cases, synthetic boundary cases, mutation tests, reproducibility checks, cross-rule conflict tests, unresolved/fail-closed tests, version migration tests and clinician review. Record defects and do not tune against identifiable individuals.
 
 ### Gate 5 — Secure integration
 
