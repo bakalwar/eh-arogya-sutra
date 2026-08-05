@@ -26,13 +26,15 @@ from .rule4.evaluator import Rule4ConfigurationError
 MEDICINE_REGISTRY_VERSION = "ehas2-medicine-registry-v1"
 ORCHESTRATOR_VERSION = "ehas2-nine-rule-orchestrator-v1-phase5c"
 
+RULE5_CANONICAL_RULE_NAME = "Monitoring, Follow-up & Post-Release Safety Surveillance"
+
 CANONICAL_RULE_ORDER = [
     (3, "Organ / System Affinity"),
     (1, "Temperament (Prakriti)"),
     (2, "Polarity"),
     (6, "Multi-Disease / Organ-System Triad"),
     (4, "Potency"),
-    (5, "Dosage"),
+    (5, RULE5_CANONICAL_RULE_NAME),
     (7, "External Use Routes"),
     (8, "Disease-level Prakruti Inference"),
     (9, "Master Pipeline"),
@@ -43,12 +45,13 @@ DISPLAY_ORDER = [
     (2, "Polarity"),
     (3, "Organ / System Affinity"),
     (4, "Potency"),
-    (5, "Dosage"),
+    (5, RULE5_CANONICAL_RULE_NAME),
     (6, "Multi-Disease / Organ-System Triad"),
     (7, "External Use Routes"),
     (8, "Disease-level Prakruti Inference"),
     (9, "Master Pipeline"),
 ]
+
 
 
 @dataclass(frozen=True)
@@ -360,13 +363,11 @@ class NineRuleOrchestrator:
             )
         rule_results[6] = r6
 
-        # --- Rules 4, 5, 7 — prescription boundary ---
+        # --- Rules 4, 7 — prescription boundary (Rule 5 post-release — separate) ---
         for num, name, effect in (
             (4, "Potency", "potency_issuance"),
-            (5, "Dosage", "dosage_issuance"),
             (7, "External Use Routes", "external_application_selection"),
         ):
-            upstream_ok = rule_results[6].status in {"EXECUTED", "UNRESOLVED"} and not safety_block
             if safety_block:
                 status = "BLOCKED_BY_SAFETY"
                 reason = "SAFETY_RED_FLAG"
@@ -393,6 +394,20 @@ class NineRuleOrchestrator:
                     "prescription_engine": "PRESCRIPTION_ENGINE_NOT_CONNECTED",
                 },
             )
+
+        # --- Rule 5 — post-release monitoring (metadata only; not dosage) ---
+        rule_results[5] = _rule(
+            5,
+            RULE5_CANONICAL_RULE_NAME,
+            "NOT_IMPLEMENTED",
+            evidence=[],
+            confidence=None,
+            warnings=["Post-release monitoring not connected"],
+            reason="NOT_IMPLEMENTED",
+            affects=False,
+            clinical_effect="none",
+            output={"implemented": False},
+        )
 
         # --- Rule 8 — historically unwired; no dummy ---
         rule_results[8] = _rule(

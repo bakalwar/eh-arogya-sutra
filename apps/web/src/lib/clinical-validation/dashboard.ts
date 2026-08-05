@@ -36,9 +36,9 @@ export const CLINICAL_VALIDATION_DASHBOARD = {
     },
     {
       ruleNumber: 5,
-      ruleName: 'Dosage',
-      status: 'READY_FOR_VALIDATION',
-      note: 'PRESCRIPTION_ENGINE_NOT_CONNECTED',
+      ruleName: 'Monitoring, Follow-up & Post-Release Safety Surveillance',
+      status: 'NOT_IMPLEMENTED',
+      note: 'Post-release monitoring not connected',
     },
     {
       ruleNumber: 6,

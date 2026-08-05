@@ -7,7 +7,11 @@ RULE_DEFINITIONS = [
     {"rule_number": 2, "rule_name": "Polarity", "status": "READY_FOR_VALIDATION"},
     {"rule_number": 3, "rule_name": "Organ / System Affinity", "status": "READY_FOR_VALIDATION"},
     {"rule_number": 4, "rule_name": "Potency", "status": "READY_FOR_VALIDATION"},
-    {"rule_number": 5, "rule_name": "Dosage", "status": "READY_FOR_VALIDATION"},
+    {
+        "rule_number": 5,
+        "rule_name": "Monitoring, Follow-up & Post-Release Safety Surveillance",
+        "status": "NOT_IMPLEMENTED",
+    },
     {
         "rule_number": 6,
         "rule_name": "Multi-Disease / Organ-System Triad",

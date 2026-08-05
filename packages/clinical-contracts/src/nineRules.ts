@@ -3,7 +3,7 @@
  * Canonical names/order from Phase 5A EH_9 audit. No live orchestration.
  */
 
-export const RULE_SET_VERSION = 'ehas2-nine-rule-interfaces-v1' as const;
+export const RULE_SET_VERSION = 'ehas2-nine-rule-interfaces-v2-rule5-monitoring' as const;
 
 export type ClinicalRuleStatus =
   | 'NOT_CONNECTED'
@@ -58,9 +58,9 @@ export const NINE_RULE_DEFINITIONS = [
   },
   {
     ruleNumber: 5 as const,
-    ruleName: 'Dosage',
-    phase5bStatus: 'READY_FOR_VALIDATION' as ClinicalRuleStatus,
-    affectsClinicalSelection: true,
+    ruleName: 'Monitoring, Follow-up & Post-Release Safety Surveillance',
+    phase5bStatus: 'NOT_IMPLEMENTED' as ClinicalRuleStatus,
+    affectsClinicalSelection: false,
   },
   {
     ruleNumber: 6 as const,
