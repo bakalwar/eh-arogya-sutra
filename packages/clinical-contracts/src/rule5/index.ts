@@ -1,4 +1,7 @@
 export * from './version.js';
 export * from './reasonCodes.js';
 export * from './reasonCodeValidation.js';
-export * from './reasonRegistry.js';
+export {
+  serializeRule5ClinicalReasonRegistry,
+  rule5ClinicalReasonRegistryFingerprint,
+} from './reasonRegistry.js';

@@ -1,4 +1,6 @@
 import {
+  RULE5_CANONICAL_CLINICAL_REASON_REGISTRY,
+  RULE5_CANONICAL_ENTRY_BY_CODE,
   RULE5_CLINICAL_REASON_CODES,
   RULE5_KNOWN_CLINICAL_REASON_CODE_SET,
   type Rule5ClinicalReasonCode,
@@ -31,14 +33,19 @@ export function assertKnownRule5ClinicalReasonCode(
 export type Rule5RegistryValidationFailureCode =
   | 'RULE5_REGISTRY_INVALID_DOCUMENT'
   | 'RULE5_REGISTRY_INVALID_VERSION'
+  | 'RULE5_REGISTRY_MISSING_REGISTRY_VERSION'
   | 'RULE5_REGISTRY_DUPLICATE_CODE'
   | 'RULE5_REGISTRY_WRONG_NAMESPACE'
   | 'RULE5_REGISTRY_MISSING_MANDATORY_FIELD'
+  | 'RULE5_REGISTRY_WHITESPACE_ONLY_FIELD'
   | 'RULE5_REGISTRY_EXECUTABLE_NOT_ALLOWED'
   | 'RULE5_REGISTRY_FORBIDDEN_CODE_PREFIX'
   | 'RULE5_REGISTRY_UNEXPECTED_FIELD'
   | 'RULE5_REGISTRY_CODE_NOT_IN_CANONICAL_SET'
-  | 'RULE5_REGISTRY_INCOMPLETE_MEMBERSHIP';
+  | 'RULE5_REGISTRY_INCOMPLETE_MEMBERSHIP'
+  | 'RULE5_REGISTRY_WRONG_OWNER_DECISION_ANCHOR'
+  | 'RULE5_REGISTRY_CANONICAL_ENTRY_MISMATCH'
+  | 'RULE5_REGISTRY_ENTRY_ORDER_NOT_CANONICAL';
 
 export class Rule5RegistryValidationError extends Error {
   readonly failureCode: Rule5RegistryValidationFailureCode;
@@ -60,14 +67,30 @@ const ENTRY_KEYS = new Set([
   'ownerDecisionAnchor',
 ]);
 
-const MANDATORY_ENTRY_FIELDS = [
+const MANDATORY_ENTRY_STRING_FIELDS = [
   'code',
   'namespace',
   'meaning',
-  'executable',
   'introducedInVersion',
   'ownerDecisionAnchor',
 ] as const;
+
+const FORBIDDEN_DOCUMENT_CODES = new Set([
+  'R5_ADVERSE_EVENT_REPORTED',
+  'R5_EMERGENCY_RED_FLAG_DETECTED',
+  'R5_ACUTE_CLINICAL_DETERIORATION',
+  'R5_OVERDOSE_SUSPECTED',
+  'R5_DANGEROUS_VITAL_OR_LAB_RESULT',
+  'R5_EXPOSURE_UNCOMPUTABLE',
+  'R5_CONFIRMED_APPLICABLE_ALLERGY',
+  'R5_ABSOLUTE_CONTRAINDICATION_DETECTED',
+  'R5_PROHIBITED_INTERACTION_DETECTED',
+  'R5_FORMULATION_ROUTE_MISMATCH',
+  'R5_MAXIMUM_DURATION_OR_CUMULATIVE_EXPOSURE_EXCEEDED',
+  'R5_UNSAFE_CONCURRENT_MEDICINE_CHANGE',
+  'R5_PATIENT_INSTRUCTIONS_NOT_DELIVERED',
+  'R5_CRITICAL_FOLLOW_UP_CONTRADICTION',
+]);
 
 function assertPlainObject(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -85,68 +108,139 @@ function rejectUnexpectedKeys(
   }
 }
 
+function requireNonEmptyString(value: unknown, field: string): string {
+  if (value === undefined || value === null || value === '') {
+    throw new Rule5RegistryValidationError('RULE5_REGISTRY_MISSING_MANDATORY_FIELD', field);
+  }
+  if (typeof value !== 'string') {
+    throw new Rule5RegistryValidationError('RULE5_REGISTRY_INVALID_DOCUMENT', field);
+  }
+  if (value.trim() === '') {
+    throw new Rule5RegistryValidationError('RULE5_REGISTRY_WHITESPACE_ONLY_FIELD', field);
+  }
+  return value;
+}
+
+function assertEntryMatchesCanonical(entry: Rule5ClinicalReasonRegistryEntry): void {
+  const canonical = RULE5_CANONICAL_ENTRY_BY_CODE[entry.code as Rule5ClinicalReasonCode];
+  if (!canonical) {
+    throw new Rule5RegistryValidationError('RULE5_REGISTRY_CODE_NOT_IN_CANONICAL_SET', entry.code);
+  }
+  if (entry.namespace !== canonical.namespace) {
+    throw new Rule5RegistryValidationError('RULE5_REGISTRY_CANONICAL_ENTRY_MISMATCH', 'namespace');
+  }
+  if (entry.meaning !== canonical.meaning) {
+    throw new Rule5RegistryValidationError('RULE5_REGISTRY_CANONICAL_ENTRY_MISMATCH', 'meaning');
+  }
+  if (entry.executable !== canonical.executable) {
+    throw new Rule5RegistryValidationError('RULE5_REGISTRY_CANONICAL_ENTRY_MISMATCH', 'executable');
+  }
+  if (entry.introducedInVersion !== canonical.introducedInVersion) {
+    throw new Rule5RegistryValidationError(
+      'RULE5_REGISTRY_CANONICAL_ENTRY_MISMATCH',
+      'introducedInVersion',
+    );
+  }
+  if (entry.ownerDecisionAnchor !== canonical.ownerDecisionAnchor) {
+    throw new Rule5RegistryValidationError(
+      'RULE5_REGISTRY_WRONG_OWNER_DECISION_ANCHOR',
+      entry.code,
+    );
+  }
+}
+
 function parseEntry(raw: unknown): Rule5ClinicalReasonRegistryEntry {
   if (!assertPlainObject(raw)) {
     throw new Rule5RegistryValidationError('RULE5_REGISTRY_INVALID_DOCUMENT');
   }
   rejectUnexpectedKeys(raw, ENTRY_KEYS, 'RULE5_REGISTRY_UNEXPECTED_FIELD');
 
-  for (const field of MANDATORY_ENTRY_FIELDS) {
-    if (raw[field] === undefined || raw[field] === null || raw[field] === '') {
-      throw new Rule5RegistryValidationError('RULE5_REGISTRY_MISSING_MANDATORY_FIELD', field);
-    }
+  if (raw.executable === undefined || raw.executable === null) {
+    throw new Rule5RegistryValidationError('RULE5_REGISTRY_MISSING_MANDATORY_FIELD', 'executable');
   }
 
-  const code = String(raw.code);
+  const code = requireNonEmptyString(raw.code, 'code');
   if (code.startsWith('RULE5_') || code.startsWith('PHASE1_')) {
     throw new Rule5RegistryValidationError('RULE5_REGISTRY_FORBIDDEN_CODE_PREFIX', code);
+  }
+  if (FORBIDDEN_DOCUMENT_CODES.has(code)) {
+    throw new Rule5RegistryValidationError('RULE5_REGISTRY_CODE_NOT_IN_CANONICAL_SET', code);
   }
   if (!RULE5_KNOWN_CLINICAL_REASON_CODE_SET.has(code)) {
     throw new Rule5RegistryValidationError('RULE5_REGISTRY_CODE_NOT_IN_CANONICAL_SET', code);
   }
 
-  if (raw.namespace !== RULE5_CLINICAL_NAMESPACE) {
-    throw new Rule5RegistryValidationError('RULE5_REGISTRY_WRONG_NAMESPACE', String(raw.namespace));
+  for (const field of MANDATORY_ENTRY_STRING_FIELDS) {
+    if (field === 'code') continue;
+    requireNonEmptyString(raw[field], field);
+  }
+
+  const namespace = String(raw.namespace);
+  if (namespace !== RULE5_CLINICAL_NAMESPACE) {
+    throw new Rule5RegistryValidationError('RULE5_REGISTRY_WRONG_NAMESPACE', namespace);
   }
 
   if (raw.executable !== false) {
     throw new Rule5RegistryValidationError('RULE5_REGISTRY_EXECUTABLE_NOT_ALLOWED', code);
   }
 
-  if (raw.introducedInVersion !== RULE5_REASON_REGISTRY_VERSION) {
-    throw new Rule5RegistryValidationError(
-      'RULE5_REGISTRY_INVALID_VERSION',
-      String(raw.introducedInVersion),
-    );
+  const introducedInVersion = String(raw.introducedInVersion);
+  if (introducedInVersion !== RULE5_REASON_REGISTRY_VERSION) {
+    throw new Rule5RegistryValidationError('RULE5_REGISTRY_INVALID_VERSION', introducedInVersion);
   }
 
-  const anchor = String(raw.ownerDecisionAnchor);
-  if (anchor !== 'OD-R5-M0-014' && anchor !== 'OD-R5-M0-015') {
+  const ownerDecisionAnchor = String(raw.ownerDecisionAnchor);
+  if (ownerDecisionAnchor !== 'OD-R5-M0-014' && ownerDecisionAnchor !== 'OD-R5-M0-015') {
     throw new Rule5RegistryValidationError(
       'RULE5_REGISTRY_MISSING_MANDATORY_FIELD',
       'ownerDecisionAnchor',
     );
   }
 
-  return {
-    code: code as Rule5ClinicalReasonCode,
+  const entry: Rule5ClinicalReasonRegistryEntry = {
+    code,
     namespace: 'R5',
     meaning: String(raw.meaning),
     executable: false,
     introducedInVersion: RULE5_REASON_REGISTRY_VERSION,
-    ownerDecisionAnchor: anchor,
+    ownerDecisionAnchor,
   };
+
+  assertEntryMatchesCanonical(entry);
+  return entry;
 }
 
-/** Fail-closed parse and validate a registry document (fixture or in-memory). */
+/**
+ * Fail-closed parse and validate a registry document against canonical TypeScript entries.
+ * Entry array order must match canonical deterministic code order (sorted by code).
+ */
 export function validateRule5ClinicalReasonRegistryDocument(
   raw: unknown,
 ): Rule5ClinicalReasonRegistry {
+  if (raw === null) {
+    throw new Rule5RegistryValidationError('RULE5_REGISTRY_INVALID_DOCUMENT');
+  }
+  if (Array.isArray(raw)) {
+    throw new Rule5RegistryValidationError('RULE5_REGISTRY_INVALID_DOCUMENT');
+  }
   if (!assertPlainObject(raw)) {
     throw new Rule5RegistryValidationError('RULE5_REGISTRY_INVALID_DOCUMENT');
   }
   rejectUnexpectedKeys(raw, ROOT_KEYS, 'RULE5_REGISTRY_UNEXPECTED_FIELD');
 
+  if (
+    raw.registryVersion === undefined ||
+    raw.registryVersion === null ||
+    raw.registryVersion === ''
+  ) {
+    throw new Rule5RegistryValidationError('RULE5_REGISTRY_MISSING_REGISTRY_VERSION');
+  }
+  if (typeof raw.registryVersion === 'string' && raw.registryVersion.trim() === '') {
+    throw new Rule5RegistryValidationError(
+      'RULE5_REGISTRY_WHITESPACE_ONLY_FIELD',
+      'registryVersion',
+    );
+  }
   if (raw.registryVersion !== RULE5_REASON_REGISTRY_VERSION) {
     throw new Rule5RegistryValidationError(
       'RULE5_REGISTRY_INVALID_VERSION',
@@ -178,10 +272,11 @@ export function validateRule5ClinicalReasonRegistryDocument(
     }
   }
 
-  entries.sort((a, b) => a.code.localeCompare(b.code));
+  const canonicalCodes = RULE5_CANONICAL_CLINICAL_REASON_REGISTRY.entries.map((e) => e.code);
+  const documentCodes = entries.map((e) => e.code);
+  if (documentCodes.join('\0') !== canonicalCodes.join('\0')) {
+    throw new Rule5RegistryValidationError('RULE5_REGISTRY_ENTRY_ORDER_NOT_CANONICAL');
+  }
 
-  return {
-    registryVersion: RULE5_REASON_REGISTRY_VERSION,
-    entries,
-  };
+  return RULE5_CANONICAL_CLINICAL_REASON_REGISTRY;
 }

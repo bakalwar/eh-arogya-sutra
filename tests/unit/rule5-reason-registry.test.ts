@@ -4,21 +4,25 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 import {
+  RULE5_CANONICAL_CLINICAL_REASON_REGISTRY,
+  RULE5_CANONICAL_CLINICAL_REASON_ENTRIES,
+  RULE5_CANONICAL_ENTRY_BY_CODE,
   RULE5_CLINICAL_REASON_CODES,
   RULE5_OD014_REASON_CODES,
   RULE5_OD015_REASON_CODES,
   RULE5_REASON_REGISTRY_VERSION,
   assertKnownRule5ClinicalReasonCode,
   createNotConnectedAnalyzeResult,
-  loadRule5ClinicalReasonRegistryFromRepoRoot,
   RULE_SET_VERSION,
   Rule5RegistryValidationError,
   Rule5UnknownClinicalReasonCodeError,
   serializeRule5ClinicalReasonRegistry,
   validateRule5ClinicalReasonRegistryDocument,
 } from '../../packages/clinical-contracts/src/index.ts';
+import { loadRule5ClinicalReasonRegistryFromRepoRoot } from '../../packages/clinical-contracts/src/rule5/reasonRegistry.ts';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
+const fixturePath = path.join(root, 'fixtures/rule5/reason-code-registry.clinical.v1.json');
 
 const M3_FUTURE_CODES = [
   'R5_EMERGENCY_RED_FLAG_DETECTED',
@@ -48,6 +52,10 @@ const FORBIDDEN_ENTRY_KEYS = new Set([
   'phi',
 ]);
 
+function readFixtureJson(): unknown {
+  return JSON.parse(fs.readFileSync(fixturePath, 'utf8')) as unknown;
+}
+
 function collectKeys(value: unknown, keys: Set<string>): void {
   if (value === null || typeof value !== 'object') return;
   if (Array.isArray(value)) {
@@ -60,15 +68,57 @@ function collectKeys(value: unknown, keys: Set<string>): void {
   }
 }
 
+function expectValidationFailure(
+  fn: () => void,
+  code: Rule5RegistryValidationError['failureCode'],
+): void {
+  try {
+    fn();
+    expect.fail('expected validation error');
+  } catch (e) {
+    expect(e).toBeInstanceOf(Rule5RegistryValidationError);
+    expect((e as Rule5RegistryValidationError).failureCode).toBe(code);
+  }
+}
+
 describe('Rule 5 R5-M2 clinical reason registry', () => {
   const registry = loadRule5ClinicalReasonRegistryFromRepoRoot(root);
 
   it('contains exactly 21 unique clinical codes with exact OD-014 + OD-015 membership', () => {
     const codes = registry.entries.map((e) => e.code);
     expect(new Set(codes).size).toBe(21);
-    expect(codes.sort()).toEqual([...RULE5_CLINICAL_REASON_CODES].sort());
+    expect(codes).toEqual([...RULE5_CLINICAL_REASON_CODES]);
+    expect(RULE5_OD014_REASON_CODES).toHaveLength(12);
+    expect(RULE5_OD015_REASON_CODES).toHaveLength(9);
     expect(RULE5_OD014_REASON_CODES.every((c) => codes.includes(c))).toBe(true);
     expect(RULE5_OD015_REASON_CODES.every((c) => codes.includes(c))).toBe(true);
+  });
+
+  it('returns canonical TypeScript registry with full 21-entry parity', () => {
+    expect(registry).toEqual(RULE5_CANONICAL_CLINICAL_REASON_REGISTRY);
+    expect(validateRule5ClinicalReasonRegistryDocument(readFixtureJson())).toEqual(
+      RULE5_CANONICAL_CLINICAL_REASON_REGISTRY,
+    );
+  });
+
+  it('binds each code to exact ownerDecisionAnchor (OD-014 ×12, OD-015 ×9)', () => {
+    for (const entry of RULE5_CANONICAL_CLINICAL_REASON_ENTRIES) {
+      expect(
+        RULE5_CANONICAL_ENTRY_BY_CODE[entry.code as keyof typeof RULE5_CANONICAL_ENTRY_BY_CODE],
+      ).toEqual(entry);
+    }
+    for (const code of RULE5_OD014_REASON_CODES) {
+      expect(
+        RULE5_CANONICAL_ENTRY_BY_CODE[code as keyof typeof RULE5_CANONICAL_ENTRY_BY_CODE]
+          .ownerDecisionAnchor,
+      ).toBe('OD-R5-M0-014');
+    }
+    for (const code of RULE5_OD015_REASON_CODES) {
+      expect(
+        RULE5_CANONICAL_ENTRY_BY_CODE[code as keyof typeof RULE5_CANONICAL_ENTRY_BY_CODE]
+          .ownerDecisionAnchor,
+      ).toBe('OD-R5-M0-015');
+    }
   });
 
   it('includes canonical intake code and excludes stale reported code', () => {
@@ -99,31 +149,23 @@ describe('Rule 5 R5-M2 clinical reason registry', () => {
   it('registry version constant matches fixture header', () => {
     expect(registry.registryVersion).toBe(RULE5_REASON_REGISTRY_VERSION);
     expect(registry.registryVersion).toBe('ehas2-rule5-reason-registry-v1');
-    const raw = JSON.parse(
-      fs.readFileSync(
-        path.join(root, 'fixtures/rule5/reason-code-registry.clinical.v1.json'),
-        'utf8',
-      ),
-    ) as { registryVersion: string };
+    const raw = readFixtureJson() as { registryVersion: string };
     expect(raw.registryVersion).toBe(RULE5_REASON_REGISTRY_VERSION);
   });
 
-  it('serializes deterministically', () => {
+  it('serializes deterministically and matches canonical stable dump', () => {
     const a = serializeRule5ClinicalReasonRegistry(registry);
-    const b = serializeRule5ClinicalReasonRegistry(
+    const b = serializeRule5ClinicalReasonRegistry(RULE5_CANONICAL_CLINICAL_REASON_REGISTRY);
+    const c = serializeRule5ClinicalReasonRegistry(
       loadRule5ClinicalReasonRegistryFromRepoRoot(root),
     );
     expect(a).toBe(b);
+    expect(b).toBe(c);
     expect(() => JSON.parse(a)).not.toThrow();
   });
 
   it('meanings do not assert PASS/safe/stable as standalone claims and omit forbidden clinical fields', () => {
-    const raw = JSON.parse(
-      fs.readFileSync(
-        path.join(root, 'fixtures/rule5/reason-code-registry.clinical.v1.json'),
-        'utf8',
-      ),
-    ) as unknown;
+    const raw = readFixtureJson();
     const keys = new Set<string>();
     collectKeys(raw, keys);
     for (const forbidden of FORBIDDEN_ENTRY_KEYS) {
@@ -135,24 +177,15 @@ describe('Rule 5 R5-M2 clinical reason registry', () => {
   });
 
   it('rejects duplicate codes fail-closed', () => {
-    const base = JSON.parse(
-      fs.readFileSync(
-        path.join(root, 'fixtures/rule5/reason-code-registry.clinical.v1.json'),
-        'utf8',
-      ),
-    ) as { registryVersion: string; entries: unknown[] };
+    const base = readFixtureJson() as { registryVersion: string; entries: unknown[] };
     const dup = {
       ...base,
       entries: [...base.entries, base.entries[0]],
     };
-    expect(() => validateRule5ClinicalReasonRegistryDocument(dup)).toThrow(
-      Rule5RegistryValidationError,
+    expectValidationFailure(
+      () => validateRule5ClinicalReasonRegistryDocument(dup),
+      'RULE5_REGISTRY_DUPLICATE_CODE',
     );
-    try {
-      validateRule5ClinicalReasonRegistryDocument(dup);
-    } catch (e) {
-      expect((e as Rule5RegistryValidationError).failureCode).toBe('RULE5_REGISTRY_DUPLICATE_CODE');
-    }
   });
 
   it('rejects unknown clinical codes fail-closed', () => {
@@ -161,51 +194,82 @@ describe('Rule 5 R5-M2 clinical reason registry', () => {
     );
   });
 
+  it('rejects extra unknown document entry fail-closed', () => {
+    const base = readFixtureJson() as {
+      registryVersion: string;
+      entries: Record<string, unknown>[];
+    };
+    const extra = {
+      registryVersion: base.registryVersion,
+      entries: [
+        ...base.entries,
+        {
+          code: 'R5_EMERGENCY_RED_FLAG_DETECTED',
+          namespace: 'R5',
+          meaning: 'x',
+          executable: false,
+          introducedInVersion: RULE5_REASON_REGISTRY_VERSION,
+          ownerDecisionAnchor: 'OD-R5-M0-014',
+        },
+      ],
+    };
+    expectValidationFailure(
+      () => validateRule5ClinicalReasonRegistryDocument(extra),
+      'RULE5_REGISTRY_CODE_NOT_IN_CANONICAL_SET',
+    );
+  });
+
+  it('rejects missing canonical entry fail-closed', () => {
+    const base = readFixtureJson() as {
+      registryVersion: string;
+      entries: Record<string, unknown>[];
+    };
+    const missing = {
+      registryVersion: base.registryVersion,
+      entries: base.entries.slice(1),
+    };
+    expectValidationFailure(
+      () => validateRule5ClinicalReasonRegistryDocument(missing),
+      'RULE5_REGISTRY_INCOMPLETE_MEMBERSHIP',
+    );
+  });
+
   it('rejects wrong namespace fail-closed', () => {
-    const base = JSON.parse(
-      fs.readFileSync(
-        path.join(root, 'fixtures/rule5/reason-code-registry.clinical.v1.json'),
-        'utf8',
-      ),
-    ) as { registryVersion: string; entries: Record<string, unknown>[] };
+    const base = readFixtureJson() as {
+      registryVersion: string;
+      entries: Record<string, unknown>[];
+    };
     const bad = {
       registryVersion: base.registryVersion,
       entries: base.entries.map((e, i) => (i === 0 ? { ...e, namespace: 'reason' } : e)),
     };
-    expect(() => validateRule5ClinicalReasonRegistryDocument(bad)).toThrow(
-      Rule5RegistryValidationError,
+    expectValidationFailure(
+      () => validateRule5ClinicalReasonRegistryDocument(bad),
+      'RULE5_REGISTRY_WRONG_NAMESPACE',
     );
-    try {
-      validateRule5ClinicalReasonRegistryDocument(bad);
-    } catch (e) {
-      expect((e as Rule5RegistryValidationError).failureCode).toBe(
-        'RULE5_REGISTRY_WRONG_NAMESPACE',
-      );
-    }
   });
 
-  it('rejects invalid registry version fail-closed', () => {
-    const base = JSON.parse(
-      fs.readFileSync(
-        path.join(root, 'fixtures/rule5/reason-code-registry.clinical.v1.json'),
-        'utf8',
-      ),
-    ) as { registryVersion: string; entries: unknown[] };
-    expect(() =>
-      validateRule5ClinicalReasonRegistryDocument({
-        ...base,
-        registryVersion: 'ehas2-rule5-reason-registry-v0',
-      }),
-    ).toThrow(Rule5RegistryValidationError);
+  it('rejects invalid and missing registry version fail-closed', () => {
+    const base = readFixtureJson() as { registryVersion: string; entries: unknown[] };
+    expectValidationFailure(
+      () =>
+        validateRule5ClinicalReasonRegistryDocument({
+          ...base,
+          registryVersion: 'ehas2-rule5-reason-registry-v0',
+        }),
+      'RULE5_REGISTRY_INVALID_VERSION',
+    );
+    expectValidationFailure(
+      () => validateRule5ClinicalReasonRegistryDocument({ entries: base.entries }),
+      'RULE5_REGISTRY_MISSING_REGISTRY_VERSION',
+    );
   });
 
-  it('rejects missing mandatory metadata and executable=true fail-closed', () => {
-    const base = JSON.parse(
-      fs.readFileSync(
-        path.join(root, 'fixtures/rule5/reason-code-registry.clinical.v1.json'),
-        'utf8',
-      ),
-    ) as { registryVersion: string; entries: Record<string, unknown>[] };
+  it('rejects missing mandatory metadata, whitespace-only fields, and executable=true', () => {
+    const base = readFixtureJson() as {
+      registryVersion: string;
+      entries: Record<string, unknown>[];
+    };
     const missing = {
       registryVersion: base.registryVersion,
       entries: base.entries.map((e, i) =>
@@ -214,24 +278,136 @@ describe('Rule 5 R5-M2 clinical reason registry', () => {
           : e,
       ),
     };
-    expect(() => validateRule5ClinicalReasonRegistryDocument(missing)).toThrow(
-      Rule5RegistryValidationError,
+    expectValidationFailure(
+      () => validateRule5ClinicalReasonRegistryDocument(missing),
+      'RULE5_REGISTRY_MISSING_MANDATORY_FIELD',
+    );
+
+    const whitespaceMeaning = {
+      registryVersion: base.registryVersion,
+      entries: base.entries.map((e, i) => (i === 0 ? { ...e, meaning: '   ' } : e)),
+    };
+    expectValidationFailure(
+      () => validateRule5ClinicalReasonRegistryDocument(whitespaceMeaning),
+      'RULE5_REGISTRY_WHITESPACE_ONLY_FIELD',
     );
 
     const executable = {
       registryVersion: base.registryVersion,
       entries: base.entries.map((e, i) => (i === 0 ? { ...e, executable: true } : e)),
     };
-    expect(() => validateRule5ClinicalReasonRegistryDocument(executable)).toThrow(
-      Rule5RegistryValidationError,
+    expectValidationFailure(
+      () => validateRule5ClinicalReasonRegistryDocument(executable),
+      'RULE5_REGISTRY_EXECUTABLE_NOT_ALLOWED',
     );
-    try {
-      validateRule5ClinicalReasonRegistryDocument(executable);
-    } catch (e) {
-      expect((e as Rule5RegistryValidationError).failureCode).toBe(
-        'RULE5_REGISTRY_EXECUTABLE_NOT_ALLOWED',
-      );
-    }
+  });
+
+  it('rejects changed canonical meaning and wrong ownerDecisionAnchor', () => {
+    const base = readFixtureJson() as {
+      registryVersion: string;
+      entries: Record<string, unknown>[];
+    };
+    const tamperedMeaning = {
+      registryVersion: base.registryVersion,
+      entries: base.entries.map((e, i) =>
+        i === 0 ? { ...e, meaning: `${String(e.meaning)}.` } : e,
+      ),
+    };
+    expectValidationFailure(
+      () => validateRule5ClinicalReasonRegistryDocument(tamperedMeaning),
+      'RULE5_REGISTRY_CANONICAL_ENTRY_MISMATCH',
+    );
+
+    const wrongAnchor = {
+      registryVersion: base.registryVersion,
+      entries: base.entries.map((e) =>
+        e.code === 'R5_ADVERSE_EVENT_INTAKE_RECORDED'
+          ? { ...e, ownerDecisionAnchor: 'OD-R5-M0-015' }
+          : e,
+      ),
+    };
+    expectValidationFailure(
+      () => validateRule5ClinicalReasonRegistryDocument(wrongAnchor),
+      'RULE5_REGISTRY_WRONG_OWNER_DECISION_ANCHOR',
+    );
+  });
+
+  it('rejects unexpected keys, null root, array root, and non-object entry', () => {
+    const base = readFixtureJson() as {
+      registryVersion: string;
+      entries: Record<string, unknown>[];
+    };
+    expectValidationFailure(
+      () =>
+        validateRule5ClinicalReasonRegistryDocument({
+          ...base,
+          extraRoot: true,
+        }),
+      'RULE5_REGISTRY_UNEXPECTED_FIELD',
+    );
+    expectValidationFailure(
+      () => validateRule5ClinicalReasonRegistryDocument(null),
+      'RULE5_REGISTRY_INVALID_DOCUMENT',
+    );
+    expectValidationFailure(
+      () => validateRule5ClinicalReasonRegistryDocument([]),
+      'RULE5_REGISTRY_INVALID_DOCUMENT',
+    );
+    expectValidationFailure(
+      () =>
+        validateRule5ClinicalReasonRegistryDocument({
+          registryVersion: base.registryVersion,
+          entries: [null, ...base.entries.slice(1)],
+        }),
+      'RULE5_REGISTRY_INVALID_DOCUMENT',
+    );
+  });
+
+  it('rejects non-canonical entry order (deterministic policy: sorted by code)', () => {
+    const base = readFixtureJson() as {
+      registryVersion: string;
+      entries: Record<string, unknown>[];
+    };
+    const shuffled = {
+      registryVersion: base.registryVersion,
+      entries: [...base.entries].reverse(),
+    };
+    expectValidationFailure(
+      () => validateRule5ClinicalReasonRegistryDocument(shuffled),
+      'RULE5_REGISTRY_ENTRY_ORDER_NOT_CANONICAL',
+    );
+  });
+
+  it('rejects stale reported and RULE5_/PHASE1_ codes in document', () => {
+    const base = readFixtureJson() as {
+      registryVersion: string;
+      entries: Record<string, unknown>[];
+    };
+    const reported = {
+      registryVersion: base.registryVersion,
+      entries: [
+        ...base.entries,
+        {
+          code: 'R5_ADVERSE_EVENT_REPORTED',
+          namespace: 'R5',
+          meaning: 'x',
+          executable: false,
+          introducedInVersion: RULE5_REASON_REGISTRY_VERSION,
+          ownerDecisionAnchor: 'OD-R5-M0-014',
+        },
+      ],
+    };
+    expectValidationFailure(
+      () => validateRule5ClinicalReasonRegistryDocument(reported),
+      'RULE5_REGISTRY_CODE_NOT_IN_CANONICAL_SET',
+    );
+  });
+
+  it('package barrel import does not expose Node filesystem loader', async () => {
+    const barrel = await import('../../packages/clinical-contracts/src/index.ts');
+    expect(barrel).toHaveProperty('RULE5_CANONICAL_CLINICAL_REASON_REGISTRY');
+    expect(barrel).toHaveProperty('validateRule5ClinicalReasonRegistryDocument');
+    expect(barrel).not.toHaveProperty('loadRule5ClinicalReasonRegistryFromRepoRoot');
   });
 });
 
