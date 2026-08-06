@@ -7,7 +7,11 @@ import {
   type Rule5ClinicalReasonRegistry,
   type Rule5ClinicalReasonRegistryEntry,
 } from './reasonCodes.js';
-import { RULE5_CLINICAL_NAMESPACE, RULE5_REASON_REGISTRY_VERSION } from './version.js';
+import {
+  RULE5_CLINICAL_NAMESPACE,
+  RULE5_REASON_REGISTRY_VERSION,
+  RULE5_REASON_REGISTRY_VERSION_V1,
+} from './version.js';
 
 export type Rule5UnknownClinicalReasonCodeFailure = 'RULE5_UNKNOWN_CLINICAL_REASON_CODE';
 
@@ -21,7 +25,7 @@ export class Rule5UnknownClinicalReasonCodeError extends Error {
   }
 }
 
-/** Fail-closed: reject codes outside the canonical 21-code clinical register. */
+/** Fail-closed: reject codes outside the canonical 34-code clinical register. */
 export function assertKnownRule5ClinicalReasonCode(
   code: string,
 ): asserts code is Rule5ClinicalReasonCode {
@@ -75,22 +79,14 @@ const MANDATORY_ENTRY_STRING_FIELDS = [
   'ownerDecisionAnchor',
 ] as const;
 
-const FORBIDDEN_DOCUMENT_CODES = new Set([
-  'R5_ADVERSE_EVENT_REPORTED',
-  'R5_EMERGENCY_RED_FLAG_DETECTED',
-  'R5_ACUTE_CLINICAL_DETERIORATION',
-  'R5_OVERDOSE_SUSPECTED',
-  'R5_DANGEROUS_VITAL_OR_LAB_RESULT',
-  'R5_EXPOSURE_UNCOMPUTABLE',
-  'R5_CONFIRMED_APPLICABLE_ALLERGY',
-  'R5_ABSOLUTE_CONTRAINDICATION_DETECTED',
-  'R5_PROHIBITED_INTERACTION_DETECTED',
-  'R5_FORMULATION_ROUTE_MISMATCH',
-  'R5_MAXIMUM_DURATION_OR_CUMULATIVE_EXPOSURE_EXCEEDED',
-  'R5_UNSAFE_CONCURRENT_MEDICINE_CHANGE',
-  'R5_PATIENT_INSTRUCTIONS_NOT_DELIVERED',
-  'R5_CRITICAL_FOLLOW_UP_CONTRADICTION',
+const FORBIDDEN_DOCUMENT_CODES = new Set(['R5_ADVERSE_EVENT_REPORTED']);
+
+const ALLOWED_INTRODUCED_VERSIONS = new Set<string>([
+  RULE5_REASON_REGISTRY_VERSION_V1,
+  RULE5_REASON_REGISTRY_VERSION,
 ]);
+
+const ALLOWED_OWNER_ANCHORS = new Set(['OD-R5-M0-014', 'OD-R5-M0-015', 'OD-R5-M0-016']);
 
 function assertPlainObject(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -185,12 +181,12 @@ function parseEntry(raw: unknown): Rule5ClinicalReasonRegistryEntry {
   }
 
   const introducedInVersion = String(raw.introducedInVersion);
-  if (introducedInVersion !== RULE5_REASON_REGISTRY_VERSION) {
+  if (!ALLOWED_INTRODUCED_VERSIONS.has(introducedInVersion)) {
     throw new Rule5RegistryValidationError('RULE5_REGISTRY_INVALID_VERSION', introducedInVersion);
   }
 
   const ownerDecisionAnchor = String(raw.ownerDecisionAnchor);
-  if (ownerDecisionAnchor !== 'OD-R5-M0-014' && ownerDecisionAnchor !== 'OD-R5-M0-015') {
+  if (!ALLOWED_OWNER_ANCHORS.has(ownerDecisionAnchor)) {
     throw new Rule5RegistryValidationError(
       'RULE5_REGISTRY_MISSING_MANDATORY_FIELD',
       'ownerDecisionAnchor',
@@ -202,8 +198,10 @@ function parseEntry(raw: unknown): Rule5ClinicalReasonRegistryEntry {
     namespace: 'R5',
     meaning: String(raw.meaning),
     executable: false,
-    introducedInVersion: RULE5_REASON_REGISTRY_VERSION,
-    ownerDecisionAnchor,
+    introducedInVersion:
+      introducedInVersion as Rule5ClinicalReasonRegistryEntry['introducedInVersion'],
+    ownerDecisionAnchor:
+      ownerDecisionAnchor as Rule5ClinicalReasonRegistryEntry['ownerDecisionAnchor'],
   };
 
   assertEntryMatchesCanonical(entry);
@@ -212,7 +210,7 @@ function parseEntry(raw: unknown): Rule5ClinicalReasonRegistryEntry {
 
 /**
  * Fail-closed parse and validate a registry document against canonical TypeScript entries.
- * Entry array order must match canonical deterministic code order (sorted by code).
+ * Only **v2** is accepted as the current canonical registry version.
  */
 export function validateRule5ClinicalReasonRegistryDocument(
   raw: unknown,

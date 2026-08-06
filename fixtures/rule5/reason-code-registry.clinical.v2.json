@@ -1,0 +1,277 @@
+{
+  "entries": [
+    {
+      "code": "R5_ABSOLUTE_CONTRAINDICATION_DETECTED",
+      "executable": false,
+      "introducedInVersion": "ehas2-rule5-reason-registry-v2",
+      "meaning": "Absolute contraindication (hard-blocker condition; metadata-only).",
+      "namespace": "R5",
+      "ownerDecisionAnchor": "OD-R5-M0-016"
+    },
+    {
+      "code": "R5_ACTIVE_ORAL_COUNT_BELOW_REQUIRED",
+      "executable": false,
+      "introducedInVersion": "ehas2-rule5-reason-registry-v1",
+      "meaning": "Active oral mixture count below required 3/4/5 (OD-011); typed safety hold.",
+      "namespace": "R5",
+      "ownerDecisionAnchor": "OD-R5-M0-015"
+    },
+    {
+      "code": "R5_ACUTE_CLINICAL_DETERIORATION",
+      "executable": false,
+      "introducedInVersion": "ehas2-rule5-reason-registry-v2",
+      "meaning": "Acute clinical deterioration (hard-blocker condition; metadata-only).",
+      "namespace": "R5",
+      "ownerDecisionAnchor": "OD-R5-M0-016"
+    },
+    {
+      "code": "R5_ADVERSE_EVENT_DATA_INCOMPLETE",
+      "executable": false,
+      "introducedInVersion": "ehas2-rule5-reason-registry-v1",
+      "meaning": "AE payload insufficient to assess",
+      "namespace": "R5",
+      "ownerDecisionAnchor": "OD-R5-M0-014"
+    },
+    {
+      "code": "R5_ADVERSE_EVENT_FOLLOW_UP_REQUIRED",
+      "executable": false,
+      "introducedInVersion": "ehas2-rule5-reason-registry-v1",
+      "meaning": "AE follow-up owed",
+      "namespace": "R5",
+      "ownerDecisionAnchor": "OD-R5-M0-014"
+    },
+    {
+      "code": "R5_ADVERSE_EVENT_INTAKE_RECORDED",
+      "executable": false,
+      "introducedInVersion": "ehas2-rule5-reason-registry-v1",
+      "meaning": "AE intake logged; not clinical success",
+      "namespace": "R5",
+      "ownerDecisionAnchor": "OD-R5-M0-014"
+    },
+    {
+      "code": "R5_CAUSALITY_NOT_ASSESSED",
+      "executable": false,
+      "introducedInVersion": "ehas2-rule5-reason-registry-v1",
+      "meaning": "Causality not determined",
+      "namespace": "R5",
+      "ownerDecisionAnchor": "OD-R5-M0-014"
+    },
+    {
+      "code": "R5_CONFIRMED_APPLICABLE_ALLERGY",
+      "executable": false,
+      "introducedInVersion": "ehas2-rule5-reason-registry-v2",
+      "meaning": "Confirmed applicable allergy (hard-blocker condition; metadata-only).",
+      "namespace": "R5",
+      "ownerDecisionAnchor": "OD-R5-M0-016"
+    },
+    {
+      "code": "R5_CRITICAL_FOLLOW_UP_CONTRADICTION",
+      "executable": false,
+      "introducedInVersion": "ehas2-rule5-reason-registry-v2",
+      "meaning": "Critical follow-up contradiction (hard-blocker condition; metadata-only).",
+      "namespace": "R5",
+      "ownerDecisionAnchor": "OD-R5-M0-016"
+    },
+    {
+      "code": "R5_DANGEROUS_VITAL_OR_LAB_RESULT",
+      "executable": false,
+      "introducedInVersion": "ehas2-rule5-reason-registry-v2",
+      "meaning": "Dangerous vital or laboratory result (hard-blocker condition; metadata-only).",
+      "namespace": "R5",
+      "ownerDecisionAnchor": "OD-R5-M0-016"
+    },
+    {
+      "code": "R5_DOSAGE_EVIDENCE_MISSING_OR_UNVERIFIED",
+      "executable": false,
+      "introducedInVersion": "ehas2-rule5-reason-registry-v1",
+      "meaning": "Dosage evidence missing or unverified (OD-012); not evaluable.",
+      "namespace": "R5",
+      "ownerDecisionAnchor": "OD-R5-M0-015"
+    },
+    {
+      "code": "R5_DUPLICATE_EVENT_REPORT_DETECTED",
+      "executable": false,
+      "introducedInVersion": "ehas2-rule5-reason-registry-v1",
+      "meaning": "Duplicate AE report",
+      "namespace": "R5",
+      "ownerDecisionAnchor": "OD-R5-M0-014"
+    },
+    {
+      "code": "R5_EMERGENCY_EVALUATION_REQUIRED",
+      "executable": false,
+      "introducedInVersion": "ehas2-rule5-reason-registry-v1",
+      "meaning": "Emergency gate triggered",
+      "namespace": "R5",
+      "ownerDecisionAnchor": "OD-R5-M0-014"
+    },
+    {
+      "code": "R5_EMERGENCY_RED_FLAG_DETECTED",
+      "executable": false,
+      "introducedInVersion": "ehas2-rule5-reason-registry-v2",
+      "meaning": "Emergency red flag (hard-blocker condition; metadata-only).",
+      "namespace": "R5",
+      "ownerDecisionAnchor": "OD-R5-M0-016"
+    },
+    {
+      "code": "R5_EVIDENCE_MISSING_OR_UNVERIFIED",
+      "executable": false,
+      "introducedInVersion": "ehas2-rule5-reason-registry-v1",
+      "meaning": "Threshold or conditional evidence missing or unverified (OD-008, OD-017); not PASS.",
+      "namespace": "R5",
+      "ownerDecisionAnchor": "OD-R5-M0-015"
+    },
+    {
+      "code": "R5_EXPOSURE_UNCOMPUTABLE",
+      "executable": false,
+      "introducedInVersion": "ehas2-rule5-reason-registry-v2",
+      "meaning": "Uncomputable exposure (hard-blocker condition; metadata-only).",
+      "namespace": "R5",
+      "ownerDecisionAnchor": "OD-R5-M0-016"
+    },
+    {
+      "code": "R5_FOLLOW_UP_DATA_CONTRADICTORY",
+      "executable": false,
+      "introducedInVersion": "ehas2-rule5-reason-registry-v1",
+      "meaning": "Follow-up data contradictory (OD-005); must not be presented as PASS or stable.",
+      "namespace": "R5",
+      "ownerDecisionAnchor": "OD-R5-M0-015"
+    },
+    {
+      "code": "R5_FOLLOW_UP_DATA_STALE",
+      "executable": false,
+      "introducedInVersion": "ehas2-rule5-reason-registry-v1",
+      "meaning": "Follow-up data stale (OD-005); must not be presented as PASS or stable.",
+      "namespace": "R5",
+      "ownerDecisionAnchor": "OD-R5-M0-015"
+    },
+    {
+      "code": "R5_FOLLOW_UP_OVERDUE",
+      "executable": false,
+      "introducedInVersion": "ehas2-rule5-reason-registry-v1",
+      "meaning": "Follow-up overdue (OD-005); must not be presented as PASS or stable.",
+      "namespace": "R5",
+      "ownerDecisionAnchor": "OD-R5-M0-015"
+    },
+    {
+      "code": "R5_FORMULATION_ROUTE_MISMATCH",
+      "executable": false,
+      "introducedInVersion": "ehas2-rule5-reason-registry-v2",
+      "meaning": "Formulation-route mismatch (hard-blocker condition; metadata-only).",
+      "namespace": "R5",
+      "ownerDecisionAnchor": "OD-R5-M0-016"
+    },
+    {
+      "code": "R5_MATERIAL_SAFETY_EVENT_REQUIRES_FULL_PLAN_REVALIDATION",
+      "executable": false,
+      "introducedInVersion": "ehas2-rule5-reason-registry-v1",
+      "meaning": "Material safety event requires full plan revalidation (OD-004).",
+      "namespace": "R5",
+      "ownerDecisionAnchor": "OD-R5-M0-015"
+    },
+    {
+      "code": "R5_MAXIMUM_DURATION_OR_CUMULATIVE_EXPOSURE_EXCEEDED",
+      "executable": false,
+      "introducedInVersion": "ehas2-rule5-reason-registry-v2",
+      "meaning": "Maximum duration or cumulative exposure exceeded (hard-blocker condition; metadata-only).",
+      "namespace": "R5",
+      "ownerDecisionAnchor": "OD-R5-M0-016"
+    },
+    {
+      "code": "R5_OVERDOSE_SUSPECTED",
+      "executable": false,
+      "introducedInVersion": "ehas2-rule5-reason-registry-v2",
+      "meaning": "Confirmed or suspected overdose (hard-blocker condition; metadata-only).",
+      "namespace": "R5",
+      "ownerDecisionAnchor": "OD-R5-M0-016"
+    },
+    {
+      "code": "R5_PATIENT_INSTRUCTIONS_NOT_DELIVERED",
+      "executable": false,
+      "introducedInVersion": "ehas2-rule5-reason-registry-v2",
+      "meaning": "Patient-facing instructions not delivered (hard-blocker condition; metadata-only).",
+      "namespace": "R5",
+      "ownerDecisionAnchor": "OD-R5-M0-016"
+    },
+    {
+      "code": "R5_PRODUCT_QUALITY_ISSUE_SUSPECTED",
+      "executable": false,
+      "introducedInVersion": "ehas2-rule5-reason-registry-v1",
+      "meaning": "Product quality / identity concern",
+      "namespace": "R5",
+      "ownerDecisionAnchor": "OD-R5-M0-014"
+    },
+    {
+      "code": "R5_PROHIBITED_INTERACTION_DETECTED",
+      "executable": false,
+      "introducedInVersion": "ehas2-rule5-reason-registry-v2",
+      "meaning": "Prohibited interaction (hard-blocker condition; metadata-only).",
+      "namespace": "R5",
+      "ownerDecisionAnchor": "OD-R5-M0-016"
+    },
+    {
+      "code": "R5_REGULATORY_REPORTABILITY_REVIEW_REQUIRED",
+      "executable": false,
+      "introducedInVersion": "ehas2-rule5-reason-registry-v1",
+      "meaning": "Reporting review needed",
+      "namespace": "R5",
+      "ownerDecisionAnchor": "OD-R5-M0-014"
+    },
+    {
+      "code": "R5_REPLACEMENT_CLINICAL_EVIDENCE_INSUFFICIENT",
+      "executable": false,
+      "introducedInVersion": "ehas2-rule5-reason-registry-v1",
+      "meaning": "Insufficient clinical evidence for replacement (OD-011); no filler prescription.",
+      "namespace": "R5",
+      "ownerDecisionAnchor": "OD-R5-M0-015"
+    },
+    {
+      "code": "R5_REPORT_SUBMISSION_FAILED",
+      "executable": false,
+      "introducedInVersion": "ehas2-rule5-reason-registry-v1",
+      "meaning": "Report submission failed (truthful)",
+      "namespace": "R5",
+      "ownerDecisionAnchor": "OD-R5-M0-014"
+    },
+    {
+      "code": "R5_REQUIRED_MONITORING_DATA_MISSING",
+      "executable": false,
+      "introducedInVersion": "ehas2-rule5-reason-registry-v1",
+      "meaning": "Monitoring not evaluable",
+      "namespace": "R5",
+      "ownerDecisionAnchor": "OD-R5-M0-014"
+    },
+    {
+      "code": "R5_SERIOUS_ADVERSE_EVENT_SUSPECTED",
+      "executable": false,
+      "introducedInVersion": "ehas2-rule5-reason-registry-v1",
+      "meaning": "Seriousness triage positive / suspected",
+      "namespace": "R5",
+      "ownerDecisionAnchor": "OD-R5-M0-014"
+    },
+    {
+      "code": "R5_SEVERE_REACTION_SUSPECTED",
+      "executable": false,
+      "introducedInVersion": "ehas2-rule5-reason-registry-v1",
+      "meaning": "Severe reaction suspected",
+      "namespace": "R5",
+      "ownerDecisionAnchor": "OD-R5-M0-014"
+    },
+    {
+      "code": "R5_UNSAFE_CONCURRENT_MEDICINE_CHANGE",
+      "executable": false,
+      "introducedInVersion": "ehas2-rule5-reason-registry-v2",
+      "meaning": "Unsafe concurrent medicine change (hard-blocker condition; metadata-only).",
+      "namespace": "R5",
+      "ownerDecisionAnchor": "OD-R5-M0-016"
+    },
+    {
+      "code": "R5_UNKNOWN_SEVERITY",
+      "executable": false,
+      "introducedInVersion": "ehas2-rule5-reason-registry-v1",
+      "meaning": "Unknown severity meta-rule (OD-009); fail-closed not-evaluable.",
+      "namespace": "R5",
+      "ownerDecisionAnchor": "OD-R5-M0-015"
+    }
+  ],
+  "registryVersion": "ehas2-rule5-reason-registry-v2"
+}
