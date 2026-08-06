@@ -10,7 +10,10 @@ import {
   RULE5_CLINICAL_REASON_CODES,
   RULE5_OD014_REASON_CODES,
   RULE5_OD015_REASON_CODES,
+  RULE5_OD016_REASON_CODES,
+  RULE5_M3_NEW_CLINICAL_REASON_CODE_COUNT,
   RULE5_REASON_REGISTRY_VERSION,
+  RULE5_REASON_REGISTRY_VERSION_V1,
   assertKnownRule5ClinicalReasonCode,
   createNotConnectedAnalyzeResult,
   RULE_SET_VERSION,
@@ -21,7 +24,9 @@ import {
 } from '../../packages/clinical-contracts/src/index.ts';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
-const fixturePath = path.join(root, 'fixtures/rule5/reason-code-registry.clinical.v1.json');
+const fixtureV2Path = path.join(root, 'fixtures/rule5/reason-code-registry.clinical.v2.json');
+const fixtureV1Path = path.join(root, 'fixtures/rule5/reason-code-registry.clinical.v1.json');
+const fixturePath = fixtureV2Path;
 const rule5ReasonRegistrySourcePath = path.join(
   root,
   'packages/clinical-contracts/src/rule5/reasonRegistry.ts',
@@ -93,20 +98,21 @@ function expectValidationFailure(
   }
 }
 
-describe('Rule 5 R5-M2 clinical reason registry', () => {
+describe('Rule 5 R5-M2/M3 clinical reason registry', () => {
   const registry = loadValidatedFixtureRegistry();
 
-  it('contains exactly 21 unique clinical codes with exact OD-014 + OD-015 membership', () => {
+  it('contains exactly 34 unique clinical codes with OD-014, OD-015, and OD-016 membership', () => {
     const codes = registry.entries.map((e) => e.code);
-    expect(new Set(codes).size).toBe(21);
+    expect(new Set(codes).size).toBe(34);
     expect(codes).toEqual([...RULE5_CLINICAL_REASON_CODES]);
     expect(RULE5_OD014_REASON_CODES).toHaveLength(12);
     expect(RULE5_OD015_REASON_CODES).toHaveLength(9);
+    expect(RULE5_OD016_REASON_CODES).toHaveLength(RULE5_M3_NEW_CLINICAL_REASON_CODE_COUNT);
     expect(RULE5_OD014_REASON_CODES.every((c) => codes.includes(c))).toBe(true);
     expect(RULE5_OD015_REASON_CODES.every((c) => codes.includes(c))).toBe(true);
   });
 
-  it('returns canonical TypeScript registry with full 21-entry parity', () => {
+  it('returns canonical TypeScript registry with full 34-entry parity', () => {
     expect(registry).toEqual(RULE5_CANONICAL_CLINICAL_REASON_REGISTRY);
     expect(validateRule5ClinicalReasonRegistryDocument(readFixtureJson())).toEqual(
       RULE5_CANONICAL_CLINICAL_REASON_REGISTRY,
@@ -143,24 +149,67 @@ describe('Rule 5 R5-M2 clinical reason registry', () => {
     for (const entry of registry.entries) {
       expect(entry.executable).toBe(false);
       expect(entry.namespace).toBe('R5');
+    }
+    for (const entry of registry.entries.filter((e) =>
+      RULE5_OD016_REASON_CODES.includes(e.code as (typeof RULE5_OD016_REASON_CODES)[number]),
+    )) {
       expect(entry.introducedInVersion).toBe(RULE5_REASON_REGISTRY_VERSION);
+    }
+    for (const entry of registry.entries.filter(
+      (e) =>
+        !RULE5_OD016_REASON_CODES.includes(e.code as (typeof RULE5_OD016_REASON_CODES)[number]),
+    )) {
+      expect(entry.introducedInVersion).toBe(RULE5_REASON_REGISTRY_VERSION_V1);
     }
   });
 
-  it('does not encode RULE5_* / PHASE1_* or M3 future blocker codes', () => {
+  it('includes exact 13 OD-R5-M0-016 codes and rejects RULE5_* / PHASE1_* prefixes', () => {
     const codes = registry.entries.map((e) => e.code);
     for (const code of codes) {
       expect(code.startsWith('RULE5_')).toBe(false);
       expect(code.startsWith('PHASE1_')).toBe(false);
     }
     for (const future of M3_FUTURE_CODES) {
-      expect(codes).not.toContain(future);
+      expect(codes).toContain(future);
+      expect(
+        RULE5_CANONICAL_ENTRY_BY_CODE[future as keyof typeof RULE5_CANONICAL_ENTRY_BY_CODE]
+          .ownerDecisionAnchor,
+      ).toBe('OD-R5-M0-016');
     }
   });
 
-  it('registry version constant matches fixture header', () => {
+  it('preserves historical v1 fixture unchanged and rejects v1 as current canonical version', () => {
+    const v1Raw = JSON.parse(fs.readFileSync(fixtureV1Path, 'utf8')) as {
+      registryVersion: string;
+      entries: unknown[];
+    };
+    expect(v1Raw.registryVersion).toBe(RULE5_REASON_REGISTRY_VERSION_V1);
+    expect(v1Raw.entries).toHaveLength(21);
+    expectValidationFailure(
+      () => validateRule5ClinicalReasonRegistryDocument(v1Raw),
+      'RULE5_REGISTRY_INVALID_VERSION',
+    );
+    const v1Codes = (v1Raw.entries as { code: string }[]).map((e) => e.code);
+    for (const code of v1Codes) {
+      const current =
+        RULE5_CANONICAL_ENTRY_BY_CODE[code as keyof typeof RULE5_CANONICAL_ENTRY_BY_CODE];
+      expect(current).toBeDefined();
+      expect(current.meaning).toBe(
+        (v1Raw.entries as { code: string; meaning: string }[]).find((e) => e.code === code)!
+          .meaning,
+      );
+      expect(current.ownerDecisionAnchor).toBe(
+        (v1Raw.entries as { code: string; ownerDecisionAnchor: string }[]).find(
+          (e) => e.code === code,
+        )!.ownerDecisionAnchor,
+      );
+      expect(current.introducedInVersion).toBe(RULE5_REASON_REGISTRY_VERSION_V1);
+    }
+  });
+
+  it('registry version constant matches v2 fixture header', () => {
     expect(registry.registryVersion).toBe(RULE5_REASON_REGISTRY_VERSION);
-    expect(registry.registryVersion).toBe('ehas2-rule5-reason-registry-v1');
+    expect(registry.registryVersion).toBe('ehas2-rule5-reason-registry-v2');
     const raw = readFixtureJson() as { registryVersion: string };
     expect(raw.registryVersion).toBe(RULE5_REASON_REGISTRY_VERSION);
   });
@@ -214,7 +263,7 @@ describe('Rule 5 R5-M2 clinical reason registry', () => {
       entries: [
         ...base.entries,
         {
-          code: 'R5_EMERGENCY_RED_FLAG_DETECTED',
+          code: 'R5_NOT_IN_CANONICAL_REGISTER',
           namespace: 'R5',
           meaning: 'x',
           executable: false,
@@ -465,7 +514,7 @@ describe('Rule 5 R5-M2 clinical reason registry', () => {
     const canon = RULE5_CANONICAL_CLINICAL_REASON_REGISTRY;
     expect(Object.isFrozen(canon)).toBe(true);
     expect(Object.isFrozen(canon.entries)).toBe(true);
-    expect(canon.entries).toHaveLength(21);
+    expect(canon.entries).toHaveLength(34);
     for (const entry of canon.entries) {
       expect(Object.isFrozen(entry)).toBe(true);
     }

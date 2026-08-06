@@ -1,0 +1,299 @@
+{
+  "matrixVersion": "ehas2-rule5-hard-blocker-matrix-v1",
+  "conditions": [
+    {
+      "conditionId": "HB-001",
+      "conditionLabel": "Emergency red flag",
+      "ownerDecisionAnchor": "OD-R5-M0-016",
+      "executable": false
+    },
+    {
+      "conditionId": "HB-002",
+      "conditionLabel": "Suspected serious adverse event",
+      "ownerDecisionAnchor": "OD-R5-M0-016",
+      "executable": false
+    },
+    {
+      "conditionId": "HB-003",
+      "conditionLabel": "Severe allergic reaction",
+      "ownerDecisionAnchor": "OD-R5-M0-016",
+      "executable": false
+    },
+    {
+      "conditionId": "HB-004",
+      "conditionLabel": "Confirmed applicable allergy",
+      "ownerDecisionAnchor": "OD-R5-M0-016",
+      "executable": false
+    },
+    {
+      "conditionId": "HB-005",
+      "conditionLabel": "Absolute contraindication",
+      "ownerDecisionAnchor": "OD-R5-M0-016",
+      "executable": false
+    },
+    {
+      "conditionId": "HB-006",
+      "conditionLabel": "Prohibited interaction",
+      "ownerDecisionAnchor": "OD-R5-M0-016",
+      "executable": false
+    },
+    {
+      "conditionId": "HB-007",
+      "conditionLabel": "Dangerous vital/laboratory result",
+      "ownerDecisionAnchor": "OD-R5-M0-016",
+      "executable": false
+    },
+    {
+      "conditionId": "HB-008",
+      "conditionLabel": "Acute clinical deterioration",
+      "ownerDecisionAnchor": "OD-R5-M0-016",
+      "executable": false
+    },
+    {
+      "conditionId": "HB-009",
+      "conditionLabel": "Formulation-route mismatch",
+      "ownerDecisionAnchor": "OD-R5-M0-016",
+      "executable": false
+    },
+    {
+      "conditionId": "HB-010",
+      "conditionLabel": "Overdose or uncomputable exposure",
+      "ownerDecisionAnchor": "OD-R5-M0-016",
+      "executable": false
+    },
+    {
+      "conditionId": "HB-011",
+      "conditionLabel": "Mandatory monitoring unavailable/overdue",
+      "ownerDecisionAnchor": "OD-R5-M0-016",
+      "executable": false
+    },
+    {
+      "conditionId": "HB-012",
+      "conditionLabel": "Maximum duration or cumulative exposure exceeded",
+      "ownerDecisionAnchor": "OD-R5-M0-016",
+      "executable": false
+    },
+    {
+      "conditionId": "HB-013",
+      "conditionLabel": "Product-quality or identity uncertainty",
+      "ownerDecisionAnchor": "OD-R5-M0-016",
+      "executable": false
+    },
+    {
+      "conditionId": "HB-014",
+      "conditionLabel": "Unsafe concurrent medicine change",
+      "ownerDecisionAnchor": "OD-R5-M0-016",
+      "executable": false
+    },
+    {
+      "conditionId": "HB-015",
+      "conditionLabel": "Patient-facing instructions not delivered",
+      "ownerDecisionAnchor": "OD-R5-M0-016",
+      "executable": false
+    },
+    {
+      "conditionId": "HB-016",
+      "conditionLabel": "Critical follow-up contradiction",
+      "ownerDecisionAnchor": "OD-R5-M0-016",
+      "executable": false
+    }
+  ],
+  "mappings": [
+    {
+      "mappingId": "HB-001",
+      "conditionId": "HB-001",
+      "reasonCode": "R5_EMERGENCY_RED_FLAG_DETECTED",
+      "safetyGroup": "G1",
+      "evidenceGate": "EVIDENCE_AUDIT_REQUIRED_BEFORE_ACTIVATION",
+      "thresholdPolicy": "NO_THRESHOLD_AUTHORIZED",
+      "doctorReviewRequired": true,
+      "executable": false,
+      "ownerDecisionAnchor": "OD-R5-M0-016"
+    },
+    {
+      "mappingId": "HB-002",
+      "conditionId": "HB-002",
+      "reasonCode": "R5_SERIOUS_ADVERSE_EVENT_SUSPECTED",
+      "safetyGroup": "G2",
+      "evidenceGate": "EVIDENCE_AUDIT_REQUIRED_BEFORE_ACTIVATION",
+      "thresholdPolicy": "NO_THRESHOLD_AUTHORIZED",
+      "doctorReviewRequired": true,
+      "executable": false,
+      "ownerDecisionAnchor": "OD-R5-M0-016"
+    },
+    {
+      "mappingId": "HB-003",
+      "conditionId": "HB-003",
+      "reasonCode": "R5_SEVERE_REACTION_SUSPECTED",
+      "safetyGroup": "G1",
+      "evidenceGate": "EVIDENCE_AUDIT_REQUIRED_BEFORE_ACTIVATION",
+      "thresholdPolicy": "NO_THRESHOLD_AUTHORIZED",
+      "doctorReviewRequired": true,
+      "executable": false,
+      "ownerDecisionAnchor": "OD-R5-M0-016"
+    },
+    {
+      "mappingId": "HB-004",
+      "conditionId": "HB-004",
+      "reasonCode": "R5_CONFIRMED_APPLICABLE_ALLERGY",
+      "safetyGroup": "G3",
+      "evidenceGate": "EVIDENCE_AUDIT_REQUIRED_BEFORE_ACTIVATION",
+      "thresholdPolicy": "NO_THRESHOLD_AUTHORIZED",
+      "doctorReviewRequired": true,
+      "executable": false,
+      "ownerDecisionAnchor": "OD-R5-M0-016"
+    },
+    {
+      "mappingId": "HB-005",
+      "conditionId": "HB-005",
+      "reasonCode": "R5_ABSOLUTE_CONTRAINDICATION_DETECTED",
+      "safetyGroup": "G3",
+      "evidenceGate": "EVIDENCE_AUDIT_REQUIRED_BEFORE_ACTIVATION",
+      "thresholdPolicy": "NO_THRESHOLD_AUTHORIZED",
+      "doctorReviewRequired": true,
+      "executable": false,
+      "ownerDecisionAnchor": "OD-R5-M0-016"
+    },
+    {
+      "mappingId": "HB-006",
+      "conditionId": "HB-006",
+      "reasonCode": "R5_PROHIBITED_INTERACTION_DETECTED",
+      "safetyGroup": "G3",
+      "evidenceGate": "EVIDENCE_AUDIT_REQUIRED_BEFORE_ACTIVATION",
+      "thresholdPolicy": "NO_THRESHOLD_AUTHORIZED",
+      "doctorReviewRequired": true,
+      "executable": false,
+      "ownerDecisionAnchor": "OD-R5-M0-016"
+    },
+    {
+      "mappingId": "HB-007",
+      "conditionId": "HB-007",
+      "reasonCode": "R5_DANGEROUS_VITAL_OR_LAB_RESULT",
+      "safetyGroup": "G2",
+      "evidenceGate": "EVIDENCE_AUDIT_REQUIRED_BEFORE_ACTIVATION",
+      "thresholdPolicy": "NO_THRESHOLD_AUTHORIZED",
+      "doctorReviewRequired": true,
+      "executable": false,
+      "ownerDecisionAnchor": "OD-R5-M0-016"
+    },
+    {
+      "mappingId": "HB-008",
+      "conditionId": "HB-008",
+      "reasonCode": "R5_ACUTE_CLINICAL_DETERIORATION",
+      "safetyGroup": "G1",
+      "evidenceGate": "EVIDENCE_AUDIT_REQUIRED_BEFORE_ACTIVATION",
+      "thresholdPolicy": "NO_THRESHOLD_AUTHORIZED",
+      "doctorReviewRequired": true,
+      "executable": false,
+      "ownerDecisionAnchor": "OD-R5-M0-016"
+    },
+    {
+      "mappingId": "HB-009",
+      "conditionId": "HB-009",
+      "reasonCode": "R5_FORMULATION_ROUTE_MISMATCH",
+      "safetyGroup": "G3",
+      "evidenceGate": "EVIDENCE_AUDIT_REQUIRED_BEFORE_ACTIVATION",
+      "thresholdPolicy": "NO_THRESHOLD_AUTHORIZED",
+      "doctorReviewRequired": true,
+      "executable": false,
+      "ownerDecisionAnchor": "OD-R5-M0-016"
+    },
+    {
+      "mappingId": "HB-010A",
+      "conditionId": "HB-010",
+      "reasonCode": "R5_OVERDOSE_SUSPECTED",
+      "safetyGroup": "G1",
+      "evidenceGate": "EVIDENCE_AUDIT_REQUIRED_BEFORE_ACTIVATION",
+      "thresholdPolicy": "NO_THRESHOLD_AUTHORIZED",
+      "doctorReviewRequired": true,
+      "executable": false,
+      "ownerDecisionAnchor": "OD-R5-M0-016"
+    },
+    {
+      "mappingId": "HB-010B",
+      "conditionId": "HB-010",
+      "reasonCode": "R5_EXPOSURE_UNCOMPUTABLE",
+      "safetyGroup": "G2",
+      "evidenceGate": "EVIDENCE_AUDIT_REQUIRED_BEFORE_ACTIVATION",
+      "thresholdPolicy": "NO_THRESHOLD_AUTHORIZED",
+      "doctorReviewRequired": true,
+      "executable": false,
+      "ownerDecisionAnchor": "OD-R5-M0-016"
+    },
+    {
+      "mappingId": "HB-011",
+      "conditionId": "HB-011",
+      "reasonCode": "R5_REQUIRED_MONITORING_DATA_MISSING",
+      "safetyGroup": "G4",
+      "evidenceGate": "EVIDENCE_AUDIT_REQUIRED_BEFORE_ACTIVATION",
+      "thresholdPolicy": "NO_THRESHOLD_AUTHORIZED",
+      "doctorReviewRequired": true,
+      "executable": false,
+      "ownerDecisionAnchor": "OD-R5-M0-016"
+    },
+    {
+      "mappingId": "HB-012",
+      "conditionId": "HB-012",
+      "reasonCode": "R5_MAXIMUM_DURATION_OR_CUMULATIVE_EXPOSURE_EXCEEDED",
+      "safetyGroup": "G3",
+      "evidenceGate": "EVIDENCE_AUDIT_REQUIRED_BEFORE_ACTIVATION",
+      "thresholdPolicy": "NO_THRESHOLD_AUTHORIZED",
+      "doctorReviewRequired": true,
+      "executable": false,
+      "ownerDecisionAnchor": "OD-R5-M0-016"
+    },
+    {
+      "mappingId": "HB-013",
+      "conditionId": "HB-013",
+      "reasonCode": "R5_PRODUCT_QUALITY_ISSUE_SUSPECTED",
+      "safetyGroup": "G3",
+      "evidenceGate": "EVIDENCE_AUDIT_REQUIRED_BEFORE_ACTIVATION",
+      "thresholdPolicy": "NO_THRESHOLD_AUTHORIZED",
+      "doctorReviewRequired": true,
+      "executable": false,
+      "ownerDecisionAnchor": "OD-R5-M0-016"
+    },
+    {
+      "mappingId": "HB-014",
+      "conditionId": "HB-014",
+      "reasonCode": "R5_UNSAFE_CONCURRENT_MEDICINE_CHANGE",
+      "safetyGroup": "G3",
+      "evidenceGate": "EVIDENCE_AUDIT_REQUIRED_BEFORE_ACTIVATION",
+      "thresholdPolicy": "NO_THRESHOLD_AUTHORIZED",
+      "doctorReviewRequired": true,
+      "executable": false,
+      "ownerDecisionAnchor": "OD-R5-M0-016"
+    },
+    {
+      "mappingId": "HB-015",
+      "conditionId": "HB-015",
+      "reasonCode": "R5_PATIENT_INSTRUCTIONS_NOT_DELIVERED",
+      "safetyGroup": "G3",
+      "evidenceGate": "EVIDENCE_AUDIT_REQUIRED_BEFORE_ACTIVATION",
+      "thresholdPolicy": "NO_THRESHOLD_AUTHORIZED",
+      "doctorReviewRequired": true,
+      "executable": false,
+      "ownerDecisionAnchor": "OD-R5-M0-016"
+    },
+    {
+      "mappingId": "HB-016",
+      "conditionId": "HB-016",
+      "reasonCode": "R5_CRITICAL_FOLLOW_UP_CONTRADICTION",
+      "safetyGroup": "G4",
+      "evidenceGate": "EVIDENCE_AUDIT_REQUIRED_BEFORE_ACTIVATION",
+      "thresholdPolicy": "NO_THRESHOLD_AUTHORIZED",
+      "doctorReviewRequired": true,
+      "executable": false,
+      "ownerDecisionAnchor": "OD-R5-M0-016"
+    }
+  ],
+  "crossCuttingGovernance": {
+    "reasonCodeReferences": ["R5_UNKNOWN_SEVERITY", "R5_EVIDENCE_MISSING_OR_UNVERIFIED"],
+    "acknowledgmentDoesNotClearBlocker": true,
+    "missingEvidenceNeverMeansPass": true,
+    "automaticClinicalActionAuthorized": false,
+    "evidenceStateCatalogDeferredToM6": true,
+    "rule4ExcludedThresholdsAndDataAssets": true,
+    "automatedBlockerActivationAuthorized": false
+  }
+}
