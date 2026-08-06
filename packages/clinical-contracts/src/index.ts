@@ -10,6 +10,7 @@ export { CLINICAL_PRODUCT_CONSTITUTION, type ClinicalProductConstitution } from 
 export * from './analyze.js';
 export * from './nineRules.js';
 export * from './rule4/index.js';
+export * from './rule5/index.js';
 
 export const CLINICAL_CONTRACTS_VERSION = '0.3.0-phase5c' as const;
 export const CLINICAL_CONTRACTS_STATUS = 'NOT_READY' as const;
