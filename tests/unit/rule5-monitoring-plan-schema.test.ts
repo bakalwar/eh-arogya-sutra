@@ -78,6 +78,23 @@ function assertErrorDoesNotEchoRawValue(
     expect(error.detail).not.toContain(raw);
   }
   expect(JSON.stringify(error)).not.toContain(raw);
+  expect(`${error.name}:${error.failureCode}:${error.message}:${error.detail ?? ''}`).not.toContain(
+    raw,
+  );
+}
+
+function fieldsClone(): Record<string, unknown>[] {
+  return JSON.parse(JSON.stringify(schemaFromFixture().fields)) as Record<string, unknown>[];
+}
+
+function withFields(fields: unknown[]): Record<string, unknown> {
+  return { ...schemaFromFixture(), fields };
+}
+
+function fieldEntry(index: number, patch: Record<string, unknown> = {}): Record<string, unknown> {
+  const fields = fieldsClone();
+  fields[index] = { ...fields[index]!, ...patch };
+  return withFields(fields);
 }
 
 describe('Rule 5 R5-M5 monitoring-plan schema foundation', () => {
@@ -422,8 +439,405 @@ print(a['output_fingerprint'])
   });
 });
 
+describe('Rule 5 R5-M5 monitoring-plan rejection matrix', () => {
+  it.each([
+    [null, 'RULE5_MONITORING_PLAN_INVALID_DOCUMENT'],
+    [[], 'RULE5_MONITORING_PLAN_INVALID_DOCUMENT'],
+    ['not-an-object', 'RULE5_MONITORING_PLAN_INVALID_DOCUMENT'],
+    [42, 'RULE5_MONITORING_PLAN_INVALID_DOCUMENT'],
+    [true, 'RULE5_MONITORING_PLAN_INVALID_DOCUMENT'],
+    [{}, 'RULE5_MONITORING_PLAN_MISSING_MANDATORY_FIELD'],
+  ] as const)('rejects invalid root document %p', (doc, code) => {
+    expectM5Failure(() => validateRule5MonitoringPlanSchemaDefinitionDocument(doc), code);
+  });
+
+  it('rejects missing schemaVersion on otherwise valid shape', () => {
+    const doc = schemaFromFixture();
+    delete doc.schemaVersion;
+    expectM5Failure(
+      () => validateRule5MonitoringPlanSchemaDefinitionDocument(doc),
+      'RULE5_MONITORING_PLAN_MISSING_MANDATORY_FIELD',
+    );
+  });
+
+  it.each([
+    ['schemaVersion', '   ', 'RULE5_MONITORING_PLAN_WHITESPACE_ONLY_FIELD'],
+    [
+      'schemaVersion',
+      'ehas2-rule5-monitoring-plan-schema-v0',
+      'RULE5_MONITORING_PLAN_INVALID_SCHEMA_VERSION',
+    ],
+    ['schemaKind', 'ACTIVE_PLAN', 'RULE5_MONITORING_PLAN_WRONG_SCHEMA_KIND'],
+  ] as const)('rejects root string field tamper %s', (key, value, code) => {
+    expectM5Failure(
+      () =>
+        validateRule5MonitoringPlanSchemaDefinitionDocument({
+          ...schemaFromFixture(),
+          [key]: value,
+        }),
+      code,
+    );
+  });
+
+  it('rejects unexpected root field', () => {
+    expectM5Failure(
+      () =>
+        validateRule5MonitoringPlanSchemaDefinitionDocument({
+          ...schemaFromFixture(),
+          unexpectedRootField: true,
+        }),
+      'RULE5_MONITORING_PLAN_UNEXPECTED_FIELD',
+    );
+  });
+
+  it.each([
+    ['implemented', 'RULE5_MONITORING_PLAN_IMPLEMENTED_NOT_ALLOWED'],
+    ['connected', 'RULE5_MONITORING_PLAN_CONNECTED_NOT_ALLOWED'],
+    ['executable', 'RULE5_MONITORING_PLAN_EXECUTABLE_NOT_ALLOWED'],
+    ['clinicalValuesAuthorized', 'RULE5_MONITORING_PLAN_AUTHORIZATION_FLAG_NOT_ALLOWED'],
+    ['thresholdValuesAuthorized', 'RULE5_MONITORING_PLAN_AUTHORIZATION_FLAG_NOT_ALLOWED'],
+    ['timingValuesAuthorized', 'RULE5_MONITORING_PLAN_AUTHORIZATION_FLAG_NOT_ALLOWED'],
+    ['freeTextAuthorized', 'RULE5_MONITORING_PLAN_AUTHORIZATION_FLAG_NOT_ALLOWED'],
+    ['patientIdentifiersAuthorized', 'RULE5_MONITORING_PLAN_AUTHORIZATION_FLAG_NOT_ALLOWED'],
+    ['clinicianIdentifiersAuthorized', 'RULE5_MONITORING_PLAN_AUTHORIZATION_FLAG_NOT_ALLOWED'],
+  ] as const)('rejects authorization flag %s=true', (flag, code) => {
+    expectM5Failure(
+      () =>
+        validateRule5MonitoringPlanSchemaDefinitionDocument({
+          ...schemaFromFixture(),
+          [flag]: true,
+        }),
+      code,
+    );
+  });
+
+  it.each([
+    [10, 'RULE5_MONITORING_PLAN_WRONG_FIELD_COUNT'],
+    [12, 'RULE5_MONITORING_PLAN_WRONG_FIELD_COUNT'],
+  ] as const)('rejects field count %i', (count, code) => {
+    const fields = fieldsClone().slice(0, count === 10 ? 10 : 12);
+    if (count === 12) {
+      fields.push(JSON.parse(JSON.stringify(fields[0])) as Record<string, unknown>);
+    }
+    expectM5Failure(
+      () => validateRule5MonitoringPlanSchemaDefinitionDocument(withFields(fields)),
+      code,
+    );
+  });
+
+  it('rejects reordered fields', () => {
+    const fields = fieldsClone();
+    [fields[0], fields[1]] = [fields[1]!, fields[0]!];
+    expectM5Failure(
+      () => validateRule5MonitoringPlanSchemaDefinitionDocument(withFields(fields)),
+      'RULE5_MONITORING_PLAN_FIELD_DEFINITION_MISMATCH',
+    );
+  });
+
+  it('rejects duplicate fieldId at second slot', () => {
+    expectM5Failure(
+      () =>
+        validateRule5MonitoringPlanSchemaDefinitionDocument(fieldEntry(1, { fieldId: 'MPF-001' })),
+      'RULE5_MONITORING_PLAN_FIELD_DEFINITION_MISMATCH',
+    );
+  });
+
+  it('rejects duplicate fieldKey at second slot', () => {
+    expectM5Failure(
+      () =>
+        validateRule5MonitoringPlanSchemaDefinitionDocument(
+          fieldEntry(1, { fieldKey: 'baselineRequirements' }),
+        ),
+      'RULE5_MONITORING_PLAN_FIELD_DEFINITION_MISMATCH',
+    );
+  });
+
+  it.each([
+    [null, 'RULE5_MONITORING_PLAN_INVALID_DOCUMENT'],
+    [[], 'RULE5_MONITORING_PLAN_INVALID_DOCUMENT'],
+    ['primitive', 'RULE5_MONITORING_PLAN_INVALID_DOCUMENT'],
+  ] as const)('rejects invalid field entry %p', (entry, code) => {
+    const fields = fieldsClone();
+    fields[0] = entry as unknown as Record<string, unknown>;
+    expectM5Failure(
+      () => validateRule5MonitoringPlanSchemaDefinitionDocument(withFields(fields)),
+      code,
+    );
+  });
+
+  it('rejects extra property on field entry', () => {
+    expectM5Failure(
+      () =>
+        validateRule5MonitoringPlanSchemaDefinitionDocument(
+          fieldEntry(0, { unexpectedFieldProperty: true }),
+        ),
+      'RULE5_MONITORING_PLAN_UNEXPECTED_FIELD',
+    );
+  });
+
+  it.each([
+    [{ fieldId: 'MPF-999' }, 'RULE5_MONITORING_PLAN_FIELD_DEFINITION_MISMATCH'],
+    [{ fieldKey: 'wrongFieldKey' }, 'RULE5_MONITORING_PLAN_FIELD_DEFINITION_MISMATCH'],
+    [{ ownerLabel: 'Tampered label' }, 'RULE5_MONITORING_PLAN_FIELD_DEFINITION_MISMATCH'],
+    [{ ownerLabel: '   ' }, 'RULE5_MONITORING_PLAN_WHITESPACE_ONLY_FIELD'],
+    [{ representation: 'ACTIVE_VALUES' }, 'RULE5_MONITORING_PLAN_FIELD_DEFINITION_MISMATCH'],
+    [{ reference: 'PLAN-REF-001' }, 'RULE5_MONITORING_PLAN_NON_NULL_REFERENCE'],
+    [{ reference: 42 }, 'RULE5_MONITORING_PLAN_NUMERIC_VALUE_FORBIDDEN'],
+    [{ reference: { id: 'x' } }, 'RULE5_MONITORING_PLAN_NON_NULL_REFERENCE'],
+    [{ clinicalValueAuthorized: true }, 'RULE5_MONITORING_PLAN_AUTHORIZATION_FLAG_NOT_ALLOWED'],
+    [{ executable: true }, 'RULE5_MONITORING_PLAN_EXECUTABLE_NOT_ALLOWED'],
+    [{ ownerDecisionAnchor: 'OD-R5-M0-004' }, 'RULE5_MONITORING_PLAN_FIELD_DEFINITION_MISMATCH'],
+  ] as const)('rejects field content tamper %o', (patch, code) => {
+    expectM5Failure(
+      () => validateRule5MonitoringPlanSchemaDefinitionDocument(fieldEntry(0, patch)),
+      code,
+    );
+  });
+
+  it.each([
+    ['threshold', 120, 'RULE5_MONITORING_PLAN_FORBIDDEN_CLINICAL_FIELD'],
+    ['cutoff', 90, 'RULE5_MONITORING_PLAN_FORBIDDEN_CLINICAL_FIELD'],
+    ['interval', '7d', 'RULE5_MONITORING_PLAN_FORBIDDEN_CLINICAL_FIELD'],
+    ['duration', 14, 'RULE5_MONITORING_PLAN_FORBIDDEN_CLINICAL_FIELD'],
+    ['symptoms', ['SYNTHETIC_SYMPTOM_TEXT'], 'RULE5_MONITORING_PLAN_FORBIDDEN_CLINICAL_FIELD'],
+    ['vitals', { bp: 140 }, 'RULE5_MONITORING_PLAN_FORBIDDEN_CLINICAL_FIELD'],
+    ['labs', { hb: 12 }, 'RULE5_MONITORING_PLAN_FORBIDDEN_CLINICAL_FIELD'],
+    [
+      'instructionText',
+      'SYNTHETIC_INSTRUCTION_TEXT',
+      'RULE5_MONITORING_PLAN_FORBIDDEN_CLINICAL_FIELD',
+    ],
+    ['patientId', 'SYNTHETIC_PATIENT_ID', 'RULE5_MONITORING_PLAN_FORBIDDEN_CLINICAL_FIELD'],
+    ['patientName', 'SYNTHETIC_PATIENT_NAME', 'RULE5_MONITORING_PLAN_FORBIDDEN_CLINICAL_FIELD'],
+    ['phone', '5550001111', 'RULE5_MONITORING_PLAN_FORBIDDEN_CLINICAL_FIELD'],
+    ['email', 'synthetic@example.invalid', 'RULE5_MONITORING_PLAN_FORBIDDEN_CLINICAL_FIELD'],
+    ['license', 'SYNTHETIC_LICENSE', 'RULE5_MONITORING_PLAN_FORBIDDEN_CLINICAL_FIELD'],
+    ['clinicianName', 'SYNTHETIC_CLINICIAN_NAME', 'RULE5_MONITORING_PLAN_FORBIDDEN_CLINICAL_FIELD'],
+    ['tenantId', 'SYNTHETIC_TENANT', 'RULE5_MONITORING_PLAN_FORBIDDEN_CLINICAL_FIELD'],
+    ['caseId', 'SYNTHETIC_CASE', 'RULE5_MONITORING_PLAN_FORBIDDEN_CLINICAL_FIELD'],
+    ['consultationId', 'SYNTHETIC_CONSULTATION', 'RULE5_MONITORING_PLAN_FORBIDDEN_CLINICAL_FIELD'],
+    ['medicine', 'SYNTHETIC_MED', 'RULE5_MONITORING_PLAN_FORBIDDEN_CLINICAL_FIELD'],
+    ['mixture', 'SYNTHETIC_MIX', 'RULE5_MONITORING_PLAN_FORBIDDEN_CLINICAL_FIELD'],
+    ['potency', '30C', 'RULE5_MONITORING_PLAN_FORBIDDEN_CLINICAL_FIELD'],
+    ['dosage', '5ml', 'RULE5_MONITORING_PLAN_FORBIDDEN_CLINICAL_FIELD'],
+    ['evidenceCatalog', { body: 'SYNTHETIC' }, 'RULE5_MONITORING_PLAN_FORBIDDEN_CLINICAL_FIELD'],
+    ['evidenceBody', 'SYNTHETIC_EVIDENCE_BODY', 'RULE5_MONITORING_PLAN_FORBIDDEN_CLINICAL_FIELD'],
+  ] as const)('rejects forbidden clinical content key %s', (key, value, code) => {
+    expectM5Failure(
+      () =>
+        validateRule5MonitoringPlanSchemaDefinitionDocument({
+          ...schemaFromFixture(),
+          [key]: value,
+        }),
+      code,
+    );
+  });
+
+  it('rejects evidence ACTIVE policy literal before wrong-policy check', () => {
+    expectM5Failure(
+      () =>
+        validateRule5MonitoringPlanSchemaDefinitionDocument({
+          ...schemaFromFixture(),
+          evidencePolicy: 'EVIDENCE_ACTIVE',
+        }),
+      'RULE5_MONITORING_PLAN_EVIDENCE_ACTIVATION_FORBIDDEN',
+    );
+  });
+
+  it.each(['TH-01', 'TH-02', 'TH-03', 'TH-04'] as const)(
+    'rejects Rule 4 threshold reference key %s',
+    (ref) => {
+      expectM5Failure(
+        () =>
+          validateRule5MonitoringPlanSchemaDefinitionDocument({
+            ...schemaFromFixture(),
+            [ref]: true,
+          }),
+        'RULE5_MONITORING_PLAN_RULE4_REFERENCE_FORBIDDEN',
+      );
+    },
+  );
+
+  it.each(['DA-01', 'DA-02', 'DA-03', 'DA-04', 'DA-05', 'DA-06', 'DA-07'] as const)(
+    'rejects Rule 4 dose reference key %s',
+    (ref) => {
+      expectM5Failure(
+        () =>
+          validateRule5MonitoringPlanSchemaDefinitionDocument({
+            ...schemaFromFixture(),
+            [ref]: true,
+          }),
+        'RULE5_MONITORING_PLAN_RULE4_REFERENCE_FORBIDDEN',
+      );
+    },
+  );
+
+  it.each([
+    ['thresholdPolicy', 'THRESHOLD_VALUES_ACTIVE', 'RULE5_MONITORING_PLAN_WRONG_THRESHOLD_POLICY'],
+    [
+      'evidencePolicy',
+      'EVIDENCE_POLICY_NOT_AUTHORIZED',
+      'RULE5_MONITORING_PLAN_WRONG_EVIDENCE_POLICY',
+    ],
+  ] as const)('rejects wrong %s', (key, value, code) => {
+    expectM5Failure(
+      () =>
+        validateRule5MonitoringPlanSchemaDefinitionDocument({
+          ...schemaFromFixture(),
+          [key]: value,
+        }),
+      code,
+    );
+  });
+
+  it.each([
+    ['reasonCode', 'R5_ENGINE_MODE_INVALID', 'RULE5_MONITORING_PLAN_MISSING_PLAN_POLICY_MISMATCH'],
+    ['statusReference', 'STATUS_PASS', 'RULE5_MONITORING_PLAN_MISSING_PLAN_POLICY_MISMATCH'],
+    [
+      'requiredActionReference',
+      'AUTO_CONTINUE',
+      'RULE5_MONITORING_PLAN_MISSING_PLAN_POLICY_MISMATCH',
+    ],
+    ['ownerDecisionAnchor', 'OD-R5-M0-004', 'RULE5_MONITORING_PLAN_MISSING_PLAN_POLICY_MISMATCH'],
+    ['executable', true, 'RULE5_MONITORING_PLAN_EXECUTABLE_NOT_ALLOWED'],
+    ['noPass', false, 'RULE5_MONITORING_PLAN_MISSING_PLAN_POLICY_MISMATCH'],
+    ['noAutoContinue', false, 'RULE5_MONITORING_PLAN_MISSING_PLAN_POLICY_MISMATCH'],
+  ] as const)('rejects missing-plan policy tamper %s', (key, value, code) => {
+    const base = schemaFromFixture();
+    expectM5Failure(
+      () =>
+        validateRule5MonitoringPlanSchemaDefinitionDocument({
+          ...base,
+          missingPlanPolicy: { ...(base.missingPlanPolicy as object), [key]: value },
+        }),
+      code,
+    );
+  });
+
+  it.each([
+    ['clinicianReviewRequired', false, 'RULE5_MONITORING_PLAN_CLINICIAN_REVIEW_POLICY_MISMATCH'],
+    ['acknowledgmentIsNotPass', false, 'RULE5_MONITORING_PLAN_CLINICIAN_REVIEW_POLICY_MISMATCH'],
+    [
+      'restartRequiresNewReviewedPlan',
+      false,
+      'RULE5_MONITORING_PLAN_CLINICIAN_REVIEW_POLICY_MISMATCH',
+    ],
+    ['executionAuthorized', true, 'RULE5_MONITORING_PLAN_EXECUTABLE_NOT_ALLOWED'],
+    ['clinicianIdentityAuthorized', true, 'RULE5_MONITORING_PLAN_AUTHORIZATION_FLAG_NOT_ALLOWED'],
+    [
+      'ownerDecisionAnchor',
+      'OD-R5-M0-004',
+      'RULE5_MONITORING_PLAN_CLINICIAN_REVIEW_POLICY_MISMATCH',
+    ],
+  ] as const)('rejects clinician-review policy tamper %s', (key, value, code) => {
+    const base = schemaFromFixture();
+    expectM5Failure(
+      () =>
+        validateRule5MonitoringPlanSchemaDefinitionDocument({
+          ...base,
+          clinicianReviewPolicy: { ...(base.clinicianReviewPolicy as object), [key]: value },
+        }),
+      code,
+    );
+  });
+
+  it.each([
+    [
+      'fingerprintVersion',
+      'ehas2-rule5-monitoring-plan-fingerprint-v0',
+      'RULE5_MONITORING_PLAN_WRONG_FINGERPRINT_VERSION',
+    ],
+    ['deterministicFingerprint', 'SYNTHETIC_FP', 'RULE5_MONITORING_PLAN_FINGERPRINT_MUST_BE_NULL'],
+    ['deterministicFingerprint', 12345, 'RULE5_MONITORING_PLAN_NUMERIC_VALUE_FORBIDDEN'],
+    ['deterministicFingerprint', { hash: 'x' }, 'RULE5_MONITORING_PLAN_FINGERPRINT_MUST_BE_NULL'],
+  ] as const)('rejects fingerprint tamper %s=%p', (key, value, code) => {
+    expectM5Failure(
+      () =>
+        validateRule5MonitoringPlanSchemaDefinitionDocument({
+          ...schemaFromFixture(),
+          [key]: value,
+        }),
+      code,
+    );
+  });
+});
+
 describe('Rule 5 R5-M5 validation error privacy', () => {
   const S = SYNTHETIC_PRIVATE_TEXT_5550001111;
+
+  function expectRedacted(
+    fn: () => void,
+    code: Rule5MonitoringPlanValidationError['failureCode'],
+  ): void {
+    const err = expectM5Failure(fn, code);
+    assertErrorDoesNotEchoRawValue(err, S);
+  }
+
+  it.each([
+    [
+      'schemaVersion',
+      () =>
+        validateRule5MonitoringPlanSchemaDefinitionShape({
+          ...schemaFromFixture(),
+          schemaVersion: S,
+        }),
+      'RULE5_MONITORING_PLAN_INVALID_SCHEMA_VERSION',
+    ],
+    [
+      'schemaKind',
+      () =>
+        validateRule5MonitoringPlanSchemaDefinitionDocument({
+          ...schemaFromFixture(),
+          schemaKind: S,
+        }),
+      'RULE5_MONITORING_PLAN_WRONG_SCHEMA_KIND',
+    ],
+    [
+      'ownerLabel',
+      () => validateRule5MonitoringPlanSchemaDefinitionDocument(fieldEntry(0, { ownerLabel: S })),
+      'RULE5_MONITORING_PLAN_FIELD_DEFINITION_MISMATCH',
+    ],
+    [
+      'reference string',
+      () => validateRule5MonitoringPlanSchemaDefinitionDocument(fieldEntry(0, { reference: S })),
+      'RULE5_MONITORING_PLAN_NON_NULL_REFERENCE',
+    ],
+    [
+      'unexpected key',
+      () =>
+        validateRule5MonitoringPlanSchemaDefinitionDocument({ ...schemaFromFixture(), [S]: true }),
+      'RULE5_MONITORING_PLAN_UNEXPECTED_FIELD',
+    ],
+    [
+      'patient instruction',
+      () =>
+        validateRule5MonitoringPlanSchemaDefinitionDocument({
+          ...schemaFromFixture(),
+          instructionText: S,
+        }),
+      'RULE5_MONITORING_PLAN_FORBIDDEN_CLINICAL_FIELD',
+    ],
+    [
+      'clinician identity',
+      () =>
+        validateRule5MonitoringPlanSchemaDefinitionDocument({
+          ...schemaFromFixture(),
+          clinicianName: S,
+        }),
+      'RULE5_MONITORING_PLAN_FORBIDDEN_CLINICAL_FIELD',
+    ],
+    [
+      'evidence value',
+      () =>
+        validateRule5MonitoringPlanSchemaDefinitionDocument({
+          ...schemaFromFixture(),
+          evidencePolicy: S,
+        }),
+      'RULE5_MONITORING_PLAN_WRONG_EVIDENCE_POLICY',
+    ],
+  ] as const)('redacts sentinel in invalid %s', (_label, fn, code) => {
+    expectRedacted(fn, code);
+  });
 
   it('redacts malicious schemaVersion and unexpected property values', () => {
     const base = schemaFromFixture();
