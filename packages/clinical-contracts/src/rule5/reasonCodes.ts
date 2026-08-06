@@ -22,7 +22,7 @@ export type Rule5ClinicalReasonRegistry = {
 };
 
 /** Deterministic code order (locale-independent). JSON fixture entries MUST match this order. */
-export const RULE5_CANONICAL_CLINICAL_REASON_ENTRIES = [
+const CANONICAL_CLINICAL_REASON_ENTRY_DEFINITIONS = [
   {
     code: 'R5_ACTIVE_ORAL_COUNT_BELOW_REQUIRED',
     namespace: 'R5',
@@ -193,24 +193,51 @@ export const RULE5_CANONICAL_CLINICAL_REASON_ENTRIES = [
   },
 ] as const satisfies readonly Rule5ClinicalReasonRegistryEntry[];
 
+function freezeClinicalReasonRegistryEntry(
+  entry: Rule5ClinicalReasonRegistryEntry,
+): Rule5ClinicalReasonRegistryEntry {
+  return Object.freeze({ ...entry });
+}
+
+const FROZEN_CANONICAL_ENTRIES = Object.freeze(
+  CANONICAL_CLINICAL_REASON_ENTRY_DEFINITIONS.map((entry) =>
+    freezeClinicalReasonRegistryEntry({
+      code: entry.code,
+      namespace: entry.namespace,
+      meaning: entry.meaning,
+      executable: entry.executable,
+      introducedInVersion: entry.introducedInVersion,
+      ownerDecisionAnchor: entry.ownerDecisionAnchor,
+    }),
+  ),
+) as readonly Rule5ClinicalReasonRegistryEntry[];
+
+/** Runtime-frozen canonical entries (deterministic code order). */
+export const RULE5_CANONICAL_CLINICAL_REASON_ENTRIES = FROZEN_CANONICAL_ENTRIES;
+
 export type Rule5ClinicalReasonCode =
-  (typeof RULE5_CANONICAL_CLINICAL_REASON_ENTRIES)[number]['code'];
+  (typeof CANONICAL_CLINICAL_REASON_ENTRY_DEFINITIONS)[number]['code'];
 
-export const RULE5_CANONICAL_CLINICAL_REASON_REGISTRY: Rule5ClinicalReasonRegistry = {
+export const RULE5_CANONICAL_CLINICAL_REASON_REGISTRY: Rule5ClinicalReasonRegistry = Object.freeze({
   registryVersion: RULE5_REASON_REGISTRY_VERSION,
-  entries: RULE5_CANONICAL_CLINICAL_REASON_ENTRIES,
-};
+  entries: FROZEN_CANONICAL_ENTRIES,
+});
 
-export const RULE5_CLINICAL_REASON_CODES: readonly Rule5ClinicalReasonCode[] =
-  RULE5_CANONICAL_CLINICAL_REASON_ENTRIES.map((e) => e.code);
+export const RULE5_CLINICAL_REASON_CODES: readonly Rule5ClinicalReasonCode[] = Object.freeze(
+  FROZEN_CANONICAL_ENTRIES.map((e) => e.code as Rule5ClinicalReasonCode),
+);
 
-export const RULE5_OD014_REASON_CODES = RULE5_CANONICAL_CLINICAL_REASON_ENTRIES.filter(
-  (e) => e.ownerDecisionAnchor === 'OD-R5-M0-014',
-).map((e) => e.code);
+export const RULE5_OD014_REASON_CODES: readonly Rule5ClinicalReasonCode[] = Object.freeze(
+  FROZEN_CANONICAL_ENTRIES.filter((e) => e.ownerDecisionAnchor === 'OD-R5-M0-014').map(
+    (e) => e.code as Rule5ClinicalReasonCode,
+  ),
+);
 
-export const RULE5_OD015_REASON_CODES = RULE5_CANONICAL_CLINICAL_REASON_ENTRIES.filter(
-  (e) => e.ownerDecisionAnchor === 'OD-R5-M0-015',
-).map((e) => e.code);
+export const RULE5_OD015_REASON_CODES: readonly Rule5ClinicalReasonCode[] = Object.freeze(
+  FROZEN_CANONICAL_ENTRIES.filter((e) => e.ownerDecisionAnchor === 'OD-R5-M0-015').map(
+    (e) => e.code as Rule5ClinicalReasonCode,
+  ),
+);
 
 export const RULE5_KNOWN_CLINICAL_REASON_CODE_SET: ReadonlySet<string> = new Set(
   RULE5_CLINICAL_REASON_CODES,
@@ -218,6 +245,9 @@ export const RULE5_KNOWN_CLINICAL_REASON_CODE_SET: ReadonlySet<string> = new Set
 
 export const RULE5_CANONICAL_ENTRY_BY_CODE: Readonly<
   Record<Rule5ClinicalReasonCode, Rule5ClinicalReasonRegistryEntry>
-> = Object.fromEntries(
-  RULE5_CANONICAL_CLINICAL_REASON_ENTRIES.map((entry) => [entry.code, entry]),
-) as Record<Rule5ClinicalReasonCode, Rule5ClinicalReasonRegistryEntry>;
+> = Object.freeze(
+  Object.fromEntries(FROZEN_CANONICAL_ENTRIES.map((entry) => [entry.code, entry])) as Record<
+    Rule5ClinicalReasonCode,
+    Rule5ClinicalReasonRegistryEntry
+  >,
+);

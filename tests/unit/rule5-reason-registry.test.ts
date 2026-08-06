@@ -19,10 +19,14 @@ import {
   serializeRule5ClinicalReasonRegistry,
   validateRule5ClinicalReasonRegistryDocument,
 } from '../../packages/clinical-contracts/src/index.ts';
-import { loadRule5ClinicalReasonRegistryFromRepoRoot } from '../../packages/clinical-contracts/src/rule5/reasonRegistry.ts';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const fixturePath = path.join(root, 'fixtures/rule5/reason-code-registry.clinical.v1.json');
+const rule5ReasonRegistrySourcePath = path.join(
+  root,
+  'packages/clinical-contracts/src/rule5/reasonRegistry.ts',
+);
+const rule5IndexSourcePath = path.join(root, 'packages/clinical-contracts/src/rule5/index.ts');
 
 const M3_FUTURE_CODES = [
   'R5_EMERGENCY_RED_FLAG_DETECTED',
@@ -56,6 +60,10 @@ function readFixtureJson(): unknown {
   return JSON.parse(fs.readFileSync(fixturePath, 'utf8')) as unknown;
 }
 
+function loadValidatedFixtureRegistry() {
+  return validateRule5ClinicalReasonRegistryDocument(readFixtureJson());
+}
+
 function collectKeys(value: unknown, keys: Set<string>): void {
   if (value === null || typeof value !== 'object') return;
   if (Array.isArray(value)) {
@@ -82,7 +90,7 @@ function expectValidationFailure(
 }
 
 describe('Rule 5 R5-M2 clinical reason registry', () => {
-  const registry = loadRule5ClinicalReasonRegistryFromRepoRoot(root);
+  const registry = loadValidatedFixtureRegistry();
 
   it('contains exactly 21 unique clinical codes with exact OD-014 + OD-015 membership', () => {
     const codes = registry.entries.map((e) => e.code);
@@ -156,9 +164,7 @@ describe('Rule 5 R5-M2 clinical reason registry', () => {
   it('serializes deterministically and matches canonical stable dump', () => {
     const a = serializeRule5ClinicalReasonRegistry(registry);
     const b = serializeRule5ClinicalReasonRegistry(RULE5_CANONICAL_CLINICAL_REASON_REGISTRY);
-    const c = serializeRule5ClinicalReasonRegistry(
-      loadRule5ClinicalReasonRegistryFromRepoRoot(root),
-    );
+    const c = serializeRule5ClinicalReasonRegistry(loadValidatedFixtureRegistry());
     expect(a).toBe(b);
     expect(b).toBe(c);
     expect(() => JSON.parse(a)).not.toThrow();
@@ -408,6 +414,60 @@ describe('Rule 5 R5-M2 clinical reason registry', () => {
     expect(barrel).toHaveProperty('RULE5_CANONICAL_CLINICAL_REASON_REGISTRY');
     expect(barrel).toHaveProperty('validateRule5ClinicalReasonRegistryDocument');
     expect(barrel).not.toHaveProperty('loadRule5ClinicalReasonRegistryFromRepoRoot');
+  });
+
+  it('public Rule 5 registry module graph excludes Node fs/path and fixture loading', () => {
+    const reasonRegistrySource = fs.readFileSync(rule5ReasonRegistrySourcePath, 'utf8');
+    const rule5IndexSource = fs.readFileSync(rule5IndexSourcePath, 'utf8');
+    expect(reasonRegistrySource).not.toMatch(/node:fs|'node:fs'|"node:fs"/);
+    expect(reasonRegistrySource).not.toMatch(/node:path|'node:path'|"node:path"/);
+    expect(reasonRegistrySource).not.toMatch(/readFileSync|process\.cwd|loadRule5/);
+    expect(rule5IndexSource).not.toMatch(/node:fs|node:path|loadRule5/);
+  });
+
+  it('deep-freezes canonical registry root, entries array, and each entry', () => {
+    const canon = RULE5_CANONICAL_CLINICAL_REASON_REGISTRY;
+    expect(Object.isFrozen(canon)).toBe(true);
+    expect(Object.isFrozen(canon.entries)).toBe(true);
+    expect(canon.entries).toHaveLength(21);
+    for (const entry of canon.entries) {
+      expect(Object.isFrozen(entry)).toBe(true);
+    }
+    expect(validateRule5ClinicalReasonRegistryDocument(readFixtureJson())).toBe(canon);
+  });
+
+  it('rejects runtime mutation of canonical registry and preserves validation/serialization', () => {
+    const canon = RULE5_CANONICAL_CLINICAL_REASON_REGISTRY;
+    const beforeSerialize = serializeRule5ClinicalReasonRegistry(canon);
+    const entry0 = canon.entries[0]!;
+    const meaningBefore = entry0.meaning;
+    const anchorBefore = entry0.ownerDecisionAnchor;
+
+    expect(() => {
+      (canon as { registryVersion: string }).registryVersion = 'tampered';
+    }).toThrow();
+    expect(canon.registryVersion).toBe(RULE5_REASON_REGISTRY_VERSION);
+
+    expect(() => {
+      (canon.entries as unknown as unknown[]).push({});
+    }).toThrow();
+
+    expect(() => {
+      (entry0 as { meaning: string }).meaning = 'tampered meaning';
+    }).toThrow();
+    expect(entry0.meaning).toBe(meaningBefore);
+
+    expect(() => {
+      (entry0 as { ownerDecisionAnchor: string }).ownerDecisionAnchor = 'OD-R5-M0-015';
+    }).toThrow();
+    expect(entry0.ownerDecisionAnchor).toBe(anchorBefore);
+
+    const consumerA = validateRule5ClinicalReasonRegistryDocument(readFixtureJson());
+    const consumerB = validateRule5ClinicalReasonRegistryDocument(readFixtureJson());
+    expect(consumerA).toBe(consumerB);
+    expect(consumerA).toBe(canon);
+    expect(serializeRule5ClinicalReasonRegistry(canon)).toBe(beforeSerialize);
+    expect(validateRule5ClinicalReasonRegistryDocument(readFixtureJson())).toEqual(canon);
   });
 });
 
