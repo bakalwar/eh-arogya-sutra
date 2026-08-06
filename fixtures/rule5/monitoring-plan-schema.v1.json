@@ -1,0 +1,146 @@
+{
+  "clinicalValuesAuthorized": false,
+  "clinicianIdentifiersAuthorized": false,
+  "clinicianReviewPolicy": {
+    "acknowledgmentIsNotPass": true,
+    "clinicianIdentityAuthorized": false,
+    "clinicianReviewRequired": true,
+    "executionAuthorized": false,
+    "ownerDecisionAnchor": "OD-R5-M0-006",
+    "restartRequiresNewReviewedPlan": true
+  },
+  "connected": false,
+  "deterministicFingerprint": null,
+  "evidencePolicy": "EVIDENCE_AUDIT_REQUIRED_BEFORE_ACTIVATION",
+  "executable": false,
+  "fields": [
+    {
+      "clinicalValueAuthorized": false,
+      "executable": false,
+      "fieldId": "MPF-001",
+      "fieldKey": "baselineRequirements",
+      "ownerDecisionAnchor": "OD-R5-M0-003",
+      "ownerLabel": "Baseline requirements",
+      "reference": null,
+      "representation": "REFERENCE_ONLY"
+    },
+    {
+      "clinicalValueAuthorized": false,
+      "executable": false,
+      "fieldId": "MPF-002",
+      "fieldKey": "monitoredSymptomsVitalsLabsEvents",
+      "ownerDecisionAnchor": "OD-R5-M0-003",
+      "ownerLabel": "Monitored symptoms / vitals / labs / events",
+      "reference": null,
+      "representation": "REFERENCE_ONLY"
+    },
+    {
+      "clinicalValueAuthorized": false,
+      "executable": false,
+      "fieldId": "MPF-003",
+      "fieldKey": "followUpWindow",
+      "ownerDecisionAnchor": "OD-R5-M0-003",
+      "ownerLabel": "Follow-up window",
+      "reference": null,
+      "representation": "REFERENCE_ONLY"
+    },
+    {
+      "clinicalValueAuthorized": false,
+      "executable": false,
+      "fieldId": "MPF-004",
+      "fieldKey": "warningThresholds",
+      "ownerDecisionAnchor": "OD-R5-M0-003",
+      "ownerLabel": "Warning thresholds",
+      "reference": null,
+      "representation": "REFERENCE_ONLY"
+    },
+    {
+      "clinicalValueAuthorized": false,
+      "executable": false,
+      "fieldId": "MPF-005",
+      "fieldKey": "responsibleClinician",
+      "ownerDecisionAnchor": "OD-R5-M0-003",
+      "ownerLabel": "Responsible clinician",
+      "reference": null,
+      "representation": "REFERENCE_ONLY"
+    },
+    {
+      "clinicalValueAuthorized": false,
+      "executable": false,
+      "fieldId": "MPF-006",
+      "fieldKey": "patientInstructions",
+      "ownerDecisionAnchor": "OD-R5-M0-003",
+      "ownerLabel": "Patient instructions",
+      "reference": null,
+      "representation": "REFERENCE_ONLY"
+    },
+    {
+      "clinicalValueAuthorized": false,
+      "executable": false,
+      "fieldId": "MPF-007",
+      "fieldKey": "pauseCriteria",
+      "ownerDecisionAnchor": "OD-R5-M0-003",
+      "ownerLabel": "Pause criteria",
+      "reference": null,
+      "representation": "REFERENCE_ONLY"
+    },
+    {
+      "clinicalValueAuthorized": false,
+      "executable": false,
+      "fieldId": "MPF-008",
+      "fieldKey": "stopCriteria",
+      "ownerDecisionAnchor": "OD-R5-M0-003",
+      "ownerLabel": "Stop criteria",
+      "reference": null,
+      "representation": "REFERENCE_ONLY"
+    },
+    {
+      "clinicalValueAuthorized": false,
+      "executable": false,
+      "fieldId": "MPF-009",
+      "fieldKey": "emergencyCriteriaAndEscalationPath",
+      "ownerDecisionAnchor": "OD-R5-M0-003",
+      "ownerLabel": "Emergency criteria and escalation path",
+      "reference": null,
+      "representation": "REFERENCE_ONLY"
+    },
+    {
+      "clinicalValueAuthorized": false,
+      "executable": false,
+      "fieldId": "MPF-010",
+      "fieldKey": "evidenceVersion",
+      "ownerDecisionAnchor": "OD-R5-M0-003",
+      "ownerLabel": "Evidence version",
+      "reference": null,
+      "representation": "REFERENCE_ONLY"
+    },
+    {
+      "clinicalValueAuthorized": false,
+      "executable": false,
+      "fieldId": "MPF-011",
+      "fieldKey": "monitoringPlanVersionAndFingerprint",
+      "ownerDecisionAnchor": "OD-R5-M0-003",
+      "ownerLabel": "Monitoring-plan version / fingerprint",
+      "reference": null,
+      "representation": "REFERENCE_ONLY"
+    }
+  ],
+  "fingerprintVersion": "ehas2-rule5-monitoring-plan-fingerprint-v1",
+  "freeTextAuthorized": false,
+  "implemented": false,
+  "missingPlanPolicy": {
+    "executable": false,
+    "noAutoContinue": true,
+    "noPass": true,
+    "ownerDecisionAnchor": "OD-R5-M0-003",
+    "reasonCode": "R5_REQUIRED_MONITORING_DATA_MISSING",
+    "requiredActionReference": "DOCTOR_REVIEW_REQUIRED",
+    "statusReference": "STATUS_NOT_EVALUABLE"
+  },
+  "patientIdentifiersAuthorized": false,
+  "schemaKind": "REFERENCE_ONLY_SCHEMA_DEFINITION",
+  "schemaVersion": "ehas2-rule5-monitoring-plan-schema-v1",
+  "thresholdPolicy": "NO_THRESHOLD_AUTHORIZED",
+  "thresholdValuesAuthorized": false,
+  "timingValuesAuthorized": false
+}
