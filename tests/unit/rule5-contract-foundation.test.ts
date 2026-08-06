@@ -47,14 +47,34 @@ function readFixture(): unknown {
 function expectContractFailure(
   fn: () => void,
   code: Rule5ContractValidationError['failureCode'],
-): void {
+): Rule5ContractValidationError {
   try {
     fn();
     expect.fail('expected contract validation error');
   } catch (e) {
     expect(e).toBeInstanceOf(Rule5ContractValidationError);
     expect((e as Rule5ContractValidationError).failureCode).toBe(code);
+    return e as Rule5ContractValidationError;
   }
+}
+
+function canonicalInputFromFixture(): Record<string, unknown> {
+  const raw = JSON.parse(fs.readFileSync(fixturePath, 'utf8')) as {
+    canonicalInput: Record<string, unknown>;
+  };
+  return { ...raw.canonicalInput };
+}
+
+function canonicalOutputFromFixture(): Record<string, unknown> {
+  const raw = JSON.parse(fs.readFileSync(fixturePath, 'utf8')) as {
+    canonicalOutput: Record<string, unknown>;
+  };
+  return JSON.parse(JSON.stringify(raw.canonicalOutput)) as Record<string, unknown>;
+}
+
+function assertErrorDoesNotEchoRawValue(error: Rule5ContractValidationError, raw: string): void {
+  expect(error.message).not.toContain(raw);
+  expect(JSON.stringify(error)).not.toContain(raw);
 }
 
 describe('Rule 5 R5-M4 contract foundation', () => {
@@ -305,6 +325,393 @@ print(a['output_fingerprint'])
     expect(fp).toMatch(/^[A-F0-9]{64}$/);
     const fpAgain = execFileSync(py, ['-c', script], { encoding: 'utf8' }).trim();
     expect(fpAgain).toBe(fp);
+  });
+});
+
+describe('Rule 5 R5-M4 contract input validation hardening', () => {
+  const canonInput = () => canonicalInputFromFixture();
+
+  it.each([
+    ['null document', null, 'RULE5_CONTRACT_INVALID_DOCUMENT'],
+    ['array document', [], 'RULE5_CONTRACT_INVALID_DOCUMENT'],
+    ['primitive document', 'text', 'RULE5_CONTRACT_INVALID_DOCUMENT'],
+  ] as const)('rejects %s', (_label, value, code) => {
+    expectContractFailure(() => validateRule5ContractFoundationInputDocument(value), code);
+  });
+
+  it('rejects missing contractVersion', () => {
+    const input = canonInput();
+    delete input.contractVersion;
+    expectContractFailure(
+      () => validateRule5ContractFoundationInputDocument(input),
+      'RULE5_CONTRACT_MISSING_MANDATORY_FIELD',
+    );
+  });
+
+  it('rejects whitespace-only contractVersion', () => {
+    expectContractFailure(
+      () =>
+        validateRule5ContractFoundationInputDocument({ ...canonInput(), contractVersion: '   ' }),
+      'RULE5_CONTRACT_WHITESPACE_ONLY_FIELD',
+    );
+  });
+
+  it('rejects wrong contractVersion', () => {
+    expectContractFailure(
+      () =>
+        validateRule5ContractFoundationInputDocument({
+          ...canonInput(),
+          contractVersion: 'ehas2-rule5-contract-v0',
+        }),
+      'RULE5_CONTRACT_INVALID_VERSION',
+    );
+  });
+
+  it('rejects wrong ruleSetVersion', () => {
+    expectContractFailure(
+      () =>
+        validateRule5ContractFoundationInputDocument({
+          ...canonInput(),
+          ruleSetVersion: 'ehas2-nine-rule-interfaces-v0',
+        }),
+      'RULE5_CONTRACT_WRONG_RULE_SET_VERSION',
+    );
+  });
+
+  it('rejects wrong invocationKind', () => {
+    expectContractFailure(
+      () =>
+        validateRule5ContractFoundationInputDocument({
+          ...canonInput(),
+          invocationKind: 'PRODUCTION_RUN',
+        }),
+      'RULE5_CONTRACT_WRONG_INVOCATION_KIND',
+    );
+  });
+
+  it('rejects whitespace-only evaluationMode', () => {
+    expectContractFailure(
+      () =>
+        validateRule5ContractFoundationInputShape({ ...canonInput(), evaluationMode: '  \t  ' }),
+      'RULE5_CONTRACT_WHITESPACE_ONLY_FIELD',
+    );
+  });
+
+  it('rejects unexpected input field', () => {
+    expectContractFailure(
+      () => validateRule5ContractFoundationInputDocument({ ...canonInput(), extraKey: true }),
+      'RULE5_CONTRACT_UNEXPECTED_FIELD',
+    );
+  });
+
+  it('rejects forbidden clinical/PHI-like input field', () => {
+    expectContractFailure(
+      () => validateRule5ContractFoundationInputDocument({ ...canonInput(), phone: '9000000000' }),
+      'RULE5_CONTRACT_FORBIDDEN_CLINICAL_FIELD',
+    );
+  });
+});
+
+describe('Rule 5 R5-M4 contract output validation hardening', () => {
+  const canonOutput = () => canonicalOutputFromFixture();
+
+  it.each([
+    ['null document', null, 'RULE5_CONTRACT_INVALID_DOCUMENT'],
+    ['array document', [], 'RULE5_CONTRACT_INVALID_DOCUMENT'],
+    ['primitive document', 42, 'RULE5_CONTRACT_INVALID_DOCUMENT'],
+  ] as const)('rejects %s', (_label, value, code) => {
+    expectContractFailure(() => validateRule5ContractFoundationOutputDocument(value), code);
+  });
+
+  it('rejects wrong ruleNumber', () => {
+    expectContractFailure(
+      () => validateRule5ContractFoundationOutputDocument({ ...canonOutput(), ruleNumber: 4 }),
+      'RULE5_CONTRACT_WRONG_RULE_NUMBER',
+    );
+  });
+
+  it('rejects wrong ruleName', () => {
+    expectContractFailure(
+      () => validateRule5ContractFoundationOutputDocument({ ...canonOutput(), ruleName: 'Dosage' }),
+      'RULE5_CONTRACT_WRONG_RULE_NAME',
+    );
+  });
+
+  it('rejects whitespace-only ruleName', () => {
+    expectContractFailure(
+      () => validateRule5ContractFoundationOutputDocument({ ...canonOutput(), ruleName: '  ' }),
+      'RULE5_CONTRACT_WHITESPACE_ONLY_FIELD',
+    );
+  });
+
+  it('rejects wrong status', () => {
+    expectContractFailure(
+      () => validateRule5ContractFoundationOutputDocument({ ...canonOutput(), status: 'EXECUTED' }),
+      'RULE5_CONTRACT_WRONG_STATUS',
+    );
+  });
+
+  it('rejects wrong output contractVersion', () => {
+    expectContractFailure(
+      () =>
+        validateRule5ContractFoundationOutputDocument({
+          ...canonOutput(),
+          contractVersion: 'ehas2-rule5-contract-v0',
+        }),
+      'RULE5_CONTRACT_INVALID_VERSION',
+    );
+  });
+
+  it('rejects wrong output ruleSetVersion', () => {
+    expectContractFailure(
+      () =>
+        validateRule5ContractFoundationOutputDocument({
+          ...canonOutput(),
+          ruleSetVersion: 'wrong-ruleset',
+        }),
+      'RULE5_CONTRACT_WRONG_RULE_SET_VERSION',
+    );
+  });
+
+  it('rejects wrong output evaluationMode', () => {
+    expectContractFailure(
+      () =>
+        validateRule5ContractFoundationOutputDocument({
+          ...canonOutput(),
+          evaluationMode: 'SHADOW',
+        }),
+      'RULE5_ENGINE_MODE_SHADOW_NOT_AUTHORIZED',
+    );
+  });
+
+  it.each([
+    ['implemented', 'RULE5_CONTRACT_IMPLEMENTED_NOT_ALLOWED'],
+    ['connected', 'RULE5_CONTRACT_CONNECTED_NOT_ALLOWED'],
+    ['affectsClinicalSelection', 'RULE5_CONTRACT_AFFECTS_CLINICAL_SELECTION_NOT_ALLOWED'],
+    ['clinicalActionAuthorized', 'RULE5_CONTRACT_CLINICAL_ACTION_NOT_ALLOWED'],
+    ['prescriptionMutationAuthorized', 'RULE5_CONTRACT_PRESCRIPTION_MUTATION_NOT_ALLOWED'],
+    ['medicineMutationAuthorized', 'RULE5_CONTRACT_MEDICINE_MUTATION_NOT_ALLOWED'],
+    ['potencyMutationAuthorized', 'RULE5_CONTRACT_POTENCY_MUTATION_NOT_ALLOWED'],
+    ['dosageMutationAuthorized', 'RULE5_CONTRACT_DOSAGE_MUTATION_NOT_ALLOWED'],
+  ] as const)('rejects tampered authority flag %s=true', (field, code) => {
+    expectContractFailure(
+      () => validateRule5ContractFoundationOutputDocument({ ...canonOutput(), [field]: true }),
+      code,
+    );
+  });
+
+  it('rejects non-empty reasonCodes', () => {
+    expectContractFailure(
+      () =>
+        validateRule5ContractFoundationOutputDocument({
+          ...canonOutput(),
+          reasonCodes: ['R5_REQUIRED_MONITORING_DATA_MISSING'],
+        }),
+      'RULE5_CONTRACT_REASON_CODES_MUST_BE_EMPTY',
+    );
+  });
+
+  it('rejects RULE5_* codes in reasonCodes', () => {
+    expectContractFailure(
+      () =>
+        validateRule5ContractFoundationOutputDocument({
+          ...canonOutput(),
+          reasonCodes: ['RULE5_CONTRACT_RUNTIME_NOT_CONNECTED'],
+          limitationCodes: [
+            'RULE5_CONTRACT_FOUNDATION_NOT_IMPLEMENTED',
+            'RULE5_CONTRACT_RUNTIME_NOT_CONNECTED',
+          ],
+        }),
+      'RULE5_CONTRACT_ENGINEERING_REASON_IN_CLINICAL',
+    );
+  });
+
+  it('rejects R5_* codes in limitationCodes', () => {
+    expectContractFailure(
+      () =>
+        validateRule5ContractFoundationOutputDocument({
+          ...canonOutput(),
+          reasonCodes: [],
+          limitationCodes: [
+            'R5_REQUIRED_MONITORING_DATA_MISSING',
+            'RULE5_CONTRACT_RUNTIME_NOT_CONNECTED',
+          ],
+        }),
+      'RULE5_CONTRACT_CLINICAL_REASON_IN_LIMITATIONS',
+    );
+  });
+
+  it('rejects missing limitation code', () => {
+    expectContractFailure(
+      () =>
+        validateRule5ContractFoundationOutputDocument({
+          ...canonOutput(),
+          limitationCodes: ['RULE5_CONTRACT_FOUNDATION_NOT_IMPLEMENTED'],
+        }),
+      'RULE5_CONTRACT_WRONG_LIMITATION_SET',
+    );
+  });
+
+  it('rejects extra limitation code', () => {
+    expectContractFailure(
+      () =>
+        validateRule5ContractFoundationOutputDocument({
+          ...canonOutput(),
+          limitationCodes: [
+            'RULE5_CONTRACT_FOUNDATION_NOT_IMPLEMENTED',
+            'RULE5_CONTRACT_RUNTIME_NOT_CONNECTED',
+            'RULE5_ENGINE_MODE_INVALID',
+          ],
+        }),
+      'RULE5_CONTRACT_WRONG_LIMITATION_SET',
+    );
+  });
+
+  it('rejects duplicate limitation codes', () => {
+    expectContractFailure(
+      () =>
+        validateRule5ContractFoundationOutputDocument({
+          ...canonOutput(),
+          limitationCodes: [
+            'RULE5_CONTRACT_FOUNDATION_NOT_IMPLEMENTED',
+            'RULE5_CONTRACT_FOUNDATION_NOT_IMPLEMENTED',
+          ],
+        }),
+      'RULE5_CONTRACT_WRONG_LIMITATION_SET',
+    );
+  });
+
+  it('rejects swapped limitation code order', () => {
+    expectContractFailure(
+      () =>
+        validateRule5ContractFoundationOutputDocument({
+          ...canonOutput(),
+          limitationCodes: [
+            'RULE5_CONTRACT_RUNTIME_NOT_CONNECTED',
+            'RULE5_CONTRACT_FOUNDATION_NOT_IMPLEMENTED',
+          ],
+        }),
+      'RULE5_CONTRACT_WRONG_LIMITATION_SET',
+    );
+  });
+
+  it('rejects wrong auditContext contractVersion', () => {
+    const output = canonOutput();
+    const audit = { ...(output.auditContext as Record<string, unknown>) };
+    audit.contractVersion = 'ehas2-rule5-contract-v0';
+    expectContractFailure(
+      () => validateRule5ContractFoundationOutputDocument({ ...output, auditContext: audit }),
+      'RULE5_CONTRACT_INVALID_VERSION',
+    );
+  });
+
+  it('rejects wrong auditContext ruleSetVersion', () => {
+    const output = canonOutput();
+    const audit = { ...(output.auditContext as Record<string, unknown>) };
+    audit.ruleSetVersion = 'wrong';
+    expectContractFailure(
+      () => validateRule5ContractFoundationOutputDocument({ ...output, auditContext: audit }),
+      'RULE5_CONTRACT_WRONG_RULE_SET_VERSION',
+    );
+  });
+
+  it('rejects wrong auditContext reasonRegistryVersion', () => {
+    const output = canonOutput();
+    const audit = { ...(output.auditContext as Record<string, unknown>) };
+    audit.reasonRegistryVersion = 'ehas2-rule5-reason-registry-v0';
+    expectContractFailure(
+      () => validateRule5ContractFoundationOutputDocument({ ...output, auditContext: audit }),
+      'RULE5_CONTRACT_WRONG_AUDIT_CONTEXT',
+    );
+  });
+
+  it('rejects wrong auditContext hardBlockerMatrixVersion', () => {
+    const output = canonOutput();
+    const audit = { ...(output.auditContext as Record<string, unknown>) };
+    audit.hardBlockerMatrixVersion = 'ehas2-rule5-hard-blocker-matrix-v0';
+    expectContractFailure(
+      () => validateRule5ContractFoundationOutputDocument({ ...output, auditContext: audit }),
+      'RULE5_CONTRACT_WRONG_AUDIT_CONTEXT',
+    );
+  });
+
+  it('rejects wrong auditContext fingerprintVersion', () => {
+    const output = canonOutput();
+    const audit = { ...(output.auditContext as Record<string, unknown>) };
+    audit.fingerprintVersion = 'ehas2-rule5-contract-fingerprint-v0';
+    expectContractFailure(
+      () => validateRule5ContractFoundationOutputDocument({ ...output, auditContext: audit }),
+      'RULE5_CONTRACT_WRONG_FINGERPRINT_VERSION',
+    );
+  });
+
+  it('rejects wrong top-level fingerprintVersion', () => {
+    expectContractFailure(
+      () =>
+        validateRule5ContractFoundationOutputDocument({
+          ...canonOutput(),
+          fingerprintVersion: 'ehas2-rule5-contract-fingerprint-v0',
+        }),
+      'RULE5_CONTRACT_WRONG_FINGERPRINT_VERSION',
+    );
+  });
+
+  it('rejects non-null deterministicFingerprint', () => {
+    expectContractFailure(
+      () =>
+        validateRule5ContractFoundationOutputDocument({
+          ...canonOutput(),
+          deterministicFingerprint: 'DEADBEEF',
+        }),
+      'RULE5_CONTRACT_FINGERPRINT_MUST_BE_NULL',
+    );
+  });
+
+  it('rejects unexpected output field', () => {
+    expectContractFailure(
+      () =>
+        validateRule5ContractFoundationOutputDocument({ ...canonOutput(), extraOutputField: true }),
+      'RULE5_CONTRACT_UNEXPECTED_FIELD',
+    );
+  });
+
+  it('rejects unexpected auditContext field', () => {
+    const output = canonOutput();
+    const audit = { ...(output.auditContext as Record<string, unknown>), extraAuditField: 'x' };
+    expectContractFailure(
+      () => validateRule5ContractFoundationOutputDocument({ ...output, auditContext: audit }),
+      'RULE5_CONTRACT_UNEXPECTED_FIELD',
+    );
+  });
+});
+
+describe('Rule 5 R5-M4 validation error privacy', () => {
+  const SYNTHETIC_PATIENT_LIKE_MODE =
+    'SYNTHETIC_TEST_PATIENT_LABEL_DO_NOT_TREAT_AS_PHI_OR_CLINICAL_DATA';
+
+  it('does not echo arbitrary invalid evaluationMode values in errors', () => {
+    const input = canonicalInputFromFixture();
+    const err = expectContractFailure(
+      () =>
+        validateRule5ContractFoundationInputShape({
+          ...input,
+          evaluationMode: SYNTHETIC_PATIENT_LIKE_MODE,
+        }),
+      'RULE5_ENGINE_MODE_INVALID',
+    );
+    assertErrorDoesNotEchoRawValue(err, SYNTHETIC_PATIENT_LIKE_MODE);
+    expect(err.message).toContain('evaluationMode');
+  });
+
+  it('does not serialize full input document into invalid-mode errors', () => {
+    const input = canonicalInputFromFixture();
+    const malicious = { ...input, evaluationMode: SYNTHETIC_PATIENT_LIKE_MODE };
+    const err = expectContractFailure(
+      () => validateRule5ContractFoundationInputShape(malicious),
+      'RULE5_ENGINE_MODE_INVALID',
+    );
+    expect(JSON.stringify(malicious)).toContain(SYNTHETIC_PATIENT_LIKE_MODE);
+    assertErrorDoesNotEchoRawValue(err, JSON.stringify(malicious));
   });
 });
 

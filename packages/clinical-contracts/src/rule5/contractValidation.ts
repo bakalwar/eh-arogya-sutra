@@ -179,7 +179,7 @@ function parseEvaluationModeForInput(raw: unknown): Rule5EvaluationModeVocabular
   if (mode === 'ACTIVE') {
     throw new Rule5ContractValidationError('RULE5_ENGINE_MODE_ACTIVE_NOT_IMPLEMENTED');
   }
-  throw new Rule5ContractValidationError('RULE5_ENGINE_MODE_INVALID', mode);
+  throw new Rule5ContractValidationError('RULE5_ENGINE_MODE_INVALID', 'evaluationMode');
 }
 
 function assertContractVersion(value: unknown, field = 'contractVersion'): void {
