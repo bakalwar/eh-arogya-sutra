@@ -1,0 +1,38 @@
+{
+  "canonicalInput": {
+    "contractVersion": "ehas2-rule5-contract-v1",
+    "evaluationMode": "OFF",
+    "invocationKind": "CONTRACT_VALIDATION",
+    "ruleSetVersion": "ehas2-nine-rule-interfaces-v2-rule5-monitoring"
+  },
+  "canonicalOutput": {
+    "affectsClinicalSelection": false,
+    "auditContext": {
+      "contractVersion": "ehas2-rule5-contract-v1",
+      "fingerprintVersion": "ehas2-rule5-contract-fingerprint-v1",
+      "hardBlockerMatrixVersion": "ehas2-rule5-hard-blocker-matrix-v1",
+      "reasonRegistryVersion": "ehas2-rule5-reason-registry-v2",
+      "ruleSetVersion": "ehas2-nine-rule-interfaces-v2-rule5-monitoring"
+    },
+    "clinicalActionAuthorized": false,
+    "connected": false,
+    "contractVersion": "ehas2-rule5-contract-v1",
+    "deterministicFingerprint": null,
+    "dosageMutationAuthorized": false,
+    "evaluationMode": "OFF",
+    "fingerprintVersion": "ehas2-rule5-contract-fingerprint-v1",
+    "implemented": false,
+    "limitationCodes": [
+      "RULE5_CONTRACT_FOUNDATION_NOT_IMPLEMENTED",
+      "RULE5_CONTRACT_RUNTIME_NOT_CONNECTED"
+    ],
+    "medicineMutationAuthorized": false,
+    "potencyMutationAuthorized": false,
+    "prescriptionMutationAuthorized": false,
+    "reasonCodes": [],
+    "ruleName": "Monitoring, Follow-up & Post-Release Safety Surveillance",
+    "ruleNumber": 5,
+    "ruleSetVersion": "ehas2-nine-rule-interfaces-v2-rule5-monitoring",
+    "status": "NOT_IMPLEMENTED"
+  }
+}

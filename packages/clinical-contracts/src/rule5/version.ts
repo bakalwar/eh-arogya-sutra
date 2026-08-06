@@ -24,3 +24,12 @@ export const RULE5_HARD_BLOCKER_MATRIX_FIXTURE_RELATIVE =
 export const RULE5_CLINICAL_NAMESPACE = 'R5' as const;
 
 export const RULE5_UNKNOWN_CODE_POLICY = 'REJECT_UNKNOWN_CODE' as const;
+
+/** Rule 5 base input/output contract envelope (R5-M4 foundation). */
+export const RULE5_CONTRACT_VERSION = 'ehas2-rule5-contract-v1' as const;
+
+/** Fingerprint schema label only — M4 does not compute result hashes. */
+export const RULE5_FINGERPRINT_VERSION = 'ehas2-rule5-contract-fingerprint-v1' as const;
+
+export const RULE5_CONTRACT_FOUNDATION_FIXTURE_RELATIVE =
+  'fixtures/rule5/contract-foundation.v1.json' as const;
