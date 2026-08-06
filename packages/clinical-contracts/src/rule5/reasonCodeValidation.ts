@@ -2,7 +2,7 @@ import {
   RULE5_CANONICAL_CLINICAL_REASON_REGISTRY,
   RULE5_CANONICAL_ENTRY_BY_CODE,
   RULE5_CLINICAL_REASON_CODES,
-  RULE5_KNOWN_CLINICAL_REASON_CODE_SET,
+  isKnownRule5ClinicalReasonCode,
   type Rule5ClinicalReasonCode,
   type Rule5ClinicalReasonRegistry,
   type Rule5ClinicalReasonRegistryEntry,
@@ -25,7 +25,7 @@ export class Rule5UnknownClinicalReasonCodeError extends Error {
 export function assertKnownRule5ClinicalReasonCode(
   code: string,
 ): asserts code is Rule5ClinicalReasonCode {
-  if (!RULE5_KNOWN_CLINICAL_REASON_CODE_SET.has(code)) {
+  if (!isKnownRule5ClinicalReasonCode(code)) {
     throw new Rule5UnknownClinicalReasonCodeError('RULE5_UNKNOWN_CLINICAL_REASON_CODE');
   }
 }
@@ -166,7 +166,7 @@ function parseEntry(raw: unknown): Rule5ClinicalReasonRegistryEntry {
   if (FORBIDDEN_DOCUMENT_CODES.has(code)) {
     throw new Rule5RegistryValidationError('RULE5_REGISTRY_CODE_NOT_IN_CANONICAL_SET', code);
   }
-  if (!RULE5_KNOWN_CLINICAL_REASON_CODE_SET.has(code)) {
+  if (!isKnownRule5ClinicalReasonCode(code)) {
     throw new Rule5RegistryValidationError('RULE5_REGISTRY_CODE_NOT_IN_CANONICAL_SET', code);
   }
 

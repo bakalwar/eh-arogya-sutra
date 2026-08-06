@@ -239,9 +239,12 @@ export const RULE5_OD015_REASON_CODES: readonly Rule5ClinicalReasonCode[] = Obje
   ),
 );
 
-export const RULE5_KNOWN_CLINICAL_REASON_CODE_SET: ReadonlySet<string> = new Set(
-  RULE5_CLINICAL_REASON_CODES,
-);
+/** Module-private lookup — not exported; consumers use {@link isKnownRule5ClinicalReasonCode}. */
+const KNOWN_RULE5_CLINICAL_REASON_CODE_LOOKUP = new Set<string>(RULE5_CLINICAL_REASON_CODES);
+
+export function isKnownRule5ClinicalReasonCode(value: string): value is Rule5ClinicalReasonCode {
+  return KNOWN_RULE5_CLINICAL_REASON_CODE_LOOKUP.has(value);
+}
 
 export const RULE5_CANONICAL_ENTRY_BY_CODE: Readonly<
   Record<Rule5ClinicalReasonCode, Rule5ClinicalReasonRegistryEntry>

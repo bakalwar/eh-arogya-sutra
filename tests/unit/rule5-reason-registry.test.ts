@@ -27,6 +27,10 @@ const rule5ReasonRegistrySourcePath = path.join(
   'packages/clinical-contracts/src/rule5/reasonRegistry.ts',
 );
 const rule5IndexSourcePath = path.join(root, 'packages/clinical-contracts/src/rule5/index.ts');
+const rule5ReasonCodesSourcePath = path.join(
+  root,
+  'packages/clinical-contracts/src/rule5/reasonCodes.ts',
+);
 
 const M3_FUTURE_CODES = [
   'R5_EMERGENCY_RED_FLAG_DETECTED',
@@ -414,6 +418,38 @@ describe('Rule 5 R5-M2 clinical reason registry', () => {
     expect(barrel).toHaveProperty('RULE5_CANONICAL_CLINICAL_REASON_REGISTRY');
     expect(barrel).toHaveProperty('validateRule5ClinicalReasonRegistryDocument');
     expect(barrel).not.toHaveProperty('loadRule5ClinicalReasonRegistryFromRepoRoot');
+    expect(barrel).not.toHaveProperty('RULE5_KNOWN_CLINICAL_REASON_CODE_SET');
+    expect(barrel).toHaveProperty('isKnownRule5ClinicalReasonCode');
+  });
+
+  it('does not export mutable Set or Map on Rule 5 or root clinical-contracts barrels', async () => {
+    const rootBarrel = await import('../../packages/clinical-contracts/src/index.ts');
+    const rule5Barrel = await import('../../packages/clinical-contracts/src/rule5/index.ts');
+    expect(rootBarrel).not.toHaveProperty('RULE5_KNOWN_CLINICAL_REASON_CODE_SET');
+    expect(rule5Barrel).not.toHaveProperty('RULE5_KNOWN_CLINICAL_REASON_CODE_SET');
+    for (const value of Object.values(rule5Barrel)) {
+      expect(value).not.toBeInstanceOf(Set);
+      expect(value).not.toBeInstanceOf(Map);
+    }
+    const reasonCodesSource = fs.readFileSync(rule5ReasonCodesSourcePath, 'utf8');
+    expect(reasonCodesSource).not.toMatch(/export const RULE5_KNOWN_CLINICAL_REASON_CODE_SET/);
+    expect(reasonCodesSource).not.toMatch(/export const \w+[^=]*=\s*new Set/);
+    expect(reasonCodesSource).not.toMatch(/export const \w+[^=]*=\s*new Map/);
+    const rule5IndexSource = fs.readFileSync(rule5IndexSourcePath, 'utf8');
+    expect(rule5IndexSource).not.toMatch(/KNOWN_CLINICAL_REASON_CODE_SET/);
+  });
+
+  it('exposes known-code lookup only via pure predicate with no consumer-mutable membership', async () => {
+    const barrel = await import('../../packages/clinical-contracts/src/index.ts');
+    const { isKnownRule5ClinicalReasonCode } = barrel;
+    for (const code of RULE5_CLINICAL_REASON_CODES) {
+      expect(isKnownRule5ClinicalReasonCode(code)).toBe(true);
+      expect(() => assertKnownRule5ClinicalReasonCode(code)).not.toThrow();
+    }
+    expect(isKnownRule5ClinicalReasonCode('R5_NOT_IN_CANONICAL_REGISTER')).toBe(false);
+    expect(() => assertKnownRule5ClinicalReasonCode('R5_NOT_IN_CANONICAL_REGISTER')).toThrow(
+      Rule5UnknownClinicalReasonCodeError,
+    );
   });
 
   it('public Rule 5 registry module graph excludes Node fs/path and fixture loading', () => {
