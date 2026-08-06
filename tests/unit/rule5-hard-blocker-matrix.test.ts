@@ -13,12 +13,18 @@ import {
   RULE5_MATRIX_EVIDENCE_GATE,
   RULE5_MATRIX_THRESHOLD_POLICY,
   RULE5_HARD_BLOCKER_MATRIX_VERSION,
+  RULE5_CLINICAL_REASON_CODES,
+  isKnownRule5ClinicalReasonCode,
   Rule5MatrixValidationError,
   validateRule5HardBlockerMatrixDocument,
 } from '../../packages/clinical-contracts/src/index.ts';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const matrixFixturePath = path.join(root, 'fixtures/rule5/hard-blocker-matrix.v1.json');
+const matrixSourcePath = path.join(
+  root,
+  'packages/clinical-contracts/src/rule5/hardBlockerMatrix.ts',
+);
 
 function readMatrixFixture(): unknown {
   return JSON.parse(fs.readFileSync(matrixFixturePath, 'utf8')) as unknown;
@@ -86,12 +92,26 @@ describe('Rule 5 R5-M3 hard-blocker matrix', () => {
   });
 
   it('requires M6 evidence gate, no threshold policy, and doctor review on every mapping', () => {
+    expect(RULE5_MATRIX_EVIDENCE_GATE).toBe('EVIDENCE_AUDIT_REQUIRED_BEFORE_ACTIVATION');
+    expect(validated.mappings).toHaveLength(17);
     for (const m of validated.mappings) {
+      expect(m.evidenceGate).toBe('EVIDENCE_AUDIT_REQUIRED_BEFORE_ACTIVATION');
       expect(m.evidenceGate).toBe(RULE5_MATRIX_EVIDENCE_GATE);
       expect(m.thresholdPolicy).toBe(RULE5_MATRIX_THRESHOLD_POLICY);
       expect(m.doctorReviewRequired).toBe(true);
       expect(m.ownerDecisionAnchor).toBe('OD-R5-M0-016');
     }
+  });
+
+  it('keeps neutral evidence gate out of the 34-code clinical reason registry', () => {
+    expect(RULE5_CLINICAL_REASON_CODES).toHaveLength(34);
+    expect(isKnownRule5ClinicalReasonCode('EVIDENCE_AUDIT_REQUIRED_BEFORE_ACTIVATION')).toBe(false);
+    expect(isKnownRule5ClinicalReasonCode('R5_M6_EVIDENCE_AUDIT_REQUIRED')).toBe(false);
+    const matrixFixtureText = fs.readFileSync(matrixFixturePath, 'utf8');
+    const matrixSourceText = fs.readFileSync(matrixSourcePath, 'utf8');
+    expect(matrixFixtureText).not.toContain('R5_M6_EVIDENCE_AUDIT_REQUIRED');
+    expect(matrixSourceText).not.toContain('R5_M6_EVIDENCE_AUDIT_REQUIRED');
+    expect(matrixFixtureText).not.toMatch(/R5_M6_EVIDENCE/);
   });
 
   it('keeps cross-cutting governance references outside 16/17 counts', () => {
@@ -160,6 +180,16 @@ describe('Rule 5 R5-M3 hard-blocker matrix', () => {
           ...base,
           mappings: (base.mappings as Record<string, unknown>[]).map((m) =>
             m.mappingId === 'HB-002' ? { ...m, evidenceGate: 'ACTIVE' } : m,
+          ),
+        }),
+      'RULE5_MATRIX_WRONG_EVIDENCE_GATE',
+    );
+    expectMatrixFailure(
+      () =>
+        validateRule5HardBlockerMatrixDocument({
+          ...base,
+          mappings: (base.mappings as Record<string, unknown>[]).map((m) =>
+            m.mappingId === 'HB-003' ? { ...m, evidenceGate: 'R5_M6_EVIDENCE_AUDIT_REQUIRED' } : m,
           ),
         }),
       'RULE5_MATRIX_WRONG_EVIDENCE_GATE',

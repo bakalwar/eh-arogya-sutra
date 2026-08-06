@@ -5,8 +5,8 @@
 
 import { RULE5_HARD_BLOCKER_MATRIX_VERSION } from './version.js';
 
-/** Closed technical metadata — not a clinical reason code. */
-export const RULE5_MATRIX_EVIDENCE_GATE = 'R5_M6_EVIDENCE_AUDIT_REQUIRED' as const;
+/** Closed matrix metadata literal — not an R5_* clinical reason code (OD-R5-M0-013). */
+export const RULE5_MATRIX_EVIDENCE_GATE = 'EVIDENCE_AUDIT_REQUIRED_BEFORE_ACTIVATION' as const;
 
 export const RULE5_MATRIX_THRESHOLD_POLICY = 'NO_THRESHOLD_AUTHORIZED' as const;
 
