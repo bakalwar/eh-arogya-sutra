@@ -33,3 +33,14 @@ export const RULE5_FINGERPRINT_VERSION = 'ehas2-rule5-contract-fingerprint-v1' a
 
 export const RULE5_CONTRACT_FOUNDATION_FIXTURE_RELATIVE =
   'fixtures/rule5/contract-foundation.v1.json' as const;
+
+/** Reference-only monitoring-plan schema definition (R5-M5). */
+export const RULE5_MONITORING_PLAN_SCHEMA_VERSION =
+  'ehas2-rule5-monitoring-plan-schema-v1' as const;
+
+/** Monitoring-plan fingerprint schema label only — M5 does not compute result hashes. */
+export const RULE5_MONITORING_PLAN_FINGERPRINT_VERSION =
+  'ehas2-rule5-monitoring-plan-fingerprint-v1' as const;
+
+export const RULE5_MONITORING_PLAN_SCHEMA_FIXTURE_RELATIVE =
+  'fixtures/rule5/monitoring-plan-schema.v1.json' as const;

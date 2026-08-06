@@ -7,6 +7,10 @@ export * from './engineeringCodes.js';
 export * from './contractFoundation.js';
 export * from './contractValidation.js';
 export * from './contractSerialization.js';
+export * from './missingMonitoringPlanPolicy.js';
+export * from './monitoringPlanSchema.js';
+export * from './monitoringPlanValidation.js';
+export * from './monitoringPlanSerialization.js';
 export {
   serializeRule5ClinicalReasonRegistry,
   rule5ClinicalReasonRegistryFingerprint,
