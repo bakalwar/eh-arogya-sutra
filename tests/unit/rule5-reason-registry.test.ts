@@ -1,0 +1,274 @@
+import { describe, expect, it } from 'vitest';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { execFileSync } from 'node:child_process';
+import {
+  RULE5_CLINICAL_REASON_CODES,
+  RULE5_OD014_REASON_CODES,
+  RULE5_OD015_REASON_CODES,
+  RULE5_REASON_REGISTRY_VERSION,
+  assertKnownRule5ClinicalReasonCode,
+  createNotConnectedAnalyzeResult,
+  loadRule5ClinicalReasonRegistryFromRepoRoot,
+  RULE_SET_VERSION,
+  Rule5RegistryValidationError,
+  Rule5UnknownClinicalReasonCodeError,
+  serializeRule5ClinicalReasonRegistry,
+  validateRule5ClinicalReasonRegistryDocument,
+} from '../../packages/clinical-contracts/src/index.ts';
+
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
+
+const M3_FUTURE_CODES = [
+  'R5_EMERGENCY_RED_FLAG_DETECTED',
+  'R5_ACUTE_CLINICAL_DETERIORATION',
+  'R5_OVERDOSE_SUSPECTED',
+  'R5_DANGEROUS_VITAL_OR_LAB_RESULT',
+  'R5_EXPOSURE_UNCOMPUTABLE',
+  'R5_CONFIRMED_APPLICABLE_ALLERGY',
+  'R5_ABSOLUTE_CONTRAINDICATION_DETECTED',
+  'R5_PROHIBITED_INTERACTION_DETECTED',
+  'R5_FORMULATION_ROUTE_MISMATCH',
+  'R5_MAXIMUM_DURATION_OR_CUMULATIVE_EXPOSURE_EXCEEDED',
+  'R5_UNSAFE_CONCURRENT_MEDICINE_CHANGE',
+  'R5_PATIENT_INSTRUCTIONS_NOT_DELIVERED',
+  'R5_CRITICAL_FOLLOW_UP_CONTRADICTION',
+] as const;
+
+const FORBIDDEN_ENTRY_KEYS = new Set([
+  'clinicalSelection',
+  'medicine',
+  'mixture',
+  'potency',
+  'dosage',
+  'threshold',
+  'patientId',
+  'phone',
+  'phi',
+]);
+
+function collectKeys(value: unknown, keys: Set<string>): void {
+  if (value === null || typeof value !== 'object') return;
+  if (Array.isArray(value)) {
+    for (const item of value) collectKeys(item, keys);
+    return;
+  }
+  for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+    keys.add(k);
+    collectKeys(v, keys);
+  }
+}
+
+describe('Rule 5 R5-M2 clinical reason registry', () => {
+  const registry = loadRule5ClinicalReasonRegistryFromRepoRoot(root);
+
+  it('contains exactly 21 unique clinical codes with exact OD-014 + OD-015 membership', () => {
+    const codes = registry.entries.map((e) => e.code);
+    expect(new Set(codes).size).toBe(21);
+    expect(codes.sort()).toEqual([...RULE5_CLINICAL_REASON_CODES].sort());
+    expect(RULE5_OD014_REASON_CODES.every((c) => codes.includes(c))).toBe(true);
+    expect(RULE5_OD015_REASON_CODES.every((c) => codes.includes(c))).toBe(true);
+  });
+
+  it('includes canonical intake code and excludes stale reported code', () => {
+    const codes = new Set(registry.entries.map((e) => e.code));
+    expect(codes.has('R5_ADVERSE_EVENT_INTAKE_RECORDED')).toBe(true);
+    expect(codes.has('R5_ADVERSE_EVENT_REPORTED')).toBe(false);
+  });
+
+  it('keeps every entry metadata-only with executable=false and namespace R5', () => {
+    for (const entry of registry.entries) {
+      expect(entry.executable).toBe(false);
+      expect(entry.namespace).toBe('R5');
+      expect(entry.introducedInVersion).toBe(RULE5_REASON_REGISTRY_VERSION);
+    }
+  });
+
+  it('does not encode RULE5_* / PHASE1_* or M3 future blocker codes', () => {
+    const codes = registry.entries.map((e) => e.code);
+    for (const code of codes) {
+      expect(code.startsWith('RULE5_')).toBe(false);
+      expect(code.startsWith('PHASE1_')).toBe(false);
+    }
+    for (const future of M3_FUTURE_CODES) {
+      expect(codes).not.toContain(future);
+    }
+  });
+
+  it('registry version constant matches fixture header', () => {
+    expect(registry.registryVersion).toBe(RULE5_REASON_REGISTRY_VERSION);
+    expect(registry.registryVersion).toBe('ehas2-rule5-reason-registry-v1');
+    const raw = JSON.parse(
+      fs.readFileSync(
+        path.join(root, 'fixtures/rule5/reason-code-registry.clinical.v1.json'),
+        'utf8',
+      ),
+    ) as { registryVersion: string };
+    expect(raw.registryVersion).toBe(RULE5_REASON_REGISTRY_VERSION);
+  });
+
+  it('serializes deterministically', () => {
+    const a = serializeRule5ClinicalReasonRegistry(registry);
+    const b = serializeRule5ClinicalReasonRegistry(
+      loadRule5ClinicalReasonRegistryFromRepoRoot(root),
+    );
+    expect(a).toBe(b);
+    expect(() => JSON.parse(a)).not.toThrow();
+  });
+
+  it('meanings do not assert PASS/safe/stable as standalone claims and omit forbidden clinical fields', () => {
+    const raw = JSON.parse(
+      fs.readFileSync(
+        path.join(root, 'fixtures/rule5/reason-code-registry.clinical.v1.json'),
+        'utf8',
+      ),
+    ) as unknown;
+    const keys = new Set<string>();
+    collectKeys(raw, keys);
+    for (const forbidden of FORBIDDEN_ENTRY_KEYS) {
+      expect(keys.has(forbidden)).toBe(false);
+    }
+    for (const entry of registry.entries) {
+      expect(entry.meaning).not.toMatch(/^\s*(PASS|SAFE|STABLE)\s*$/i);
+    }
+  });
+
+  it('rejects duplicate codes fail-closed', () => {
+    const base = JSON.parse(
+      fs.readFileSync(
+        path.join(root, 'fixtures/rule5/reason-code-registry.clinical.v1.json'),
+        'utf8',
+      ),
+    ) as { registryVersion: string; entries: unknown[] };
+    const dup = {
+      ...base,
+      entries: [...base.entries, base.entries[0]],
+    };
+    expect(() => validateRule5ClinicalReasonRegistryDocument(dup)).toThrow(
+      Rule5RegistryValidationError,
+    );
+    try {
+      validateRule5ClinicalReasonRegistryDocument(dup);
+    } catch (e) {
+      expect((e as Rule5RegistryValidationError).failureCode).toBe('RULE5_REGISTRY_DUPLICATE_CODE');
+    }
+  });
+
+  it('rejects unknown clinical codes fail-closed', () => {
+    expect(() => assertKnownRule5ClinicalReasonCode('R5_NOT_IN_CANONICAL_REGISTER')).toThrow(
+      Rule5UnknownClinicalReasonCodeError,
+    );
+  });
+
+  it('rejects wrong namespace fail-closed', () => {
+    const base = JSON.parse(
+      fs.readFileSync(
+        path.join(root, 'fixtures/rule5/reason-code-registry.clinical.v1.json'),
+        'utf8',
+      ),
+    ) as { registryVersion: string; entries: Record<string, unknown>[] };
+    const bad = {
+      registryVersion: base.registryVersion,
+      entries: base.entries.map((e, i) => (i === 0 ? { ...e, namespace: 'reason' } : e)),
+    };
+    expect(() => validateRule5ClinicalReasonRegistryDocument(bad)).toThrow(
+      Rule5RegistryValidationError,
+    );
+    try {
+      validateRule5ClinicalReasonRegistryDocument(bad);
+    } catch (e) {
+      expect((e as Rule5RegistryValidationError).failureCode).toBe(
+        'RULE5_REGISTRY_WRONG_NAMESPACE',
+      );
+    }
+  });
+
+  it('rejects invalid registry version fail-closed', () => {
+    const base = JSON.parse(
+      fs.readFileSync(
+        path.join(root, 'fixtures/rule5/reason-code-registry.clinical.v1.json'),
+        'utf8',
+      ),
+    ) as { registryVersion: string; entries: unknown[] };
+    expect(() =>
+      validateRule5ClinicalReasonRegistryDocument({
+        ...base,
+        registryVersion: 'ehas2-rule5-reason-registry-v0',
+      }),
+    ).toThrow(Rule5RegistryValidationError);
+  });
+
+  it('rejects missing mandatory metadata and executable=true fail-closed', () => {
+    const base = JSON.parse(
+      fs.readFileSync(
+        path.join(root, 'fixtures/rule5/reason-code-registry.clinical.v1.json'),
+        'utf8',
+      ),
+    ) as { registryVersion: string; entries: Record<string, unknown>[] };
+    const missing = {
+      registryVersion: base.registryVersion,
+      entries: base.entries.map((e, i) =>
+        i === 0
+          ? { code: e.code, namespace: e.namespace, meaning: e.meaning, executable: e.executable }
+          : e,
+      ),
+    };
+    expect(() => validateRule5ClinicalReasonRegistryDocument(missing)).toThrow(
+      Rule5RegistryValidationError,
+    );
+
+    const executable = {
+      registryVersion: base.registryVersion,
+      entries: base.entries.map((e, i) => (i === 0 ? { ...e, executable: true } : e)),
+    };
+    expect(() => validateRule5ClinicalReasonRegistryDocument(executable)).toThrow(
+      Rule5RegistryValidationError,
+    );
+    try {
+      validateRule5ClinicalReasonRegistryDocument(executable);
+    } catch (e) {
+      expect((e as Rule5RegistryValidationError).failureCode).toBe(
+        'RULE5_REGISTRY_EXECUTABLE_NOT_ALLOWED',
+      );
+    }
+  });
+});
+
+describe('Rule 5 R5-M2 nine-rule boundary (unchanged orchestration contracts)', () => {
+  it('preserves post-M1b RULE_SET_VERSION and AnalyzeComplete NOT_CONNECTED', () => {
+    expect(RULE_SET_VERSION).toBe('ehas2-nine-rule-interfaces-v2-rule5-monitoring');
+    const analyze = createNotConnectedAnalyzeResult('r5-m2-registry-test');
+    expect(analyze.status).toBe('CLINICAL_ENGINE_NOT_CONNECTED');
+    expect(analyze.oralFormulaCandidates).toEqual([]);
+    expect(analyze.defaultWeUsed).toBe(false);
+  });
+
+  it('keeps synthetic orchestrator output fingerprint stable when clinical-engine venv is present', () => {
+    const pyWin = path.join(root, 'apps/clinical-engine/.venv/Scripts/python.exe');
+    const pyUnix = path.join(root, 'apps/clinical-engine/.venv/bin/python');
+    const py = fs.existsSync(pyWin) ? pyWin : fs.existsSync(pyUnix) ? pyUnix : null;
+    if (!py) return;
+
+    const script = `
+import json, sys
+from pathlib import Path
+ROOT = Path(${JSON.stringify(path.join(root, 'apps/clinical-engine/src'))})
+sys.path.insert(0, str(ROOT))
+from ehas2_clinical_engine.orchestrator import NineRuleOrchestrator, OrchestratorRun
+from ehas2_clinical_engine.disease_package import synthetic_fixture_dir
+o = NineRuleOrchestrator()
+run = OrchestratorRun(label='SYNTHETIC', package_dir=synthetic_fixture_dir(), allow_synthetic_package=True)
+payload = {'chief_complaint': 'fever', 'symptoms': ['fever', 'weakness']}
+a = o.orchestrate(payload, run)
+b = o.orchestrate(payload, run)
+assert a['output_fingerprint'] == b['output_fingerprint']
+print(a['output_fingerprint'])
+`.trim();
+
+    const fp = execFileSync(py, ['-c', script], { encoding: 'utf8' }).trim();
+    expect(fp).toMatch(/^[A-F0-9]{64}$/);
+    const fpAgain = execFileSync(py, ['-c', script], { encoding: 'utf8' }).trim();
+    expect(fpAgain).toBe(fp);
+  });
+});
