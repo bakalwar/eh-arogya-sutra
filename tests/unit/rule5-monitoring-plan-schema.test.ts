@@ -281,7 +281,10 @@ describe('Rule 5 R5-M5 monitoring-plan schema foundation', () => {
     const base = schemaFromFixture();
     expectM5Failure(
       () =>
-        validateRule5MonitoringPlanSchemaDefinitionDocument({ ...base, thresholdPolicy: 'THRESHOLD_VALUES_ACTIVE' }),
+        validateRule5MonitoringPlanSchemaDefinitionDocument({
+          ...base,
+          thresholdPolicy: 'THRESHOLD_VALUES_ACTIVE',
+        }),
       'RULE5_MONITORING_PLAN_WRONG_THRESHOLD_POLICY',
     );
     expectM5Failure(

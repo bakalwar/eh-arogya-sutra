@@ -287,7 +287,11 @@ function validateMissingPlanPolicyRaw(raw: unknown): Rule5MissingMonitoringPlanP
       'requiredActionReference',
     );
   }
-  assertTrueFlag(raw.noPass, 'RULE5_MONITORING_PLAN_MISSING_PLAN_POLICY_MISMATCH', 'missingPlanPolicy.noPass');
+  assertTrueFlag(
+    raw.noPass,
+    'RULE5_MONITORING_PLAN_MISSING_PLAN_POLICY_MISMATCH',
+    'missingPlanPolicy.noPass',
+  );
   assertTrueFlag(
     raw.noAutoContinue,
     'RULE5_MONITORING_PLAN_MISSING_PLAN_POLICY_MISMATCH',
