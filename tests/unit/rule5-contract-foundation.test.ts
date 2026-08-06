@@ -74,7 +74,25 @@ function canonicalOutputFromFixture(): Record<string, unknown> {
 
 function assertErrorDoesNotEchoRawValue(error: Rule5ContractValidationError, raw: string): void {
   expect(error.message).not.toContain(raw);
+  if (error.detail !== undefined) {
+    expect(error.detail).not.toContain(raw);
+  }
   expect(JSON.stringify(error)).not.toContain(raw);
+}
+
+const SYNTHETIC_PRIVATE_TEXT_5550001111 = 'SYNTHETIC_PRIVATE_TEXT_5550001111';
+
+function expectRedactedFailure(
+  fn: () => void,
+  code: Rule5ContractValidationError['failureCode'],
+  sentinel: string,
+  expectedSafeDetail?: string,
+): void {
+  const err = expectContractFailure(fn, code);
+  assertErrorDoesNotEchoRawValue(err, sentinel);
+  if (expectedSafeDetail !== undefined) {
+    expect(err.detail).toBe(expectedSafeDetail);
+  }
 }
 
 describe('Rule 5 R5-M4 contract foundation', () => {
@@ -686,8 +704,7 @@ describe('Rule 5 R5-M4 contract output validation hardening', () => {
 });
 
 describe('Rule 5 R5-M4 validation error privacy', () => {
-  const SYNTHETIC_PATIENT_LIKE_MODE =
-    'SYNTHETIC_TEST_PATIENT_LABEL_DO_NOT_TREAT_AS_PHI_OR_CLINICAL_DATA';
+  const S = SYNTHETIC_PRIVATE_TEXT_5550001111;
 
   it('does not echo arbitrary invalid evaluationMode values in errors', () => {
     const input = canonicalInputFromFixture();
@@ -695,23 +712,203 @@ describe('Rule 5 R5-M4 validation error privacy', () => {
       () =>
         validateRule5ContractFoundationInputShape({
           ...input,
-          evaluationMode: SYNTHETIC_PATIENT_LIKE_MODE,
+          evaluationMode: S,
         }),
       'RULE5_ENGINE_MODE_INVALID',
     );
-    assertErrorDoesNotEchoRawValue(err, SYNTHETIC_PATIENT_LIKE_MODE);
-    expect(err.message).toContain('evaluationMode');
+    assertErrorDoesNotEchoRawValue(err, S);
+    expect(err.detail).toBe('evaluationMode');
   });
 
   it('does not serialize full input document into invalid-mode errors', () => {
     const input = canonicalInputFromFixture();
-    const malicious = { ...input, evaluationMode: SYNTHETIC_PATIENT_LIKE_MODE };
+    const malicious = { ...input, evaluationMode: S };
     const err = expectContractFailure(
       () => validateRule5ContractFoundationInputShape(malicious),
       'RULE5_ENGINE_MODE_INVALID',
     );
-    expect(JSON.stringify(malicious)).toContain(SYNTHETIC_PATIENT_LIKE_MODE);
+    expect(JSON.stringify(malicious)).toContain(S);
     assertErrorDoesNotEchoRawValue(err, JSON.stringify(malicious));
+  });
+
+  it.each([
+    [
+      'contractVersion',
+      () =>
+        validateRule5ContractFoundationInputDocument({
+          ...canonicalInputFromFixture(),
+          contractVersion: S,
+        }),
+      'RULE5_CONTRACT_INVALID_VERSION',
+      'contractVersion',
+    ],
+    [
+      'ruleSetVersion',
+      () =>
+        validateRule5ContractFoundationInputDocument({
+          ...canonicalInputFromFixture(),
+          ruleSetVersion: S,
+        }),
+      'RULE5_CONTRACT_WRONG_RULE_SET_VERSION',
+      'ruleSetVersion',
+    ],
+    [
+      'invocationKind',
+      () =>
+        validateRule5ContractFoundationInputDocument({
+          ...canonicalInputFromFixture(),
+          invocationKind: S,
+        }),
+      'RULE5_CONTRACT_WRONG_INVOCATION_KIND',
+      undefined,
+    ],
+    [
+      'ruleName',
+      () =>
+        validateRule5ContractFoundationOutputDocument({
+          ...canonicalOutputFromFixture(),
+          ruleName: S,
+        }),
+      'RULE5_CONTRACT_WRONG_RULE_NAME',
+      undefined,
+    ],
+    [
+      'status',
+      () =>
+        validateRule5ContractFoundationOutputDocument({
+          ...canonicalOutputFromFixture(),
+          status: S,
+        }),
+      'RULE5_CONTRACT_WRONG_STATUS',
+      undefined,
+    ],
+    [
+      'fingerprintVersion',
+      () =>
+        validateRule5ContractFoundationOutputDocument({
+          ...canonicalOutputFromFixture(),
+          fingerprintVersion: S,
+        }),
+      'RULE5_CONTRACT_WRONG_FINGERPRINT_VERSION',
+      undefined,
+    ],
+    [
+      'deterministicFingerprint',
+      () =>
+        validateRule5ContractFoundationOutputDocument({
+          ...canonicalOutputFromFixture(),
+          deterministicFingerprint: S,
+        }),
+      'RULE5_CONTRACT_FINGERPRINT_MUST_BE_NULL',
+      undefined,
+    ],
+  ] as const)(
+    'redacts malicious %s in contract validation errors',
+    (_field, fn, code, safeDetail) => {
+      expectRedactedFailure(fn, code, S, safeDetail);
+    },
+  );
+
+  it('redacts unknown reason code value in output', () => {
+    const output = canonicalOutputFromFixture();
+    expectRedactedFailure(
+      () =>
+        validateRule5ContractFoundationOutputDocument({
+          ...output,
+          reasonCodes: [S],
+          limitationCodes: output.limitationCodes,
+        }),
+      'RULE5_CONTRACT_REASON_CODES_MUST_BE_EMPTY',
+      S,
+    );
+  });
+
+  it('redacts unknown limitation code value in output', () => {
+    expectRedactedFailure(
+      () =>
+        validateRule5ContractFoundationOutputDocument({
+          ...canonicalOutputFromFixture(),
+          limitationCodes: [S, 'RULE5_CONTRACT_RUNTIME_NOT_CONNECTED'],
+        }),
+      'RULE5_CONTRACT_WRONG_LIMITATION_SET',
+      S,
+      'limitationCodes[0]',
+    );
+  });
+
+  it('redacts unexpected input property name', () => {
+    expectRedactedFailure(
+      () =>
+        validateRule5ContractFoundationInputDocument({
+          ...canonicalInputFromFixture(),
+          [S]: true,
+        }),
+      'RULE5_CONTRACT_UNEXPECTED_FIELD',
+      S,
+      'unexpectedField',
+    );
+  });
+
+  it('redacts unexpected output property name', () => {
+    expectRedactedFailure(
+      () =>
+        validateRule5ContractFoundationOutputDocument({
+          ...canonicalOutputFromFixture(),
+          [S]: true,
+        }),
+      'RULE5_CONTRACT_UNEXPECTED_FIELD',
+      S,
+      'unexpectedField',
+    );
+  });
+
+  it('redacts unexpected auditContext property name', () => {
+    const output = canonicalOutputFromFixture();
+    const audit = { ...(output.auditContext as Record<string, unknown>), [S]: true };
+    expectRedactedFailure(
+      () => validateRule5ContractFoundationOutputDocument({ ...output, auditContext: audit }),
+      'RULE5_CONTRACT_UNEXPECTED_FIELD',
+      S,
+      'unexpectedField',
+    );
+  });
+
+  it('redacts wrong auditContext reasonRegistryVersion value', () => {
+    const output = canonicalOutputFromFixture();
+    const audit = { ...(output.auditContext as Record<string, unknown>), reasonRegistryVersion: S };
+    expectRedactedFailure(
+      () => validateRule5ContractFoundationOutputDocument({ ...output, auditContext: audit }),
+      'RULE5_CONTRACT_WRONG_AUDIT_CONTEXT',
+      S,
+      'reasonRegistryVersion',
+    );
+  });
+
+  it('redacts forbidden nested field value', () => {
+    expectRedactedFailure(
+      () =>
+        validateRule5ContractFoundationInputDocument({
+          ...canonicalInputFromFixture(),
+          phone: S,
+        }),
+      'RULE5_CONTRACT_FORBIDDEN_CLINICAL_FIELD',
+      S,
+      'forbiddenField',
+    );
+  });
+
+  it('keeps SHADOW and ACTIVE failure codes without caller detail', () => {
+    const base = canonicalInputFromFixture();
+    const shadowErr = expectContractFailure(
+      () => validateRule5ContractFoundationInputShape({ ...base, evaluationMode: 'SHADOW' }),
+      'RULE5_ENGINE_MODE_SHADOW_NOT_AUTHORIZED',
+    );
+    expect(shadowErr.detail).toBeUndefined();
+    const activeErr = expectContractFailure(
+      () => validateRule5ContractFoundationInputShape({ ...base, evaluationMode: 'ACTIVE' }),
+      'RULE5_ENGINE_MODE_ACTIVE_NOT_IMPLEMENTED',
+    );
+    expect(activeErr.detail).toBeUndefined();
   });
 });
 

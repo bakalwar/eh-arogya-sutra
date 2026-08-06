@@ -59,11 +59,14 @@ export type Rule5ContractValidationFailureCode =
 
 export class Rule5ContractValidationError extends Error {
   readonly failureCode: Rule5ContractValidationFailureCode;
+  /** Static safe field path only — never caller-provided values. */
+  readonly detail?: string;
 
-  constructor(failureCode: Rule5ContractValidationFailureCode, detail?: string) {
-    super(detail ? `${failureCode}: ${detail}` : failureCode);
+  constructor(failureCode: Rule5ContractValidationFailureCode, safeDetail?: string) {
+    super(safeDetail ? `${failureCode}: ${safeDetail}` : failureCode);
     this.name = 'Rule5ContractValidationError';
     this.failureCode = failureCode;
+    this.detail = safeDetail;
   }
 }
 
@@ -141,7 +144,7 @@ function rejectUnexpectedKeys(
 ): void {
   for (const key of Object.keys(raw)) {
     if (!allowed.has(key)) {
-      throw new Rule5ContractValidationError(failure, key);
+      throw new Rule5ContractValidationError(failure, 'unexpectedField');
     }
   }
 }
@@ -154,7 +157,10 @@ function rejectForbiddenNestedKeys(value: unknown): void {
   }
   for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
     if (FORBIDDEN_KEY_NAMES.has(k)) {
-      throw new Rule5ContractValidationError('RULE5_CONTRACT_FORBIDDEN_CLINICAL_FIELD', k);
+      throw new Rule5ContractValidationError(
+        'RULE5_CONTRACT_FORBIDDEN_CLINICAL_FIELD',
+        'forbiddenField',
+      );
     }
     rejectForbiddenNestedKeys(v);
   }
@@ -185,14 +191,14 @@ function parseEvaluationModeForInput(raw: unknown): Rule5EvaluationModeVocabular
 function assertContractVersion(value: unknown, field = 'contractVersion'): void {
   requireNonEmptyString(value, field);
   if (value !== RULE5_CONTRACT_VERSION) {
-    throw new Rule5ContractValidationError('RULE5_CONTRACT_INVALID_VERSION', String(value));
+    throw new Rule5ContractValidationError('RULE5_CONTRACT_INVALID_VERSION', field);
   }
 }
 
 function assertRuleSetVersion(value: unknown, field = 'ruleSetVersion'): void {
   requireNonEmptyString(value, field);
   if (value !== RULE_SET_VERSION) {
-    throw new Rule5ContractValidationError('RULE5_CONTRACT_WRONG_RULE_SET_VERSION', String(value));
+    throw new Rule5ContractValidationError('RULE5_CONTRACT_WRONG_RULE_SET_VERSION', field);
   }
 }
 
@@ -211,7 +217,10 @@ function validateReasonAndLimitationNamespaces(
       throw new Rule5ContractValidationError('RULE5_CONTRACT_INVALID_DOCUMENT', 'reasonCodes');
     }
     if (isRule5EngineeringNamespace(code)) {
-      throw new Rule5ContractValidationError('RULE5_CONTRACT_ENGINEERING_REASON_IN_CLINICAL', code);
+      throw new Rule5ContractValidationError(
+        'RULE5_CONTRACT_ENGINEERING_REASON_IN_CLINICAL',
+        'reasonCodes',
+      );
     }
   }
   for (const code of limitationCodes) {
@@ -219,7 +228,10 @@ function validateReasonAndLimitationNamespaces(
       throw new Rule5ContractValidationError('RULE5_CONTRACT_INVALID_DOCUMENT', 'limitationCodes');
     }
     if (isRule5ClinicalReasonNamespace(code)) {
-      throw new Rule5ContractValidationError('RULE5_CONTRACT_CLINICAL_REASON_IN_LIMITATIONS', code);
+      throw new Rule5ContractValidationError(
+        'RULE5_CONTRACT_CLINICAL_REASON_IN_LIMITATIONS',
+        'limitationCodes',
+      );
     }
   }
 }
@@ -355,10 +367,16 @@ export function validateRule5ContractFoundationOutputDocument(
       throw new Rule5ContractValidationError('RULE5_CONTRACT_UNKNOWN_LIMITATION_CODE');
     }
     if (actual !== expected) {
-      throw new Rule5ContractValidationError('RULE5_CONTRACT_WRONG_LIMITATION_SET', actual);
+      throw new Rule5ContractValidationError(
+        'RULE5_CONTRACT_WRONG_LIMITATION_SET',
+        `limitationCodes[${i}]`,
+      );
     }
     if (!isKnownRule5EngineeringLimitationCode(actual)) {
-      throw new Rule5ContractValidationError('RULE5_CONTRACT_UNKNOWN_LIMITATION_CODE', actual);
+      throw new Rule5ContractValidationError(
+        'RULE5_CONTRACT_UNKNOWN_LIMITATION_CODE',
+        `limitationCodes[${i}]`,
+      );
     }
   }
   validateAuditContextRaw(rawDocument.auditContext);
