@@ -75,10 +75,12 @@ def data_package_status() -> dict:
 @app.get("/status/medicine-registry")
 def medicine_registry_status() -> dict:
     return {
-        "canonical_count": 39,
-        "c11": "PRESENT",
+        "canonical_count": 38,
+        "c11": "EXCLUDED",
+        "owner_decision": "CQ-001A",
         "sqlite_seed_canonical": False,
-        "registry_version": "ehas2-medicine-registry-v1",
+        "registry_version": "ehas2-medicine-registry-v2",
+        "historical_v1_version": "ehas2-medicine-registry-v1",
         "status": "AVAILABLE",
     }
 

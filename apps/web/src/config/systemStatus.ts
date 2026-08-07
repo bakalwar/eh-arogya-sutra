@@ -21,7 +21,7 @@ export const DASHBOARD_INTEGRATION_STATUS = [
 export const FORBIDDEN_STATUS_CLAIMS = [
   'Engine Online',
   '116,284 diseases',
-  '39 medicines',
+  '38 medicines',
   'Secure/Protected',
   'security monitoring active',
 ] as const;

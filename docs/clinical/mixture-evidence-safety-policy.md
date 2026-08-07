@@ -11,7 +11,7 @@
 - No unjustified repetition  
 - Formula-specific potency and electricity  
 - No default WE; unresolved electricity must state reason  
-- Tablet A/B from full 39 pool independently (not oral-copy)  
+- Tablet A/B from full 38 pool independently (not oral-copy)  
 - Section B without evidence → `NO_CLINICALLY_JUSTIFIED_CANDIDATE`  
 - External by organ/site evidence (not oral-copy)  
 - Frontend: no medicine inference  

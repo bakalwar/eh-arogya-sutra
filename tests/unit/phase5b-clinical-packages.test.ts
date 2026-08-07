@@ -6,10 +6,19 @@ import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 import {
   assertCanonicalMedicineRegistry,
+  assertHistoricalMedicineRegistryV1,
+  CQ001A_CANONICAL_MEDICINE_CODES,
   EXPECTED_MEDICINE_COUNT,
+  getMedicineById,
+  getMedicineByIdV1,
+  HISTORICAL_V1_REQUIRED_CODE_C11,
+  medicineRegistryManifest,
+  medicineRegistryManifestV1,
   medicines,
-  rejectSqliteSeedAsCanonical,
-  REQUIRED_CODE_C11,
+  medicinesV1,
+  MEDICINE_REGISTRY_VERSION,
+  MEDICINE_REGISTRY_V1_VERSION,
+  rejectNonCanonicalMedicineSeed,
 } from '../../packages/medicine-registry/src/index.ts';
 import {
   allNineRuleInterfaceResults,
@@ -36,22 +45,56 @@ function sha256File(p: string): string {
   return hash.digest('hex').toUpperCase();
 }
 
-describe('Phase 5B medicine registry', () => {
-  it('canonical registry is exactly 39 with C11 and no duplicates', () => {
+describe('Phase 5B medicine registry (CQ-001A v2)', () => {
+  it('canonical registry v2 is exactly 38 with CQ-001A set and no C11', () => {
+    expect(MEDICINE_REGISTRY_VERSION).toBe('ehas2-medicine-registry-v2');
     expect(medicines).toHaveLength(EXPECTED_MEDICINE_COUNT);
     assertCanonicalMedicineRegistry(medicines);
-    expect(medicines.some((m) => m.id === REQUIRED_CODE_C11)).toBe(true);
+    expect(medicines.some((m) => m.id === 'C11')).toBe(false);
+    expect(getMedicineById('C11')).toBeUndefined();
+    expect(getMedicineByIdV1('C11')).toBeDefined();
+    const codes = medicines.map((m) => m.id).sort();
+    expect(codes).toEqual([...CQ001A_CANONICAL_MEDICINE_CODES].sort());
+  });
+
+  it('manifest v2 count and fingerprints match package artifacts', () => {
+    expect(medicineRegistryManifest.registryVersion).toBe('ehas2-medicine-registry-v2');
+    expect(medicineRegistryManifest.medicineCount).toBe(38);
+    expect(medicineRegistryManifest.excludedCodes).toContain('C11');
+    const artifactPath = path.join(root, 'packages/medicine-registry/src/medicines.v2.json');
+    const hash = sha256File(artifactPath);
+    expect(medicineRegistryManifest.artifactSha256).toBe(hash);
+  });
+
+  it('historical v1 snapshot remains 39 with C11 distinguishable from v2', () => {
+    expect(MEDICINE_REGISTRY_V1_VERSION).toBe('ehas2-medicine-registry-v1');
+    assertHistoricalMedicineRegistryV1(medicinesV1);
+    expect(medicinesV1.some((m) => m.id === HISTORICAL_V1_REQUIRED_CODE_C11)).toBe(true);
+    expect(medicineRegistryManifestV1.requiredCodePresent).toBe('C11');
+    expect(medicineRegistryManifestV1.medicineCount).toBe(39);
   });
 
   it('rejects missing codes and duplicate codes', () => {
-    expect(() => assertCanonicalMedicineRegistry(medicines.slice(0, 38))).toThrow(/39/);
+    expect(() => assertCanonicalMedicineRegistry(medicines.slice(0, 37))).toThrow(/38/);
     const dup = [...medicines];
     dup[0] = { ...dup[1] };
     expect(() => assertCanonicalMedicineRegistry(dup)).toThrow(/Duplicate/);
   });
 
-  it('rejects 38-row SQLite seed as canonical', () => {
-    expect(() => rejectSqliteSeedAsCanonical(38, false)).toThrow(/not canonical/);
+  it('rejects non-CQ-001A seed sets including legacy sqlite row-count-only seeds', () => {
+    const codes = medicines.map((m) => m.id);
+    expect(() =>
+      rejectNonCanonicalMedicineSeed(
+        38,
+        codes.filter((c) => c !== 'A1'),
+      ),
+    ).toThrow(/rejected/);
+    expect(() =>
+      rejectNonCanonicalMedicineSeed(
+        38,
+        [...codes, 'C11'].filter((c) => c !== 'A1'),
+      ),
+    ).toThrow(/C11/);
   });
 });
 

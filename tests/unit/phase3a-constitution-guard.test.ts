@@ -19,7 +19,7 @@ describe('Phase 3A clinical product constitution guard', () => {
     expect(text).toMatch(/Complex\/multi-system → \*\*5\*\*/);
     expect(text).toMatch(/no fixed medicine\/formula/i);
     expect(text).toMatch(/no default WE/i);
-    expect(text).toMatch(/full \*\*39\*\*-medicine pool/i);
+    expect(text).toMatch(/full \*\*38\*\*-medicine pool/i);
     expect(text).toMatch(/organ\/body-site specific/i);
     expect(text).toMatch(/patient-specific summary/i);
     expect(text).toMatch(/No original photo\/PDF may be stored permanently/i);
@@ -33,7 +33,7 @@ describe('Phase 3A clinical product constitution guard', () => {
     expect(CLINICAL_PRODUCT_CONSTITUTION.oralFormulas.moderateCount).toBe(4);
     expect(CLINICAL_PRODUCT_CONSTITUTION.oralFormulas.complexCount).toBe(5);
     expect(CLINICAL_PRODUCT_CONSTITUTION.oralFormulas.noDefaultWE).toBe(true);
-    expect(CLINICAL_PRODUCT_CONSTITUTION.tablets.fullMedicinePoolSize).toBe(39);
+    expect(CLINICAL_PRODUCT_CONSTITUTION.tablets.fullMedicinePoolSize).toBe(38);
     expect(CLINICAL_PRODUCT_CONSTITUTION.generation.noFixedMedicineOrFormula).toBe(true);
     expect(CLINICAL_PRODUCT_CONSTITUTION.review.doctorReviewBeforeIssuance).toBe(true);
     expect(CLINICAL_PRODUCT_CONSTITUTION.nonRetention.originalPhotoPdfNeverPermanent).toBe(true);

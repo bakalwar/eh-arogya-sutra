@@ -8,7 +8,7 @@ Service: `apps/clinical-engine/` (Python FastAPI scaffold)
 | `GET /ready` | **503**, `ready: false` |
 | `GET /version` | engine/rule versions |
 | `GET /status/data-package` | generated_local / installed_live=false |
-| `GET /status/medicine-registry` | 39 / C11 PRESENT |
+| `GET /status/medicine-registry` | 38 / C11 EXCLUDED / v2 |
 | `GET /status/rules` | interfaces + Rule 8 NOT_IMPLEMENTED |
 | `POST /v1/analyze-complete` | **501** `CLINICAL_ENGINE_NOT_CONNECTED` |
 

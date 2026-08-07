@@ -15,7 +15,7 @@ Confirmed **absent / not active**:
 - Phase **4B** real OTP provider: **HOLD** (no provider account)
 - Local `/preview` gallery is development-only (blocked in production)
 - Phase **5A** clinical migration audit is documentation-only (engine still NOT_CONNECTED)
-- Phase **5B** sanitized disease extract tooling + 39-medicine registry package exist; analyze remains **NOT_CONNECTED**
+- Phase **5B** sanitized disease extract tooling + **38-medicine** registry package (CQ-001A v2; historical v1 preserved); analyze remains **NOT_CONNECTED**
 - Phase **5C** isolated nine-rule **validation** orchestration exists; production AnalyzeComplete remains **NOT_CONNECTED**; Rule 8 **NOT_IMPLEMENTED**; no medicines issued
 - No production patient database deployment
 - No payment integration

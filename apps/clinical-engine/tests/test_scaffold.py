@@ -69,8 +69,9 @@ class ClinicalEngineScaffoldTests(unittest.TestCase):
 
     def test_medicine_registry_status(self) -> None:
         r = self.client.get("/status/medicine-registry")
-        self.assertEqual(r.json()["canonical_count"], 39)
-        self.assertEqual(r.json()["c11"], "PRESENT")
+        self.assertEqual(r.json()["canonical_count"], 38)
+        self.assertEqual(r.json()["c11"], "EXCLUDED")
+        self.assertEqual(r.json()["registry_version"], "ehas2-medicine-registry-v2")
         self.assertFalse(r.json()["sqlite_seed_canonical"])
 
 
