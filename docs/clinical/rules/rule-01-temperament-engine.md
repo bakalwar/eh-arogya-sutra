@@ -197,6 +197,7 @@ Rule 1 remains separate from:
 
 - Owner decisions: [rule-01-owner-decisions.md](./rule-01-owner-decisions.md)
 - Blood / Lymph governance addendum (R1-CP-Q2): [rule-01-blood-lymph-owner-decisions.md](./rule-01-blood-lymph-owner-decisions.md) — later owner-approved governance baseline only; **frozen temperament logic in this document is unchanged**; **no** runtime implementation or direct medicine-selection authority
+- Evidence / workflow governance (R1-CP-Q3): [rule-01-q3-evidence-workflow-owner-decisions.md](./rule-01-q3-evidence-workflow-owner-decisions.md) — **Q3G-TIE** supersedes **future** interactive follow-up-question behavior on equal tie; frozen **historical body above remains preserved**; exact unresolved equal tie → **`UNRESOLVED_TIE`** (not MIXED/default); **no** code or runtime implementation authorized by the Q3 record
 - Legacy conflicts rejected: [rule-01-legacy-conflicts.md](./rule-01-legacy-conflicts.md)
 - Test requirements: [rule-01-test-requirements.md](./rule-01-test-requirements.md)
 - Forensic audit artifacts: `%TEMP%\ehas2_rule1_forensic_audit\` (Phase 5R-1, read-only)
