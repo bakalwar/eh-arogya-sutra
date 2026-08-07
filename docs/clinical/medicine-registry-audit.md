@@ -1,5 +1,7 @@
 # Medicine registry audit (Phase 5A)
 
+> **Current state (CQ-001A, PR #15 — read first):** Owner-approved canonical identity is **`ehas2-medicine-registry-v2`** — **38** medicine/electricity codes, **C11 excluded** (no replacement or remapping). Registry package availability does **not** imply clinical validation, indication proof, or selection readiness. **§ below is the historical Phase 5A audit** when canonical EHAS2 package identity was **v1 / 39 / C11 present**; historical C11 mentions are **not** current candidate eligibility.
+
 ## Naming inconsistency — resolved
 
 | Source | Count | Verdict |

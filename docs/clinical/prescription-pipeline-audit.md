@@ -1,5 +1,7 @@
 # Prescription pipeline audit (Phase 5A)
 
+> **Current canonical medicine identity (2026-08-07, CQ-001A / PR #15):** `ehas2-medicine-registry-v2` — **38** medicines, **C11 excluded** (no replacement or remapping). The Phase 5A findings below describe the **historical** live old path and former **39**-code / v1 framing; they are **not** rewritten.
+
 Owner EHAS2 target rules are scored against the **live old production path**.
 
 ## Owner-rule scorecard

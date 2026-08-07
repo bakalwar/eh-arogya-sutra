@@ -6,7 +6,7 @@
 
 ## Owner-approved EHAS2 rule
 
-Tablet A/B independently scored from the complete canonical **39**-medicine pool.
+Tablet A/B independently scored from the complete canonical **38**-medicine pool (`ehas2-medicine-registry-v2`, CQ-001A; **C11 excluded**; no replacement or remapping). No fixed medicine; selection remains **NOT_IMPLEMENTED**.
 
 ## Phase 5B status
 

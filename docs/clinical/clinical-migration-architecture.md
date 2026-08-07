@@ -9,7 +9,7 @@
 | `apps/clinical-engine/` | Orchestration facade / AnalyzeComplete | UI, OTP, payments |
 | `packages/clinical-contracts/` | Versioned request/result schemas, enums | Scoring logic |
 | `packages/clinical-data-manifest/` | Dataset/registry/rule version stamps, provenance | Live OCR |
-| `packages/medicine-registry/` | Canonical 39 MM | Case logic |
+| `packages/medicine-registry/` | Canonical medicine registry package (current identity: **v2**, **38** codes, CQ-001A; **C11 excluded**) | Case logic |
 | `services/disease-search/` | Detection/search over disease pack | Rx selection |
 | `services/report-processing/` | Encrypted ingest → structured findings → delete | Medicine pick |
 | `services/clinical-validation/` | Golden fingerprints, gates | Production mutate |
@@ -52,4 +52,4 @@ Result (conceptual):
 - No frontend clinical inference  
 - No patient tables in disease pack  
 - No Phase F inside clinical authority  
-- Tablet A/B must eventually use full 39 pool (owner rule) — old prod CONFLICT documented
+- Tablet A/B must eventually use full **38**-medicine v2 pool (CQ-001A owner rule; **C11 excluded**) — old prod CONFLICT documented

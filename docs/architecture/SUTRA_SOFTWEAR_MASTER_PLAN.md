@@ -115,7 +115,7 @@ Preview data, tests, old prompts, comments and legacy behavior are evidence only
 
 ### Clinical intelligence layer
 
-- Versioned disease data and verified 39-medicine registry.
+- Versioned disease data and canonical **38**-medicine registry (`ehas2-medicine-registry-v2`, CQ-001A; **C11 excluded**; identity package only — not clinical validation or production connection).
 - Evidence normalization before rule execution.
 - Nine rule engines with explicit contracts and no hidden cross-rule mutation.
 - Deterministic orchestration, confidence, provenance and unresolved reasons.
