@@ -58,6 +58,7 @@ Future integration must use the verified versioned **nine-rule engine**.
 - Photos: supporting observation only; never sole authority; no skin-colour or ordinary-face automatic temperament.
 - Rule 1 supplies evidence to downstream engines; it **must not** directly select medicine, formula, potency, electricity, tablet, or external application.
 - Full spec: [rules/rule-01-temperament-engine.md](./rules/rule-01-temperament-engine.md).
+- **Blood / Lymph governance (R1-CP-Q2):** Integrated SANGUINE/Blood and LYMPHATIC/Lymph axis decisions are recorded in [rules/rule-01-blood-lymph-owner-decisions.md](./rules/rule-01-blood-lymph-owner-decisions.md) — **governance-only**, **NOT_IMPLEMENTED**, **NOT_CONNECTED**; no direct or fixed medicine selection; future Rule 6 candidate use requires separate owner approval and evidence rules.
 
 ### Rule 2 — Polarity Engine (Phase 5R-2F freeze)
 

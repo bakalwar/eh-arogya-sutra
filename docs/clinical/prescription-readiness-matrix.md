@@ -14,9 +14,9 @@ Classification key: `READY` · `REQUIRES_RECONSTRUCTION` · `LEGACY_CONFLICT` ·
 | Potency | `get_unified_clinical_potency` | polarity, phase, BP, severity, age, system | dilution per mixture | Tablet PARTIAL | Formula-specific oral first | **REQUIRES_RECONSTRUCTION** |
 | Electricity | `select_oral_electricity_for_mixture` | MM evidence | electricity or unresolved reason | Legacy summary WE defaults | No default WE; unresolved + reason | **REQUIRES_RECONSTRUCTION** |
 | No-default-WE | POLICY-004-WE oral | MM evidence | WE only if evidenced | Non-canonical summary paths | Scrub presentation defaults | **READY** (policy MATCH oral) |
-| Tablet Section A | `build_section_a_from_oral_mixtures` | finalized oral | section A meds | `derived_from_oral: True` vs owner full pool | Independent 39-pool | **LEGACY_CONFLICT** |
-| Tablet Section B | meal-slot tablet builder | slots, evidence | slot meds or empty contract | Oral-linked pool in prod | Independent 39-pool + slots | **LEGACY_CONFLICT** |
-| Full 39-pool independent selection | shadow / env OFF in prod | registry 39 + C11 | independent A/B | Production oral-copy | Owner rule wins | **OWNER_DECISION_REQUIRED** (cutover) |
+| Tablet Section A | `build_section_a_from_oral_mixtures` | finalized oral | section A meds | `derived_from_oral: True` vs owner full pool | Independent canonical **38**-medicine v2 pool (CQ-001A; **C11 excluded**) | **LEGACY_CONFLICT** |
+| Tablet Section B | meal-slot tablet builder | slots, evidence | slot meds or empty contract | Oral-linked pool in prod | Independent **38**-medicine v2 pool + slots (**C11 excluded**) | **LEGACY_CONFLICT** |
+| Full-pool independent tablet selection | shadow / env OFF in prod | `ehas2-medicine-registry-v2` (**38**; **C11 excluded**; no remapping) | independent A/B | Production oral-copy | Owner rule wins; tablet engine **NOT_IMPLEMENTED** / **NOT_CONNECTED** | **OWNER_DECISION_REQUIRED** (cutover) |
 | Section B timing slots | tablet B slots | before/after/night evidence | med or `NO_CLINICALLY_JUSTIFIED_CANDIDATE` | None on empty contract | Preserve empty contract | **READY** (empty contract MATCH) |
 | `NO_CLINICALLY_JUSTIFIED_CANDIDATE` | Section B empty | missing slot evidence | explicit status | None | Keep; never fabricate | **READY** |
 | External applications | `external_application_engine.build_external_routes` | systems, site, symptoms, BP, phase | routes or NOT_CLINICALLY_INDICATED | Legacy oral-copy env OFF | Evidence/site based; no oral-copy | **REQUIRES_RECONSTRUCTION** |

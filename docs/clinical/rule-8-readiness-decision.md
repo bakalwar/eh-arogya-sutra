@@ -27,7 +27,7 @@ Phase 5A forensic audit: live `MultiDiseaseEngine` path **does not call** Rule 8
 |-------|----------|
 | Docs: affects selection | YES (documented) |
 | Live MDE prescription path | **NO** — unused |
-| Owner Tablet A/B full 39-pool rule | Independent of Rule 8 |
+| Owner Tablet A/B full **38**-medicine v2 pool (CQ-001A; **C11 excluded**) | Independent of Rule 8 |
 | Owner oral 3/4/5 + scoring | Driven by R6/R2/R4/electricity — not Rule 8 |
 
 ## Owner-rule conflicts
