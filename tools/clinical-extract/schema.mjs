@@ -64,6 +64,48 @@ export const DENYLIST_FIELD_PATTERNS = Object.freeze([
 export const DISEASE_PACKAGE_SCHEMA_VERSION = 'ehas2-disease-schema-v1';
 export const DISEASE_DATASET_VERSION = 'ehas2-disease-v1';
 
-export const MEDICINE_REGISTRY_VERSION = 'ehas2-medicine-registry-v1';
-export const EXPECTED_MEDICINE_COUNT = 39;
-export const REQUIRED_MEDICINE_CODE = 'C11';
+export const MEDICINE_REGISTRY_VERSION = 'ehas2-medicine-registry-v2';
+export const EXPECTED_MEDICINE_COUNT = 38;
+export const EXCLUDED_MEDICINE_CODES = Object.freeze(['C11']);
+
+/** Owner CQ-001A canonical identity set (count/identity only). */
+export const CQ001A_CANONICAL_MEDICINE_CODES = Object.freeze([
+  'A1',
+  'A2',
+  'A3',
+  'APP',
+  'BE',
+  'C1',
+  'C2',
+  'C3',
+  'C4',
+  'C5',
+  'C6',
+  'C10',
+  'C13',
+  'C15',
+  'C17',
+  'F1',
+  'F2',
+  'GE',
+  'L1',
+  'P1',
+  'P2',
+  'P3',
+  'P4',
+  'RE',
+  'S-Lass',
+  'S1',
+  'S2',
+  'S3',
+  'S5',
+  'S6',
+  'S10',
+  'S11',
+  'S12',
+  'Ven1',
+  'Ver1',
+  'Ver2',
+  'WE',
+  'YE',
+]);

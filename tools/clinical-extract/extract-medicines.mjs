@@ -12,7 +12,8 @@ import crypto from 'node:crypto';
 import {
   EXPECTED_MEDICINE_COUNT,
   MEDICINE_REGISTRY_VERSION,
-  REQUIRED_MEDICINE_CODE,
+  EXCLUDED_MEDICINE_CODES,
+  CQ001A_CANONICAL_MEDICINE_CODES,
 } from './schema.mjs';
 
 const APPROVED_MED_FIELDS = [
@@ -116,16 +117,27 @@ function main() {
 
   const text = fs.readFileSync(source, 'utf8');
   const sourceSha = crypto.createHash('sha256').update(text, 'utf8').digest('hex').toUpperCase();
-  const medicines = parseMedicinesPy(text);
+  let medicines = parseMedicinesPy(text);
+
+  for (const excluded of EXCLUDED_MEDICINE_CODES) {
+    medicines = medicines.filter((m) => m.id !== excluded);
+  }
 
   const ids = medicines.map((m) => m.id);
   const unique = new Set(ids);
   if (unique.size !== ids.length) fail('Duplicate medicine codes');
   if (medicines.length !== EXPECTED_MEDICINE_COUNT) {
-    fail(`Expected ${EXPECTED_MEDICINE_COUNT} medicines, got ${medicines.length}`);
+    fail(
+      `Expected ${EXPECTED_MEDICINE_COUNT} medicines after CQ-001A exclusions, got ${medicines.length}`,
+    );
   }
-  if (!unique.has(REQUIRED_MEDICINE_CODE))
-    fail(`${REQUIRED_MEDICINE_CODE} missing from canonical registry`);
+  const allow = new Set(CQ001A_CANONICAL_MEDICINE_CODES);
+  for (const id of ids) {
+    if (!allow.has(id)) fail(`Unexpected medicine code ${id} — not in CQ-001A allowlist`);
+  }
+  for (const required of CQ001A_CANONICAL_MEDICINE_CODES) {
+    if (!unique.has(required)) fail(`CQ-001A code missing from extract: ${required}`);
+  }
 
   // Sort by id for determinism
   medicines.sort((a, b) => a.id.localeCompare(b.id));
@@ -133,22 +145,24 @@ function main() {
   const artifactSha = crypto.createHash('sha256').update(body, 'utf8').digest('hex').toUpperCase();
 
   fs.mkdirSync(outDir, { recursive: true });
-  fs.writeFileSync(path.join(outDir, 'medicines.v1.json'), body, 'utf8');
+  fs.writeFileSync(path.join(outDir, 'medicines.v2.json'), body, 'utf8');
   const manifest = {
     registryVersion: MEDICINE_REGISTRY_VERSION,
     medicineCount: medicines.length,
     codes: medicines.map((m) => m.id),
-    requiredCodePresent: REQUIRED_MEDICINE_CODE,
+    excludedCodes: [...EXCLUDED_MEDICINE_CODES],
+    ownerDecision: 'CQ-001A',
+    supersedesVersion: 'ehas2-medicine-registry-v1',
     sourceFingerprint: sourceSha,
     artifactSha256: artifactSha,
     sqliteSeedIsCanonical: false,
     notes: [
-      'Canonical count is 39 despite legacy Python module filename.',
-      'SQLite medicines seed (38, missing C11) must never be treated as canonical.',
+      'Canonical identity is 38 codes per owner decision CQ-001A.',
+      'C11 excluded from identity; not a clinical replacement decision.',
     ],
   };
   fs.writeFileSync(
-    path.join(outDir, 'manifest.json'),
+    path.join(outDir, 'registry.v2.manifest.json'),
     `${JSON.stringify(manifest, null, 2)}\n`,
     'utf8',
   );

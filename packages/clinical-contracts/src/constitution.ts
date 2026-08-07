@@ -35,7 +35,7 @@ export const CLINICAL_PRODUCT_CONSTITUTION = {
   },
   tablets: {
     independentFromOral: true,
-    fullMedicinePoolSize: 39,
+    fullMedicinePoolSize: 38,
     emptySectionBReason: 'NO_CLINICALLY_JUSTIFIED_CANDIDATE',
   },
   externalApplications: {

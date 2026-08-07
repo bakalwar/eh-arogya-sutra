@@ -99,7 +99,7 @@ Owner-approved intended downstream influence documented in [rule-01-temperament-
 | Decision | Tag |
 |----------|-----|
 | L1, S1, A3, F1 etc. illustrative only | OWNER-APPROVED |
-| Full 39-medicine pool for Formula 2/3 | OWNER-APPROVED |
+| Full 38-medicine pool for Formula 2/3 (CQ-001A v2) | OWNER-APPROVED |
 | No temperament→medicine shortcut | OWNER-APPROVED |
 
 ---

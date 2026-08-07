@@ -21,8 +21,9 @@ export const CLINICAL_VALIDATION_DASHBOARD = {
   },
   registry: {
     status: 'AVAILABLE',
-    count: 39,
-    c11: 'PRESENT',
+    count: 38,
+    c11: 'EXCLUDED',
+    registryVersion: 'ehas2-medicine-registry-v2',
   },
   rules: [
     { ruleNumber: 1, ruleName: 'Temperament (Prakriti)', status: 'READY_FOR_VALIDATION' },

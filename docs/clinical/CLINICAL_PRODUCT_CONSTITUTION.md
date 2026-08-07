@@ -166,7 +166,7 @@ This approval closes the policy decision only. It does not formally freeze the n
 
 Tablet A/B:
 
-- independent selection from verified full **39**-medicine pool
+- independent selection from verified full **38**-medicine pool (CQ-001A; `ehas2-medicine-registry-v2`)
 - not copied from oral formulas
 - disease, symptoms, organ, clinical target, temperament, constitution, severity, phase and polarity evidence
 - empty Section B slot: `NO_CLINICALLY_JUSTIFIED_CANDIDATE`

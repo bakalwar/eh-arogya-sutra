@@ -178,7 +178,7 @@ Exact downstream scoring weights are **IMPLEMENTATION-PENDING** until each consu
 
 Names such as L1, S1, A3, F1 discussed during clarification are **illustrative examples only**. They are **not** approved Formula 2 or Formula 3 medicines.
 
-Future Formula 2 and Formula 3 selection **must** evaluate the complete canonical **39-medicine** pool.
+Future Formula 2 and Formula 3 selection **must** evaluate the complete canonical **38-medicine** pool (`ehas2-medicine-registry-v2`, CQ-001A).
 
 No hardcoded temperament-to-medicine shortcut is approved.
 

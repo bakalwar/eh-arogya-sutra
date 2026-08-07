@@ -184,6 +184,15 @@ Rule 5 use authorized = **false** for all rows. **ACTIVE** = **false**. Do not c
 
 **This document does not declare the registry clinically safe for Rule 5.**
 
+### CQ-001A append-only clarification (2026-08-07)
+
+| Item | Record |
+|------|--------|
+| **Historical observation (PR #14 merge / §7 above)** | **39** with **C11 required** — `ehas2-medicine-registry-v1` |
+| **Current owner-approved identity (CQ-001A)** | **38** without **C11** — `ehas2-medicine-registry-v2` (`medicines.v2.json`, `registry.v2.manifest.json`) |
+| **Evidence activation** | **None** — inventory unchanged in clinical authority |
+| **Rule 5 clinical change** | **None** — Rule 5 remains **NOT_IMPLEMENTED** / **NOT_CONNECTED** |
+
 ---
 
 ## 8. Disease / symptom data assessment

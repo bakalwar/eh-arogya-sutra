@@ -1,7 +1,7 @@
 {
   "name": "@ehas2/medicine-registry",
   "version": "0.1.0-phase5b",
-  "description": "EHAS2 canonical 39-medicine registry (versioned; clinical engine NOT_CONNECTED)",
+  "description": "EHAS2 canonical 38-medicine registry CQ-001A v2 (historical v1 preserved; clinical engine NOT_CONNECTED)",
   "private": true,
   "type": "module",
   "main": "./dist/index.js",

@@ -23,7 +23,7 @@ from .retrieval import retrieve_diseases
 from .rule4.orchestrator_hook import apply_rule4_orchestrator_hook
 from .rule4.evaluator import Rule4ConfigurationError
 
-MEDICINE_REGISTRY_VERSION = "ehas2-medicine-registry-v1"
+MEDICINE_REGISTRY_VERSION = "ehas2-medicine-registry-v2"
 ORCHESTRATOR_VERSION = "ehas2-nine-rule-orchestrator-v1-phase5c"
 
 RULE5_CANONICAL_RULE_NAME = "Monitoring, Follow-up & Post-Release Safety Surveillance"

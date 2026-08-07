@@ -8,7 +8,7 @@ export const DISEASE_PACKAGE_SCHEMA_VERSION = 'ehas2-disease-schema-v1' as const
 export const DISEASE_DATASET_VERSION = 'ehas2-disease-v1' as const;
 export const EXPECTED_DISEASE_COUNT = 116_284 as const;
 
-export const MEDICINE_REGISTRY_VERSION = 'ehas2-medicine-registry-v1' as const;
+export const MEDICINE_REGISTRY_VERSION = 'ehas2-medicine-registry-v2' as const;
 export const RULE_SET_VERSION = 'ehas2-nine-rule-interfaces-v2-rule5-monitoring' as const;
 export const CLINICAL_ENGINE_VERSION = 'ehas2-clinical-engine-scaffold-v1' as const;
 
