@@ -23,9 +23,9 @@ Tests must not be treated as clinical proof until owner accepts scenarios.
 | R1-T07 | Systolic ≥ 140 with **no** other evidence | BP does **not** alone resolve (UNKNOWN or non-resolved) |
 | R1-T08 | Systolic ≥ 140 **with** approved symptom evidence | SANGUINE supporting +3 contributes to resolved result |
 | R1-T09 | Systolic < 100 with approved non-BP evidence | LYMPHATIC supporting +2 contributes |
-| R1-T10 | Exact equal scores and equal evidence strength | UNRESOLVED_TIE; FOLLOW_UP_REQUIRED |
-| R1-T11 | Two-way tie → follow-up answered | Resolved primary (not dictionary order) |
-| R1-T12 | Two-way tie → no follow-up answer | MIXED; BALANCED_MIXED |
+| R1-T10 | Equal scores and equal evidence strength after **all available authorized evidence** evaluated first | Deterministic owner-approved tie rules only; **no** random order; **no** dictionary/first-key fallback; **no** hidden default temperament |
+| R1-T11 | Exact material temperament tie remains after full evidence pass (Q3G-TIE future impl) | `temperamentResolution` = **UNRESOLVED_TIE**; **no** interactive follow-up question; **no** popup/chatbot/question bank; structured `missingEvidenceRequirements`; `ADDITIONAL_INFORMATION_REQUIRED` and/or `DOCTOR_REVIEW_REQUIRED` as applicable; **no** automatic medicine candidate; **no** auto-prescription |
+| R1-T12 | Verified evidence genuinely supports multiple temperaments (not tie fallback) | **MIXED** / **BALANCED_MIXED** only when multi-temperament support is evidence-backed; **not** unresolved equal-tie fallback; exact equal tie remains **UNRESOLVED_TIE**; doctor may add information via ordinary workflow; system reruns **complete versioned reassessment**; system asks **no** clinical question |
 | R1-T13 | Three+ way tie | TRIDOSHAJA path; mixed_components |
 | R1-T14 | Determinism — repeat same input | Identical fingerprint + outputs |
 | R1-T15 | Contract fields present when implemented | All frozen contract keys populated or explicitly null |
@@ -47,6 +47,17 @@ Tests must not be treated as clinical proof until owner accepts scenarios.
 | R1-X01 | Lymphatic wins because first in dictionary order on tie |
 | R1-X02 | Hardcoded L1/S1/A3/F1 for Formula 2/3 from temperament alone |
 | R1-X03 | Single merged `prakriti` string without separate dosha_mapping |
+| R1-X04 | Equal-tie resolved via interactive follow-up question, question bank, or dictionary/first-key default |
+
+---
+
+## Q3G / Q3G-TIE supersession (owner-approved future implementation)
+
+Historical [rule-01-temperament-engine.md](./rule-01-temperament-engine.md) equal-tie body (follow-up question; MIXED if no answer) remains **frozen and preserved**.
+
+**Future EHAS2 implementation** is governed by [rule-01-q3-evidence-workflow-owner-decisions.md](./rule-01-q3-evidence-workflow-owner-decisions.md) (**Q3G revised final**, **Q3G-TIE**) and [rule-01-q3-precontract-owner-decisions.md](./rule-01-q3-precontract-owner-decisions.md).
+
+**R1-T10–R1-T12** above describe **future** test expectations under that authority — not legacy interactive tie resolution.
 
 ---
 
