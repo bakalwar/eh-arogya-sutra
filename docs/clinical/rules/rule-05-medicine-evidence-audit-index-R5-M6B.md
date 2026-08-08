@@ -48,7 +48,7 @@ Initial posture for all medicines until individual read-only audits are performe
 | 1 | A1 | VERIFIED | LOCATED_REVIEWED | COMPLETED_CONFLICTS | COMPLETED_CONFLICTS | INCOMPLETE_NOT_VERIFIED | NOT_VERIFIED | COMPLETED_INVENTORY_NOT_VALIDATED | INCOMPLETE_BLOCKED | NOT_AUTHORIZED | RECORDED_4 | NONE | [rule-05-medicine-evidence-audit-A1-R5-M6B.md](./rule-05-medicine-evidence-audit-A1-R5-M6B.md) |
 | 2 | A2 | VERIFIED | LOCATED_REVIEWED | COMPLETED_CONFLICTS | COMPLETED_CONFLICTS | INCOMPLETE_NOT_VERIFIED | NOT_VERIFIED | COMPLETED_INVENTORY_NOT_VALIDATED | INCOMPLETE_BLOCKED | NOT_AUTHORIZED | RECORDED_4 | NONE | [rule-05-medicine-evidence-audit-A2-R5-M6B.md](./rule-05-medicine-evidence-audit-A2-R5-M6B.md) |
 | 3 | A3 | VERIFIED | LOCATED_REVIEWED | COMPLETED_CONFLICTS | COMPLETED_CONFLICTS | INCOMPLETE_NOT_VERIFIED | NOT_VERIFIED | COMPLETED_INVENTORY_NOT_VALIDATED | INCOMPLETE_BLOCKED | NOT_AUTHORIZED | RECORDED_4 | NONE | [rule-05-medicine-evidence-audit-A3-R5-M6B.md](./rule-05-medicine-evidence-audit-A3-R5-M6B.md) |
-| 4 | APP | PENDING_AUDIT | NOT_REVIEWED | NOT_REVIEWED | NOT_REVIEWED | NOT_VERIFIED | NOT_VERIFIED | NOT_STARTED | NOT_STARTED | NOT_AUTHORIZED | PENDING | NONE | NOT_CREATED |
+| 4 | APP | VERIFIED | NOT_LOCATED | COMPLETED_CONFLICTS | COMPLETED_CONFLICTS | INCOMPLETE_NOT_VERIFIED | NOT_VERIFIED | COMPLETED_INVENTORY_NOT_VALIDATED | INCOMPLETE_BLOCKED | NOT_AUTHORIZED | RECORDED_6 | NONE | [rule-05-medicine-evidence-audit-APP-R5-M6B.md](./rule-05-medicine-evidence-audit-APP-R5-M6B.md) |
 | 5 | BE | PENDING_AUDIT | NOT_REVIEWED | NOT_REVIEWED | NOT_REVIEWED | NOT_VERIFIED | NOT_VERIFIED | NOT_STARTED | NOT_STARTED | NOT_AUTHORIZED | PENDING | NONE | NOT_CREATED |
 | 6 | C1 | PENDING_AUDIT | NOT_REVIEWED | NOT_REVIEWED | NOT_REVIEWED | NOT_VERIFIED | NOT_VERIFIED | NOT_STARTED | NOT_STARTED | NOT_AUTHORIZED | PENDING | NONE | NOT_CREATED |
 | 7 | C2 | PENDING_AUDIT | NOT_REVIEWED | NOT_REVIEWED | NOT_REVIEWED | NOT_VERIFIED | NOT_VERIFIED | NOT_STARTED | NOT_STARTED | NOT_AUTHORIZED | PENDING | NONE | NOT_CREATED |
@@ -91,9 +91,9 @@ Initial posture for all medicines until individual read-only audits are performe
 | Metric | Value |
 |--------|------:|
 | Total medicines | 38 |
-| Completed documentation audits | 3 |
+| Completed documentation audits | 4 |
 | In progress | 0 |
-| Next eligible medicine in canonical sequence | **APP** — `NOT_STARTED`; separate owner authorization required |
+| Next eligible medicine in canonical sequence | **BE** — `NOT_STARTED`; separate owner authorization required |
 | Evidence activated | 0 |
 | Clinically validated | 0 |
 | Rule 5 safety-complete | 0 |
@@ -106,7 +106,7 @@ Initial posture for all medicines until individual read-only audits are performe
 
 **A3 status:** documentation audit **complete with conflicts** ([A3 audit record](./rule-05-medicine-evidence-audit-A3-R5-M6B.md)); **not** clinically validated; Rule 5 safety **incomplete**; four owner decisions **recorded** (R5-M6B-A3-CQ-001–004).
 
-**APP status:** unchanged — **NOT_STARTED**; not marked in-progress or audited.
+**APP status:** documentation audit **complete with conflicts and owner-primary not located** ([APP audit record](./rule-05-medicine-evidence-audit-APP-R5-M6B.md)); **not** clinically validated; Rule 5 safety **incomplete**; six owner decisions **recorded** (R5-M6B-APP-CQ-001–006); **ME-APP-001** open.
 
 ---
 
@@ -124,16 +124,19 @@ Initial posture for all medicines until individual read-only audits are performe
 | Item | Value |
 |------|--------|
 | Medicines indexed | 38 |
-| Documentation audits completed | 3 (A1, A2, A3) |
+| Documentation audits completed | 4 (A1, A2, A3, APP) |
 | A1 documentation audit | YES |
 | A2 documentation audit | YES |
 | A3 documentation audit | YES |
+| APP documentation audit | YES |
 | A1 clinically validated | NO |
 | A2 clinically validated | NO |
 | A3 clinically validated | NO |
+| APP clinically validated | NO |
 | A2 owner decisions recorded | 4 |
 | A3 owner decisions recorded | 4 |
-| Next eligible in sequence (not an audit target) | APP — NOT_STARTED |
+| APP owner decisions recorded | 6 |
+| Next eligible in sequence (not an audit target) | BE — NOT_STARTED |
 | C11 present in index | NO |
 | Registry JSON/manifest changed | NO |
 | Clinical evidence activated | NONE |
@@ -142,4 +145,4 @@ Initial posture for all medicines until individual read-only audits are performe
 | Database accessed | NO |
 | Legacy engine executed | NO |
 
-**Authority tag:** DOCUMENTATION_ONLY_AUDIT_INDEX · **A1, A2, and A3 audit records linked; APP not started**
+**Authority tag:** DOCUMENTATION_ONLY_AUDIT_INDEX · **A1, A2, A3, and APP audit records linked; APP clinically blocked (owner-primary not located)**
