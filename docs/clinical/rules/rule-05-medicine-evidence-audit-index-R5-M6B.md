@@ -50,7 +50,7 @@ Initial posture for all medicines until individual read-only audits are performe
 | 3 | A3 | VERIFIED | LOCATED_REVIEWED | COMPLETED_CONFLICTS | COMPLETED_CONFLICTS | INCOMPLETE_NOT_VERIFIED | NOT_VERIFIED | COMPLETED_INVENTORY_NOT_VALIDATED | INCOMPLETE_BLOCKED | NOT_AUTHORIZED | RECORDED_4 | NONE | [rule-05-medicine-evidence-audit-A3-R5-M6B.md](./rule-05-medicine-evidence-audit-A3-R5-M6B.md) |
 | 4 | APP | VERIFIED | NOT_LOCATED | COMPLETED_CONFLICTS | COMPLETED_CONFLICTS | INCOMPLETE_NOT_VERIFIED | NOT_VERIFIED | COMPLETED_INVENTORY_NOT_VALIDATED | INCOMPLETE_BLOCKED | NOT_AUTHORIZED | RECORDED_6 | NONE | [rule-05-medicine-evidence-audit-APP-R5-M6B.md](./rule-05-medicine-evidence-audit-APP-R5-M6B.md) |
 | 5 | BE | VERIFIED | NOT_LOCATED | COMPLETED_CONFLICTS | COMPLETED_CONFLICTS | INCOMPLETE_NOT_VERIFIED | NOT_VERIFIED | COMPLETED_INVENTORY_NOT_VALIDATED | INCOMPLETE_BLOCKED | NOT_AUTHORIZED | RECORDED_9 | NONE | [rule-05-medicine-evidence-audit-BE-R5-M6B.md](./rule-05-medicine-evidence-audit-BE-R5-M6B.md) |
-| 6 | C1 | PENDING_AUDIT | NOT_REVIEWED | NOT_REVIEWED | NOT_REVIEWED | NOT_VERIFIED | NOT_VERIFIED | NOT_STARTED | NOT_STARTED | NOT_AUTHORIZED | PENDING | NONE | NOT_CREATED |
+| 6 | C1 | VERIFIED | LOCATED_REVIEWED | COMPLETED_CONFLICTS | COMPLETED_CONFLICTS | INCOMPLETE_NOT_VERIFIED | NOT_VERIFIED | COMPLETED_INVENTORY_NOT_VALIDATED | INCOMPLETE_BLOCKED | NOT_AUTHORIZED | RECORDED_6 | NONE | [rule-05-medicine-evidence-audit-C1-R5-M6B.md](./rule-05-medicine-evidence-audit-C1-R5-M6B.md) |
 | 7 | C2 | PENDING_AUDIT | NOT_REVIEWED | NOT_REVIEWED | NOT_REVIEWED | NOT_VERIFIED | NOT_VERIFIED | NOT_STARTED | NOT_STARTED | NOT_AUTHORIZED | PENDING | NONE | NOT_CREATED |
 | 8 | C3 | PENDING_AUDIT | NOT_REVIEWED | NOT_REVIEWED | NOT_REVIEWED | NOT_VERIFIED | NOT_VERIFIED | NOT_STARTED | NOT_STARTED | NOT_AUTHORIZED | PENDING | NONE | NOT_CREATED |
 | 9 | C4 | PENDING_AUDIT | NOT_REVIEWED | NOT_REVIEWED | NOT_REVIEWED | NOT_VERIFIED | NOT_VERIFIED | NOT_STARTED | NOT_STARTED | NOT_AUTHORIZED | PENDING | NONE | NOT_CREATED |
@@ -91,9 +91,9 @@ Initial posture for all medicines until individual read-only audits are performe
 | Metric | Value |
 |--------|------:|
 | Total medicines | 38 |
-| Completed documentation audits | 5 |
+| Completed documentation audits | 6 |
 | In progress | 0 |
-| Next eligible medicine in canonical sequence | **C1** — `NOT_STARTED`; separate owner authorization required |
+| Next eligible medicine in canonical sequence | **C2** — `NOT_STARTED`; separate owner authorization required |
 | Evidence activated | 0 |
 | Clinically validated | 0 |
 | Rule 5 safety-complete | 0 |
@@ -109,6 +109,8 @@ Initial posture for all medicines until individual read-only audits are performe
 **APP status:** documentation audit **complete with conflicts and owner-primary not located** ([APP audit record](./rule-05-medicine-evidence-audit-APP-R5-M6B.md)); **not** clinically validated; Rule 5 safety **incomplete**; six owner decisions **recorded** (R5-M6B-APP-CQ-001–006); **ME-APP-001** open.
 
 **BE status:** documentation audit **complete with conflicts and owner-primary not located** ([BE audit record](./rule-05-medicine-evidence-audit-BE-R5-M6B.md)); **not** clinically validated; Rule 5 safety **incomplete**; **`RECORDED_9`** = eight explicit owner CQ decisions (R5-M6B-BE-CQ-001–008 = A) + one owner-delegated technical classification (R5-M6B-BE-CQ-009 = A / TGC-BE-009); **ME-BE-001** open; **essential owner clinical decisions: NONE** (blocked by missing verified primary).
+
+**C1 status:** documentation audit **complete with conflicts** ([C1 audit record](./rule-05-medicine-evidence-audit-C1-R5-M6B.md)); **not** clinically validated; Rule 5 safety **incomplete**; owner source **`LOCATED_REVIEWED`** with **`PROVISIONAL_OWNER_PRIMARY`** (transcript line **1217** byte proof **pending**; length mismatch **open**; provenance **`INCOMPLETE_NOT_VERIFIED`**); **`RECORDED_6`** = essential owner decisions **EOD-C1-01–06 = A** only; **`TECHNICAL_GOVERNANCE_CLASSIFICATION_COUNT: 10`** (TGC-C1-001–010, not in owner-decision column); **ME-C1-001** open.
 
 ---
 
@@ -126,22 +128,26 @@ Initial posture for all medicines until individual read-only audits are performe
 | Item | Value |
 |------|--------|
 | Medicines indexed | 38 |
-| Documentation audits completed | 5 (A1, A2, A3, APP, BE) |
+| Documentation audits completed | 6 (A1, A2, A3, APP, BE, C1) |
 | A1 documentation audit | YES |
 | A2 documentation audit | YES |
 | A3 documentation audit | YES |
 | APP documentation audit | YES |
 | BE documentation audit | YES |
+| C1 documentation audit | YES |
 | A1 clinically validated | NO |
 | A2 clinically validated | NO |
 | A3 clinically validated | NO |
 | APP clinically validated | NO |
 | BE clinically validated | NO |
+| C1 clinically validated | NO |
 | A2 owner decisions recorded | 4 |
 | A3 owner decisions recorded | 4 |
 | APP owner decisions recorded | 6 |
 | BE governance classifications recorded | 9 (8 explicit owner CQ + 1 delegated technical) |
-| Next eligible in sequence (not an audit target) | C1 — NOT_STARTED |
+| C1 owner decisions recorded | 6 (EOD-C1-01–06) |
+| C1 technical governance classifications | 10 (TGC-C1-001–010) |
+| Next eligible in sequence (not an audit target) | C2 — NOT_STARTED |
 | C11 present in index | NO |
 | Registry JSON/manifest changed | NO |
 | Clinical evidence activated | NONE |
@@ -150,4 +156,4 @@ Initial posture for all medicines until individual read-only audits are performe
 | Database accessed | NO |
 | Legacy engine executed | NO |
 
-**Authority tag:** DOCUMENTATION_ONLY_AUDIT_INDEX · **A1, A2, A3, APP, and BE audit records linked; APP and BE clinically blocked (owner-primary not located)**
+**Authority tag:** DOCUMENTATION_ONLY_AUDIT_INDEX · **A1–BE and C1 audit records linked; C1 provisional primary; APP/BE owner-primary not located; no clinical validation**
