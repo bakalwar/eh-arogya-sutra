@@ -71,8 +71,8 @@ This record is a **documentation-only** source and governance audit for **A1**. 
 
 | Source ID | Classification (framework §3) | Reference | Tracked in EHAS2 Git | Blob / status | Provenance | License |
 |-----------|------------------------------|-----------|----------------------|---------------|------------|---------|
-| **SRC-A1-OWNER** | `OWNER_PROVIDED_SOURCE_CANDIDATE` | Cursor transcript session `019c5012-fbb1-4582-a4af-af8484d1bc5f` (user message ~line 1415); normalized corpus `MED=A1` | Corpus: **NOT_GIT_TRACKED** in EHAS2 | Working-tree SHA `f4bc49f70d8482824bc06f8d21dae673cba8ee9e` · corpus lines **887–926** | **Located, not verified** | **Not verified** |
-| **SRC-A1-MM1E** | `NORMALIZED_OWNER_TEXT_COPY` | Legacy repo `docs/phase-s5-mm1e/_doctor_medicine_corpus.txt` (`MED=A1`) | **WORKTREE_ONLY** | Same content anchor as SRC-A1-OWNER | Derived copy of owner block | N/A |
+| **SRC-A1-OWNER** | `OWNER_PROVIDED_SOURCE_CANDIDATE` | Cursor transcript session `019c5012-fbb1-4582-a4af-af8484d1bc5f` (user message ~line 1415); normalized corpus `MED=A1` | Corpus: **NOT_GIT_TRACKED** in EHAS2 | See **§5.1 corpus integrity** (scope-specific hashes; not a merged Git blob) · primary narrative lines **887–926** | **Located, not verified** | **Not verified** |
+| **SRC-A1-MM1E** | `NORMALIZED_OWNER_TEXT_COPY` | Legacy project `docs/phase-s5-mm1e/_doctor_medicine_corpus.txt` (`MED=A1` … before `MED=A2`) | **WORKTREE_ONLY** (legacy repo) | Same byte anchor as §5.1 A1-block scope | Derived copy of owner block | N/A |
 | **SRC-A1-REG-V2** | `CURRENT_EHAS2_REGISTRY_V2` | `packages/medicine-registry/src/medicines.v2.json` (first object) | **Tracked @ e762537** | Blob `5bba8d6…` | Identity/metadata structure | N/A |
 | **SRC-A1-ENGINE** | `LEGACY_NORMALIZED_ENGINE_COPY` | Legacy `eh-api/data/engine_medicines_38.py` (`MEDICINES_38` A1 dict) | Legacy repo tracked @ `c4232ec` lineage; blob `6e3d87e…` @ legacy HEAD | Comparison only | Developer normalization | N/A |
 | **SRC-A1-MM2** | `NORMALIZED_OWNER_TEXT_COPY` | Legacy `docs/phase-s5-mm2/S5MM2_MASTER_MATERIA_MEDICA.json` (A1 entry) | **WORKTREE_ONLY** | MM2 `temperament_affinity`: `UNKNOWN` | Parsed from owner corpus | N/A |
@@ -80,6 +80,23 @@ This record is a **documentation-only** source and governance audit for **A1**. 
 | **SRC-A1-BOOK** | `HISTORICAL_OR_CONFLICTING_LEGACY_SOURCE` | BOOK master Hindi OCR (`EH_BOOK_MASTER_HINDI.txt`) — A-group doctrine | **WORKTREE_ONLY** | Group-level blood-nature text; not English Sanguine on A1 row | **UNVERIFIED_BOOK_DERIVED_TEXT** | **Not verified** |
 
 Untracked legacy sources are **not** merged Git authority for EHAS2.
+
+### 5.1 Corpus integrity (read-only recompute)
+
+Legacy normalized corpus (untracked working tree). **No legacy files edited.** Methods: `git hash-object` (Git blob SHA-1, with/without `--no-filters`); `SHA-256` over **on-disk bytes** (Node `crypto.createHash('sha256')`).
+
+| Scope | Relative path / boundary | Byte length | Line endings (on disk) | Git tracking | Git blob SHA-1 (`--no-filters`) | Git blob SHA-1 (default filters) | SHA-256 (raw bytes) |
+|-------|--------------------------|------------:|------------------------|--------------|--------------------------------|----------------------------------|---------------------|
+| **Whole file** | `docs/phase-s5-mm1e/_doctor_medicine_corpus.txt` | 424,565 | **CRLF** throughout (5,677 `\n`-split records; 4,899 non-empty logical lines via `Measure-Object -Line`) | **NOT_GIT_TRACKED** (legacy repo) | `f4bc49f70d8482824bc06f8d21dae673cba8ee9e` | `51ba285e302d7490f37f1cf73b69c953f59c2f87` | `9ecd7e87bf0ed5865df70c1bd49adcd093f557d3cdb5a0f56c9a0e85bc82e4c1` |
+| **A1 normalized block** | From first `MED=A1` through byte before `MED=A2` (includes section headers + `<user_query>` … `</user_query>`) | 6,244 | **CRLF** (substring of whole file) | **NOT_GIT_TRACKED** | `dbd2788dbfa1459abe20a68f693be280eb5d669e` | `d3696362e1b7837fbe05b61192238cdda1a5e200` | `49377158a0a03716e7b9537dceb3e2b6098ca8728cb7feea2dedc85513893cf5` |
+
+**Prior hash reconciliation (not merged Git authority):**
+
+- **`51ba285e…`** — reproducible as **whole-file** `git hash-object` **without** `--no-filters` (Git default filter path on this host). **Not** the on-disk raw-byte blob SHA-1.
+- **`f4bc49f…`** — reproducible as **whole-file** `git hash-object --no-filters` (raw working-tree bytes). Used in PR #21 initial draft; **scope was whole file**, not A1-only.
+- **A1-block hashes** (`dbd2788…` / `d3696362…`) — **distinct scopes**; neither prior report hash applied to this boundary.
+
+**Statement inventory check:** Primary owner narrative (lines 887–926 / `<user_query>` body) **unchanged** vs pre-audit read-only inventory; audit **continues** (no content drift blocker).
 
 ---
 
@@ -225,6 +242,8 @@ Domains use framework §5.7 vocabulary only. **BOOK-only** rows marked quarantin
 | 13 | Follow-up timing | **SOURCE_NOT_FOUND** | **SOURCE_NOT_FOUND** | **SOURCE_NOT_FOUND** | **SOURCE_NOT_FOUND** |
 | 14 | Special populations | **SOURCE_NOT_FOUND** | **SOURCE_NOT_FOUND** | Pregnancy mention in OCR cautions | **OWNER_REVIEW_REQUIRED** · BOOK quarantined |
 
+**`OWNER_REVIEW_REQUIRED` meaning (this audit):** required **action / governance status** only — **not** Rule 5 safety completion. It does **not** verify BOOK OCR text, does **not** close contraindication / adverse-effect / interaction / monitoring / emergency / special-population gaps, and does **not** assign `OWNER_APPROVED`, `VALIDATED`, or `ACTIVE`. Applicable **independent clinical evidence** (and complete provenance where required) remains necessary before any future safety-completion claim.
+
 **Rule 5 implementation posture (EHAS2):** `NOT_IMPLEMENTED` (framework/index). No domain reaches `OWNER_APPROVED`.
 
 ---
@@ -237,7 +256,7 @@ Domains use framework §5.7 vocabulary only. **BOOK-only** rows marked quarantin
 | **CF-A1-002** | Owner D10–D500 vs registry D10–D200 | **Preserved** — CQ-002 = A |
 | **CF-A1-003** | Registry `temperament_affinity` vs owner silence | **Preserved** — CQ-004 = A |
 | **CF-A1-004** | MM3 BOOK safety text vs owner-primary absence | **Quarantine** — CQ-003 = A |
-| **CF-A1-005** | Expert tip keyword priority vs no-default medicine governance | **Unresolved** — not a selector; document only |
+| **CF-A1-005** | Expert tip keyword priority vs no-default medicine governance | **Closed** — `REJECTED_BY_EXISTING_GOVERNANCE`; historical source narrative preserved; no selector/default/candidate authority |
 | **CF-A1-006** | Medicine-level `polarity: POSITIVE` vs bidirectional potency narrative | **Preserved** — descriptive conflict |
 
 No silent merge applied in this audit record.
@@ -306,14 +325,14 @@ These decisions are **documentation of owner authorization** for audit posture �
 
 ## 17. Remaining blockers
 
-1. Rule 5 fourteen-domain owner review and/or independent validation — **not started** for authoritative safety completion.
+1. Rule 5 fourteen-domain completion requires **complete source provenance**, applicable **owner governance review**, and **independent clinical validation** where required; **owner acknowledgment/approval alone does not** make missing safety evidence verified, sufficient, or complete.
 2. BOOK bibliographic verification gate before any BOOK text adoption.
 3. Explicit owner decisions if registry descriptive fields should ever supersede or reconcile with owner-primary (beyond documented CQ-001–004 preservation posture).
 4. Rule 6 medicine-level relationship authorization — **separate future owner phase**; not implied by this audit.
 5. Provenance/license verification for owner transcript and normalized corpus in EHAS2 tracked artifacts.
-6. Keyword-priority expert tip vs no-default medicine policy — **governance unresolved** for any future selector use.
+6. **Closed boundary (not an open blocker):** keyword-priority expert tip is **rejected** for current EHAS2 selector use (`REJECTED_BY_EXISTING_GOVERNANCE`); future reconsideration requires a **new explicit owner supersession decision**. Historical owner text remains in §7 inventory only.
 
-**Next medicine in sequence (queue only):** **A2 — NOT_STARTED; separate owner authorization required.** No A2 audit file in this task.
+**Next eligible medicine in canonical sequence:** **A2 — NOT_STARTED; no audit target authorization in this PR.** No A2 audit file in this task.
 
 ---
 

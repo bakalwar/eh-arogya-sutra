@@ -46,7 +46,7 @@ Initial posture for all medicines until individual read-only audits are performe
 | Seq | Medicine code | Identity status | Owner source status | Registry comparison status | Legacy comparison status | Provenance status | License status | Clinical-content audit | Rule 5 safety audit | Potency/dosage authorization | Owner decision status | Evidence activation | Audit record link |
 |----:|:-------------|:----------------|:--------------------|:---------------------------|:-------------------------|:------------------|:---------------|:-----------------------|:--------------------|:-----------------------------|:----------------------|:--------------------|:------------------|
 | 1 | A1 | VERIFIED | LOCATED_REVIEWED | COMPLETED_CONFLICTS | COMPLETED_CONFLICTS | INCOMPLETE_NOT_VERIFIED | NOT_VERIFIED | COMPLETED_INVENTORY_NOT_VALIDATED | INCOMPLETE_BLOCKED | NOT_AUTHORIZED | RECORDED_4 | NONE | [rule-05-medicine-evidence-audit-A1-R5-M6B.md](./rule-05-medicine-evidence-audit-A1-R5-M6B.md) |
-| 2 | A2 | PENDING_AUDIT | NOT_REVIEWED | NOT_REVIEWED | NOT_REVIEWED | NOT_VERIFIED | NOT_VERIFIED | NOT_STARTED | NOT_STARTED | NOT_AUTHORIZED | PENDING | NONE | NOT_CREATED · **NEXT_AUDIT_TARGET** |
+| 2 | A2 | PENDING_AUDIT | NOT_REVIEWED | NOT_REVIEWED | NOT_REVIEWED | NOT_VERIFIED | NOT_VERIFIED | NOT_STARTED | NOT_STARTED | NOT_AUTHORIZED | PENDING | NONE | NOT_CREATED |
 | 3 | A3 | PENDING_AUDIT | NOT_REVIEWED | NOT_REVIEWED | NOT_REVIEWED | NOT_VERIFIED | NOT_VERIFIED | NOT_STARTED | NOT_STARTED | NOT_AUTHORIZED | PENDING | NONE | NOT_CREATED |
 | 4 | APP | PENDING_AUDIT | NOT_REVIEWED | NOT_REVIEWED | NOT_REVIEWED | NOT_VERIFIED | NOT_VERIFIED | NOT_STARTED | NOT_STARTED | NOT_AUTHORIZED | PENDING | NONE | NOT_CREATED |
 | 5 | BE | PENDING_AUDIT | NOT_REVIEWED | NOT_REVIEWED | NOT_REVIEWED | NOT_VERIFIED | NOT_VERIFIED | NOT_STARTED | NOT_STARTED | NOT_AUTHORIZED | PENDING | NONE | NOT_CREATED |
@@ -93,7 +93,7 @@ Initial posture for all medicines until individual read-only audits are performe
 | Total medicines | 38 |
 | Completed documentation audits | 1 |
 | In progress | 0 |
-| Next audit target | **A2** — `NOT_STARTED`; separate owner authorization required |
+| Next eligible medicine in canonical sequence | **A2** — `NOT_STARTED`; separate owner authorization required |
 | Evidence activated | 0 |
 | Clinically validated | 0 |
 | Rule 5 safety-complete | 0 |
@@ -123,7 +123,7 @@ Initial posture for all medicines until individual read-only audits are performe
 | Documentation audits completed | 1 (A1) |
 | A1 documentation audit | YES |
 | A1 clinically validated | NO |
-| Next audit target (queue) | A2 (not started) |
+| Next eligible in sequence (not an audit target) | A2 — NOT_STARTED |
 | C11 present in index | NO |
 | Registry JSON/manifest changed | NO |
 | Clinical evidence activated | NONE |
