@@ -143,7 +143,7 @@ Source-tier inventory preserved for traceability:
 |------|----------------------|
 | **Owner 019c (provisional)** | Skin structure vs **S3** function; abscess/boils; chronic eczema; psoriasis; deep fungal; severe acne/pustules; pigmentation; leucoderma; chronic ulcers; fistula; hair/nail fungal; keywords; expert tip (incl. **C3+S3** inventory wording) |
 | **Registry/engine** | English mirror + additions (e.g. **cellulitis**, melasma/vitiligo labels, tinea profunda, alopecia, scalp infection) — **`DERIVED_UNVERIFIED`** |
-| **MM2 parsed** | Section 3 + keywords + tip | Aligns to owner pointer |
+| **MM2 parsed** | Section 3 + keywords + tip; aligns to owner pointer |
 | **MM3/BOOK** | OCR/tablets/unrelated organ lists | **`UNVERIFIED_BOOK_DERIVED_TEXT`** |
 | **UCKB** | External routes + electricity staging | **NOT_ACTIVATED** |
 | **Developer/116k tier** | Cursor save + mandatory keyword priority language | **Non-operational inventory** only |
