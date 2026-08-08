@@ -1,6 +1,6 @@
 # Dependency risk register — E.H. AROGYA SUTRA 2 (Phase 1A-H)
 
-**Date:** 2026-07-29 (updated Phase 1B preflight)  
+**Date:** 2026-07-29 (updated Phase 1B preflight; **nanoid GHSA entry 2026-08-08**)  
 **Node policy:** `20.x` (validated on **v20.20.2** via TEMP portable official build)  
 **npm:** >=10 (validated with npm 10.8.2 under Node 20.20.2)  
 **Raw audits (not in Git):** `%TEMP%\ehas2_phase1a_hardening\`, `%TEMP%\ehas2_phase1b_preflight\`
@@ -10,7 +10,8 @@
 | Moment | critical | high | moderate | low | total |
 |--------|----------|------|----------|-----|-------|
 | Before hardening | 0 | 8 | 0 | 0 | 8 |
-| After safe overrides + clean lockfile | 0 | 0 | 0 | 0 | 0 |
+| After safe overrides + clean lockfile (Phase 1A-H) | 0 | 0 | 0 | 0 | 0 |
+| After nanoid override (2026-08-08; `npm audit --omit=dev --audit-level=high`) | 0 | 0 | 0 | 0 | 0 |
 
 `npm audit fix --force` was **not** used.
 
@@ -86,9 +87,37 @@
 
 `npm audit` suggested downgrading `next` to `9.3.3` (major downgrade, incorrect). **Rejected.** Compatible overrides used instead.
 
-## After hardening — unresolved
+## After hardening — unresolved (historical snapshot)
 
-**None** in `npm audit` (0 vulnerabilities).
+Phase 1A-H recorded **0** vulnerabilities in `npm audit` at that time. A later **production** high advisory (§7) required a separate override; see §7 status.
+
+## 7. nanoid (via postcss → next) — GHSA-2v37-7h3g-55p8
+
+| Field | Value |
+|-------|--------|
+| Advisory ID | **GHSA-2v37-7h3g-55p8** |
+| CVE | **CVE-2026-67213** |
+| Package | `nanoid` |
+| Installed (before fix) | `3.3.16` |
+| Vulnerable range (npm 3.x) | `<3.3.17` |
+| Severity | **high** |
+| CVSS (npm audit JSON) | **5.9** (`CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H`) |
+| Direct / transitive | **Transitive** (no direct app dependency) |
+| Parent chain | `eh-arogya-sutra-2-web` → `next@15.5.22` → `postcss@8.5.25` (override) → `nanoid` |
+| Affected workspace | `apps/web` (`eh-arogya-sutra-2-web`) |
+| Prod / dev | **Production dependency tree** under `next` (`npm audit --omit=dev` gate) |
+| Runtime / build reachability | **Build-time CSS pipeline** (PostCSS under Next); not used by API/worker packages |
+| Vulnerable feature in repo | **Not identified** in first-party code; PostCSS uses `nanoid/non-secure` with fixed size `6` |
+| User-controlled zero-size trigger | **Not identified** to vulnerable `customAlphabet`/`customRandom` API |
+| Safe patched version (3.x) | **`3.3.17`** (exact pin) |
+| Fix chosen | Root **`overrides.nanoid = "3.3.17"`** (exact; PostCSS/Next versions unchanged) |
+| Breaking-change risk | **Low** (patch within 3.3.x) |
+| Validation performed | `npm ci`; `npm ls nanoid --all`; `npm explain nanoid`; `npm audit --omit=dev --audit-level=high` (exit 0); repo CI suite (lint/typecheck/test/clinical-engine/build); read-only smoke: `nanoid(6)` OK; `customAlphabet` size 0 completes without hang (strict wall-clock check) |
+| Residual risk | **Version-based CI gate satisfied**; does **not** imply zero application DoS risk if future code passes attacker-controlled size 0 to custom generators; independent evidence of exploitability in this app **not established** |
+| Status | **REMEDIATED** (dependency pin; lockfile updated) |
+| Date | **2026-08-08** |
+| Owner / reviewer | Owner-authorized security PR; **not** production deployment |
+| CI exposure | EHAS2 CI run **`31253400994`** (`npm audit --omit=dev --audit-level=high` failed on `nanoid <3.3.17`). Earlier run **`31208889647`** on the same lockfile reported **0** production highs — **inference only:** npm audit advisory feed differed between runs; publication/propagation timing **not independently proven** here. |
 
 ## Unused dependencies removed
 
