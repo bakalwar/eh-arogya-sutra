@@ -53,7 +53,7 @@ Initial posture for all medicines until individual read-only audits are performe
 | 6 | C1 | VERIFIED | LOCATED_REVIEWED | COMPLETED_CONFLICTS | COMPLETED_CONFLICTS | INCOMPLETE_NOT_VERIFIED | NOT_VERIFIED | COMPLETED_INVENTORY_NOT_VALIDATED | INCOMPLETE_BLOCKED | NOT_AUTHORIZED | RECORDED_6 | NONE | [rule-05-medicine-evidence-audit-C1-R5-M6B.md](./rule-05-medicine-evidence-audit-C1-R5-M6B.md) |
 | 7 | C2 | VERIFIED | LOCATED_REVIEWED | COMPLETED_CONFLICTS | COMPLETED_CONFLICTS | INCOMPLETE_NOT_VERIFIED | NOT_VERIFIED | COMPLETED_INVENTORY_NOT_VALIDATED | INCOMPLETE_BLOCKED | NOT_AUTHORIZED | RECORDED_6 | NONE | [rule-05-medicine-evidence-audit-C2-R5-M6B.md](./rule-05-medicine-evidence-audit-C2-R5-M6B.md) |
 | 8 | C3 | VERIFIED | LOCATED_REVIEWED | COMPLETED_CONFLICTS | COMPLETED_CONFLICTS | INCOMPLETE_NOT_VERIFIED | NOT_VERIFIED | COMPLETED_INVENTORY_NOT_VALIDATED | INCOMPLETE_BLOCKED | NOT_AUTHORIZED | RECORDED_0 | NONE | [rule-05-medicine-evidence-audit-C3-R5-M6B.md](./rule-05-medicine-evidence-audit-C3-R5-M6B.md) |
-| 9 | C4 | PENDING_AUDIT | NOT_REVIEWED | NOT_REVIEWED | NOT_REVIEWED | NOT_VERIFIED | NOT_VERIFIED | NOT_STARTED | NOT_STARTED | NOT_AUTHORIZED | PENDING | NONE | NOT_CREATED |
+| 9 | C4 | VERIFIED | LOCATED_REVIEWED | COMPLETED_CONFLICTS | COMPLETED_CONFLICTS | INCOMPLETE_NOT_VERIFIED | NOT_VERIFIED | COMPLETED_INVENTORY_NOT_VALIDATED | INCOMPLETE_BLOCKED | NOT_AUTHORIZED | RECORDED_0 | NONE | [rule-05-medicine-evidence-audit-C4-R5-M6B.md](./rule-05-medicine-evidence-audit-C4-R5-M6B.md) |
 | 10 | C5 | PENDING_AUDIT | NOT_REVIEWED | NOT_REVIEWED | NOT_REVIEWED | NOT_VERIFIED | NOT_VERIFIED | NOT_STARTED | NOT_STARTED | NOT_AUTHORIZED | PENDING | NONE | NOT_CREATED |
 | 11 | C6 | PENDING_AUDIT | NOT_REVIEWED | NOT_REVIEWED | NOT_REVIEWED | NOT_VERIFIED | NOT_VERIFIED | NOT_STARTED | NOT_STARTED | NOT_AUTHORIZED | PENDING | NONE | NOT_CREATED |
 | 12 | C10 | PENDING_AUDIT | NOT_REVIEWED | NOT_REVIEWED | NOT_REVIEWED | NOT_VERIFIED | NOT_VERIFIED | NOT_STARTED | NOT_STARTED | NOT_AUTHORIZED | PENDING | NONE | NOT_CREATED |
@@ -91,9 +91,9 @@ Initial posture for all medicines until individual read-only audits are performe
 | Metric | Value |
 |--------|------:|
 | Total medicines | 38 |
-| Completed documentation audits | 8 |
+| Completed documentation audits | 9 |
 | In progress | 0 |
-| Next eligible medicine in canonical sequence | **C4** — `NOT_STARTED`; separate owner authorization required |
+| Next eligible medicine in canonical sequence | **C5** — `NOT_STARTED`; separate owner authorization required |
 | Evidence activated | 0 |
 | Clinically validated | 0 |
 | Rule 5 safety-complete | 0 |
@@ -116,6 +116,8 @@ Initial posture for all medicines until individual read-only audits are performe
 
 **C3 status:** documentation audit **complete with conflicts** ([C3 audit record](./rule-05-medicine-evidence-audit-C3-R5-M6B.md)); **not** clinically validated; Rule 5 safety **incomplete**; owner source **`LOCATED_REVIEWED`** with **`PROVISIONAL_OWNER_PRIMARY`** (**provisional, not fully verified**; 019c `MED=C3` L531 · clinical inventory **L535–568** §1–5 + expert tip; inner `</user_query>` at **L569**; **C2 L527–528 not attributed to C3**; upstream C2 segmentation/wrapper **open**; transcript line **1254** / len **2828** **unverified**; provenance **`INCOMPLETE_NOT_VERIFIED`**); **`RECORDED_0`** = documentation audit **complete**, **zero** essential owner clinical decisions recorded, **`TECHNICAL_GOVERNANCE_CLASSIFICATION_COUNT: 10`** (TGC-C3-001–010, **not** in owner-decision column), **no** clinical authority created; **ME-C3-001** open; **`ESSENTIAL_OWNER_CLINICAL_DECISIONS: NONE — BLOCKED BY MISSING VERIFIED PRIMARY AND RULE 5 SAFETY EVIDENCE`**.
 
+**C4 status:** documentation audit **complete with conflicts** ([C4 audit record](./rule-05-medicine-evidence-audit-C4-R5-M6B.md)); **not** clinically validated; Rule 5 safety **incomplete**; owner source **`LOCATED_REVIEWED`** with **`PROVISIONAL_OWNER_PRIMARY`** (**provisional, not fully verified**; 019c `MED=C4` L572 · clinical inventory **L576–608** §1–5 + expert tip; **C3 closes L569** — **no bleed into C4**; inner `</user_query>` at **L610**; **C5 begins L612**; transcript line **1266** / len **2842** **unverified**; provenance **`INCOMPLETE_NOT_VERIFIED`**); **`RECORDED_0`** = documentation audit **complete**, **zero** essential owner clinical decisions recorded, **`TECHNICAL_GOVERNANCE_CLASSIFICATION_COUNT: 10`** (TGC-C4-001–010, **not** in owner-decision column), **no** clinical authority created; **ME-C4-001** open; **`ESSENTIAL_OWNER_CLINICAL_DECISIONS: NONE — BLOCKED BY MISSING VERIFIED PRIMARY AND RULE 5 SAFETY EVIDENCE`**.
+
 ---
 
 ## 5. Documentation accuracy
@@ -132,7 +134,7 @@ Initial posture for all medicines until individual read-only audits are performe
 | Item | Value |
 |------|--------|
 | Medicines indexed | 38 |
-| Documentation audits completed | 8 (A1, A2, A3, APP, BE, C1, C2, C3) |
+| Documentation audits completed | 9 (A1, A2, A3, APP, BE, C1, C2, C3, C4) |
 | A1 documentation audit | YES |
 | A2 documentation audit | YES |
 | A3 documentation audit | YES |
@@ -141,6 +143,7 @@ Initial posture for all medicines until individual read-only audits are performe
 | C1 documentation audit | YES |
 | C2 documentation audit | YES |
 | C3 documentation audit | YES |
+| C4 documentation audit | YES |
 | A1 clinically validated | NO |
 | A2 clinically validated | NO |
 | A3 clinically validated | NO |
@@ -149,6 +152,7 @@ Initial posture for all medicines until individual read-only audits are performe
 | C1 clinically validated | NO |
 | C2 clinically validated | NO |
 | C3 clinically validated | NO |
+| C4 clinically validated | NO |
 | A2 owner decisions recorded | 4 |
 | A3 owner decisions recorded | 4 |
 | APP owner decisions recorded | 6 |
@@ -159,7 +163,9 @@ Initial posture for all medicines until individual read-only audits are performe
 | C2 technical governance classifications | 10 (TGC-C2-001–010) |
 | C3 owner decision status | RECORDED_0 (documentation audit complete; zero essential owner clinical decisions; TGC count 10 separate; no clinical authority) |
 | C3 technical governance classifications | 10 (TGC-C3-001–010) |
-| Next eligible in sequence (not an audit target) | C4 — NOT_STARTED |
+| C4 owner decision status | RECORDED_0 (documentation audit complete; zero essential owner clinical decisions; TGC count 10 separate; no clinical authority) |
+| C4 technical governance classifications | 10 (TGC-C4-001–010) |
+| Next eligible in sequence (not an audit target) | C5 — NOT_STARTED |
 | C11 present in index | NO |
 | Registry JSON/manifest changed | NO |
 | Clinical evidence activated | NONE |
@@ -168,4 +174,4 @@ Initial posture for all medicines until individual read-only audits are performe
 | Database accessed | NO |
 | Legacy engine executed | NO |
 
-**Authority tag:** DOCUMENTATION_ONLY_AUDIT_INDEX · **A1–BE, C1, C2, and C3 audit records linked; C1/C2/C3 provisional primary; C3 RECORDED_0; APP/BE owner-primary not located; no clinical validation**
+**Authority tag:** DOCUMENTATION_ONLY_AUDIT_INDEX · **A1–BE, C1, C2, C3, and C4 audit records linked; C1/C2/C3/C4 provisional primary; C3/C4 RECORDED_0; APP/BE owner-primary not located; no clinical validation**
