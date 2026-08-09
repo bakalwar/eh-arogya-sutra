@@ -67,7 +67,7 @@ Initial posture for all medicines until individual read-only audits are performe
 | 20 | P1 | VERIFIED | LOCATED_REVIEWED | COMPLETED_CONFLICTS | COMPLETED_CONFLICTS | INCOMPLETE_NOT_VERIFIED | NOT_VERIFIED | COMPLETED_INVENTORY_NOT_VALIDATED | INCOMPLETE_BLOCKED | NOT_AUTHORIZED | RECORDED_0 | NONE | [rule-05-medicine-evidence-audit-P1-R5-M6B.md](./rule-05-medicine-evidence-audit-P1-R5-M6B.md) |
 | 21 | P2 | VERIFIED | LOCATED_REVIEWED | COMPLETED_CONFLICTS | COMPLETED_CONFLICTS | INCOMPLETE_NOT_VERIFIED | NOT_VERIFIED | COMPLETED_INVENTORY_NOT_VALIDATED | INCOMPLETE_BLOCKED | NOT_AUTHORIZED | RECORDED_0 | NONE | [rule-05-medicine-evidence-audit-P2-R5-M6B.md](./rule-05-medicine-evidence-audit-P2-R5-M6B.md) |
 | 22 | P3 | VERIFIED | LOCATED_REVIEWED | COMPLETED_CONFLICTS | COMPLETED_CONFLICTS | INCOMPLETE_NOT_VERIFIED | NOT_VERIFIED | COMPLETED_INVENTORY_NOT_VALIDATED | INCOMPLETE_BLOCKED | NOT_AUTHORIZED | RECORDED_0 | NONE | [rule-05-medicine-evidence-audit-P3-R5-M6B.md](./rule-05-medicine-evidence-audit-P3-R5-M6B.md) |
-| 23 | P4 | PENDING_AUDIT | NOT_REVIEWED | NOT_REVIEWED | NOT_REVIEWED | NOT_VERIFIED | NOT_VERIFIED | NOT_STARTED | NOT_STARTED | NOT_AUTHORIZED | PENDING | NONE | NOT_CREATED |
+| 23 | P4 | VERIFIED | LOCATED_REVIEWED | COMPLETED_CONFLICTS | COMPLETED_CONFLICTS | INCOMPLETE_NOT_VERIFIED | NOT_VERIFIED | COMPLETED_INVENTORY_NOT_VALIDATED | INCOMPLETE_BLOCKED | NOT_AUTHORIZED | RECORDED_0 | NONE | [rule-05-medicine-evidence-audit-P4-R5-M6B.md](./rule-05-medicine-evidence-audit-P4-R5-M6B.md) |
 | 24 | RE | PENDING_AUDIT | NOT_REVIEWED | NOT_REVIEWED | NOT_REVIEWED | NOT_VERIFIED | NOT_VERIFIED | NOT_STARTED | NOT_STARTED | NOT_AUTHORIZED | PENDING | NONE | NOT_CREATED |
 | 25 | S-Lass | PENDING_AUDIT | NOT_REVIEWED | NOT_REVIEWED | NOT_REVIEWED | NOT_VERIFIED | NOT_VERIFIED | NOT_STARTED | NOT_STARTED | NOT_AUTHORIZED | PENDING | NONE | NOT_CREATED |
 | 26 | S1 | PENDING_AUDIT | NOT_REVIEWED | NOT_REVIEWED | NOT_REVIEWED | NOT_VERIFIED | NOT_VERIFIED | NOT_STARTED | NOT_STARTED | NOT_AUTHORIZED | PENDING | NONE | NOT_CREATED |
@@ -91,9 +91,9 @@ Initial posture for all medicines until individual read-only audits are performe
 | Metric | Value |
 |--------|------:|
 | Total medicines | 38 |
-| Completed documentation audits | 22 |
+| Completed documentation audits | 23 |
 | In progress | 0 |
-| Next eligible medicine in canonical sequence | **P4** — `NOT_STARTED`; informational only; separate owner authorization required |
+| Next eligible medicine in canonical sequence | **RE** — `NOT_STARTED`; informational only; separate owner authorization required |
 | Evidence activated | 0 |
 | Clinically validated | 0 |
 | Rule 5 safety-complete | 0 |
@@ -142,7 +142,9 @@ Initial posture for all medicines until individual read-only audits are performe
 
 **P2 status:** documentation audit **complete with conflicts** ([P2 audit record](./rule-05-medicine-evidence-audit-P2-R5-M6B.md)); **not** clinically validated; Rule 5 safety **incomplete**; owner source **`LOCATED_REVIEWED`** with **`PROVISIONAL_OWNER_PRIMARY`** (**provisional, not fully verified**; **single** normalized owner-session occurrence **A** — 019c **`MED=P2` L1053** · clinical inventory **L1062–1084** §1–4 + expert tip **L1087–1088**; inner wrapper **L1056–1090**; **L1059–1060** Cursor save **excluded**; **L1085–1086** 116k keyword framing **non-operational**; **no duplicate `MED=P2`**; **no post-tip agent tail**; **physical predecessor P1** (closes **L1050**); **physical immediate successor `MED=P3` L1092** (~**L1096**) — **matches** canonical audit successor **P3**; **canonical predecessor P1** — **P1→P2→P3** physically before **L1** in normalized corpus; transcript line **1506** / len **2785** **unverified** (byte proof **pending**); **MM2/MM2C**, **MM3/BOOK/OCR**, and **UCKB** P2 tiers **`NOT_LOCATED_IN_AVAILABLE_TREES`**; provenance **`INCOMPLETE_NOT_VERIFIED`**); **`RECORDED_0`** = documentation audit **complete**, **zero** essential owner clinical decisions recorded (**not** TGC count), **`TECHNICAL_GOVERNANCE_CLASSIFICATION_COUNT: 10`** (TGC-P2-001–010, **not** in owner-decision column), **no** clinical authority created; **P3 formal audit recorded (separate artifact)**; **ME-P2-001–010** open; **`ESSENTIAL_OWNER_CLINICAL_DECISIONS: NONE — BLOCKED BY MISSING VERIFIED PRIMARY AND RULE 5 SAFETY EVIDENCE`**.
 
-**P3 status:** documentation audit **complete with conflicts** ([P3 audit record](./rule-05-medicine-evidence-audit-P3-R5-M6B.md)); **not** clinically validated; Rule 5 safety **incomplete**; owner source **`LOCATED_REVIEWED`** with **`PROVISIONAL_OWNER_PRIMARY`** (**provisional, not fully verified**; **single** normalized owner-session occurrence **A** — 019c **`MED=P3` L1093** · clinical inventory **L1101–L1123** §1–4 + expert tip **L1126–L1127**; inner wrapper **L1096–L1129**; **L1098–L1099** Cursor save **excluded**; **L1124–L1125** 116k keyword framing **non-operational**; **no duplicate `MED=P3`**; **no post-tip agent tail**; **physical predecessor P2** (closes **L1090**); **physical immediate successor `MED=P4` L1132** — **matches** canonical audit successor **P4**; **canonical predecessor P2** — **P2→P3→P4** physically before **L1** in normalized corpus; merged **P2** artifact **~L1092** successor pointer vs authoritative header **L1093** drift **OPEN** (**CF-P3-001**); transcript line **1550** / len **2738** **unverified** (byte proof **pending**); **MM2/MM2C**, **MM3/BOOK/OCR**, and **UCKB** P3 tiers **`NOT_LOCATED_IN_AVAILABLE_TREES`**; provenance **`INCOMPLETE_NOT_VERIFIED`**); **`RECORDED_0`** = documentation audit **complete**, **zero** essential owner clinical decisions recorded (**not** TGC count), **`TECHNICAL_GOVERNANCE_CLASSIFICATION_COUNT: 10`** (TGC-P3-001–010, **not** in owner-decision column), **no** clinical authority created; **P4 not started or targeted**; **ME-P3-001–010** open; **`ESSENTIAL_OWNER_CLINICAL_DECISIONS: NONE — BLOCKED BY MISSING VERIFIED PRIMARY AND RULE 5 SAFETY EVIDENCE`**.
+**P3 status:** documentation audit **complete with conflicts** ([P3 audit record](./rule-05-medicine-evidence-audit-P3-R5-M6B.md)); **not** clinically validated; Rule 5 safety **incomplete**; owner source **`LOCATED_REVIEWED`** with **`PROVISIONAL_OWNER_PRIMARY`** (**provisional, not fully verified**; **single** normalized owner-session occurrence **A** — 019c **`MED=P3` L1093** · clinical inventory **L1101–L1123** §1–4 + expert tip **L1126–L1127**; inner wrapper **L1096–L1129**; **L1098–L1099** Cursor save **excluded**; **L1124–L1125** 116k keyword framing **non-operational**; **no duplicate `MED=P3`**; **no post-tip agent tail**; **physical predecessor P2** (closes **L1090**); **physical immediate successor `MED=P4` L1132** — **matches** canonical audit successor **P4**; **canonical predecessor P2** — **P2→P3→P4** physically before **L1** in normalized corpus; merged **P2** artifact **~L1092** successor pointer vs authoritative header **L1093** drift **OPEN** (**CF-P3-001**); transcript line **1550** / len **2738** **unverified** (byte proof **pending**); **MM2/MM2C**, **MM3/BOOK/OCR**, and **UCKB** P3 tiers **`NOT_LOCATED_IN_AVAILABLE_TREES`**; provenance **`INCOMPLETE_NOT_VERIFIED`**); **`RECORDED_0`** = documentation audit **complete**, **zero** essential owner clinical decisions recorded (**not** TGC count), **`TECHNICAL_GOVERNANCE_CLASSIFICATION_COUNT: 10`** (TGC-P3-001–010, **not** in owner-decision column), **no** clinical authority created; **P4 formal audit recorded (separate artifact)**; **ME-P3-001–010** open; **`ESSENTIAL_OWNER_CLINICAL_DECISIONS: NONE — BLOCKED BY MISSING VERIFIED PRIMARY AND RULE 5 SAFETY EVIDENCE`**.
+
+**P4 status:** documentation audit **complete with conflicts** ([P4 audit record](./rule-05-medicine-evidence-audit-P4-R5-M6B.md)); **not** clinically validated; Rule 5 safety **incomplete**; owner source **`LOCATED_REVIEWED`** with **`PROVISIONAL_OWNER_PRIMARY`** (**provisional, not fully verified**; **single** normalized owner-session occurrence **A** — 019c **`MED=P4` L1132** · clinical inventory **L1140–L1161** §1–4 + expert tip **L1164–L1165**; inner wrapper **L1135–L1166**; **L1137–L1138** Cursor save **excluded**; **L1162–L1163** 116k keyword framing **non-operational**; **no duplicate `MED=P4`**; **no post-tip agent tail**; **physical predecessor P3** (closes **L1129**); **physical immediate successor `MED=F1` L1169** vs **canonical audit successor RE** — sequence/order tension **OPEN** (**CF-P4-003**); **canonical predecessor P3** — **P3→P4→RE** in index §2 order; transcript line **1573** / len **2709** **unverified** (byte proof **pending**); **MM2/MM2C**, **MM3/BOOK/OCR**, and **UCKB** P4 tiers **`NOT_LOCATED_IN_AVAILABLE_TREES`**; provenance **`INCOMPLETE_NOT_VERIFIED`**); **`RECORDED_0`** = documentation audit **complete**, **zero** essential owner clinical decisions recorded (**not** TGC count), **`TECHNICAL_GOVERNANCE_CLASSIFICATION_COUNT: 10`** (TGC-P4-001–010, **not** in owner-decision column), **no** clinical authority created; **RE not started or targeted**; **ME-P4-001–010** open; **`ESSENTIAL_OWNER_CLINICAL_DECISIONS: NONE — BLOCKED BY MISSING VERIFIED PRIMARY AND RULE 5 SAFETY EVIDENCE`**.
 
 ---
 
@@ -160,7 +162,7 @@ Initial posture for all medicines until individual read-only audits are performe
 | Item | Value |
 |------|--------|
 | Medicines indexed | 38 |
-| Documentation audits completed | 22 (A1, A2, A3, APP, BE, C1, C2, C3, C4, C5, C6, C10, C13, C15, C17, F1, F2, GE, L1, P1, P2, P3) |
+| Documentation audits completed | 23 (A1, A2, A3, APP, BE, C1, C2, C3, C4, C5, C6, C10, C13, C15, C17, F1, F2, GE, L1, P1, P2, P3, P4) |
 | A1 documentation audit | YES |
 | A2 documentation audit | YES |
 | A3 documentation audit | YES |
@@ -183,6 +185,7 @@ Initial posture for all medicines until individual read-only audits are performe
 | P1 documentation audit | YES |
 | P2 documentation audit | YES |
 | P3 documentation audit | YES |
+| P4 documentation audit | YES |
 | A1 clinically validated | NO |
 | A2 clinically validated | NO |
 | A3 clinically validated | NO |
@@ -205,6 +208,7 @@ Initial posture for all medicines until individual read-only audits are performe
 | P1 clinically validated | NO |
 | P2 clinically validated | NO |
 | P3 clinically validated | NO |
+| P4 clinically validated | NO |
 | A2 owner decisions recorded | 4 |
 | A3 owner decisions recorded | 4 |
 | APP owner decisions recorded | 6 |
@@ -243,7 +247,9 @@ Initial posture for all medicines until individual read-only audits are performe
 | P2 technical governance classifications | 10 (TGC-P2-001–010) |
 | P3 owner decision status | RECORDED_0 (documentation audit complete; zero essential owner clinical decisions; TGC count 10 separate; no clinical authority; MM2/MM2C/MM3/BOOK/UCKB P3 tiers not located in available trees; L1092/L1093 pointer drift OPEN) |
 | P3 technical governance classifications | 10 (TGC-P3-001–010) |
-| Next eligible in sequence (not an audit target) | P4 — NOT_STARTED |
+| P4 owner decision status | RECORDED_0 (documentation audit complete; zero essential owner clinical decisions; TGC count 10 separate; no clinical authority; MM2/MM2C/MM3/BOOK/UCKB P4 tiers not located in available trees; physical F1 vs canonical RE sequence tension OPEN) |
+| P4 technical governance classifications | 10 (TGC-P4-001–010) |
+| Next eligible in sequence (not an audit target) | RE — NOT_STARTED |
 | C11 present in index | NO |
 | Registry JSON/manifest changed | NO |
 | Clinical evidence activated | NONE |
@@ -252,4 +258,4 @@ Initial posture for all medicines until individual read-only audits are performe
 | Database accessed | NO |
 | Legacy engine executed | NO |
 
-**Authority tag:** DOCUMENTATION_ONLY_AUDIT_INDEX · **A1–BE, C1, C2, C3, C4, C5, C6, C10, C13, C15, C17, F1, F2, GE, L1, P1, P2, and P3 audit records linked; C1/C2/C3/C4/C5/C6/C10/C13/C15/C17/F1/F2/GE/L1/P1/P2/P3 provisional primary; C3/C4/C5/C6/C10/C13/C15/C17/F1/F2/GE/L1/P1/P2/P3 RECORDED_0; GE MED=None electricity master documented; L1 single MED=L1 owner block documented; P1 single MED=P1 owner block documented; P2 single MED=P2 owner block documented; P3 single MED=P3 owner block documented (authoritative header L1093; L1092/L1093 drift OPEN); APP/BE owner-primary not located; no clinical validation**
+**Authority tag:** DOCUMENTATION_ONLY_AUDIT_INDEX · **A1–BE, C1, C2, C3, C4, C5, C6, C10, C13, C15, C17, F1, F2, GE, L1, P1, P2, P3, and P4 audit records linked; C1/C2/C3/C4/C5/C6/C10/C13/C15/C17/F1/F2/GE/L1/P1/P2/P3/P4 provisional primary; C3/C4/C5/C6/C10/C13/C15/C17/F1/F2/GE/L1/P1/P2/P3/P4 RECORDED_0; GE MED=None electricity master documented; L1 single MED=L1 owner block documented; P1 single MED=P1 owner block documented; P2 single MED=P2 owner block documented; P3 single MED=P3 owner block documented (authoritative header L1093; L1092/L1093 drift OPEN); P4 single MED=P4 owner block documented (physical F1 vs canonical RE OPEN); APP/BE owner-primary not located; no clinical validation**
