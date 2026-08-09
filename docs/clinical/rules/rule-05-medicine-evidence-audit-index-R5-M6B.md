@@ -61,7 +61,7 @@ Initial posture for all medicines until individual read-only audits are performe
 | 14 | C15 | VERIFIED | LOCATED_REVIEWED | COMPLETED_CONFLICTS | COMPLETED_CONFLICTS | INCOMPLETE_NOT_VERIFIED | NOT_VERIFIED | COMPLETED_INVENTORY_NOT_VALIDATED | INCOMPLETE_BLOCKED | NOT_AUTHORIZED | RECORDED_0 | NONE | [rule-05-medicine-evidence-audit-C15-R5-M6B.md](./rule-05-medicine-evidence-audit-C15-R5-M6B.md) |
 | 15 | C17 | VERIFIED | LOCATED_REVIEWED | COMPLETED_CONFLICTS | COMPLETED_CONFLICTS | INCOMPLETE_NOT_VERIFIED | NOT_VERIFIED | COMPLETED_INVENTORY_NOT_VALIDATED | INCOMPLETE_BLOCKED | NOT_AUTHORIZED | RECORDED_0 | NONE | [rule-05-medicine-evidence-audit-C17-R5-M6B.md](./rule-05-medicine-evidence-audit-C17-R5-M6B.md) |
 | 16 | F1 | VERIFIED | LOCATED_REVIEWED | COMPLETED_CONFLICTS | COMPLETED_CONFLICTS | INCOMPLETE_NOT_VERIFIED | NOT_VERIFIED | COMPLETED_INVENTORY_NOT_VALIDATED | INCOMPLETE_BLOCKED | NOT_AUTHORIZED | RECORDED_0 | NONE | [rule-05-medicine-evidence-audit-F1-R5-M6B.md](./rule-05-medicine-evidence-audit-F1-R5-M6B.md) |
-| 17 | F2 | PENDING_AUDIT | NOT_REVIEWED | NOT_REVIEWED | NOT_REVIEWED | NOT_VERIFIED | NOT_VERIFIED | NOT_STARTED | NOT_STARTED | NOT_AUTHORIZED | PENDING | NONE | NOT_CREATED |
+| 17 | F2 | VERIFIED | LOCATED_REVIEWED | COMPLETED_CONFLICTS | COMPLETED_CONFLICTS | INCOMPLETE_NOT_VERIFIED | NOT_VERIFIED | COMPLETED_INVENTORY_NOT_VALIDATED | INCOMPLETE_BLOCKED | NOT_AUTHORIZED | RECORDED_0 | NONE | [rule-05-medicine-evidence-audit-F2-R5-M6B.md](./rule-05-medicine-evidence-audit-F2-R5-M6B.md) |
 | 18 | GE | PENDING_AUDIT | NOT_REVIEWED | NOT_REVIEWED | NOT_REVIEWED | NOT_VERIFIED | NOT_VERIFIED | NOT_STARTED | NOT_STARTED | NOT_AUTHORIZED | PENDING | NONE | NOT_CREATED |
 | 19 | L1 | PENDING_AUDIT | NOT_REVIEWED | NOT_REVIEWED | NOT_REVIEWED | NOT_VERIFIED | NOT_VERIFIED | NOT_STARTED | NOT_STARTED | NOT_AUTHORIZED | PENDING | NONE | NOT_CREATED |
 | 20 | P1 | PENDING_AUDIT | NOT_REVIEWED | NOT_REVIEWED | NOT_REVIEWED | NOT_VERIFIED | NOT_VERIFIED | NOT_STARTED | NOT_STARTED | NOT_AUTHORIZED | PENDING | NONE | NOT_CREATED |
@@ -91,9 +91,9 @@ Initial posture for all medicines until individual read-only audits are performe
 | Metric | Value |
 |--------|------:|
 | Total medicines | 38 |
-| Completed documentation audits | 16 |
+| Completed documentation audits | 17 |
 | In progress | 0 |
-| Next eligible medicine in canonical sequence | **F2** — `NOT_STARTED`; informational only; separate owner authorization required |
+| Next eligible medicine in canonical sequence | **GE** — `NOT_STARTED`; informational only; separate owner authorization required |
 | Evidence activated | 0 |
 | Clinically validated | 0 |
 | Rule 5 safety-complete | 0 |
@@ -132,6 +132,8 @@ Initial posture for all medicines until individual read-only audits are performe
 
 **F1 status:** documentation audit **complete with conflicts** ([F1 audit record](./rule-05-medicine-evidence-audit-F1-R5-M6B.md)); **not** clinically validated; Rule 5 safety **incomplete**; owner source **`LOCATED_REVIEWED`** with **`PROVISIONAL_OWNER_PRIMARY`** (**provisional, not fully verified**; **one** canonical owner-session occurrence **A** — 019c `MED=F1` **L1169** · clinical inventory **L1177–1201** §1–4 + expert tip **L1204–1205**; inner wrapper **L1172–1207**; **L1174–1175** Cursor save **excluded**; **L1202–1203** 116k keyword framing **non-operational**; **four rejected dev/API/alternate `MED=F1` occurrences B–E** (L1645, L1839, L1853, L4391) — **not** co-primary; **physical predecessor P4** (closes **L1166**); **physical successor `MED=F2` L1210** (~L1213); **physical corpus C17→A1…→P4→F1** vs canonical audit **C17→F1**; **no post-tip agent ladder**; transcript line **1594** / len **2916** **unverified** (byte proof **pending**); MM3 doctor length **2912** delta **open**; provenance **`INCOMPLETE_NOT_VERIFIED`**); **`RECORDED_0`** = documentation audit **complete**, **zero** essential owner clinical decisions recorded (**not** TGC count), **`TECHNICAL_GOVERNANCE_CLASSIFICATION_COUNT: 10`** (TGC-F1-001–010, **not** in owner-decision column), **no** clinical authority created; **ME-F1-001–010** open; **`ESSENTIAL_OWNER_CLINICAL_DECISIONS: NONE — BLOCKED BY MISSING VERIFIED PRIMARY AND RULE 5 SAFETY EVIDENCE`**.
 
+**F2 status:** documentation audit **complete with conflicts** ([F2 audit record](./rule-05-medicine-evidence-audit-F2-R5-M6B.md)); **not** clinically validated; Rule 5 safety **incomplete**; owner source **`LOCATED_REVIEWED`** with **`PROVISIONAL_OWNER_PRIMARY`** (**provisional, not fully verified**; **single** normalized owner-session occurrence **A** — 019c `MED=F2` **L1210** · clinical inventory **L1219–1243** §1–4 + expert tip **L1246–1247**; inner wrapper **L1213–1249**; **L1216–1217** Cursor save **excluded**; **L1244–1245** 116k keyword framing **non-operational**; **no duplicate `MED=F2`**; **no post-tip agent tail**; **physical predecessor F1** (closes **L1207**); **physical immediate successor `MED=VEN1` L1252** (~L1255) vs **canonical audit successor GE** (no normalized `MED=GE` block); transcript line **1611** / len **2814** **unverified** (byte proof **pending**); MM3 doctor length **2810** delta **open**; provenance **`INCOMPLETE_NOT_VERIFIED`**); **`RECORDED_0`** = documentation audit **complete**, **zero** essential owner clinical decisions recorded (**not** TGC count), **`TECHNICAL_GOVERNANCE_CLASSIFICATION_COUNT: 10`** (TGC-F2-001–010, **not** in owner-decision column), **no** clinical authority created; **GE not started or targeted**; **ME-F2-001–010** open; **`ESSENTIAL_OWNER_CLINICAL_DECISIONS: NONE — BLOCKED BY MISSING VERIFIED PRIMARY AND RULE 5 SAFETY EVIDENCE`**.
+
 ---
 
 ## 5. Documentation accuracy
@@ -148,7 +150,7 @@ Initial posture for all medicines until individual read-only audits are performe
 | Item | Value |
 |------|--------|
 | Medicines indexed | 38 |
-| Documentation audits completed | 16 (A1, A2, A3, APP, BE, C1, C2, C3, C4, C5, C6, C10, C13, C15, C17, F1) |
+| Documentation audits completed | 17 (A1, A2, A3, APP, BE, C1, C2, C3, C4, C5, C6, C10, C13, C15, C17, F1, F2) |
 | A1 documentation audit | YES |
 | A2 documentation audit | YES |
 | A3 documentation audit | YES |
@@ -165,6 +167,7 @@ Initial posture for all medicines until individual read-only audits are performe
 | C15 documentation audit | YES |
 | C17 documentation audit | YES |
 | F1 documentation audit | YES |
+| F2 documentation audit | YES |
 | A1 clinically validated | NO |
 | A2 clinically validated | NO |
 | A3 clinically validated | NO |
@@ -181,6 +184,7 @@ Initial posture for all medicines until individual read-only audits are performe
 | C15 clinically validated | NO |
 | C17 clinically validated | NO |
 | F1 clinically validated | NO |
+| F2 clinically validated | NO |
 | A2 owner decisions recorded | 4 |
 | A3 owner decisions recorded | 4 |
 | APP owner decisions recorded | 6 |
@@ -207,7 +211,9 @@ Initial posture for all medicines until individual read-only audits are performe
 | C17 technical governance classifications | 10 (TGC-C17-001–010) |
 | F1 owner decision status | RECORDED_0 (documentation audit complete; zero essential owner clinical decisions; TGC count 10 separate; no clinical authority) |
 | F1 technical governance classifications | 10 (TGC-F1-001–010) |
-| Next eligible in sequence (not an audit target) | F2 — NOT_STARTED |
+| F2 owner decision status | RECORDED_0 (documentation audit complete; zero essential owner clinical decisions; TGC count 10 separate; no clinical authority) |
+| F2 technical governance classifications | 10 (TGC-F2-001–010) |
+| Next eligible in sequence (not an audit target) | GE — NOT_STARTED |
 | C11 present in index | NO |
 | Registry JSON/manifest changed | NO |
 | Clinical evidence activated | NONE |
@@ -216,4 +222,4 @@ Initial posture for all medicines until individual read-only audits are performe
 | Database accessed | NO |
 | Legacy engine executed | NO |
 
-**Authority tag:** DOCUMENTATION_ONLY_AUDIT_INDEX · **A1–BE, C1, C2, C3, C4, C5, C6, C10, C13, C15, C17, and F1 audit records linked; C1/C2/C3/C4/C5/C6/C10/C13/C15/C17/F1 provisional primary; C3/C4/C5/C6/C10/C13/C15/C17/F1 RECORDED_0; APP/BE owner-primary not located; no clinical validation**
+**Authority tag:** DOCUMENTATION_ONLY_AUDIT_INDEX · **A1–BE, C1, C2, C3, C4, C5, C6, C10, C13, C15, C17, F1, and F2 audit records linked; C1/C2/C3/C4/C5/C6/C10/C13/C15/C17/F1/F2 provisional primary; C3/C4/C5/C6/C10/C13/C15/C17/F1/F2 RECORDED_0; APP/BE owner-primary not located; no clinical validation**
