@@ -69,7 +69,7 @@ Initial posture for all medicines until individual read-only audits are performe
 | 22 | P3 | VERIFIED | LOCATED_REVIEWED | COMPLETED_CONFLICTS | COMPLETED_CONFLICTS | INCOMPLETE_NOT_VERIFIED | NOT_VERIFIED | COMPLETED_INVENTORY_NOT_VALIDATED | INCOMPLETE_BLOCKED | NOT_AUTHORIZED | RECORDED_0 | NONE | [rule-05-medicine-evidence-audit-P3-R5-M6B.md](./rule-05-medicine-evidence-audit-P3-R5-M6B.md) |
 | 23 | P4 | VERIFIED | LOCATED_REVIEWED | COMPLETED_CONFLICTS | COMPLETED_CONFLICTS | INCOMPLETE_NOT_VERIFIED | NOT_VERIFIED | COMPLETED_INVENTORY_NOT_VALIDATED | INCOMPLETE_BLOCKED | NOT_AUTHORIZED | RECORDED_0 | NONE | [rule-05-medicine-evidence-audit-P4-R5-M6B.md](./rule-05-medicine-evidence-audit-P4-R5-M6B.md) |
 | 24 | RE | VERIFIED | NOT_LOCATED | COMPLETED_CONFLICTS | COMPLETED_CONFLICTS | INCOMPLETE_NOT_VERIFIED | NOT_VERIFIED | COMPLETED_INVENTORY_NOT_VALIDATED | INCOMPLETE_BLOCKED | NOT_AUTHORIZED | RECORDED_0 | NONE | [rule-05-medicine-evidence-audit-RE-R5-M6B.md](./rule-05-medicine-evidence-audit-RE-R5-M6B.md) |
-| 25 | S-Lass | PENDING_AUDIT | NOT_REVIEWED | NOT_REVIEWED | NOT_REVIEWED | NOT_VERIFIED | NOT_VERIFIED | NOT_STARTED | NOT_STARTED | NOT_AUTHORIZED | PENDING | NONE | NOT_CREATED |
+| 25 | S-Lass | VERIFIED | LOCATED_REVIEWED | COMPLETED_CONFLICTS | COMPLETED_CONFLICTS | INCOMPLETE_NOT_VERIFIED | NOT_VERIFIED | COMPLETED_INVENTORY_NOT_VALIDATED | INCOMPLETE_BLOCKED | NOT_AUTHORIZED | RECORDED_0 | NONE | [rule-05-medicine-evidence-audit-S-Lass-R5-M6B.md](./rule-05-medicine-evidence-audit-S-Lass-R5-M6B.md) |
 | 26 | S1 | PENDING_AUDIT | NOT_REVIEWED | NOT_REVIEWED | NOT_REVIEWED | NOT_VERIFIED | NOT_VERIFIED | NOT_STARTED | NOT_STARTED | NOT_AUTHORIZED | PENDING | NONE | NOT_CREATED |
 | 27 | S2 | PENDING_AUDIT | NOT_REVIEWED | NOT_REVIEWED | NOT_REVIEWED | NOT_VERIFIED | NOT_VERIFIED | NOT_STARTED | NOT_STARTED | NOT_AUTHORIZED | PENDING | NONE | NOT_CREATED |
 | 28 | S3 | PENDING_AUDIT | NOT_REVIEWED | NOT_REVIEWED | NOT_REVIEWED | NOT_VERIFIED | NOT_VERIFIED | NOT_STARTED | NOT_STARTED | NOT_AUTHORIZED | PENDING | NONE | NOT_CREATED |
@@ -91,9 +91,9 @@ Initial posture for all medicines until individual read-only audits are performe
 | Metric | Value |
 |--------|------:|
 | Total medicines | 38 |
-| Completed documentation audits | 24 |
+| Completed documentation audits | 25 |
 | In progress | 0 |
-| Next eligible medicine in canonical sequence | **S-Lass** — `NOT_STARTED`; informational only; separate owner authorization required |
+| Next eligible medicine in canonical sequence | **S1** — `NOT_STARTED`; informational only; separate owner authorization required |
 | Evidence activated | 0 |
 | Clinically validated | 0 |
 | Rule 5 safety-complete | 0 |
@@ -146,7 +146,9 @@ Initial posture for all medicines until individual read-only audits are performe
 
 **P4 status:** documentation audit **complete with conflicts** ([P4 audit record](./rule-05-medicine-evidence-audit-P4-R5-M6B.md)); **not** clinically validated; Rule 5 safety **incomplete**; owner source **`LOCATED_REVIEWED`** with **`PROVISIONAL_OWNER_PRIMARY`** (**provisional, not fully verified**; **single** normalized owner-session occurrence **A** — 019c **`MED=P4` L1132** · clinical inventory **L1140–L1161** §1–4 + expert tip **L1164–L1165**; inner wrapper **L1135–L1166**; **L1137–L1138** Cursor save **excluded**; **L1162–L1163** 116k keyword framing **non-operational**; **no duplicate `MED=P4`**; **no post-tip agent tail**; **physical predecessor P3** (closes **L1129**); **physical immediate successor `MED=F1` L1169** vs **canonical audit successor RE** — sequence/order tension **OPEN** (**CF-P4-003**); **canonical predecessor P3** — **P3→P4→RE** in index §2 order; transcript line **1573** / len **2709** **unverified** (byte proof **pending**); **MM2/MM2C**, **MM3/BOOK/OCR**, and **UCKB** P4 tiers **`NOT_LOCATED_IN_AVAILABLE_TREES`**; provenance **`INCOMPLETE_NOT_VERIFIED`**); **`RECORDED_0`** = documentation audit **complete**, **zero** essential owner clinical decisions recorded (**not** TGC count), **`TECHNICAL_GOVERNANCE_CLASSIFICATION_COUNT: 10`** (TGC-P4-001–010, **not** in owner-decision column), **no** clinical authority created; **RE formal audit recorded (separate artifact)**; **ME-P4-001–010** open; **`ESSENTIAL_OWNER_CLINICAL_DECISIONS: NONE — BLOCKED BY MISSING VERIFIED PRIMARY AND RULE 5 SAFETY EVIDENCE`**.
 
-**RE status:** documentation audit **complete with conflicts** ([RE audit record](./rule-05-medicine-evidence-audit-RE-R5-M6B.md)); **not** clinically validated; Rule 5 safety **incomplete**; owner source **`NOT_LOCATED`** — **`OWNER_PRIMARY_CORPUS_NOT_LOCATED`** (**no** normalized **`MED=RE`** header; **no** **`MED=None` Red Electricity (RE)** owner master block in available normalized corpus; **do not invent** occurrence **A**, wrapper/body/tip boundaries, jsonl anchor, or declared owner length); **canonical predecessor P4** — **P3→P4→RE** in index §2 order; **physical immediate successor after P4 close** **`MED=F1` L1169** — **no physical RE block** (**CF-RE-002** / **CF-P4-003** tension **OPEN**); **canonical successor S-Lass** vs **`MED=SLASS` L408** early physical placement — **OPEN** (**CF-RE-003**); **MM2/MM2C**, **MM3/BOOK/OCR**, and **UCKB** RE tiers **`NOT_LOCATED_IN_AVAILABLE_TREES`**; dev/API/mock **RE** strings **`QUARANTINED_NO_OWNER_MERGE`**; registry/manifest **`DERIVED_UNVERIFIED`**; provenance **`INCOMPLETE_NOT_VERIFIED`**); **`RECORDED_0`** = documentation audit **complete**, **zero** essential owner clinical decisions recorded (**not** TGC count), **`TECHNICAL_GOVERNANCE_CLASSIFICATION_COUNT: 10`** (TGC-RE-001–010, **not** in owner-decision column), **no** clinical authority and **no electricity-use authority** created; **S-Lass not started or targeted**; **ME-RE-001–010** open; **`ESSENTIAL_OWNER_CLINICAL_DECISIONS: NONE — BLOCKED BY MISSING VERIFIED PRIMARY AND RULE 5 SAFETY EVIDENCE`**.
+**RE status:** documentation audit **complete with conflicts** ([RE audit record](./rule-05-medicine-evidence-audit-RE-R5-M6B.md)); **not** clinically validated; Rule 5 safety **incomplete**; owner source **`NOT_LOCATED`** — **`OWNER_PRIMARY_CORPUS_NOT_LOCATED`** (**no** normalized **`MED=RE`** header; **no** **`MED=None` Red Electricity (RE)** owner master block in available normalized corpus; **do not invent** occurrence **A**, wrapper/body/tip boundaries, jsonl anchor, or declared owner length); **canonical predecessor P4** — **P3→P4→RE** in index §2 order; **physical immediate successor after P4 close** **`MED=F1` L1169** — **no physical RE block** (**CF-RE-002** / **CF-P4-003** tension **OPEN**); **canonical successor S-Lass** vs **`MED=SLASS` L408** early physical placement — **OPEN** (**CF-RE-003**); **MM2/MM2C**, **MM3/BOOK/OCR**, and **UCKB** RE tiers **`NOT_LOCATED_IN_AVAILABLE_TREES`**; dev/API/mock **RE** strings **`QUARANTINED_NO_OWNER_MERGE`**; registry/manifest **`DERIVED_UNVERIFIED`**; provenance **`INCOMPLETE_NOT_VERIFIED`**); **`RECORDED_0`** = documentation audit **complete**, **zero** essential owner clinical decisions recorded (**not** TGC count), **`TECHNICAL_GOVERNANCE_CLASSIFICATION_COUNT: 10`** (TGC-RE-001–010, **not** in owner-decision column), **no** clinical authority and **no electricity-use authority** created; **S-Lass formal audit recorded (separate artifact)**; **ME-RE-001–010** open; **`ESSENTIAL_OWNER_CLINICAL_DECISIONS: NONE — BLOCKED BY MISSING VERIFIED PRIMARY AND RULE 5 SAFETY EVIDENCE`**.
+
+**S-Lass status:** documentation audit **complete with conflicts** ([S-Lass audit record](./rule-05-medicine-evidence-audit-S-Lass-R5-M6B.md)); **not** clinically validated; Rule 5 safety **incomplete**; owner source **`LOCATED_REVIEWED`** with **`PROVISIONAL_OWNER_PRIMARY`** (**provisional, not fully verified**; 019c **`MED=SLASS` L408** · clinical inventory **L415–L438** §1–4 + expert tip **L441–L442**; inner wrapper **L410–L443** — **`<user_query>` L411**; **closing `</user_query>` absent** before separator **L444** — **OPEN** (**CF-SLASS-003**); **L413** Cursor save **excluded**; **L423** 116k section title **non-operational**; **L439–L440** keyword/116k tags **excluded**; **no post-tip agent tail** before **L444**; **physical predecessor `MED=S12` L367** (closes **L405**); **physical immediate successor `MED=C1` L446** vs **canonical audit successor S1**; **canonical predecessor RE** — RE owner-primary **`NOT_LOCATED`**; **canonical chain RE→S-Lass→S1** vs **physical S12→SLASS→C1** — **OPEN** (**CF-SLASS-001**, **CF-RE-003**); **single** **`^MED=SLASS`** header; transcript line **1202** / len **2762** **unverified** (byte proof **pending**); **MM2/MM2C**, **MM3/BOOK/OCR**, and **UCKB** S-Lass tiers **`NOT_LOCATED_IN_AVAILABLE_TREES`**; dev/API/mock **S-Lass** strings **`QUARANTINED_NO_OWNER_MERGE`**; registry/manifest **`DERIVED_UNVERIFIED`** (**Scrofoloso-Lassativo** vs owner **Lassative** **OPEN**); provenance **`INCOMPLETE_NOT_VERIFIED`**); **`RECORDED_0`** = documentation audit **complete**, **zero** essential owner clinical decisions recorded (**not** TGC count), **`TECHNICAL_GOVERNANCE_CLASSIFICATION_COUNT: 10`** (TGC-SLASS-001–010, **not** in owner-decision column), **no** clinical authority created; **S1 not started or targeted**; **ME-SLASS-001–010** open; **`ESSENTIAL_OWNER_CLINICAL_DECISIONS: NONE — BLOCKED BY MISSING VERIFIED PRIMARY AND RULE 5 SAFETY EVIDENCE`**.
 
 ---
 
@@ -164,7 +166,7 @@ Initial posture for all medicines until individual read-only audits are performe
 | Item | Value |
 |------|--------|
 | Medicines indexed | 38 |
-| Documentation audits completed | 24 (A1, A2, A3, APP, BE, C1, C2, C3, C4, C5, C6, C10, C13, C15, C17, F1, F2, GE, L1, P1, P2, P3, P4, RE) |
+| Documentation audits completed | 25 (A1, A2, A3, APP, BE, C1, C2, C3, C4, C5, C6, C10, C13, C15, C17, F1, F2, GE, L1, P1, P2, P3, P4, RE, S-Lass) |
 | A1 documentation audit | YES |
 | A2 documentation audit | YES |
 | A3 documentation audit | YES |
@@ -189,6 +191,7 @@ Initial posture for all medicines until individual read-only audits are performe
 | P3 documentation audit | YES |
 | P4 documentation audit | YES |
 | RE documentation audit | YES |
+| S-Lass documentation audit | YES |
 | A1 clinically validated | NO |
 | A2 clinically validated | NO |
 | A3 clinically validated | NO |
@@ -213,6 +216,7 @@ Initial posture for all medicines until individual read-only audits are performe
 | P3 clinically validated | NO |
 | P4 clinically validated | NO |
 | RE clinically validated | NO |
+| S-Lass clinically validated | NO |
 | A2 owner decisions recorded | 4 |
 | A3 owner decisions recorded | 4 |
 | APP owner decisions recorded | 6 |
@@ -255,7 +259,9 @@ Initial posture for all medicines until individual read-only audits are performe
 | P4 technical governance classifications | 10 (TGC-P4-001–010) |
 | RE owner decision status | RECORDED_0 (documentation audit complete; zero essential owner clinical decisions; TGC count 10 separate; no clinical authority; no electricity-use authority; owner-primary corpus not located; no MED=RE; P4→F1 vs canonical RE OPEN; S-Lass early physical placement OPEN) |
 | RE technical governance classifications | 10 (TGC-RE-001–010) |
-| Next eligible in sequence (not an audit target) | S-Lass — NOT_STARTED |
+| S-Lass owner decision status | RECORDED_0 (documentation audit complete; zero essential owner clinical decisions; TGC count 10 separate; no clinical authority; MED=SLASS provisional primary; physical S12→C1 vs canonical RE→S1 OPEN; missing wrapper close OPEN; MM2/MM2C/MM3/BOOK/UCKB not located in available trees) |
+| S-Lass technical governance classifications | 10 (TGC-SLASS-001–010) |
+| Next eligible in sequence (not an audit target) | S1 — NOT_STARTED |
 | C11 present in index | NO |
 | Registry JSON/manifest changed | NO |
 | Clinical evidence activated | NONE |
@@ -264,4 +270,4 @@ Initial posture for all medicines until individual read-only audits are performe
 | Database accessed | NO |
 | Legacy engine executed | NO |
 
-**Authority tag:** DOCUMENTATION_ONLY_AUDIT_INDEX · **A1–BE, C1, C2, C3, C4, C5, C6, C10, C13, C15, C17, F1, F2, GE, L1, P1, P2, P3, P4, and RE audit records linked; C1/C2/C3/C4/C5/C6/C10/C13/C15/C17/F1/F2/GE/L1/P1/P2/P3/P4 provisional primary; C3/C4/C5/C6/C10/C13/C15/C17/F1/F2/GE/L1/P1/P2/P3/P4 RECORDED_0; GE MED=None electricity master documented; L1 single MED=L1 owner block documented; P1 single MED=P1 owner block documented; P2 single MED=P2 owner block documented; P3 single MED=P3 owner block documented (authoritative header L1093; L1092/L1093 drift OPEN); P4 single MED=P4 owner block documented (physical F1 vs canonical RE OPEN); RE owner-primary corpus not located (no MED=RE; no Red Electricity MED=None master); APP/BE/RE owner-primary not located; no clinical validation**
+**Authority tag:** DOCUMENTATION_ONLY_AUDIT_INDEX · **A1–BE, C1, C2, C3, C4, C5, C6, C10, C13, C15, C17, F1, F2, GE, L1, P1, P2, P3, P4, RE, and S-Lass audit records linked; C1/C2/C3/C4/C5/C6/C10/C13/C15/C17/F1/F2/GE/L1/P1/P2/P3/P4/S-Lass provisional primary; C3/C4/C5/C6/C10/C13/C15/C17/F1/F2/GE/L1/P1/P2/P3/P4/S-Lass RECORDED_0; GE MED=None electricity master documented; L1 single MED=L1 owner block documented; P1 single MED=P1 owner block documented; P2 single MED=P2 owner block documented; P3 single MED=P3 owner block documented (authoritative header L1093; L1092/L1093 drift OPEN); P4 single MED=P4 owner block documented (physical F1 vs canonical RE OPEN); RE owner-primary corpus not located (no MED=RE; no Red Electricity MED=None master); S-Lass single MED=SLASS owner block documented (canonical code S-Lass; physical S12→C1 vs canonical RE→S1 OPEN; wrapper close OPEN); APP/BE/RE owner-primary not located; no clinical validation**
