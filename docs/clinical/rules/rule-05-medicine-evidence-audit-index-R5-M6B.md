@@ -253,4 +253,3 @@ Initial posture for all medicines until individual read-only audits are performe
 | Legacy engine executed | NO |
 
 **Authority tag:** DOCUMENTATION_ONLY_AUDIT_INDEX · **A1–BE, C1, C2, C3, C4, C5, C6, C10, C13, C15, C17, F1, F2, GE, L1, P1, P2, and P3 audit records linked; C1/C2/C3/C4/C5/C6/C10/C13/C15/C17/F1/F2/GE/L1/P1/P2/P3 provisional primary; C3/C4/C5/C6/C10/C13/C15/C17/F1/F2/GE/L1/P1/P2/P3 RECORDED_0; GE MED=None electricity master documented; L1 single MED=L1 owner block documented; P1 single MED=P1 owner block documented; P2 single MED=P2 owner block documented; P3 single MED=P3 owner block documented (authoritative header L1093; L1092/L1093 drift OPEN); APP/BE owner-primary not located; no clinical validation**
-

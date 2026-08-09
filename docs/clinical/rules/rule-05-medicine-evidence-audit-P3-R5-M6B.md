@@ -366,4 +366,3 @@ Evidence gaps only — **not** EODs.
 | PHI / secrets / database | **NONE** |
 
 **Authority tag:** DOCUMENTATION_ONLY_MEDICINE_AUDIT · **P3 blocked · P2→P4 sequence documented · L1092/L1093 pointer drift OPEN · P-group before L1 physically · MM2/MM2C/MM3/BOOK/UCKB not located · zero essential owner clinical decisions**
-
