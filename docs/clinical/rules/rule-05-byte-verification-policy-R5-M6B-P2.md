@@ -89,6 +89,19 @@ P2-A does not change the above operational statuses.
 
 No real storage path is selected in this policy document.
 
+### 6.1 Temporary retention and cleanup (P2-OD-19; policy only)
+
+**Decision:** **IMMEDIATE_BEST_EFFORT_DELETE_DEFAULT**
+
+| Topic | Policy |
+|-------|--------|
+| Operational scope | **Best-effort deletion** is an **operational cleanup requirement only**. It does **not** claim or guarantee **forensic secure erasure**, particularly on SSDs, cloud-synced storage, copy-on-write filesystems, backups, or snapshots. |
+| Cleanup failure | If temporary-file or temporary-directory cleanup **fails**, a future verifier must: report a **dedicated non-success cleanup status** (generic execution/configuration outcome — **outside** the fixed BV-v1 mismatch-result manifest); return a **non-zero / non-success exit**; **not** report the run as complete **PASS**; **not** automatically persist or emit a repository-safe manifest as if cleanup succeeded; provide **only** a **redacted local remediation instruction** (no source path or content in repository output). |
+| BV vocabulary | The fixed BV-v1 list has **no** dedicated cleanup code. **Do not** add a twentieth BV code in P2-A. Adding a dedicated cleanup error code is **deferred** to **P2-B** tool-contract review. Cleanup failure **blocks PASS** and **manifest persistence** regardless. |
+| P2-A boundary | This wording is **policy-only**. **No** cleanup tooling or cleanup **execution** is authorized in P2-A. |
+
+This policy does **not** prescribe guaranteed secure wipe or destructive disk operations.
+
 ---
 
 ## 7. Original, normalized, and de-identified identities
