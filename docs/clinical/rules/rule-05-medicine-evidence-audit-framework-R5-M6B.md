@@ -342,17 +342,20 @@ Exactly this sequence (matches [master index](./rule-05-medicine-evidence-audit-
 
 Do **not** claim that owner or normalized source text contains complete contraindication, interaction, adverse-effect, monitoring, potency, or dosage evidence for all medicines.
 
-Known posture on canonical `main` at framework authoring:
+Known posture on canonical `main` (reconciled after **38/38** per-medicine documentation audits; see [master index](./rule-05-medicine-evidence-audit-index-R5-M6B.md)):
 
-- Owner/normalized source material for the canonical medicine **set** may exist where prior discovery recorded it; **per-medicine audit is not yet complete** (completed audits = **0**).
-- Source **existence ≠ clinical validation**.
-- Safety evidence remains **unverified** until individual medicine audits complete.
+- **R5-M6B canonical medicine documentation-audit sequence:** **COMPLETE** — **38/38** formal per-medicine documentation audit records linked from the master index.
+- **Next eligible medicine in the canonical audit sequence:** **NONE — DOCUMENTATION_AUDIT_SEQUENCE_COMPLETE** (no row 39; no successor medicine in the 38-set).
+- **Documentation completion does not imply:** clinical validation; Rule 5 safety completion; evidence activation; potency, dosage, route, or electricity-use authorization; or runtime authorization.
+- Owner/normalized source material for the canonical medicine **set** may exist where prior discovery recorded it; source **existence ≠ clinical validation**.
+- Per-medicine documentation audits record inventory and governance posture only; **verified owner-primary**, byte proof, Rule 5 safety evidence, and clinical validation are **not** established program-wide unless separately authorized.
+- **Clinically validated medicines:** **0** · **Rule 5 safety-complete:** **0** · **Evidence activated:** **NONE** · **Potency/dosage authorized:** **0** · **Runtime authorized:** **0**
 - Rule 5 remains **NOT_IMPLEMENTED** (`nineRules.ts`, contract foundation).
 - Rule 6 remains **NOT_STARTED**.
 - Orchestration remains **NOT_CONNECTED**.
 - R5-M6A inventory explicitly records **evidenceActivated: NONE** and **thresholdsAuthorized: NONE**.
 
-This framework **does not** implement R5-M6B metadata catalog contracts described as future work in R5-M6A §15; it defines the **audit methodology and index** only.
+This framework **does not** implement R5-M6B metadata catalog contracts described as future work in R5-M6A §15; it defines the **audit methodology and index** for the **medicine documentation-audit track** only. Completion of that track does **not** authorize, implement, or complete the metadata catalog contracts track.
 
 ---
 
