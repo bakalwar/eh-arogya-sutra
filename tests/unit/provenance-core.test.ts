@@ -203,9 +203,22 @@ describe('provenance verifyCore (P2-B1 synthetic in-memory)', () => {
     ).toEqual({
       outcome: 'PASS',
     });
-    const fail = verifyNormalizationPolicyVersion('OTHER', NORMALIZATION_POLICY_V1);
-    expect(fail).toEqual({ outcome: 'FAIL', bvCode: BV_NORM_POLICY_MISMATCH });
+    expect(verifyNormalizationPolicyVersion('WRONG_POLICY', NORMALIZATION_POLICY_V1)).toEqual({
+      outcome: 'FAIL',
+      bvCode: BV_NORM_POLICY_MISMATCH,
+    });
+    expect(verifyNormalizationPolicyVersion(NORMALIZATION_POLICY_V1, 'WRONG_POLICY')).toEqual({
+      outcome: 'FAIL',
+      bvCode: BV_NORM_POLICY_MISMATCH,
+    });
+    expect(verifyNormalizationPolicyVersion('WRONG_POLICY', 'WRONG_POLICY')).toEqual({
+      outcome: 'FAIL',
+      bvCode: BV_NORM_POLICY_MISMATCH,
+    });
     expect(() => verifyNormalizationPolicyVersion(null, NORMALIZATION_POLICY_V1)).toThrow(
+      TypeError,
+    );
+    expect(() => verifyNormalizationPolicyVersion(NORMALIZATION_POLICY_V1, null)).toThrow(
       TypeError,
     );
   });

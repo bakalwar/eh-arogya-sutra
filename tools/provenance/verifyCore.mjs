@@ -255,7 +255,7 @@ export function verifyNormalizationPolicyVersion(actual, expected) {
   if (typeof actual !== 'string' || typeof expected !== 'string') {
     throw new TypeError('Policy version arguments must be strings');
   }
-  if (actual === expected) {
+  if (actual === NORMALIZATION_POLICY_V1 && expected === NORMALIZATION_POLICY_V1) {
     return { outcome: 'PASS' };
   }
   return { outcome: 'FAIL', bvCode: BV_NORM_POLICY_MISMATCH };
