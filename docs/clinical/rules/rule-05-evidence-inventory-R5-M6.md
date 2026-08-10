@@ -333,9 +333,11 @@ Where evidence is insufficient for a recommendation: **`NEED_MORE_VALIDATED_EVID
 | Track | Milestone | Status (medicine audit sequence reconciled on canonical `main`; historical base SHA in table below unchanged) |
 |-------|-----------|-------------------------------------------------------------------------------------------------------------|
 | **A** | R5-M6B **medicine documentation-audit** (per-medicine formal audit records + [master index](./rule-05-medicine-evidence-audit-index-R5-M6B.md)) | **COMPLETE** — **38/38**; next medicine **NONE — DOCUMENTATION_AUDIT_SEQUENCE_COMPLETE** |
-| **B** | R5-M6B **metadata catalog contracts** (FG-001; OD-R5-M0-022; no `RULE5_EVIDENCE_CATALOG_VERSION` in contracts on `main`) | **NOT_STARTED** / **NOT_AUTHORIZED** |
+| **B** | R5-M6B **metadata catalog contracts** (FG-001; OD-R5-M0-022; no `RULE5_EVIDENCE_CATALOG_VERSION` in contracts on `main`) | **Layered (current `main`):** Scoping **COMPLETE** (read-only); T1 spec [rule-05-evidence-catalog-contract-R5-M6B.md](./rule-05-evidence-catalog-contract-R5-M6B.md) **DOCUMENTATION_SPEC_RECORDED**; T2–T3 **IMPLEMENTATION_NOT_AUTHORIZED**; T4 **BLOCKED**; T5 **NOT_AUTHORIZED** / **BLOCKED**. **`RULE5_EVIDENCE_CATALOG_VERSION` absent on `main`**. **FG-001 OPEN** (T1 does not close FG-001). |
 
 Track **A** completion does **not** authorize, implement, or complete track **B**. FG-001, owner CQ resolution (§14), provenance acquisition, clinical evidence validation, Rule 5 safety evidence validation, evidence activation, and runtime activation remain separately gated; no assumption permitted.
+
+**Current-main note (does not alter the historical snapshot in the table below):** Track B T1 documentation specification is recorded via [rule-05-evidence-catalog-contract-R5-M6B.md](./rule-05-evidence-catalog-contract-R5-M6B.md); contract **implementation** (T2–T5) is **not** authorized by T1 alone.
 
 | Milestone | Status on base `05168087` |
 |-----------|---------------------------|
