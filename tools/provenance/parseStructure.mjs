@@ -4,8 +4,6 @@ const MAX_INPUT_BYTES = 262144;
 
 const LENGTH_UNITS = new Set(['BYTE', 'UTF8_CODEPOINT', 'UTF16_CODE_UNIT', 'LINE_COUNT', 'ABSENT']);
 
-const CONFIG_KEYS = new Set(['lengthUnit']);
-
 const UTF8_DECODER = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true });
 
 /**
@@ -27,18 +25,34 @@ function copyBytes(input) {
  * @returns {{ lengthUnit: string }}
  */
 function validateConfig(config) {
-  if (config === null || typeof config !== 'object' || Array.isArray(config)) {
+  if (typeof config !== 'object' || config === null || Array.isArray(config)) {
     throw new TypeError('Malformed parser config');
   }
-  for (const key of Object.keys(config)) {
-    if (!CONFIG_KEYS.has(key)) {
-      throw new TypeError('Unexpected config key');
-    }
-  }
-  if (!CONFIG_KEYS.has('lengthUnit') || !LENGTH_UNITS.has(config.lengthUnit)) {
+  const proto = Object.getPrototypeOf(config);
+  if (proto !== Object.prototype && proto !== null) {
     throw new TypeError('Malformed parser config');
   }
-  return { lengthUnit: config.lengthUnit };
+  const ownKeys = Reflect.ownKeys(config);
+  if (ownKeys.length !== 1 || ownKeys[0] !== 'lengthUnit') {
+    throw new TypeError('Malformed parser config');
+  }
+  if (!Object.hasOwn(config, 'lengthUnit')) {
+    throw new TypeError('Malformed parser config');
+  }
+  const descriptor = Object.getOwnPropertyDescriptor(config, 'lengthUnit');
+  if (
+    descriptor === undefined ||
+    descriptor.get !== undefined ||
+    descriptor.set !== undefined ||
+    !Object.prototype.hasOwnProperty.call(descriptor, 'value')
+  ) {
+    throw new TypeError('Malformed parser config');
+  }
+  const { value: lengthUnit } = descriptor;
+  if (!LENGTH_UNITS.has(lengthUnit)) {
+    throw new TypeError('Malformed parser config');
+  }
+  return { lengthUnit };
 }
 
 /**

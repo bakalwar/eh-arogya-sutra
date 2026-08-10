@@ -85,6 +85,98 @@ describe('provenance parseStructure (P2-B2B basic in-memory parser)', () => {
     );
   });
 
+  describe('strict ParserConfig own-key contract', () => {
+    const bytes = u8('');
+
+    it('accepts ordinary literal { lengthUnit: BYTE }', () => {
+      expect(() => parseSyntheticStructureFromBytes(bytes, { lengthUnit: 'BYTE' })).not.toThrow();
+    });
+
+    it('accepts null-prototype config with one own data property lengthUnit', () => {
+      const config = Object.create(null);
+      Object.defineProperty(config, 'lengthUnit', {
+        value: 'BYTE',
+        enumerable: true,
+        writable: true,
+        configurable: true,
+      });
+      expect(parseSyntheticStructureFromBytes(bytes, config).observedLengthUnit).toBe('BYTE');
+    });
+
+    it('accepts null-prototype config with non-enumerable own data lengthUnit', () => {
+      const config = Object.create(null);
+      Object.defineProperty(config, 'lengthUnit', {
+        value: 'ABSENT',
+        enumerable: false,
+        writable: true,
+        configurable: true,
+      });
+      expect(parseSyntheticStructureFromBytes(bytes, config).observedLengthUnit).toBe('ABSENT');
+    });
+
+    it('rejects class instance with own lengthUnit property', () => {
+      class ParserConfig {
+        lengthUnit = 'BYTE';
+      }
+      expect(() => parseSyntheticStructureFromBytes(bytes, new ParserConfig())).toThrow(TypeError);
+    });
+
+    it('rejects class instance with inherited lengthUnit only', () => {
+      class Base {
+        lengthUnit = 'BYTE';
+      }
+      class Derived extends Base {}
+      expect(() => parseSyntheticStructureFromBytes(bytes, new Derived())).toThrow(TypeError);
+    });
+
+    it('rejects Object.create({ lengthUnit: BYTE })', () => {
+      const config = Object.create({ lengthUnit: 'BYTE' });
+      expect(() => parseSyntheticStructureFromBytes(bytes, config)).toThrow(TypeError);
+    });
+
+    it('rejects ordinary object inheriting lengthUnit from prototype', () => {
+      const config = Object.create({ lengthUnit: 'UTF8_CODEPOINT' });
+      expect(() => parseSyntheticStructureFromBytes(bytes, config)).toThrow(TypeError);
+    });
+
+    it('rejects valid object plus symbol key', () => {
+      const config = { lengthUnit: 'BYTE', [Symbol('meta')]: 1 };
+      expect(() => parseSyntheticStructureFromBytes(bytes, config)).toThrow(TypeError);
+    });
+
+    it('rejects null-prototype object without own lengthUnit key', () => {
+      expect(() => parseSyntheticStructureFromBytes(bytes, Object.create(null))).toThrow(TypeError);
+    });
+
+    it('rejects getter-only lengthUnit accessor descriptor', () => {
+      const config = { lengthUnit: 'BYTE' };
+      Object.defineProperty(config, 'lengthUnit', {
+        get() {
+          return 'BYTE';
+        },
+        configurable: true,
+      });
+      expect(() => parseSyntheticStructureFromBytes(bytes, config)).toThrow(TypeError);
+    });
+
+    it('rejects config with extra string key', () => {
+      expect(() =>
+        parseSyntheticStructureFromBytes(bytes, { lengthUnit: 'BYTE', extra: true }),
+      ).toThrow(TypeError);
+    });
+
+    it('rejects config with only symbol key described as lengthUnit', () => {
+      const sym = Symbol('lengthUnit');
+      expect(() => parseSyntheticStructureFromBytes(bytes, { [sym]: 'BYTE' })).toThrow(TypeError);
+    });
+
+    it('rejects array carrying lengthUnit property', () => {
+      const config = ['BYTE'];
+      config.lengthUnit = 'BYTE';
+      expect(() => parseSyntheticStructureFromBytes(bytes, config)).toThrow(TypeError);
+    });
+  });
+
   it('accepts 262144 bytes and rejects 262145 with RangeError', () => {
     const ok = new Uint8Array(MAX_BYTES);
     expect(() => parseSyntheticStructureFromBytes(ok, { lengthUnit: 'BYTE' })).not.toThrow();
