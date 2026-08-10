@@ -44,3 +44,11 @@ export const RULE5_MONITORING_PLAN_FINGERPRINT_VERSION =
 
 export const RULE5_MONITORING_PLAN_SCHEMA_FIXTURE_RELATIVE =
   'fixtures/rule5/monitoring-plan-schema.v1.json' as const;
+
+/** R5-M6B Track B CA-1 — empty metadata-only evidence catalog structural contract. */
+export const RULE5_EVIDENCE_CATALOG_VERSION = 'ehas2-rule5-evidence-catalog-v1' as const;
+
+export const RULE5_EVIDENCE_CATALOG_SCHEMA_KIND = 'METADATA_ONLY_EMPTY_EVIDENCE_CATALOG' as const;
+
+export const RULE5_EVIDENCE_CATALOG_FIXTURE_RELATIVE =
+  'fixtures/rule5/evidence-catalog.v1.json' as const;

@@ -15,3 +15,6 @@ export {
   serializeRule5ClinicalReasonRegistry,
   rule5ClinicalReasonRegistryFingerprint,
 } from './reasonRegistry.js';
+export * from './evidenceCatalogSchema.js';
+export * from './evidenceCatalogValidation.js';
+export * from './evidenceCatalogSerialization.js';

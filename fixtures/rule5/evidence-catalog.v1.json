@@ -1,0 +1,13 @@
+{
+  "affectsClinicalSelection": false,
+  "catalogRowCount": 0,
+  "connected": false,
+  "deterministicFingerprint": null,
+  "entries": [],
+  "evidencePolicy": "EVIDENCE_AUDIT_REQUIRED_BEFORE_ACTIVATION",
+  "executable": false,
+  "implemented": false,
+  "schemaKind": "METADATA_ONLY_EMPTY_EVIDENCE_CATALOG",
+  "schemaVersion": "ehas2-rule5-evidence-catalog-v1",
+  "thresholdPolicy": "NO_THRESHOLD_AUTHORIZED"
+}
