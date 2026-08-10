@@ -328,11 +328,20 @@ Where evidence is insufficient for a recommendation: **`NEED_MORE_VALIDATED_EVID
 
 ## 15. Roadmap / non-claims
 
+**R5-M6B disambiguation (two tracks — do not conflate):**
+
+| Track | Milestone | Status (medicine audit sequence reconciled on canonical `main`; historical base SHA in table below unchanged) |
+|-------|-----------|-------------------------------------------------------------------------------------------------------------|
+| **A** | R5-M6B **medicine documentation-audit** (per-medicine formal audit records + [master index](./rule-05-medicine-evidence-audit-index-R5-M6B.md)) | **COMPLETE** — **38/38**; next medicine **NONE — DOCUMENTATION_AUDIT_SEQUENCE_COMPLETE** |
+| **B** | R5-M6B **metadata catalog contracts** (FG-001; OD-R5-M0-022; no `RULE5_EVIDENCE_CATALOG_VERSION` in contracts on `main`) | **NOT_STARTED** / **NOT_AUTHORIZED** |
+
+Track **A** completion does **not** authorize, implement, or complete track **B**. FG-001, owner CQ resolution (§14), provenance acquisition, clinical evidence validation, Rule 5 safety evidence validation, evidence activation, and runtime activation remain separately gated; no assumption permitted.
+
 | Milestone | Status on base `05168087` |
 |-----------|---------------------------|
 | R5-M0–M5 | **Complete** on `main` |
 | **R5-M6A** | **This documentation record only** |
-| R5-M6B (metadata catalog contracts) | **Not started** |
+| R5-M6B (metadata catalog contracts) | **Not started** — track **B** above; **not** implied complete by track **A** |
 | Evidence activation | **Not started** |
 | R5-M7–M19 | **Not started** |
 | Runtime change from M6A | **None** |
