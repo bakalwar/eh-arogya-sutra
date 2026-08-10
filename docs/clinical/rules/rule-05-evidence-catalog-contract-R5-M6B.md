@@ -23,12 +23,24 @@ This document is a **documentation contract specification only**. It does **not*
 |-------|--------|--------|
 | Track B scoping audit (read-only) | **COMPLETE** | Governance analysis only; not implementation |
 | **T1 documentation specification (this document)** | **DOCUMENTATION_SPEC_RECORDED** | On `main` after authorized T1 merge |
-| T2 contract types + `RULE5_EVIDENCE_CATALOG_VERSION` | **IMPLEMENTATION_NOT_AUTHORIZED** | Separate owner authorization required |
-| T3 empty fixture, validator, tests | **IMPLEMENTATION_NOT_AUTHORIZED** | Separate owner authorization required |
+| **CA-1 empty structural contract (coherent artifact)** | **EMPTY_STRUCTURAL_CONTRACT_PRESENT** — runtime **NOT_IMPLEMENTED** / **NOT_CONNECTED** | Single coherent tranche fulfilling prior split T2/T3 **structural** intent only (see §2.1); **not** separate T2 then T3 PRs |
+| T2 contract types + `RULE5_EVIDENCE_CATALOG_VERSION` (historical layer label) | **Fulfilled structurally by CA-1** — not a separately executed T2 tranche | Historical T1 design preserved |
+| T3 empty fixture, validator, tests (historical layer label) | **Fulfilled structurally by CA-1** — not a separately executed T3 tranche | Empty JSON + validator + serializer + tests in CA-1 only |
 | T4 populated evidence catalog | **BLOCKED** | CQ/provenance/clinical gates |
 | T5 activation / runtime integration | **NOT_AUTHORIZED** and **BLOCKED** | §12 activation prerequisites; orchestration not connected |
 
-Track B as a whole is **not** implemented, **not** clinically authorized, and **not** runtime-connected.
+Track B as a whole is **not** clinically authorized and **not** runtime-connected. **CA-1** is a **metadata-only empty structural module** — **zero catalog rows**, **zero ACTIVE rows**, **no clinical authority**.
+
+### 2.1 CA-1 scope (authorized structural contract only)
+
+**Authorization token:** `R5_TRACK_B_CA1_EMPTY_STRUCTURAL_CONTRACT_AUTHORIZED` (owner decision).
+
+CA-1 on `main` after merge contains **only**: `RULE5_EVIDENCE_CATALOG_VERSION`, empty envelope TypeScript, physical empty JSON fixture, strict validator, serializer, unit tests, and Rule 5 barrel export. **Does not** implement Rule 5 clinical engine behavior.
+
+- Prior split **T2/T3 execution** is **not** separately implemented; the **single coherent CA-1** tranche fulfills the **structural** intent of both historical layers.
+- **Catalog row count** remains **0**; **CATALOG_ROW_ID_NAMESPACE** remains **OWNER_DECISION_REQUIRED** (TB-OD-02).
+- **T4** remains **BLOCKED**; **T5** remains **NOT_AUTHORIZED** / **BLOCKED**.
+- **No** populated rows, **no** evidence activation, **no** medicine data, **no** runtime integration.
 
 ---
 
@@ -163,12 +175,12 @@ This T1 document does **not** authorize or create:
 
 Stop before:
 
-- T2 contract code or version constant on `main`
-- T3 fixture, validator, or tests
-- Catalog rows or medicine references
+- Populated catalog rows or medicine references
+- Catalog row-ID namespace decision (TB-OD-02) and row/item types
 - FG/CQ closure
 - Rule engine comparison implementation
 - Runtime connection or R5-M7
+- T4 populated catalog or T5 activation
 
 ---
 
@@ -178,9 +190,10 @@ Stop before:
 |------|--------|
 | **Catalog rows** | **0** |
 | **CATALOG_ROW_ID_NAMESPACE** | **OWNER_DECISION_REQUIRED** |
+| **CA-1 structural contract** | **EMPTY_STRUCTURAL_CONTRACT_PRESENT** (after CA-1 merge) — runtime **NOT_IMPLEMENTED** / **NOT_CONNECTED** |
 | **FG-001** | **OPEN** |
 | **Evidence activated** | **NONE** |
 | **Rule 5 implemented** | **NO** |
-| **T2/T3 authorized** | **NO** |
+| **T4/T5 authorized** | **NO** |
 
 **Authority tag:** DOCUMENTATION_ONLY_TRACK_B_T1_SPEC · **Clinical validation claim:** NONE
