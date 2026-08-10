@@ -368,7 +368,25 @@ P2-A does **not** claim:
 | **Byte proof (owner corpus)** | **`BYTE_PROOF_PENDING`** |
 | **Manifest persistence** | **`MANIFEST_PERSISTENCE_NOT_AUTHORIZED`** |
 
-P2-B1 implements **SHA256_V1**, byte inspection, and the **four** BV-v1 codes **BV-ENC-INVALID**, **BV-RAW-HASH-MISMATCH**, **BV-NORM-HASH-MISMATCH**, **BV-NORM-POLICY-MISMATCH** over **caller-supplied bytes only**. It does **not** access protected sources, persist manifests, populate catalog rows, set **`ownerPrimaryVerified`**, close FG/CQ items, or connect runtime. **P2-B2+** (structural anchors, confined CLI, protected runner) remain **separately authorized**.
+P2-B1 implements **SHA256_V1**, byte inspection, and the **four** BV-v1 codes **BV-ENC-INVALID**, **BV-RAW-HASH-MISMATCH**, **BV-NORM-HASH-MISMATCH**, **BV-NORM-POLICY-MISMATCH** over **caller-supplied bytes only**. It does **not** access protected sources, persist manifests, populate catalog rows, set **`ownerPrimaryVerified`**, close FG/CQ items, or connect runtime. **P2-B2+** (structural anchors, confined CLI, protected runner) remain **separately authorized** unless a tranche is explicitly recorded below.
+
+---
+
+## 25.2 P2-B2A structural comparator status (authorized implementation tranche)
+
+| Status | Value |
+|--------|--------|
+| **Authorization token** | **`R5_P2B2A_PURE_STRUCTURAL_COMPARATOR_IMPLEMENTATION_AUTHORIZED`** |
+| **P2-B2A** | **`PURE_STRUCTURAL_COMPARATOR_PRESENT`** — `tools/provenance/verifyStructure.mjs` |
+| **Tests** | **`SYNTHETIC_OBSERVATION_TESTS_PRESENT`** — no committed fixture files |
+| **Byte-to-structure parser** | **`BYTE_TO_STRUCTURE_PARSER_NOT_IMPLEMENTED`** |
+| **Filesystem** | **`FILESYSTEM_ACCESS_NOT_IMPLEMENTED`** |
+| **CLI** | **`CLI_NOT_IMPLEMENTED`** |
+| **Protected source** | **`PROTECTED_SOURCE_EXECUTION_NOT_AUTHORIZED`** |
+| **Byte proof (owner corpus)** | **`BYTE_PROOF_PENDING`** |
+| **Manifest persistence** | **`MANIFEST_PERSISTENCE_NOT_AUTHORIZED`** |
+
+P2-B2A implements **`compareSyntheticStructure`** over **caller-supplied synthetic observation and expectation objects only** (no bytes, no parsing, no paths). It reuses **`BV-ENC-INVALID`** from P2-B1 for upstream encoding gate status on observations. It does **not** verify owner corpus bytes, access protected sources, persist manifests, populate catalog rows, or connect runtime. **P2-B2B+ / P2-B3 / P2-C** remain **separately authorized**.
 
 ---
 
