@@ -311,3 +311,14 @@ P1 does **not** claim:
 **`R5_M6B_P1_PROVENANCE_CHARTER_DOCUMENTATION_RECORDED`**
 
 Evidence activation: **NONE**. Clinical validation: **0**. Runtime: **NOT_IMPLEMENTED** / **NOT_CONNECTED**.
+
+---
+
+## Appendix C — Current status (P2-A cross-reference; does not alter P1 record)
+
+| Field | Value |
+|-------|--------|
+| **PROV-OD-07** | Exact hash, normalization, and byte-verification **policy** is recorded in [rule-05-byte-verification-policy-R5-M6B-P2.md](./rule-05-byte-verification-policy-R5-M6B-P2.md) (**P2-A**, **POLICY_ONLY**). |
+| **Source access / hashing** | **None** — no protected-source access, hash execution, or verification occurred for P2-A. |
+| **P1 historical register** | Appendix A owner declarations **unchanged**; §14 historical deferral text **preserved**. |
+| **Owner corpus tier** | **BYTE_PROOF_PENDING** and **OWNER_PRIMARY_VERIFICATION_PENDING** **remain**. |
