@@ -355,6 +355,23 @@ P2-A does **not** claim:
 
 ---
 
+## 25.1 P2-B1 in-memory core status (authorized implementation tranche)
+
+| Status | Value |
+|--------|--------|
+| **Authorization token** | **`R5_P2B1_PURE_IN_MEMORY_CORE_IMPLEMENTATION_AUTHORIZED`** |
+| **P2-B1** | **`PURE_IN_MEMORY_CORE_PRESENT`** — `tools/provenance/verifyCore.mjs` |
+| **Tests** | **`SYNTHETIC_IN_MEMORY_TESTS_PRESENT`** — no committed fixture files |
+| **Filesystem** | **`FILESYSTEM_ACCESS_NOT_IMPLEMENTED`** (core module) |
+| **CLI** | **`CLI_NOT_IMPLEMENTED`** |
+| **Protected source** | **`PROTECTED_SOURCE_EXECUTION_NOT_AUTHORIZED`** |
+| **Byte proof (owner corpus)** | **`BYTE_PROOF_PENDING`** |
+| **Manifest persistence** | **`MANIFEST_PERSISTENCE_NOT_AUTHORIZED`** |
+
+P2-B1 implements **SHA256_V1**, byte inspection, and the **four** BV-v1 codes **BV-ENC-INVALID**, **BV-RAW-HASH-MISMATCH**, **BV-NORM-HASH-MISMATCH**, **BV-NORM-POLICY-MISMATCH** over **caller-supplied bytes only**. It does **not** access protected sources, persist manifests, populate catalog rows, set **`ownerPrimaryVerified`**, close FG/CQ items, or connect runtime. **P2-B2+** (structural anchors, confined CLI, protected runner) remain **separately authorized**.
+
+---
+
 ## 26. P2-OD-01–19 register (P2-A recorded)
 
 | ID | Decision | Recorded choice |
