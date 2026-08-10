@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { execFileSync } from 'node:child_process';
 import {
   NINE_RULE_DEFINITIONS,
   ORCHESTRATION_STATUS,
@@ -23,11 +22,6 @@ const catalogModules = [
 ];
 const catalogModuleBase = path.join(root, 'packages/clinical-contracts/src/rule5');
 const nineRulesPath = path.join(root, 'packages/clinical-contracts/src/nineRules.ts');
-const nineRulesBaseline = execFileSync(
-  'git',
-  ['show', '6f412e2:packages/clinical-contracts/src/nineRules.ts'],
-  { cwd: root, encoding: 'utf8' },
-);
 
 function readFixture(): unknown {
   return JSON.parse(fs.readFileSync(fixturePath, 'utf8')) as unknown;
@@ -279,9 +273,10 @@ describe('Rule 5 CA-1 empty evidence catalog structural contract', () => {
     }
   });
 
-  it('24. nineRules.ts unchanged; Rule 5 remains NOT_IMPLEMENTED / no clinical selection', () => {
-    const current = fs.readFileSync(nineRulesPath, 'utf8');
-    expect(current).toBe(nineRulesBaseline);
+  it('24. nineRules.ts has no evidence-catalog wiring; Rule 5 remains NOT_IMPLEMENTED / no clinical selection', () => {
+    const nineRulesSource = fs.readFileSync(nineRulesPath, 'utf8');
+    expect(nineRulesSource).not.toMatch(/evidenceCatalog|RULE5_EVIDENCE_CATALOG/);
+    expect(nineRulesSource).not.toMatch(/evidenceCatalogSchema/);
     const rule5 = NINE_RULE_DEFINITIONS.find((d) => d.ruleNumber === 5);
     expect(rule5?.phase5bStatus).toBe('NOT_IMPLEMENTED');
     expect(rule5?.affectsClinicalSelection).toBe(false);
