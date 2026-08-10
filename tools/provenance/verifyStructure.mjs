@@ -132,21 +132,19 @@ function validateWrapper(wrapper) {
   if (!isPositiveInt(boundaryEndLine)) {
     throw new TypeError('Malformed wrapper');
   }
-  if (!isAbsent(openLine) && !isPositiveInt(openLine)) {
+  const openAbsent = isAbsent(openLine);
+  const closeAbsent = isAbsent(closeLine);
+  if (openAbsent !== closeAbsent) {
     throw new TypeError('Malformed wrapper');
   }
-  if (!isAbsent(closeLine) && !isPositiveInt(closeLine)) {
+  if (openAbsent && closeAbsent) {
+    return;
+  }
+  if (!isPositiveInt(openLine) || !isPositiveInt(closeLine)) {
     throw new TypeError('Malformed wrapper');
   }
-  if (isPositiveInt(openLine) && isPositiveInt(closeLine)) {
-    if (openLine > closeLine || closeLine > boundaryEndLine) {
-      throw new TypeError('Malformed wrapper');
-    }
-  }
-  if (isPositiveInt(openLine) && isAbsent(closeLine)) {
-    if (openLine > boundaryEndLine) {
-      throw new TypeError('Malformed wrapper');
-    }
+  if (openLine > closeLine || closeLine > boundaryEndLine) {
+    throw new TypeError('Malformed wrapper');
   }
 }
 
@@ -300,30 +298,11 @@ function sortUniqueBvCodes(codes) {
  * @param {{ openLine: unknown, closeLine: unknown, boundaryEndLine: unknown }} observed
  */
 function wrapperMatches(expected, observed) {
-  if (
-    expected.openLine !== observed.openLine ||
-    expected.closeLine !== observed.closeLine ||
-    expected.boundaryEndLine !== observed.boundaryEndLine
-  ) {
-    return false;
-  }
-  const pairs = [
-    [expected.openLine, expected.closeLine],
-    [observed.openLine, observed.closeLine],
-  ];
-  for (const [openLine, closeLine] of pairs) {
-    if (isPositiveInt(openLine) && isPositiveInt(closeLine)) {
-      if (openLine > closeLine || closeLine > expected.boundaryEndLine) {
-        return false;
-      }
-    }
-    if (isPositiveInt(openLine) && isAbsent(closeLine)) {
-      if (openLine > expected.boundaryEndLine) {
-        return false;
-      }
-    }
-  }
-  return true;
+  return (
+    expected.openLine === observed.openLine &&
+    expected.closeLine === observed.closeLine &&
+    expected.boundaryEndLine === observed.boundaryEndLine
+  );
 }
 
 /**

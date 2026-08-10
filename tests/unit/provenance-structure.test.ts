@@ -250,6 +250,118 @@ describe('provenance verifyStructure (P2-B2A synthetic comparator)', () => {
     expect(fail.primaryBvCode).toBe(BV_WRAPPER_MISMATCH);
   });
 
+  describe('wrapper pair invariant (mixed open/close forbidden)', () => {
+    it('expectation open ABSENT + numeric close throws TypeError', () => {
+      expect(() =>
+        compareSyntheticStructure(
+          baseExpectation({
+            wrapper: { openLine: 'ABSENT', closeLine: 3, boundaryEndLine: 10 },
+          }),
+          baseObservation(),
+        ),
+      ).toThrow(TypeError);
+    });
+
+    it('expectation numeric open + close ABSENT throws TypeError', () => {
+      expect(() =>
+        compareSyntheticStructure(
+          baseExpectation({
+            wrapper: { openLine: 2, closeLine: 'ABSENT', boundaryEndLine: 10 },
+          }),
+          baseObservation(),
+        ),
+      ).toThrow(TypeError);
+    });
+
+    it('observation open ABSENT + numeric close throws TypeError', () => {
+      expect(() =>
+        compareSyntheticStructure(
+          baseExpectation(),
+          baseObservation({
+            wrapper: { openLine: 'ABSENT', closeLine: 3, boundaryEndLine: 20 },
+          }),
+        ),
+      ).toThrow(TypeError);
+    });
+
+    it('observation numeric open + close ABSENT throws TypeError', () => {
+      expect(() =>
+        compareSyntheticStructure(
+          baseExpectation(),
+          baseObservation({
+            wrapper: { openLine: 2, closeLine: 'ABSENT', boundaryEndLine: 20 },
+          }),
+        ),
+      ).toThrow(TypeError);
+    });
+
+    it('closeLine > boundaryEndLine throws TypeError', () => {
+      expect(() =>
+        compareSyntheticStructure(
+          baseExpectation({
+            wrapper: { openLine: 2, closeLine: 12, boundaryEndLine: 10 },
+          }),
+          baseObservation({
+            wrapper: { openLine: 2, closeLine: 5, boundaryEndLine: 10 },
+          }),
+        ),
+      ).toThrow(TypeError);
+    });
+
+    it('openLine > closeLine throws TypeError', () => {
+      expect(() =>
+        compareSyntheticStructure(
+          baseExpectation({
+            wrapper: { openLine: 8, closeLine: 5, boundaryEndLine: 10 },
+          }),
+          baseObservation({
+            wrapper: { openLine: 2, closeLine: 5, boundaryEndLine: 10 },
+          }),
+        ),
+      ).toThrow(TypeError);
+    });
+
+    it('valid ABSENT/ABSENT wrappers matching yields no wrapper BV', () => {
+      const result = compareSyntheticStructure(baseExpectation(), baseObservation());
+      expect(result.outcome).toBe('PASS');
+      expect(result.bvCodes ?? []).not.toContain(BV_WRAPPER_MISMATCH);
+    });
+
+    it('valid present wrappers matching yields no wrapper BV', () => {
+      const wrapper = { openLine: 2, closeLine: 5, boundaryEndLine: 10 };
+      const result = compareSyntheticStructure(
+        baseExpectation({ wrapper }),
+        baseObservation({ wrapper }),
+      );
+      expect(result.outcome).toBe('PASS');
+      expect(result.bvCodes ?? []).not.toContain(BV_WRAPPER_MISMATCH);
+    });
+
+    it('valid wrappers with boundary mismatch returns BV-WRAPPER-MISMATCH', () => {
+      const result = compareSyntheticStructure(
+        baseExpectation({
+          wrapper: { openLine: 'ABSENT', closeLine: 'ABSENT', boundaryEndLine: 20 },
+        }),
+        baseObservation({
+          wrapper: { openLine: 'ABSENT', closeLine: 'ABSENT', boundaryEndLine: 21 },
+        }),
+      );
+      expect(result.primaryBvCode).toBe(BV_WRAPPER_MISMATCH);
+    });
+
+    it('valid absent vs valid present wrapper returns BV-WRAPPER-MISMATCH', () => {
+      const result = compareSyntheticStructure(
+        baseExpectation({
+          wrapper: { openLine: 'ABSENT', closeLine: 'ABSENT', boundaryEndLine: 20 },
+        }),
+        baseObservation({
+          wrapper: { openLine: 2, closeLine: 5, boundaryEndLine: 20 },
+        }),
+      );
+      expect(result.primaryBvCode).toBe(BV_WRAPPER_MISMATCH);
+    });
+  });
+
   it('excluded-range sorting mismatch and overlap rejection', () => {
     const pass = compareSyntheticStructure(
       baseExpectation({ excludedRanges: [{ startLine: 5, endLine: 6 }] }),
