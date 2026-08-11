@@ -411,6 +411,29 @@ P2-B2B implements **`parseSyntheticStructureFromBytes`** over **caller-supplied 
 
 ---
 
+## 25.4 P2-B2C fixed wrapper token parser status (authorized implementation tranche)
+
+| Status | Value |
+|--------|--------|
+| **Authorization token** | **`R5_P2B2C_FIXED_WRAPPER_TOKEN_PARSER_IMPLEMENTATION_AUTHORIZED`** |
+| **P2-B2C** | **`FIXED_WRAPPER_TOKEN_PARSER_PRESENT`** — `tools/provenance/parseStructure.mjs` (`wrapperMode: 'FIXED_USER_QUERY_V1'`) |
+| **Wrapper ambiguity** | **`WRAPPER_AMBIGUITY_FAIL_CLOSED`** — malformed token-bearing source throws **`Rule5WrapperSourceAmbiguityError`** / **`RULE5_WRAPPER_SOURCE_AMBIGUOUS`** |
+| **Wrapper tokens** | **`WRAPPER_TOKENS_FIXED_USER_QUERY_V1`** — fixed whole-line literals only; no caller tokens; no regex |
+| **Wrapper boundary** | **`WRAPPER_BOUNDARY_DOCUMENT_END_ONLY`** — `boundaryEndLine = totalLogicalLines` |
+| **Tests** | **`SYNTHETIC_BYTE_TESTS_PRESENT`** — extended `tests/unit/provenance-parse-structure.test.ts`; no committed fixture files |
+| **JSONL anchor derivation** | **`JSONL_ANCHOR_DERIVATION_NOT_IMPLEMENTED`** |
+| **Quarantine assignment** | **`QUARANTINE_ASSIGNMENT_NOT_IMPLEMENTED`** |
+| **Exclusion inference** | **`EXCLUSION_INFERENCE_NOT_IMPLEMENTED`** |
+| **Filesystem** | **`FILESYSTEM_ACCESS_NOT_IMPLEMENTED`** |
+| **CLI** | **`CLI_NOT_IMPLEMENTED`** |
+| **Protected source** | **`PROTECTED_SOURCE_EXECUTION_NOT_AUTHORIZED`** |
+| **Byte proof (owner corpus)** | **`BYTE_PROOF_PENDING`** |
+| **Manifest persistence** | **`MANIFEST_PERSISTENCE_NOT_AUTHORIZED`** |
+
+P2-B2C extends **`parseSyntheticStructureFromBytes`** with an optional strict **`{ lengthUnit, wrapperMode: 'FIXED_USER_QUERY_V1' }`** config only. Legacy **`{ lengthUnit }`** config preserves P2-B2B behavior (wrapper scan disabled). Fixed-token scan uses exact whole-line matching with document-end boundary only. Malformed or ambiguous token-bearing source throws **`Rule5WrapperSourceAmbiguityError`** — not a BV code. It does **not** derive JSONL anchors, infer exclusions, verify owner corpus paths, persist manifests, populate catalog rows, set **`ownerPrimaryVerified`**, or connect runtime. **P2-B3 / P2-C** remain **separately authorized**.
+
+---
+
 ## 26. P2-OD-01–19 register (P2-A recorded)
 
 | ID | Decision | Recorded choice |

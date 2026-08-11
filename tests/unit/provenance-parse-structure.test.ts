@@ -3,8 +3,15 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { BV_ENC_INVALID } from '../../tools/provenance/verifyCore.mjs';
-import { compareSyntheticStructure } from '../../tools/provenance/verifyStructure.mjs';
-import { parseSyntheticStructureFromBytes } from '../../tools/provenance/parseStructure.mjs';
+import {
+  BV_WRAPPER_MISMATCH,
+  compareSyntheticStructure,
+} from '../../tools/provenance/verifyStructure.mjs';
+import {
+  RULE5_WRAPPER_SOURCE_AMBIGUOUS,
+  Rule5WrapperSourceAmbiguityError,
+  parseSyntheticStructureFromBytes,
+} from '../../tools/provenance/parseStructure.mjs';
 
 const PARSER_PATH = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -460,5 +467,391 @@ describe('provenance parseStructure (P2-B2B basic in-memory parser)', () => {
       'occurrences',
       'wrapper',
     ]);
+  });
+});
+
+describe('P2-B2C fixed wrapper token parser', () => {
+  const OPEN = '<user_query>';
+  const CLOSE = '</user_query>';
+  const LEGACY = { lengthUnit: 'ABSENT' as const };
+  const WRAPPER = { lengthUnit: 'ABSENT' as const, wrapperMode: 'FIXED_USER_QUERY_V1' as const };
+
+  function baseExpectation(overrides: Record<string, unknown> = {}): Record<string, unknown> {
+    return {
+      assessmentMode: 'COMPARE',
+      expectedPhysicalHeader: 'MED=TOK1',
+      lineAnchorExpected: 1,
+      jsonlAnchorExpected: 'ABSENT',
+      wrapper: { openLine: 'ABSENT', closeLine: 'ABSENT', boundaryEndLine: 3 },
+      excludedRanges: [],
+      declaredLength: 'ABSENT',
+      lengthUnit: 'ABSENT',
+      ...overrides,
+    };
+  }
+
+  function expectAmbiguity(fn: () => unknown) {
+    let caught: unknown;
+    try {
+      fn();
+    } catch (error) {
+      caught = error;
+    }
+    expect(caught).toBeInstanceOf(Rule5WrapperSourceAmbiguityError);
+    expect(caught).toBeInstanceOf(Error);
+    const err = caught as Rule5WrapperSourceAmbiguityError;
+    expect(err.name).toBe('Rule5WrapperSourceAmbiguityError');
+    expect(err.message).toBe('Wrapper source structure is ambiguous');
+    expect(err.failureCode).toBe(RULE5_WRAPPER_SOURCE_AMBIGUOUS);
+    expect(Object.getOwnPropertyNames(err).sort()).toEqual([
+      'failureCode',
+      'message',
+      'name',
+      'stack',
+    ]);
+    expect(err.message).not.toContain(OPEN);
+    expect(err.message).not.toContain(CLOSE);
+    return err;
+  }
+
+  describe('config contract', () => {
+    const bytes = u8('MED=A');
+
+    it('legacy one-key config remains accepted with unchanged absent wrapper behavior', () => {
+      const obs = parseSyntheticStructureFromBytes(u8('MED=A\n'), LEGACY);
+      expect(obs.wrapper).toEqual({
+        openLine: 'ABSENT',
+        closeLine: 'ABSENT',
+        boundaryEndLine: 1,
+      });
+    });
+
+    it('accepts two-key config', () => {
+      expect(() => parseSyntheticStructureFromBytes(bytes, WRAPPER)).not.toThrow();
+    });
+
+    it('accepts two-key config regardless of key order', () => {
+      const obs = parseSyntheticStructureFromBytes(bytes, {
+        wrapperMode: 'FIXED_USER_QUERY_V1',
+        lengthUnit: 'ABSENT',
+      });
+      expect(obs.wrapper.boundaryEndLine).toBe(1);
+    });
+
+    it('accepts null-prototype two-key config', () => {
+      const config = Object.create(null);
+      Object.defineProperty(config, 'lengthUnit', {
+        value: 'ABSENT',
+        enumerable: true,
+        writable: true,
+        configurable: true,
+      });
+      Object.defineProperty(config, 'wrapperMode', {
+        value: 'FIXED_USER_QUERY_V1',
+        enumerable: true,
+        writable: true,
+        configurable: true,
+      });
+      expect(parseSyntheticStructureFromBytes(bytes, config).interpretiveEncoding).toBe('PASS');
+    });
+
+    it('accepts non-enumerable own data properties on two-key config', () => {
+      const config = Object.create(null);
+      Object.defineProperty(config, 'lengthUnit', {
+        value: 'ABSENT',
+        enumerable: false,
+        writable: true,
+        configurable: true,
+      });
+      Object.defineProperty(config, 'wrapperMode', {
+        value: 'FIXED_USER_QUERY_V1',
+        enumerable: false,
+        writable: true,
+        configurable: true,
+      });
+      expect(parseSyntheticStructureFromBytes(bytes, config).interpretiveEncoding).toBe('PASS');
+    });
+
+    it('rejects invalid wrapperMode values', () => {
+      for (const bad of ['OFF', '', 'fixed_user_query_v1', null, undefined, 1]) {
+        expect(() =>
+          parseSyntheticStructureFromBytes(bytes, { lengthUnit: 'ABSENT', wrapperMode: bad }),
+        ).toThrow(TypeError);
+      }
+    });
+
+    it('rejects extra, symbol, inherited, class, and accessor wrapperMode without getter execution', () => {
+      expect(() =>
+        parseSyntheticStructureFromBytes(bytes, {
+          lengthUnit: 'ABSENT',
+          wrapperMode: 'FIXED_USER_QUERY_V1',
+          extra: 1,
+        }),
+      ).toThrow(TypeError);
+
+      expect(() =>
+        parseSyntheticStructureFromBytes(bytes, {
+          lengthUnit: 'ABSENT',
+          wrapperMode: 'FIXED_USER_QUERY_V1',
+          [Symbol('meta')]: 1,
+        }),
+      ).toThrow(TypeError);
+
+      class ParserConfig {
+        lengthUnit = 'ABSENT';
+        wrapperMode = 'FIXED_USER_QUERY_V1';
+      }
+      expect(() => parseSyntheticStructureFromBytes(bytes, new ParserConfig())).toThrow(TypeError);
+
+      const inherited = Object.create({ wrapperMode: 'FIXED_USER_QUERY_V1' });
+      inherited.lengthUnit = 'ABSENT';
+      expect(() => parseSyntheticStructureFromBytes(bytes, inherited)).toThrow(TypeError);
+
+      let getterCalls = 0;
+      const accessor = { lengthUnit: 'ABSENT' };
+      Object.defineProperty(accessor, 'wrapperMode', {
+        get() {
+          getterCalls += 1;
+          return 'FIXED_USER_QUERY_V1';
+        },
+        configurable: true,
+      });
+      expect(() => parseSyntheticStructureFromBytes(bytes, accessor)).toThrow(TypeError);
+      expect(getterCalls).toBe(0);
+    });
+  });
+
+  describe('wrapper scan states', () => {
+    it('enabled mode with no tokens returns absent wrapper at document end', () => {
+      const obs = parseSyntheticStructureFromBytes(u8('MED=TOK1\nLINE\nTAIL'), WRAPPER);
+      expect(obs.wrapper).toEqual({
+        openLine: 'ABSENT',
+        closeLine: 'ABSENT',
+        boundaryEndLine: 3,
+      });
+    });
+
+    it('exact one ordered pair returns numeric wrapper triple', () => {
+      const obs = parseSyntheticStructureFromBytes(
+        u8(`MED=TOK1\n${OPEN}\nBODY\n${CLOSE}\nTAIL`),
+        WRAPPER,
+      );
+      expect(obs.wrapper).toEqual({
+        openLine: 2,
+        closeLine: 4,
+        boundaryEndLine: 5,
+      });
+    });
+
+    it('open only throws dedicated ambiguity error', () => {
+      expectAmbiguity(() =>
+        parseSyntheticStructureFromBytes(u8(`MED=TOK1\n${OPEN}\nBODY`), WRAPPER),
+      );
+    });
+
+    it('close only throws dedicated ambiguity error', () => {
+      expectAmbiguity(() =>
+        parseSyntheticStructureFromBytes(u8(`MED=TOK1\nBODY\n${CLOSE}`), WRAPPER),
+      );
+    });
+
+    it('reversed close-before-open throws dedicated ambiguity error', () => {
+      expectAmbiguity(() =>
+        parseSyntheticStructureFromBytes(u8(`MED=TOK1\n${CLOSE}\n${OPEN}`), WRAPPER),
+      );
+    });
+
+    it('duplicate opens with one close throws dedicated ambiguity error', () => {
+      expectAmbiguity(() =>
+        parseSyntheticStructureFromBytes(u8(`MED=TOK1\n${OPEN}\n${OPEN}\n${CLOSE}`), WRAPPER),
+      );
+    });
+
+    it('one open with duplicate closes throws dedicated ambiguity error', () => {
+      expectAmbiguity(() =>
+        parseSyntheticStructureFromBytes(u8(`MED=TOK1\n${OPEN}\n${CLOSE}\n${CLOSE}`), WRAPPER),
+      );
+    });
+
+    it('duplicate complete pairs throws dedicated ambiguity error', () => {
+      expectAmbiguity(() =>
+        parseSyntheticStructureFromBytes(
+          u8(`MED=TOK1\n${OPEN}\n${CLOSE}\n${OPEN}\n${CLOSE}`),
+          WRAPPER,
+        ),
+      );
+    });
+
+    it('nested pair throws dedicated ambiguity error', () => {
+      expectAmbiguity(() =>
+        parseSyntheticStructureFromBytes(
+          u8(`MED=TOK1\n${OPEN}\n${OPEN}\nINNER\n${CLOSE}\n${CLOSE}`),
+          WRAPPER,
+        ),
+      );
+    });
+
+    it('interleaved tokens throw dedicated ambiguity error', () => {
+      expectAmbiguity(() =>
+        parseSyntheticStructureFromBytes(
+          u8(`MED=TOK1\n${OPEN}\n${CLOSE}\n${OPEN}\nMID\n${CLOSE}`),
+          WRAPPER,
+        ),
+      );
+    });
+
+    it('ignores substring token embeddings', () => {
+      const obs = parseSyntheticStructureFromBytes(u8(`MED=TOK1\nX${OPEN}Y\nX${CLOSE}Y`), WRAPPER);
+      expect(obs.wrapper).toEqual({
+        openLine: 'ABSENT',
+        closeLine: 'ABSENT',
+        boundaryEndLine: 3,
+      });
+    });
+
+    it('ignores leading and trailing whitespace variants', () => {
+      const obs = parseSyntheticStructureFromBytes(u8(`MED=TOK1\n ${OPEN}\n${CLOSE} `), WRAPPER);
+      expect(obs.wrapper).toEqual({
+        openLine: 'ABSENT',
+        closeLine: 'ABSENT',
+        boundaryEndLine: 3,
+      });
+    });
+
+    it('ignores case variants', () => {
+      const obs = parseSyntheticStructureFromBytes(
+        u8('MED=TOK1\n<USER_QUERY>\n</USER_QUERY>'),
+        WRAPPER,
+      );
+      expect(obs.wrapper).toEqual({
+        openLine: 'ABSENT',
+        closeLine: 'ABSENT',
+        boundaryEndLine: 3,
+      });
+    });
+
+    it('recognizes opening token on line 1 after BOM via comparisonView', () => {
+      const obs = parseSyntheticStructureFromBytes(
+        u8('\xef\xbb\xbf', `${OPEN}\nBODY\n${CLOSE}`),
+        WRAPPER,
+      );
+      expect(obs.wrapper).toEqual({
+        openLine: 1,
+        closeLine: 3,
+        boundaryEndLine: 3,
+      });
+    });
+
+    it('does not normalize BOM on later lines', () => {
+      expectAmbiguity(() =>
+        parseSyntheticStructureFromBytes(u8(`MED=TOK1\n${OPEN}\n`, '\xef\xbb\xbf', CLOSE), WRAPPER),
+      );
+    });
+
+    it('invalid UTF-8 returns ENC observation without wrapper ambiguity error', () => {
+      expect(() => parseSyntheticStructureFromBytes(u8('\xff'), WRAPPER)).not.toThrow(
+        Rule5WrapperSourceAmbiguityError,
+      );
+      expect(parseSyntheticStructureFromBytes(u8('\xff'), WRAPPER)).toEqual(
+        encInvalidObservation(),
+      );
+    });
+  });
+
+  describe('error contract', () => {
+    it('does not retain input bytes, decoded lines, or config references on ambiguity error', () => {
+      const bytes = u8(`MED=TOK1\n${OPEN}\n${OPEN}`);
+      const config = { lengthUnit: 'ABSENT', wrapperMode: 'FIXED_USER_QUERY_V1' };
+      const err = expectAmbiguity(() => parseSyntheticStructureFromBytes(bytes, config));
+      expect(Object.prototype.hasOwnProperty.call(err, 'bytes')).toBe(false);
+      expect(Object.prototype.hasOwnProperty.call(err, 'lines')).toBe(false);
+      expect(Object.prototype.hasOwnProperty.call(err, 'config')).toBe(false);
+      expect(Object.prototype.hasOwnProperty.call(err, 'openCount')).toBe(false);
+      expect(Object.prototype.hasOwnProperty.call(err, 'closeCount')).toBe(false);
+      expect(Object.prototype.hasOwnProperty.call(err, 'openLine')).toBe(false);
+      expect(Object.prototype.hasOwnProperty.call(err, 'closeLine')).toBe(false);
+    });
+  });
+
+  describe('comparator integration', () => {
+    it('absent source vs absent expectation passes wrapper comparison', () => {
+      const observation = parseSyntheticStructureFromBytes(u8('MED=TOK1\nLINE\nTAIL'), WRAPPER);
+      const result = compareSyntheticStructure(baseExpectation(), observation);
+      expect(result.outcome).toBe('PASS');
+      expect(result.bvCodes ?? []).not.toContain(BV_WRAPPER_MISMATCH);
+    });
+
+    it('absent source vs present expectation returns BV-WRAPPER-MISMATCH', () => {
+      const observation = parseSyntheticStructureFromBytes(u8('MED=TOK1\nLINE\nTAIL'), WRAPPER);
+      const result = compareSyntheticStructure(
+        baseExpectation({
+          wrapper: { openLine: 2, closeLine: 3, boundaryEndLine: 3 },
+        }),
+        observation,
+      );
+      expect(result.primaryBvCode).toBe(BV_WRAPPER_MISMATCH);
+    });
+
+    it('exact pair vs matching expectation passes wrapper comparison', () => {
+      const observation = parseSyntheticStructureFromBytes(
+        u8(`MED=TOK1\n${OPEN}\nBODY\n${CLOSE}`),
+        WRAPPER,
+      );
+      const result = compareSyntheticStructure(
+        baseExpectation({
+          wrapper: { openLine: 2, closeLine: 4, boundaryEndLine: 4 },
+        }),
+        observation,
+      );
+      expect(result.outcome).toBe('PASS');
+      expect(result.bvCodes ?? []).not.toContain(BV_WRAPPER_MISMATCH);
+    });
+
+    it('exact pair vs absent expectation returns BV-WRAPPER-MISMATCH', () => {
+      const observation = parseSyntheticStructureFromBytes(
+        u8(`MED=TOK1\n${OPEN}\nBODY\n${CLOSE}`),
+        WRAPPER,
+      );
+      const result = compareSyntheticStructure(baseExpectation(), observation);
+      expect(result.primaryBvCode).toBe(BV_WRAPPER_MISMATCH);
+    });
+
+    it('malformed wrapper source throws before comparator can run', () => {
+      const bytes = u8(`MED=TOK1\n${OPEN}\n${OPEN}`);
+      expect(() => {
+        const observation = parseSyntheticStructureFromBytes(bytes, WRAPPER);
+        compareSyntheticStructure(baseExpectation(), observation);
+      }).toThrow(Rule5WrapperSourceAmbiguityError);
+    });
+  });
+
+  describe('regression and security', () => {
+    it('keeps 262144-byte cap unchanged', () => {
+      const ok = new Uint8Array(MAX_BYTES);
+      expect(() => parseSyntheticStructureFromBytes(ok, WRAPPER)).not.toThrow();
+      const big = new Uint8Array(MAX_BYTES + 1);
+      expect(() => parseSyntheticStructureFromBytes(big, WRAPPER)).toThrow(RangeError);
+    });
+
+    it('keeps frozen observation output without wrapper token content leak', () => {
+      const obs = parseSyntheticStructureFromBytes(
+        u8(`MED=TOK1\n${OPEN}\nBODY\n${CLOSE}`),
+        WRAPPER,
+      );
+      expect(Object.isFrozen(obs)).toBe(true);
+      expect(Object.isFrozen(obs.wrapper)).toBe(true);
+      const json = JSON.stringify(obs);
+      expect(json).not.toContain(OPEN);
+      expect(json).not.toContain(CLOSE);
+      expect(json).not.toContain('BODY');
+    });
+
+    it('parseStructure.mjs import boundary remains verifyCore-only', () => {
+      const source = readFileSync(PARSER_PATH, 'utf8');
+      expect(source).toMatch(/from\s+['"]\.\/verifyCore\.mjs['"]/);
+      for (const re of FORBIDDEN_IMPORT_PATTERNS) {
+        expect(source).not.toMatch(re);
+      }
+    });
   });
 });
