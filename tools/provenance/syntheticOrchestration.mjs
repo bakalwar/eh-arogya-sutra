@@ -305,8 +305,13 @@ function validateAndCanonicalizeWrapper(wrapperValue) {
   if (openAbsent !== closeAbsent) {
     throwInvalidConfig();
   }
-  if (!openAbsent && (!isPositiveInt(openLine) || !isPositiveInt(closeLine))) {
-    throwInvalidConfig();
+  if (!openAbsent) {
+    if (!isPositiveInt(openLine) || !isPositiveInt(closeLine)) {
+      throwInvalidConfig();
+    }
+    if (openLine > closeLine || closeLine > boundaryEndLine || openLine > boundaryEndLine) {
+      throwInvalidConfig();
+    }
   }
 
   return {
@@ -314,6 +319,27 @@ function validateAndCanonicalizeWrapper(wrapperValue) {
     closeLine,
     boundaryEndLine,
   };
+}
+
+/**
+ * @param {{ startLine: number, endLine: number }[]} canonical
+ */
+function validateNonOverlappingExcludedRanges(canonical) {
+  if (canonical.length <= 1) {
+    return;
+  }
+
+  const sorted = canonical
+    .slice()
+    .sort((a, b) => a.startLine - b.startLine || a.endLine - b.endLine);
+
+  for (let i = 1; i < sorted.length; i += 1) {
+    const previous = sorted[i - 1];
+    const current = sorted[i];
+    if (current.startLine <= previous.endLine) {
+      throwInvalidConfig();
+    }
+  }
 }
 
 /**
@@ -395,6 +421,8 @@ function validateAndCanonicalizeExcludedRanges(rangesValue) {
     }
     canonical.push({ startLine, endLine });
   }
+
+  validateNonOverlappingExcludedRanges(canonical);
 
   return canonical;
 }

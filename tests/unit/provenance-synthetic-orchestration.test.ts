@@ -3,7 +3,10 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { BV_ENC_INVALID } from '../../tools/provenance/verifyCore.mjs';
-import { BV_HDR_CODE_MISMATCH } from '../../tools/provenance/verifyStructure.mjs';
+import {
+  BV_HDR_CODE_MISMATCH,
+  BV_EXCL_REGION_MISMATCH,
+} from '../../tools/provenance/verifyStructure.mjs';
 import {
   MAX_SYNTHETIC_ORCHESTRATION_BYTES,
   ORCHESTRATION_VERSION,
@@ -640,6 +643,172 @@ describe('provenance syntheticOrchestration (P2-C3B in-memory orchestration)', (
       target.expectedPhysicalHeader = 'MED=TOK2';
       expect(result.comparison?.outcome).toBe('PASS');
     });
+  });
+});
+
+describe('provenance syntheticOrchestration caller domain validation correction', () => {
+  it('rejects expectation openLine > closeLine as INVALID_CONFIG', () => {
+    expectOrchestrationError(
+      () =>
+        evaluateSyntheticProvenanceOrchestration(u8('MED=TOK1\n'), baseParserConfig(), {
+          ...baseExpectation(),
+          wrapper: { openLine: 3, closeLine: 2, boundaryEndLine: 3 },
+        }),
+      RULE5_SYNTHETIC_ORCHESTRATION_INVALID_CONFIG,
+    );
+  });
+
+  it('rejects expectation closeLine > boundaryEndLine as INVALID_CONFIG', () => {
+    expectOrchestrationError(
+      () =>
+        evaluateSyntheticProvenanceOrchestration(u8('MED=TOK1\n'), baseParserConfig(), {
+          ...baseExpectation(),
+          wrapper: { openLine: 1, closeLine: 2, boundaryEndLine: 1 },
+        }),
+      RULE5_SYNTHETIC_ORCHESTRATION_INVALID_CONFIG,
+    );
+  });
+
+  it('rejects expectation openLine > boundaryEndLine as INVALID_CONFIG', () => {
+    expectOrchestrationError(
+      () =>
+        evaluateSyntheticProvenanceOrchestration(u8('MED=TOK1\n'), baseParserConfig(), {
+          ...baseExpectation(),
+          wrapper: { openLine: 3, closeLine: 3, boundaryEndLine: 2 },
+        }),
+      RULE5_SYNTHETIC_ORCHESTRATION_INVALID_CONFIG,
+    );
+  });
+
+  it('rejects overlapping excludedRanges as INVALID_CONFIG', () => {
+    expectOrchestrationError(
+      () =>
+        evaluateSyntheticProvenanceOrchestration(u8('MED=TOK1\n'), baseParserConfig(), {
+          ...baseExpectation(),
+          excludedRanges: [
+            { startLine: 1, endLine: 3 },
+            { startLine: 2, endLine: 4 },
+          ],
+        }),
+      RULE5_SYNTHETIC_ORCHESTRATION_INVALID_CONFIG,
+    );
+  });
+
+  it('rejects touching inclusive ranges [1,2] and [2,3] as INVALID_CONFIG', () => {
+    expectOrchestrationError(
+      () =>
+        evaluateSyntheticProvenanceOrchestration(u8('MED=TOK1\n'), baseParserConfig(), {
+          ...baseExpectation(),
+          excludedRanges: [
+            { startLine: 1, endLine: 2 },
+            { startLine: 2, endLine: 3 },
+          ],
+        }),
+      RULE5_SYNTHETIC_ORCHESTRATION_INVALID_CONFIG,
+    );
+  });
+
+  it('rejects duplicate identical excludedRanges as INVALID_CONFIG', () => {
+    expectOrchestrationError(
+      () =>
+        evaluateSyntheticProvenanceOrchestration(u8('MED=TOK1\n'), baseParserConfig(), {
+          ...baseExpectation(),
+          excludedRanges: [
+            { startLine: 1, endLine: 2 },
+            { startLine: 1, endLine: 2 },
+          ],
+        }),
+      RULE5_SYNTHETIC_ORCHESTRATION_INVALID_CONFIG,
+    );
+  });
+
+  it('accepts adjacent non-overlapping ranges [1,2] and [3,4]', () => {
+    const result = evaluateSyntheticProvenanceOrchestration(
+      u8('MED=TOK1\n'),
+      baseParserConfig(),
+      baseExpectation({
+        excludedRanges: [
+          { startLine: 1, endLine: 2 },
+          { startLine: 3, endLine: 4 },
+        ],
+      }),
+    );
+    expect(result.comparison).toBeDefined();
+    expect(result.outcome).toBe('STRUCTURE_COMPARED_FAIL');
+    expect(result.comparison?.primaryBvCode).toBe(BV_EXCL_REGION_MISMATCH);
+  });
+
+  it('accepts unsorted non-overlapping ranges and preserves caller order in expectation', () => {
+    const excludedRanges = [
+      { startLine: 3, endLine: 4 },
+      { startLine: 1, endLine: 2 },
+    ];
+    const result = evaluateSyntheticProvenanceOrchestration(
+      u8('MED=TOK1\n'),
+      baseParserConfig(),
+      baseExpectation({ excludedRanges }),
+    );
+    expect(result.comparison).toBeDefined();
+    expect(result.outcome).toBe('STRUCTURE_COMPARED_FAIL');
+    expect(result.comparison?.primaryBvCode).toBe(BV_EXCL_REGION_MISMATCH);
+    expect(excludedRanges[0].startLine).toBe(3);
+    expect(excludedRanges[1].startLine).toBe(1);
+  });
+
+  it('invalid wrapper never reaches ordinary comparison outcome', () => {
+    try {
+      evaluateSyntheticProvenanceOrchestration(u8('MED=TOK1\n'), baseParserConfig(), {
+        ...baseExpectation(),
+        wrapper: { openLine: 3, closeLine: 2, boundaryEndLine: 3 },
+      });
+      throw new Error('expected throw');
+    } catch (err) {
+      expect(err).toBeInstanceOf(Rule5SyntheticOrchestrationError);
+      expect((err as Rule5SyntheticOrchestrationError).failureCode).toBe(
+        RULE5_SYNTHETIC_ORCHESTRATION_INVALID_CONFIG,
+      );
+      expect(err).not.toHaveProperty('comparison');
+    }
+  });
+
+  it('invalid ranges never reach ordinary comparison outcome', () => {
+    try {
+      evaluateSyntheticProvenanceOrchestration(u8('MED=TOK1\n'), baseParserConfig(), {
+        ...baseExpectation(),
+        excludedRanges: [
+          { startLine: 1, endLine: 3 },
+          { startLine: 2, endLine: 4 },
+        ],
+      });
+      throw new Error('expected throw');
+    } catch (err) {
+      expect(err).toBeInstanceOf(Rule5SyntheticOrchestrationError);
+      expect((err as Rule5SyntheticOrchestrationError).failureCode).toBe(
+        RULE5_SYNTHETIC_ORCHESTRATION_INVALID_CONFIG,
+      );
+    }
+  });
+
+  it('domain validation errors expose only failureCode as message without value leakage', () => {
+    try {
+      evaluateSyntheticProvenanceOrchestration(u8('MED=TOK1\n'), baseParserConfig(), {
+        ...baseExpectation(),
+        excludedRanges: [
+          { startLine: 1, endLine: 3 },
+          { startLine: 2, endLine: 4 },
+        ],
+      });
+    } catch (err) {
+      const oerr = err as Rule5SyntheticOrchestrationError;
+      expect(oerr.message).toBe(RULE5_SYNTHETIC_ORCHESTRATION_INVALID_CONFIG);
+      expect(JSON.stringify(oerr)).not.toMatch(/startLine|endLine|openLine|closeLine|boundary/i);
+    }
+  });
+
+  it('does not broadly remap downstream TypeError to INVALID_CONFIG in source', () => {
+    const source = readFileSync(MODULE_PATH, 'utf8');
+    expect(source).not.toMatch(/catch\s*\([^)]*\)\s*\{[^}]*TypeError[^}]*INVALID_CONFIG/s);
+    expect(source).toMatch(/throwInternal\(\)/);
   });
 });
 
