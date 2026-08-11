@@ -14,10 +14,10 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import fs from 'node:fs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import type { Rule5SyntheticInputError } from '../../tools/provenance/readSyntheticInput.mjs';
 import {
   MARKER_EXACT_BYTES,
   MARKER_FILENAME,
-  Rule5SyntheticInputError,
   isConfinedOpenSupported,
   readSyntheticInput,
 } from '../../tools/provenance/readSyntheticInput.mjs';
