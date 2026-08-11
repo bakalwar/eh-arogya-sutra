@@ -434,6 +434,27 @@ P2-B2C extends **`parseSyntheticStructureFromBytes`** with an optional strict **
 
 ---
 
+## 25.5 P2-B3 confined synthetic CLI status (authorized implementation tranche)
+
+| Status | Value |
+|--------|--------|
+| **Authorization token** | **`R5_P2B3_CONFINED_SYNTHETIC_CLI_IMPLEMENTATION_AUTHORIZED`** |
+| **P2-B3** | **`P2-B3 CONFINED_SYNTHETIC_CLI_PRESENT`** — `tools/provenance/verifySyntheticCli.mjs` + `tools/provenance/readSyntheticInput.mjs` |
+| **Filesystem** | **`FILESYSTEM_ACCESS_SYNTHETIC_ONLY`** — confined `--root` + relative `--input` only; no protected-source paths |
+| **Marker interlock** | **`SYNTHETIC_ROOT_MARKER_INTERLOCK_PRESENT`** — mandatory `.ehas2-provenance-synthetic-root` (24-byte UTF-8 exact match); **`SYNTHETIC_CONTENT_NOT_CRYPTOGRAPHICALLY_PROVEN`** |
+| **CLI scope** | **`PARSER_ONLY_CLI_PRESENT`** — calls **`inspectByteCharacteristics`** then **`parseSyntheticStructureFromBytes`** only |
+| **Comparator** | **`COMPARATOR_CLI_NOT_IMPLEMENTED`** — no **`compareSyntheticStructure`**, no digests in output |
+| **Platform** | **Linux-only** full execution; other platforms → **`RULE5_CLI_UNSUPPORTED_PLATFORM`** |
+| **Tests** | **`SYNTHETIC_BYTE_TESTS_PRESENT`** — `tests/unit/provenance-synthetic-cli.test.ts`; test-created **`mkdtemp`** only |
+| **Protected source** | **`PROTECTED_SOURCE_EXECUTION_NOT_AUTHORIZED`** |
+| **Byte proof (owner corpus)** | **`BYTE_PROOF_PENDING`** |
+| **Manifest persistence** | **`MANIFEST_PERSISTENCE_NOT_AUTHORIZED`** |
+| **Runtime** | **`CLI_RUNTIME_NOT_CONNECTED`** |
+
+P2-B3 implements a **parser-only**, **Linux-only** confined synthetic CLI over an explicit **`--root`** with mandatory marker interlock (not cryptographic proof of synthetic content). It performs per-component **`lstat`**, **`O_RDONLY | O_NOFOLLOW`** open, **`fstat`** identity checks, **`nlink === 1`**, and bounded reads (marker ≤65 bytes; input ≤262145 read / ≤262144 accept). Operational stdout is one redacted JSON line; stderr is empty. Exit **0** for **`PARSED`** or **`ENCODING_INVALID`** only — not clinical validation, byte proof, or owner-corpus verification. It does **not** compare expectations, emit hashes, persist manifests, populate catalog rows, or connect runtime. **P2-C** remains **separately authorized**.
+
+---
+
 ## 26. P2-OD-01–19 register (P2-A recorded)
 
 | ID | Decision | Recorded choice |
