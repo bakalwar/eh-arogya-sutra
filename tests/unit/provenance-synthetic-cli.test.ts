@@ -466,7 +466,7 @@ describe.skipIf(process.platform !== 'linux')(
             adapter.readSyntheticInput(root, 'x.txt');
           } catch (err) {
             expect(err).toBeInstanceOf(adapter.Rule5SyntheticInputError);
-            expect(/** @type {{ failureCode: string }} */ (err).failureCode).toBe(
+            expect(/** @type {{ failureCode: string }} */ err.failureCode).toBe(
               'RULE5_CLI_PATH_CONFINEMENT_FAILED',
             );
           }
@@ -547,7 +547,7 @@ describe.skipIf(process.platform !== 'linux')(
             adapter.readSyntheticInput(root2, 'probe.txt');
           } catch (err) {
             expect(err).toBeInstanceOf(adapter.Rule5SyntheticInputError);
-            expect(/** @type {{ failureCode: string }} */ (err).failureCode).toBe(
+            expect(/** @type {{ failureCode: string }} */ err.failureCode).toBe(
               'RULE5_CLI_PATH_CONFINEMENT_FAILED',
             );
           }
