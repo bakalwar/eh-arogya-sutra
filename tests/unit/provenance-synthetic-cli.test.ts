@@ -15,7 +15,6 @@ import { fileURLToPath } from 'node:url';
 import fs from 'node:fs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
-  MARKER_EXACT_BYTES,
   MARKER_FILENAME,
   isConfinedOpenSupported,
   readSyntheticInput,
@@ -56,6 +55,9 @@ const FORBIDDEN_CLI_IMPORTS = [
 
 const FORBIDDEN_EXPORT_NAME = /TestSeam|setAdapter|setCli|override|mock/i;
 
+/** Test-local exact marker bytes; not imported from production adapter. */
+const TEST_MARKER_BYTES = Buffer.from('EHAS2_SYNTHETIC_ROOT_V1\n', 'utf8');
+
 const ADAPTER_EXPORTS = Object.keys(adapterModule);
 const CLI_EXPORTS = Object.keys(cliModule);
 
@@ -95,7 +97,7 @@ function createTempRoot() {
  * @param {string} root
  */
 function writeMarker(root) {
-  writeFileSync(path.join(root, MARKER_FILENAME), MARKER_EXACT_BYTES);
+  writeFileSync(path.join(root, MARKER_FILENAME), TEST_MARKER_BYTES);
 }
 
 /**
@@ -190,12 +192,31 @@ afterEach(() => {
 });
 
 describe('provenance verifySyntheticCli (P2-B3 confined synthetic CLI)', () => {
-  it('does not export production mutable test seam setters', () => {
+  it('does not export marker byte authority or mutable test seam setters', () => {
+    expect(ADAPTER_EXPORTS).not.toContain('MARKER_EXACT_BYTES');
     expect(ADAPTER_EXPORTS).not.toContain('__setAdapterTestSeam');
     expect(CLI_EXPORTS).not.toContain('__setCliTestSeam');
     for (const name of [...ADAPTER_EXPORTS, ...CLI_EXPORTS]) {
       expect(name).not.toMatch(FORBIDDEN_EXPORT_NAME);
     }
+  });
+
+  it('exports no Buffer, Uint8Array, or marker-control objects from adapter', () => {
+    for (const name of ADAPTER_EXPORTS) {
+      const value = adapterModule[name as keyof typeof adapterModule];
+      expect(value).not.toBeInstanceOf(Buffer);
+      expect(value).not.toBeInstanceOf(Uint8Array);
+      expect(Array.isArray(value)).toBe(false);
+      if (value !== null && typeof value === 'object' && !(value instanceof Function)) {
+        expect(Object.isFrozen(value)).toBe(true);
+      }
+    }
+  });
+
+  it('adapter source keeps marker bytes internal and unexported', () => {
+    const source = readFileSync(ADAPTER_PATH, 'utf8');
+    expect(source).not.toMatch(/export const MARKER_EXACT_BYTES/);
+    expect(source).toMatch(/MARKER_EXACT_TEXT/);
   });
 
   it('adapter source contains no mutable seam state', () => {
@@ -210,7 +231,6 @@ describe('provenance verifySyntheticCli (P2-B3 confined synthetic CLI)', () => {
         'INPUT_MAX_BYTES',
         'INPUT_MAX_READ',
         'MARKER_EXACT_BYTE_LENGTH',
-        'MARKER_EXACT_BYTES',
         'MARKER_FILENAME',
         'MARKER_MAX_READ',
         'MARKER_MAX_SIZE',
@@ -406,8 +426,8 @@ describe.skipIf(process.platform !== 'linux')(
       const variants = [
         Buffer.from('EHAS2_SYNTHETIC_ROOT_V1\r\n', 'utf8'),
         Buffer.from('EHAS2_SYNTHETIC_ROOT_V1', 'utf8'),
-        Buffer.concat([Buffer.from([0xef, 0xbb, 0xbf]), MARKER_EXACT_BYTES]),
-        Buffer.concat([MARKER_EXACT_BYTES, Buffer.from('X')]),
+        Buffer.concat([Buffer.from([0xef, 0xbb, 0xbf]), TEST_MARKER_BYTES]),
+        Buffer.concat([TEST_MARKER_BYTES, Buffer.from('X')]),
         Buffer.alloc(65, 0x41),
       ];
 
@@ -425,7 +445,7 @@ describe.skipIf(process.platform !== 'linux')(
     it('rejects marker symlink and hard link', () => {
       const root = createTempRoot();
       const markerReal = path.join(root, 'marker-real');
-      writeFileSync(markerReal, MARKER_EXACT_BYTES);
+      writeFileSync(markerReal, TEST_MARKER_BYTES);
       symlinkSync(markerReal, path.join(root, MARKER_FILENAME));
       writeInput(root, 'x.txt', 'MED=A');
       let result = runCli(['--root', root, '--input', 'x.txt', '--length-unit', 'ABSENT']);
@@ -433,7 +453,7 @@ describe.skipIf(process.platform !== 'linux')(
       expect(parseStdoutJson(result.stdout ?? '').failureCode).toBe('RULE5_CLI_MARKER_INVALID');
 
       const root2 = createTempRoot();
-      writeFileSync(path.join(root2, MARKER_FILENAME), MARKER_EXACT_BYTES);
+      writeFileSync(path.join(root2, MARKER_FILENAME), TEST_MARKER_BYTES);
       linkSync(path.join(root2, MARKER_FILENAME), path.join(root2, 'marker-hardlink'));
       writeInput(root2, 'x.txt', 'MED=A');
       result = runCli(['--root', root2, '--input', 'x.txt', '--length-unit', 'ABSENT']);
@@ -472,10 +492,70 @@ describe.skipIf(process.platform !== 'linux')(
           } catch (err) {
             expect(err).toBeInstanceOf(adapter.Rule5SyntheticInputError);
             expect(/** @type {{ failureCode: string }} */ err.failureCode).toBe(
-              'RULE5_CLI_PATH_CONFINEMENT_FAILED',
+              'RULE5_CLI_MARKER_INVALID',
             );
           }
         },
+      );
+    });
+
+    it('maps marker identity mismatch to MARKER_INVALID exit 2 via in-process CLI', async () => {
+      const root = createTempRoot();
+      writeMarker(root);
+      writeInput(root, 'x.txt', 'MED=A');
+
+      await withIsolatedFsMock(
+        (actual) => {
+          let fstatCalls = 0;
+          const originalFstat = actual.default.fstatSync.bind(actual.default);
+          return {
+            fstatSync: (fd) => {
+              fstatCalls += 1;
+              const stats = originalFstat(fd);
+              if (fstatCalls === 1) {
+                return Object.create(stats, {
+                  ino: { value: Number(stats.ino) + 888888, enumerable: true },
+                });
+              }
+              return stats;
+            },
+          };
+        },
+        async ({ cli }) => {
+          let stdout = '';
+          const writeSpy = vi.spyOn(process.stdout, 'write').mockImplementation((chunk) => {
+            stdout += String(chunk);
+            return true;
+          });
+          const exitSpy = vi.spyOn(process, 'exit').mockImplementation(((code) => {
+            throw new Error(`exit:${code}`);
+          }) as never);
+
+          try {
+            expect(() =>
+              cli!.runVerifySyntheticCli([
+                '--root',
+                root,
+                '--input',
+                'x.txt',
+                '--length-unit',
+                'ABSENT',
+              ]),
+            ).toThrow('exit:2');
+            expect(parseStdoutJson(stdout)).toEqual({
+              toolVersion: TOOL_VERSION,
+              outcome: 'ERROR',
+              failureCode: 'RULE5_CLI_MARKER_INVALID',
+            });
+            for (const pattern of LEAKAGE_PATTERNS) {
+              expect(stdout).not.toMatch(pattern);
+            }
+          } finally {
+            writeSpy.mockRestore();
+            exitSpy.mockRestore();
+          }
+        },
+        { loadCli: true },
       );
     });
 
@@ -600,6 +680,20 @@ describe.skipIf(process.platform !== 'linux')(
 
       const bytes = readSyntheticInput(root, 'unmocked.txt');
       expect(Buffer.from(bytes).toString('utf8')).toBe('MED=U');
+    });
+
+    it('caller-owned marker buffer mutation cannot alter later validation', () => {
+      const root = createTempRoot();
+      const callerMarker = Buffer.from('EHAS2_SYNTHETIC_ROOT_V1\n', 'utf8');
+      writeFileSync(path.join(root, MARKER_FILENAME), callerMarker);
+      writeInput(root, 'first.txt', 'MED=A');
+      readSyntheticInput(root, 'first.txt');
+
+      callerMarker[0] = 0x58;
+
+      writeInput(root, 'second.txt', 'MED=B');
+      const bytes = readSyntheticInput(root, 'second.txt');
+      expect(Buffer.from(bytes).toString('utf8')).toBe('MED=B');
     });
 
     it('asserts runtime O_NOFOLLOW availability via real constants', () => {

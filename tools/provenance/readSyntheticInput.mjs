@@ -11,8 +11,17 @@ export const RULE5_CLI_INPUT_OVERSIZE = 'RULE5_CLI_INPUT_OVERSIZE';
 export const RULE5_CLI_READ_FAILED = 'RULE5_CLI_READ_FAILED';
 
 export const MARKER_FILENAME = '.ehas2-provenance-synthetic-root';
-export const MARKER_EXACT_BYTES = Buffer.from('EHAS2_SYNTHETIC_ROOT_V1\n', 'utf8');
 export const MARKER_EXACT_BYTE_LENGTH = 24;
+
+/** @type {string} */
+const MARKER_EXACT_TEXT = 'EHAS2_SYNTHETIC_ROOT_V1\n';
+
+/**
+ * @returns {Buffer}
+ */
+function markerExactBytes() {
+  return Buffer.from(MARKER_EXACT_TEXT, 'utf8');
+}
 export const MARKER_MAX_SIZE = 64;
 export const MARKER_MAX_READ = 65;
 export const INPUT_MAX_BYTES = 262144;
@@ -58,10 +67,11 @@ function requireOpenFlags() {
 /**
  * @param {fs.Stats} before
  * @param {fs.Stats} after
+ * @param {string} identityFailureCode
  */
-function requireSameIdentity(before, after) {
+function requireSameIdentity(before, after, identityFailureCode) {
   if (before.dev !== after.dev || before.ino !== after.ino) {
-    fail(RULE5_CLI_PATH_CONFINEMENT_FAILED);
+    fail(identityFailureCode);
   }
 }
 
@@ -131,7 +141,7 @@ function validateMarker(markerPath, openFlags) {
     if (postOpenStats.size > MARKER_MAX_SIZE) {
       fail(RULE5_CLI_MARKER_INVALID);
     }
-    requireSameIdentity(preOpenStats, postOpenStats);
+    requireSameIdentity(preOpenStats, postOpenStats, RULE5_CLI_MARKER_INVALID);
 
     const buffer = Buffer.alloc(MARKER_MAX_READ);
     let totalRead = 0;
@@ -146,7 +156,7 @@ function validateMarker(markerPath, openFlags) {
     if (totalRead !== MARKER_EXACT_BYTE_LENGTH) {
       fail(RULE5_CLI_MARKER_INVALID);
     }
-    if (!buffer.subarray(0, MARKER_EXACT_BYTE_LENGTH).equals(MARKER_EXACT_BYTES)) {
+    if (!buffer.subarray(0, MARKER_EXACT_BYTE_LENGTH).equals(markerExactBytes())) {
       fail(RULE5_CLI_MARKER_INVALID);
     }
   } finally {
@@ -195,7 +205,7 @@ function readBoundedInput(candidatePath, openFlags) {
     if (postOpenStats.size > INPUT_MAX_BYTES) {
       fail(RULE5_CLI_INPUT_OVERSIZE);
     }
-    requireSameIdentity(preOpenStats, postOpenStats);
+    requireSameIdentity(preOpenStats, postOpenStats, RULE5_CLI_PATH_CONFINEMENT_FAILED);
 
     const buffer = Buffer.alloc(INPUT_MAX_READ);
     let totalRead = 0;
