@@ -390,6 +390,27 @@ P2-B2A implements **`compareSyntheticStructure`** over **caller-supplied synthet
 
 ---
 
+## 25.3 P2-B2B basic in-memory header-line parser status (authorized implementation tranche)
+
+| Status | Value |
+|--------|--------|
+| **Authorization token** | **`R5_P2B2B_BASIC_IN_MEMORY_PARSER_IMPLEMENTATION_AUTHORIZED`** |
+| **P2-B2B** | **`BASIC_IN_MEMORY_HEADER_LINE_PARSER_PRESENT`** — `tools/provenance/parseStructure.mjs` |
+| **Tests** | **`SYNTHETIC_BYTE_TESTS_PRESENT`** — `tests/unit/provenance-parse-structure.test.ts`; no committed fixture files |
+| **Wrapper token parser** | **`WRAPPER_TOKEN_PARSER_NOT_IMPLEMENTED`** |
+| **JSONL anchor derivation** | **`JSONL_ANCHOR_DERIVATION_NOT_IMPLEMENTED`** |
+| **Quarantine assignment** | **`QUARANTINE_ASSIGNMENT_NOT_IMPLEMENTED`** |
+| **Exclusion inference** | **`EXCLUSION_INFERENCE_NOT_IMPLEMENTED`** |
+| **Filesystem** | **`FILESYSTEM_ACCESS_NOT_IMPLEMENTED`** |
+| **CLI** | **`CLI_NOT_IMPLEMENTED`** |
+| **Protected source** | **`PROTECTED_SOURCE_EXECUTION_NOT_AUTHORIZED`** |
+| **Byte proof (owner corpus)** | **`BYTE_PROOF_PENDING`** |
+| **Manifest persistence** | **`MANIFEST_PERSISTENCE_NOT_AUTHORIZED`** |
+
+P2-B2B implements **`parseSyntheticStructureFromBytes`** over **caller-supplied bytes and a strict `{ lengthUnit }` config only** (header-line discovery, fixed absent wrapper/JSONL/exclusions, no quarantine mapping). It imports **`inspectByteCharacteristics`** and **`BV-ENC-INVALID`** from P2-B1 only. It does **not** parse wrapper tokens, derive JSONL anchors from bytes, infer clinical exclusions, verify owner corpus paths, persist manifests, populate catalog rows, or connect runtime. **P2-B3 / P2-C** remain **separately authorized**.
+
+---
+
 ## 26. P2-OD-01–19 register (P2-A recorded)
 
 | ID | Decision | Recorded choice |
