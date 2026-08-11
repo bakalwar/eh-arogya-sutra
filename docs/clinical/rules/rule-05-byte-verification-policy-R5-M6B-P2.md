@@ -476,6 +476,27 @@ P2-C1 records protected-source, manifest-field, trust-zone, checkpoint, and outp
 
 ---
 
+## 25.7 P2-C2 synthetic repo-safe manifest schema status (authorized implementation tranche)
+
+| Status | Value |
+|--------|--------|
+| **Authorization token** | **`R5_P2C2_SYNTHETIC_REPO_SAFE_MANIFEST_SCHEMA_IMPLEMENTATION_AUTHORIZED`** |
+| **P2-C2** | **`P2-C2 SYNTHETIC_REPO_SAFE_MANIFEST_SCHEMA_VALIDATOR_PRESENT`** — `tools/provenance/manifestSchema.mjs` |
+| **Scope** | **`IN_MEMORY_ONLY`** — validate + serialize synthetic repo-safe manifest objects only |
+| **Fixture** | **`NO_COMMITTED_JSON_FIXTURE`** — in-test synthetic objects only |
+| **Digest** | **`NO_DIGEST_FIELD`** / **`NO_HASH_COMPUTATION`** |
+| **Filesystem** | **`NO_FILESYSTEM`** |
+| **CLI** | **`NO_CLI`** |
+| **Manifest persistence** | **`NO_MANIFEST_PERSISTENCE`** / **`MANIFEST_PERSISTENCE_NOT_AUTHORIZED`** |
+| **Protected source** | **`PROTECTED_SOURCE_EXECUTION_NOT_AUTHORIZED`** |
+| **`ownerPrimaryVerified`** | **`OWNER_PRIMARY_VERIFIED_FALSE_ONLY`** — literal `false` in schema; not set true |
+| **Runtime** | **`CLI_RUNTIME_NOT_CONNECTED`** |
+| **Byte proof (owner corpus)** | **`BYTE_PROOF_PENDING`** |
+
+P2-C2 implements a **12-field**, **flat**, **repo-safe synthetic** manifest validator and canonical serializer only. It does **not** access protected source, compute digests, write manifest files, persist manifests, run CLI, populate catalog rows, set **`ownerPrimaryVerified` true**, or connect runtime. Protected-local manifest schema remains **unimplemented** and **separately authorized**. §25.1–§25.6 history is unchanged.
+
+---
+
 ## 26. P2-OD-01–19 register (P2-A recorded)
 
 | ID | Decision | Recorded choice |
