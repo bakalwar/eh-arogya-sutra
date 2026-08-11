@@ -150,28 +150,33 @@ function parseStdoutJson(stdout) {
  * @returns {Promise<T>}
  */
 async function withIsolatedFsMock(configureMock, fn, options = {}) {
-  return vi.isolateModulesAsync(async () => {
-    vi.doMock('node:fs', async (importOriginal) => {
-      const actual = await importOriginal();
-      const overrides = configureMock(/** @type {typeof import('node:fs')} */ actual);
-      const fsDefault = /** @type {typeof import('node:fs').default} */ actual.default;
-      return {
-        ...actual,
-        default: {
-          ...fsDefault,
-          ...overrides,
-        },
-      };
-    });
+  vi.doMock('node:fs', async (importOriginal) => {
+    const actual = await importOriginal();
+    const overrides = configureMock(/** @type {typeof import('node:fs')} */ actual);
+    const fsDefault = /** @type {typeof import('node:fs').default} */ actual.default;
+    return {
+      ...actual,
+      default: {
+        ...fsDefault,
+        ...overrides,
+      },
+    };
+  });
 
+  vi.resetModules();
+
+  try {
     const adapter = await import('../../tools/provenance/readSyntheticInput.mjs');
     /** @type {{ adapter: typeof adapter; cli?: typeof import('../../tools/provenance/verifySyntheticCli.mjs') }} */
     const modules = { adapter };
     if (options.loadCli) {
       modules.cli = await import('../../tools/provenance/verifySyntheticCli.mjs');
     }
-    return fn(modules);
-  });
+    return await fn(modules);
+  } finally {
+    vi.doUnmock('node:fs');
+    vi.resetModules();
+  }
 }
 
 afterEach(() => {
@@ -594,7 +599,7 @@ describe.skipIf(process.platform !== 'linux')(
       writeInput(root, 'unmocked.txt', 'MED=U');
 
       const bytes = readSyntheticInput(root, 'unmocked.txt');
-      expect(bytes.toString('utf8')).toBe('MED=U');
+      expect(Buffer.from(bytes).toString('utf8')).toBe('MED=U');
     });
 
     it('asserts runtime O_NOFOLLOW availability via real constants', () => {
