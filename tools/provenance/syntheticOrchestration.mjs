@@ -15,8 +15,7 @@ export const RULE5_SYNTHETIC_ORCHESTRATION_INVALID_CONFIG =
   'RULE5_SYNTHETIC_ORCHESTRATION_INVALID_CONFIG';
 export const RULE5_SYNTHETIC_ORCHESTRATION_INPUT_OVERSIZE =
   'RULE5_SYNTHETIC_ORCHESTRATION_INPUT_OVERSIZE';
-export const RULE5_SYNTHETIC_ORCHESTRATION_INTERNAL =
-  'RULE5_SYNTHETIC_ORCHESTRATION_INTERNAL';
+export const RULE5_SYNTHETIC_ORCHESTRATION_INTERNAL = 'RULE5_SYNTHETIC_ORCHESTRATION_INTERNAL';
 
 export { RULE5_WRAPPER_SOURCE_AMBIGUOUS };
 
@@ -32,10 +31,7 @@ const COMPARE_LENGTH_UNITS = new Set([
 const WRAPPER_MODE_FIXED = 'FIXED_USER_QUERY_V1';
 const EXPECTED_HEADER_RE = /^MED=(?:None|[A-Z0-9]+)$/;
 
-const PARSER_CONFIG_KEY_SETS = [
-  new Set(['lengthUnit']),
-  new Set(['lengthUnit', 'wrapperMode']),
-];
+const PARSER_CONFIG_KEY_SETS = [new Set(['lengthUnit']), new Set(['lengthUnit', 'wrapperMode'])];
 
 const EXPECTATION_KEYS_NA = new Set(['assessmentMode']);
 const EXPECTATION_KEYS_COMPARE = new Set([
@@ -495,7 +491,10 @@ function validateAndCanonicalizeExpectation(expectation) {
   assertExactOwnStringKeys(obj, EXPECTATION_KEYS_COMPARE);
 
   const expectedPhysicalHeader = readOwnDataValue(obj, 'expectedPhysicalHeader');
-  if (typeof expectedPhysicalHeader !== 'string' || !EXPECTED_HEADER_RE.test(expectedPhysicalHeader)) {
+  if (
+    typeof expectedPhysicalHeader !== 'string' ||
+    !EXPECTED_HEADER_RE.test(expectedPhysicalHeader)
+  ) {
     throwInvalidConfig();
   }
 
@@ -505,7 +504,9 @@ function validateAndCanonicalizeExpectation(expectation) {
   validateAnchorValue(jsonlAnchorExpected, 'jsonl');
 
   const wrapper = validateAndCanonicalizeWrapper(readOwnDataValue(obj, 'wrapper'));
-  const excludedRanges = validateAndCanonicalizeExcludedRanges(readOwnDataValue(obj, 'excludedRanges'));
+  const excludedRanges = validateAndCanonicalizeExcludedRanges(
+    readOwnDataValue(obj, 'excludedRanges'),
+  );
 
   const declaredLength = readOwnDataValue(obj, 'declaredLength');
   const lengthUnit = readOwnDataValue(obj, 'lengthUnit');

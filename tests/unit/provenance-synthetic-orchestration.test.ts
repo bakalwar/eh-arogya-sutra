@@ -447,9 +447,7 @@ describe('provenance syntheticOrchestration (P2-C3B in-memory orchestration)', (
   });
 
   it('T28 exported INTERNAL code exists for contract surface', () => {
-    expect(RULE5_SYNTHETIC_ORCHESTRATION_INTERNAL).toBe(
-      'RULE5_SYNTHETIC_ORCHESTRATION_INTERNAL',
-    );
+    expect(RULE5_SYNTHETIC_ORCHESTRATION_INTERNAL).toBe('RULE5_SYNTHETIC_ORCHESTRATION_INTERNAL');
   });
 
   describe('Proxy/trap contract delta D01-D12', () => {
@@ -582,7 +580,10 @@ describe('provenance syntheticOrchestration (P2-C3B in-memory orchestration)', (
     });
 
     it('D10 excludedRanges symbol/extra/non-canonical index maps to INVALID_CONFIG', () => {
-      const extraProp = [{ startLine: 1, endLine: 1 }, { startLine: 2, endLine: 2 }];
+      const extraProp = [
+        { startLine: 1, endLine: 1 },
+        { startLine: 2, endLine: 2 },
+      ];
       Object.defineProperty(extraProp, 'extra', {
         value: 1,
         enumerable: true,
