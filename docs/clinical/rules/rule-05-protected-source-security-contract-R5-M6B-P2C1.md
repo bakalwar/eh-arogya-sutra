@@ -474,3 +474,15 @@ See §6 for the authoritative P2C-OD-01–19 table with decision tokens and summ
 This verdict means **security contract documentation only**. It does **not** imply protected execution readiness, dry-run authorization, verification complete, manifest ready/persisted, or owner-primary verified.
 
 **Evidence activation:** **NONE**. **Clinical validation:** **0**. **Runtime:** **NOT_IMPLEMENTED** / **NOT_CONNECTED**. **`BYTE_PROOF_PENDING`** and **`OWNER_PRIMARY_VERIFICATION_PENDING`** remain.
+
+---
+
+## 27. P2-C2 cross-reference (synthetic repo-safe manifest schema)
+
+| Item | Status |
+|------|--------|
+| **P2-C2** | **`P2-C2 SYNTHETIC_REPO_SAFE_MANIFEST_SCHEMA_VALIDATOR_PRESENT`** — see P2-A §25.7 |
+| **Scope** | Synthetic in-memory schema/validator/serializer only; **`NO_COMMITTED_JSON_FIXTURE`** |
+| **Protected-local manifest** | **Unimplemented** — requires separate contract and authorization |
+| **P2-C1 execution authority** | **Unchanged** — no protected-source access, dry/full run, or manifest persistence authorized |
+| **B3 boundary** | B3 remains **permanently synthetic-only** |
