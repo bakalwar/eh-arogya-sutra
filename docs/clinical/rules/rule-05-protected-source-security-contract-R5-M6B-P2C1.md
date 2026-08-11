@@ -486,3 +486,18 @@ This verdict means **security contract documentation only**. It does **not** imp
 | **Protected-local manifest** | **Unimplemented** — requires separate contract and authorization |
 | **P2-C1 execution authority** | **Unchanged** — no protected-source access, dry/full run, or manifest persistence authorized |
 | **B3 boundary** | B3 remains **permanently synthetic-only** |
+
+---
+
+## 28. P2-C3A cross-reference (Windows protected-runner technical contract)
+
+| Item | Status |
+|------|--------|
+| **P2-C3A** | **`P2-C3A WINDOWS_PROTECTED_RUNNER_TECHNICAL_CONTRACT_DOCUMENTATION_RECORDED`** — see P2-A §25.8 |
+| **Scope** | Documentation-only technical contract; **`PROTECTED_RUNNER_NOT_IMPLEMENTED`** |
+| **Pure Node protected open** | **`PURE_NODE_PROTECTED_FILE_OPEN_NOT_AUTHORIZED`** |
+| **Native hardening** | **`NATIVE_OR_VERIFIED_OS_HANDLE_HARDENING_REQUIRED`** before protected clinical bytes |
+| **Security-access dry run** | **`SECURITY_ACCESS_DRY_RUN_NOT_AUTHORIZED`** — distinct from byte verification |
+| **P2-C1 execution authority** | **Unchanged** — no protected-source access, hashing, dry/full run, or manifest persistence authorized |
+| **P2-C2 schema** | **Synthetic-only** — no reuse for protected results |
+| **B3 boundary** | B3 remains **permanently Linux synthetic-only** |

@@ -497,6 +497,31 @@ P2-C2 implements a **12-field**, **flat**, **repo-safe synthetic** manifest vali
 
 ---
 
+## 25.8 P2-C3A Windows protected-runner technical contract status (documentation tranche)
+
+| Status | Value |
+|--------|--------|
+| **Authorization token** | **`R5_P2C3A_WINDOWS_PROTECTED_RUNNER_TECHNICAL_CONTRACT_DOCUMENTATION_AUTHORIZED`** |
+| **P2-C3A** | **`P2-C3A WINDOWS_PROTECTED_RUNNER_TECHNICAL_CONTRACT_DOCUMENTATION_RECORDED`** — [rule-05-windows-protected-runner-contract-R5-M6B-P2C3A.md](./rule-05-windows-protected-runner-contract-R5-M6B-P2C3A.md) |
+| **Classification** | **DOCUMENTATION_ONLY** / **TECHNICAL_CONTRACT_ONLY** |
+| **Pure Node protected open** | **`PURE_NODE_PROTECTED_FILE_OPEN_NOT_AUTHORIZED`** |
+| **Native / verified OS-handle hardening** | **`NATIVE_OR_VERIFIED_OS_HANDLE_HARDENING_REQUIRED`** — before protected clinical byte access |
+| **Protected runner** | **`PROTECTED_RUNNER_NOT_IMPLEMENTED`** |
+| **Security-access dry run** | **`SECURITY_ACCESS_DRY_RUN_NOT_AUTHORIZED`** |
+| **Protected source** | **`PROTECTED_SOURCE_EXECUTION_NOT_AUTHORIZED`** |
+| **Digest** | **`NO_HASH_COMPUTATION`** |
+| **Manifest persistence** | **`NO_MANIFEST_PERSISTENCE`** / **`MANIFEST_PERSISTENCE_NOT_AUTHORIZED`** |
+| **`ownerPrimaryVerified`** | **`OWNER_PRIMARY_VERIFIED_NOT_ADVANCED`** — not set |
+| **Runtime** | **`CLI_RUNTIME_NOT_CONNECTED`** |
+| **Byte proof (owner corpus)** | **`BYTE_PROOF_PENDING`** |
+| **Stage ladder** | C3A → C3B → review → C3C → review → C3D → review → C3E — separate tokens; no auto-advance |
+| **B3 boundary** | B3 remains **permanently Linux synthetic-only** — **`B3_NON_REUSE_PERMANENT`** |
+| **P2-C2 boundary** | P2-C2 schema **synthetic-only** — **`P2_C2_SCHEMA_NON_REUSE_FOR_PROTECTED_RESULTS`** |
+
+P2-C3A records Windows protected-runner architecture, P2C3-OD-01–20, feasibility matrix, output category framework, and provisional failure taxonomy only. It does **not** implement code, run filesystem or native experiments, access protected source, compute digests, create or persist manifests, authorize security-access dry run or full run, populate catalog rows, set **`ownerPrimaryVerified`**, or connect runtime. §25.1–§25.7 history is unchanged.
+
+---
+
 ## 26. P2-OD-01–19 register (P2-A recorded)
 
 | ID | Decision | Recorded choice |
