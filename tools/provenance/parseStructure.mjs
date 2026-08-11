@@ -1,8 +1,25 @@
 import { BV_ENC_INVALID, inspectByteCharacteristics } from './verifyCore.mjs';
 
+export const RULE5_WRAPPER_SOURCE_AMBIGUOUS = 'RULE5_WRAPPER_SOURCE_AMBIGUOUS';
+
+export class Rule5WrapperSourceAmbiguityError extends Error {
+  constructor() {
+    super('Wrapper source structure is ambiguous');
+    this.name = 'Rule5WrapperSourceAmbiguityError';
+    this.failureCode = RULE5_WRAPPER_SOURCE_AMBIGUOUS;
+  }
+}
+
 const MAX_INPUT_BYTES = 262144;
 
 const LENGTH_UNITS = new Set(['BYTE', 'UTF8_CODEPOINT', 'UTF16_CODE_UNIT', 'LINE_COUNT', 'ABSENT']);
+
+const WRAPPER_MODE_FIXED = 'FIXED_USER_QUERY_V1';
+
+const WRAPPER_OPEN_TOKEN = '<user_query>';
+const WRAPPER_CLOSE_TOKEN = '</user_query>';
+
+const ALLOWED_CONFIG_KEY_SETS = [new Set(['lengthUnit']), new Set(['lengthUnit', 'wrapperMode'])];
 
 const UTF8_DECODER = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true });
 
@@ -21,8 +38,29 @@ function copyBytes(input) {
 }
 
 /**
+ * @param {object} config
+ * @param {string} key
+ * @returns {unknown}
+ */
+function readOwnDataValue(config, key) {
+  if (!Object.hasOwn(config, key)) {
+    throw new TypeError('Malformed parser config');
+  }
+  const descriptor = Object.getOwnPropertyDescriptor(config, key);
+  if (
+    descriptor === undefined ||
+    descriptor.get !== undefined ||
+    descriptor.set !== undefined ||
+    !Object.prototype.hasOwnProperty.call(descriptor, 'value')
+  ) {
+    throw new TypeError('Malformed parser config');
+  }
+  return descriptor.value;
+}
+
+/**
  * @param {unknown} config
- * @returns {{ lengthUnit: string }}
+ * @returns {{ lengthUnit: string, wrapperMode?: string }}
  */
 function validateConfig(config) {
   if (typeof config !== 'object' || config === null || Array.isArray(config)) {
@@ -33,26 +71,36 @@ function validateConfig(config) {
     throw new TypeError('Malformed parser config');
   }
   const ownKeys = Reflect.ownKeys(config);
-  if (ownKeys.length !== 1 || ownKeys[0] !== 'lengthUnit') {
+  for (const key of ownKeys) {
+    if (typeof key !== 'string') {
+      throw new TypeError('Malformed parser config');
+    }
+  }
+  const ownKeySet = new Set(ownKeys);
+  const keySetValid = ALLOWED_CONFIG_KEY_SETS.some(
+    (allowed) =>
+      allowed.size === ownKeySet.size &&
+      [...allowed].every((allowedKey) => ownKeySet.has(allowedKey)),
+  );
+  if (!keySetValid) {
     throw new TypeError('Malformed parser config');
   }
-  if (!Object.hasOwn(config, 'lengthUnit')) {
-    throw new TypeError('Malformed parser config');
-  }
-  const descriptor = Object.getOwnPropertyDescriptor(config, 'lengthUnit');
-  if (
-    descriptor === undefined ||
-    descriptor.get !== undefined ||
-    descriptor.set !== undefined ||
-    !Object.prototype.hasOwnProperty.call(descriptor, 'value')
-  ) {
-    throw new TypeError('Malformed parser config');
-  }
-  const { value: lengthUnit } = descriptor;
+
+  const lengthUnit = readOwnDataValue(config, 'lengthUnit');
   if (!LENGTH_UNITS.has(lengthUnit)) {
     throw new TypeError('Malformed parser config');
   }
-  return { lengthUnit };
+
+  if (!ownKeySet.has('wrapperMode')) {
+    return { lengthUnit };
+  }
+
+  const wrapperMode = readOwnDataValue(config, 'wrapperMode');
+  if (wrapperMode !== WRAPPER_MODE_FIXED) {
+    throw new TypeError('Malformed parser config');
+  }
+
+  return { lengthUnit, wrapperMode };
 }
 
 /**
@@ -115,6 +163,53 @@ function comparisonView(lineIndex1Based, lineText) {
  */
 function isDiscoveredHeaderLine(view) {
   return view.startsWith('MED=') && view.length >= 5 && view.length <= 256;
+}
+
+/**
+ * @param {string[]} lines
+ * @returns {{ openLine: 'ABSENT' | number, closeLine: 'ABSENT' | number, boundaryEndLine: number }}
+ */
+function resolveFixedWrapperFields(lines) {
+  const totalLogicalLines = lines.length;
+  let openCount = 0;
+  let closeCount = 0;
+  let openLine = 0;
+  let closeLine = 0;
+
+  for (let lineNo = 1; lineNo <= totalLogicalLines; lineNo += 1) {
+    const view = comparisonView(lineNo, lines[lineNo - 1]);
+    if (view === WRAPPER_OPEN_TOKEN) {
+      openCount += 1;
+      openLine = lineNo;
+    }
+    if (view === WRAPPER_CLOSE_TOKEN) {
+      closeCount += 1;
+      closeLine = lineNo;
+    }
+  }
+
+  if (openCount === 0 && closeCount === 0) {
+    return {
+      openLine: 'ABSENT',
+      closeLine: 'ABSENT',
+      boundaryEndLine: totalLogicalLines,
+    };
+  }
+
+  if (
+    openCount === 1 &&
+    closeCount === 1 &&
+    openLine <= closeLine &&
+    closeLine <= totalLogicalLines
+  ) {
+    return {
+      openLine,
+      closeLine,
+      boundaryEndLine: totalLogicalLines,
+    };
+  }
+
+  throw new Rule5WrapperSourceAmbiguityError();
 }
 
 /**
@@ -221,10 +316,12 @@ function buildEncInvalidObservation() {
 
 /**
  * @param {Buffer | Uint8Array} bytes
- * @param {{ lengthUnit: string }} config
+ * @param {{ lengthUnit: string, wrapperMode?: string }} config
  */
 export function parseSyntheticStructureFromBytes(bytes, config) {
-  const { lengthUnit } = validateConfig(config);
+  const validated = validateConfig(config);
+  const { lengthUnit } = validated;
+  const wrapperMode = validated.wrapperMode;
   const copy = copyBytes(bytes);
   if (copy.length > MAX_INPUT_BYTES) {
     throw new RangeError();
@@ -273,16 +370,21 @@ export function parseSyntheticStructureFromBytes(bytes, config) {
     lengthUnit,
   );
 
+  const wrapper =
+    wrapperMode === WRAPPER_MODE_FIXED
+      ? resolveFixedWrapperFields(lines)
+      : {
+          openLine: 'ABSENT',
+          closeLine: 'ABSENT',
+          boundaryEndLine: totalLogicalLines,
+        };
+
   const observation = {
     interpretiveEncoding: 'PASS',
     occurrences,
     lineAnchorObserved,
     jsonlAnchorObserved: 'ABSENT',
-    wrapper: {
-      openLine: 'ABSENT',
-      closeLine: 'ABSENT',
-      boundaryEndLine: totalLogicalLines,
-    },
+    wrapper,
     excludedRanges: [],
     ...lengthFields,
   };
