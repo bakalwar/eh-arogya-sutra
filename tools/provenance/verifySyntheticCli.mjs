@@ -232,6 +232,14 @@ function buildSuccessPayload(inspection, observation, lengthUnit) {
   };
 }
 
+/** @type {null | { isConfinedOpenSupported?: () => boolean }} */
+let cliTestSeam = null;
+
+/** @param {null | { isConfinedOpenSupported?: () => boolean }} seam */
+export function __setCliTestSeam(seam) {
+  cliTestSeam = seam;
+}
+
 /**
  * @param {string[]} argv
  */
@@ -252,7 +260,7 @@ export function runVerifySyntheticCli(argv) {
   if (process.platform !== 'linux') {
     exitError(RULE5_CLI_UNSUPPORTED_PLATFORM, 1);
   }
-  if (!isConfinedOpenSupported()) {
+  if (!(cliTestSeam?.isConfinedOpenSupported ?? isConfinedOpenSupported)()) {
     exitError(RULE5_CLI_UNSUPPORTED_PLATFORM, 1);
   }
 

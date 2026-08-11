@@ -17,7 +17,9 @@ import * as fsConstants from 'node:fs';
 import {
   MARKER_EXACT_BYTES,
   MARKER_FILENAME,
+  Rule5SyntheticInputError,
   __setAdapterTestSeam,
+  readSyntheticInput,
 } from '../../tools/provenance/readSyntheticInput.mjs';
 import {
   HELP_TEXT,
@@ -25,6 +27,7 @@ import {
   RULE5_CLI_USAGE_ERROR,
   TOOL_VERSION,
   VERSION_TEXT,
+  __setCliTestSeam,
   runVerifySyntheticCli,
 } from '../../tools/provenance/verifySyntheticCli.mjs';
 
@@ -131,6 +134,7 @@ function parseStdoutJson(stdout) {
 
 afterEach(() => {
   __setAdapterTestSeam(null);
+  __setCliTestSeam(null);
   while (createdTempRoots.length > 0) {
     const target = createdTempRoots.pop();
     if (target && existsSync(target)) {
@@ -360,12 +364,15 @@ describe.skipIf(process.platform !== 'linux')(
         },
       });
 
-      const result = runCli(['--root', root, '--input', 'x.txt', '--length-unit', 'ABSENT']);
-      expect(result.status).toBe(2);
-      expect(parseStdoutJson(result.stdout ?? '').failureCode).toBe(
-        'RULE5_CLI_PATH_CONFINEMENT_FAILED',
-      );
-      expectEmptyStderr(result);
+      expect(() => readSyntheticInput(root, 'x.txt')).toThrow(Rule5SyntheticInputError);
+      try {
+        readSyntheticInput(root, 'x.txt');
+      } catch (err) {
+        expect(err).toBeInstanceOf(Rule5SyntheticInputError);
+        expect(/** @type {Rule5SyntheticInputError} */ err.failureCode).toBe(
+          'RULE5_CLI_PATH_CONFINEMENT_FAILED',
+        );
+      }
     });
 
     it('rejects root symlink component, input symlink, and directory input', () => {
@@ -411,7 +418,9 @@ describe.skipIf(process.platform !== 'linux')(
       expect(result.status).toBe(4);
       expect(parseStdoutJson(result.stdout ?? '').failureCode).toBe('RULE5_CLI_HARDLINK_REJECTED');
 
-      writeInput(root, 'probe.txt', 'MED=B');
+      const root2 = createTempRoot();
+      writeMarker(root2);
+      writeInput(root2, 'probe.txt', 'MED=B');
       const originalFstat = fsConstants.fstatSync.bind(fsConstants);
       let fstatCalls = 0;
       __setAdapterTestSeam({
@@ -426,11 +435,16 @@ describe.skipIf(process.platform !== 'linux')(
           return stats;
         },
       });
-      result = runCli(['--root', root, '--input', 'probe.txt', '--length-unit', 'ABSENT']);
-      expect(result.status).toBe(2);
-      expect(parseStdoutJson(result.stdout ?? '').failureCode).toBe(
-        'RULE5_CLI_PATH_CONFINEMENT_FAILED',
-      );
+
+      expect(() => readSyntheticInput(root2, 'probe.txt')).toThrow(Rule5SyntheticInputError);
+      try {
+        readSyntheticInput(root2, 'probe.txt');
+      } catch (err) {
+        expect(err).toBeInstanceOf(Rule5SyntheticInputError);
+        expect(/** @type {Rule5SyntheticInputError} */ err.failureCode).toBe(
+          'RULE5_CLI_PATH_CONFINEMENT_FAILED',
+        );
+      }
     });
 
     it('accepts exactly 262144 bytes and rejects 262145 bytes', () => {
@@ -517,17 +531,27 @@ describe.skipIf(process.platform !== 'linux')(
     });
 
     it('maps O_NOFOLLOW unavailable to unsupported platform without fallback', () => {
-      const constantsSpy = vi.spyOn(fsConstants, 'constants', 'get').mockReturnValue({
-        ...fsConstants.constants,
-        O_NOFOLLOW: undefined,
+      __setCliTestSeam({ isConfinedOpenSupported: () => false });
+      let stdout = '';
+      const writeSpy = vi.spyOn(process.stdout, 'write').mockImplementation((chunk) => {
+        stdout += String(chunk);
+        return true;
+      });
+      const exitSpy = vi.spyOn(process, 'exit').mockImplementation(((code) => {
+        throw new Error(`exit:${code}`);
+      }) as never);
+
+      expect(() =>
+        runVerifySyntheticCli(['--root', '/tmp/x', '--input', 'a.txt', '--length-unit', 'ABSENT']),
+      ).toThrow('exit:1');
+      expect(parseStdoutJson(stdout)).toEqual({
+        toolVersion: TOOL_VERSION,
+        outcome: 'ERROR',
+        failureCode: RULE5_CLI_UNSUPPORTED_PLATFORM,
       });
 
-      const result = runCli(['--root', '/tmp/x', '--input', 'a.txt', '--length-unit', 'ABSENT']);
-      expect(result.status).toBe(1);
-      expect(parseStdoutJson(result.stdout ?? '').failureCode).toBe(RULE5_CLI_UNSUPPORTED_PLATFORM);
-      expectEmptyStderr(result);
-
-      constantsSpy.mockRestore();
+      writeSpy.mockRestore();
+      exitSpy.mockRestore();
     });
   },
 );

@@ -75,8 +75,9 @@ function requireSameIdentity(before, after) {
 
 /**
  * @param {string} absolutePath
+ * @param {string} symlinkFailureCode
  */
-function lstatExistingComponents(absolutePath) {
+function lstatExistingComponents(absolutePath, symlinkFailureCode) {
   const resolved = path.resolve(absolutePath);
   const parsed = path.parse(resolved);
   const segments = resolved.slice(parsed.root.length).split(path.sep).filter(Boolean);
@@ -93,7 +94,7 @@ function lstatExistingComponents(absolutePath) {
       fail(RULE5_CLI_READ_FAILED);
     }
     if (stats.isSymbolicLink()) {
-      fail(RULE5_CLI_ROOT_INVALID);
+      fail(symlinkFailureCode);
     }
   }
 }
@@ -114,6 +115,9 @@ function validateMarker(markerPath, openFlags) {
   }
 
   if (preOpenStats.isSymbolicLink() || !preOpenStats.isFile()) {
+    fail(RULE5_CLI_MARKER_INVALID);
+  }
+  if (preOpenStats.nlink !== 1) {
     fail(RULE5_CLI_MARKER_INVALID);
   }
 
@@ -235,7 +239,7 @@ export function readSyntheticInput(rootPath, relativeInput) {
   const openFlags = requireOpenFlags();
   const canonicalRoot = path.resolve(rootPath);
 
-  lstatExistingComponents(canonicalRoot);
+  lstatExistingComponents(canonicalRoot, RULE5_CLI_ROOT_INVALID);
 
   let rootStats;
   try {
@@ -248,7 +252,7 @@ export function readSyntheticInput(rootPath, relativeInput) {
   }
 
   const markerPath = path.join(canonicalRoot, MARKER_FILENAME);
-  lstatExistingComponents(markerPath);
+  lstatExistingComponents(markerPath, RULE5_CLI_MARKER_INVALID);
   validateMarker(markerPath, openFlags);
 
   const candidatePath = path.resolve(canonicalRoot, relativeInput);
@@ -261,6 +265,6 @@ export function readSyntheticInput(rootPath, relativeInput) {
     fail(RULE5_CLI_PATH_CONFINEMENT_FAILED);
   }
 
-  lstatExistingComponents(candidatePath);
+  lstatExistingComponents(candidatePath, RULE5_CLI_UNSAFE_FILE_TYPE);
   return readBoundedInput(candidatePath, openFlags);
 }
