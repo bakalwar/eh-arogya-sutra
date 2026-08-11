@@ -132,6 +132,28 @@ function expectFailureCode(input, code) {
   }
 }
 
+/** @param {Record<string, unknown>} base @param {ProxyHandler<object>} handler */
+function proxyInput(base, handler) {
+  return new Proxy(base, handler);
+}
+
+const TRAP_SENTINEL = '__R5_TRAP_SENTINEL_XYZ__';
+
+/** @param {unknown} input @param {string} code */
+function expectTrapFailureWithoutSentinel(input, code) {
+  try {
+    validateSyntheticManifest(input);
+    throw new Error('expected validation failure');
+  } catch (err) {
+    expect(err).toBeInstanceOf(Rule5SyntheticManifestValidationError);
+    expect(err.failureCode).toBe(code);
+    expect(err.message).toBe(code);
+    expect(err.message).not.toContain(TRAP_SENTINEL);
+    expect(err.failureCode).not.toContain(TRAP_SENTINEL);
+    expect(JSON.stringify(err)).not.toContain(TRAP_SENTINEL);
+  }
+}
+
 function shaLike() {
   return 'sha256:' + 'a'.repeat(64);
 }
@@ -418,5 +440,71 @@ describe('provenance manifestSchema (P2-C2 synthetic repo-safe)', () => {
     expect(copy.sourceArtifactId).toBe('SYN-0001');
     expect(copy.protectedSourceAccessed).toBe(false);
     expect(Object.isFrozen(copy)).toBe(true);
+  });
+
+  it('maps Proxy getPrototypeOf trap to INVALID_DOCUMENT without leaking trap text', () => {
+    const input = proxyInput(canonicalInput(), {
+      getPrototypeOf() {
+        throw new Error(TRAP_SENTINEL);
+      },
+    });
+    expectTrapFailureWithoutSentinel(input, RULE5_SYNTHETIC_MANIFEST_INVALID_DOCUMENT);
+  });
+
+  it('maps Proxy ownKeys trap to INVALID_DOCUMENT without leaking trap text', () => {
+    const input = proxyInput(canonicalInput(), {
+      ownKeys() {
+        throw new Error(TRAP_SENTINEL);
+      },
+    });
+    expectTrapFailureWithoutSentinel(input, RULE5_SYNTHETIC_MANIFEST_INVALID_DOCUMENT);
+  });
+
+  it('maps Proxy getOwnPropertyDescriptor trap during descriptor scan to INVALID_DOCUMENT', () => {
+    const input = proxyInput(canonicalInput(), {
+      getOwnPropertyDescriptor(_target, _prop) {
+        throw new Error(TRAP_SENTINEL);
+      },
+    });
+    expectTrapFailureWithoutSentinel(input, RULE5_SYNTHETIC_MANIFEST_INVALID_DOCUMENT);
+  });
+
+  it('maps revoked Proxy to INVALID_DOCUMENT', () => {
+    const { proxy, revoke } = Proxy.revocable(canonicalInput(), {});
+    revoke();
+    expectFailureCode(proxy, RULE5_SYNTHETIC_MANIFEST_INVALID_DOCUMENT);
+  });
+
+  it('accepts non-enumerable own data fields', () => {
+    const input = canonicalInput();
+    Object.defineProperty(input, 'toolVersion', {
+      value: TOOL_VERSION,
+      enumerable: false,
+    });
+    const copy = validateSyntheticManifest(input);
+    expect(copy.toolVersion).toBe(TOOL_VERSION);
+  });
+
+  it('reports first missing field in canonical order using ownKeys membership', () => {
+    const input = canonicalInput();
+    delete input.manifestVersion;
+    delete input.schemaKind;
+    expectFailureCode(input, RULE5_SYNTHETIC_MANIFEST_MISSING_FIELD);
+  });
+
+  it('serializeSyntheticManifest maps Proxy trap to INVALID_DOCUMENT', () => {
+    const input = proxyInput(canonicalInput(), {
+      getOwnPropertyDescriptor() {
+        throw new Error(TRAP_SENTINEL);
+      },
+    });
+    try {
+      serializeSyntheticManifest(input);
+      throw new Error('expected serialization failure');
+    } catch (err) {
+      expect(err).toBeInstanceOf(Rule5SyntheticManifestValidationError);
+      expect(err.failureCode).toBe(RULE5_SYNTHETIC_MANIFEST_INVALID_DOCUMENT);
+      expect(JSON.stringify(err)).not.toContain(TRAP_SENTINEL);
+    }
   });
 });

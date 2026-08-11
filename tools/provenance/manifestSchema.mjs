@@ -443,7 +443,16 @@ export function validateSyntheticManifest(input) {
   if (typeof input !== 'object' || input === null) {
     fail(RULE5_SYNTHETIC_MANIFEST_INVALID_DOCUMENT);
   }
-  if (Array.isArray(input)) {
+  let isArray;
+  try {
+    isArray = Array.isArray(input);
+  } catch (err) {
+    if (err instanceof Rule5SyntheticManifestValidationError) {
+      throw err;
+    }
+    fail(RULE5_SYNTHETIC_MANIFEST_INVALID_DOCUMENT);
+  }
+  if (isArray) {
     fail(RULE5_SYNTHETIC_MANIFEST_INVALID_DOCUMENT);
   }
 
@@ -454,7 +463,10 @@ export function validateSyntheticManifest(input) {
   let proto;
   try {
     proto = Object.getPrototypeOf(obj);
-  } catch {
+  } catch (err) {
+    if (err instanceof Rule5SyntheticManifestValidationError) {
+      throw err;
+    }
     fail(RULE5_SYNTHETIC_MANIFEST_INVALID_DOCUMENT);
   }
   if (proto !== Object.prototype) {
@@ -465,7 +477,10 @@ export function validateSyntheticManifest(input) {
   let ownKeys;
   try {
     ownKeys = Reflect.ownKeys(obj);
-  } catch {
+  } catch (err) {
+    if (err instanceof Rule5SyntheticManifestValidationError) {
+      throw err;
+    }
     fail(RULE5_SYNTHETIC_MANIFEST_INVALID_DOCUMENT);
   }
 
@@ -476,6 +491,7 @@ export function validateSyntheticManifest(input) {
   }
 
   const ownStringKeys = ownKeys.filter((k) => typeof k === 'string');
+  const ownStringKeySet = new Set(ownStringKeys);
   const unexpected = ownStringKeys.filter((k) => !ALLOWLIST.has(k));
   if (unexpected.length > 0) {
     const first = sortUnexpectedStringKeys(unexpected)[0];
@@ -483,7 +499,7 @@ export function validateSyntheticManifest(input) {
   }
 
   for (const field of CANONICAL_FIELD_ORDER) {
-    if (!Object.prototype.hasOwnProperty.call(obj, field)) {
+    if (!ownStringKeySet.has(field)) {
       fail(RULE5_SYNTHETIC_MANIFEST_MISSING_FIELD);
     }
   }
@@ -494,7 +510,10 @@ export function validateSyntheticManifest(input) {
     let descriptor;
     try {
       descriptor = Object.getOwnPropertyDescriptor(obj, field);
-    } catch {
+    } catch (err) {
+      if (err instanceof Rule5SyntheticManifestValidationError) {
+        throw err;
+      }
       fail(RULE5_SYNTHETIC_MANIFEST_INVALID_DOCUMENT);
     }
     if (
