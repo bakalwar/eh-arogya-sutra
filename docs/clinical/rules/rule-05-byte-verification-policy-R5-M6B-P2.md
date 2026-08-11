@@ -451,7 +451,28 @@ P2-B2C extends **`parseSyntheticStructureFromBytes`** with an optional strict **
 | **Manifest persistence** | **`MANIFEST_PERSISTENCE_NOT_AUTHORIZED`** |
 | **Runtime** | **`CLI_RUNTIME_NOT_CONNECTED`** |
 
-P2-B3 implements a **parser-only**, **Linux-only** confined synthetic CLI over an explicit **`--root`** with mandatory marker interlock (not cryptographic proof of synthetic content). It performs per-component **`lstat`**, **`O_RDONLY | O_NOFOLLOW`** open, **`fstat`** identity checks, **`nlink === 1`**, and bounded reads (marker ≤65 bytes; input ≤262145 read / ≤262144 accept). Operational stdout is one redacted JSON line; stderr is empty. Exit **0** for **`PARSED`** or **`ENCODING_INVALID`** only — not clinical validation, byte proof, or owner-corpus verification. It does **not** compare expectations, emit hashes, persist manifests, populate catalog rows, or connect runtime. **P2-C** remains **separately authorized**.
+P2-B3 implements a **parser-only**, **Linux-only** confined synthetic CLI over an explicit **`--root`** with mandatory marker interlock (not cryptographic proof of synthetic content). It performs per-component **`lstat`**, **`O_RDONLY | O_NOFOLLOW`** open, **`fstat`** identity checks, **`nlink === 1`**, and bounded reads (marker ≤65 bytes; input ≤262145 read / ≤262144 accept). Operational stdout is one redacted JSON line; stderr is empty. Exit **0** for **`PARSED`** or **`ENCODING_INVALID`** only — not clinical validation, byte proof, or owner-corpus verification. It does **not** compare expectations, emit hashes, persist manifests, populate catalog rows, or connect runtime. **P2-C1 / P2-C execution** remain **separately authorized** (see §25.6).
+
+---
+
+## 25.6 P2-C1 protected-source security contract status (documentation tranche)
+
+| Status | Value |
+|--------|--------|
+| **Authorization token** | **`R5_P2C1_PROTECTED_SOURCE_AND_MANIFEST_SECURITY_CONTRACT_DOCUMENTATION_AUTHORIZED`** |
+| **P2-C1** | **`P2_C1_DOCUMENTATION_ONLY_SECURITY_CONTRACT`** — [rule-05-protected-source-security-contract-R5-M6B-P2C1.md](./rule-05-protected-source-security-contract-R5-M6B-P2C1.md) |
+| **Classification** | **DOCUMENTATION_ONLY** / **SECURITY_CONTRACT_ONLY** |
+| **Verdict** | **`R5_P2C1_PROTECTED_SOURCE_AND_MANIFEST_SECURITY_CONTRACT_DOCUMENTATION_RECORDED`** |
+| **Sequencing** | P2-C1 is a **prerequisite documentation sub-tranche** that **precedes** historical §23 **P2-C protected dry run**; §23 label retained as historical |
+| **B3 boundary** | B3 remains **synthetic-only**, **Linux-only**, **marker-interlocked**, **parser-only** — **not** extended for protected source (**`SEPARATE_PROTECTED_SOURCE_RUNNER_REQUIRED`**) |
+| **Next possible impl** | **P2-C2** synthetic manifest schema only — **`P2_C2_SYNTHETIC_MANIFEST_SCHEMA_ONLY_REQUIRES_SEPARATE_AUTHORIZATION`** — **not authorized now** |
+| **Protected source** | **`PROTECTED_SOURCE_EXECUTION_NOT_AUTHORIZED`** |
+| **Byte proof (owner corpus)** | **`BYTE_PROOF_PENDING`** |
+| **Manifest persistence** | **`MANIFEST_PERSISTENCE_NOT_AUTHORIZED`** |
+| **Runtime** | **`CLI_RUNTIME_NOT_CONNECTED`** |
+| **`ownerPrimaryVerified`** | **Not set** — **`EXPLICIT_POST_RECONCILIATION_OWNER_DECISION_REQUIRED`** |
+
+P2-C1 records protected-source, manifest-field, trust-zone, checkpoint, and output-redaction rules only. It does **not** access protected source, compute digests, run dry/full protected execution, create or persist manifests, implement tooling, populate catalog rows, set **`ownerPrimaryVerified`**, or connect runtime. §25.1–§25.5 history is unchanged.
 
 ---
 
