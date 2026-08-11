@@ -522,6 +522,33 @@ P2-C3A records Windows protected-runner architecture, P2C3-OD-01–20, feasibili
 
 ---
 
+## 25.9 P2-C3B synthetic in-memory orchestration status (implementation + post-merge security review)
+
+| Status | Value |
+|--------|--------|
+| **Authorization token** | **`R5_P2C3B_SYNTHETIC_ORCHESTRATION_DOCUMENTATION_AUTHORIZED`** |
+| **P2-C3B contract** | [rule-05-synthetic-orchestration-contract-R5-M6B-P2C3B.md](./rule-05-synthetic-orchestration-contract-R5-M6B-P2C3B.md) |
+| **Implementation** | **`P2-C3B SYNTHETIC_IN_MEMORY_ORCHESTRATION_IMPLEMENTED`** — `tools/provenance/syntheticOrchestration.mjs` — merged PR **#73** @ `abc24d312138908470bbc9c9ba080ededc8cad3f` |
+| **Tests** | **`P2-C3B SYNTHETIC_IN_MEMORY_ORCHESTRATION_TESTS_PRESENT`** — 53 direct unit tests |
+| **Post-merge security review** | **`POST_C3B_INDEPENDENT_SECURITY_REVIEW_PASS`** — owner acceptance **`R5_P2C3B_POST_MERGE_INDEPENDENT_SECURITY_REVIEW_ACCEPTED`** |
+| **Scope** | **`SYNTHETIC_CALLER_OWNED_BYTES_ONLY`** / **`IN_MEMORY_ONLY`** |
+| **Byte cap** | **`MAX_SYNTHETIC_ORCHESTRATION_BYTES_262144`** |
+| **Resource-bound note** | **`EXCLUDED_RANGES_ELEMENT_CAP_NOT_SET_TRUSTED_IN_PROCESS_ONLY`** — not production-external safe |
+| **Digest** | **`NO_HASH_COMPUTATION`** |
+| **Filesystem** | **`NO_FILESYSTEM`** |
+| **CLI** | **`NO_CLI`** (B3 remains separate; **`B3_NON_REUSE_PERMANENT`**) |
+| **Manifest** | **`MANIFEST_COMPLETELY_EXCLUDED_FROM_C3B_V1`** / **`NO_MANIFEST_PERSISTENCE`** |
+| **Protected source** | **`PROTECTED_SOURCE_EXECUTION_NOT_AUTHORIZED`** |
+| **Dry run** | **`SECURITY_ACCESS_DRY_RUN_NOT_AUTHORIZED`** |
+| **`ownerPrimaryVerified`** | **`OWNER_PRIMARY_VERIFIED_NOT_ADVANCED`** |
+| **Runtime** | **`CLI_RUNTIME_NOT_CONNECTED`** |
+| **Byte proof (owner corpus)** | **`BYTE_PROOF_PENDING`** |
+| **Next stage** | **`C3C_NOT_AUTHORIZED`** — separate contract and owner token required |
+
+P2-C3B implements synthetic in-memory inspect/parse/optional-compare orchestration only. It does **not** access protected source, compute digests, write manifest files, run CLI, perform filesystem or native experiments, authorize C3C/C3D/C3E, populate catalog rows, set **`ownerPrimaryVerified`**, or connect runtime. §25.1–§25.8 history is unchanged.
+
+---
+
 ## 26. P2-OD-01–19 register (P2-A recorded)
 
 | ID | Decision | Recorded choice |
