@@ -12,8 +12,8 @@ import {
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import fs from 'node:fs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import * as fsConstants from 'node:fs';
 import {
   MARKER_EXACT_BYTES,
   MARKER_FILENAME,
@@ -136,6 +136,43 @@ function parseStdoutJson(stdout) {
   const trimmed = stdout.slice(0, -1);
   expect(trimmed.includes('\n')).toBe(false);
   return JSON.parse(trimmed);
+}
+
+/**
+ * Run a callback with an isolated node:fs mock; production modules stay unaware.
+ *
+ * @template T
+ * @param {(actual: typeof import('node:fs')) => Partial<typeof import('node:fs').default>} configureMock
+ * @param {(modules: {
+ *   adapter: typeof import('../../tools/provenance/readSyntheticInput.mjs');
+ *   cli?: typeof import('../../tools/provenance/verifySyntheticCli.mjs');
+ * }) => T | Promise<T>} fn
+ * @param {{ loadCli?: boolean }} [options]
+ * @returns {Promise<T>}
+ */
+async function withIsolatedFsMock(configureMock, fn, options = {}) {
+  return vi.isolateModulesAsync(async () => {
+    vi.doMock('node:fs', async (importOriginal) => {
+      const actual = await importOriginal();
+      const overrides = configureMock(/** @type {typeof import('node:fs')} */ actual);
+      const fsDefault = /** @type {typeof import('node:fs').default} */ actual.default;
+      return {
+        ...actual,
+        default: {
+          ...fsDefault,
+          ...overrides,
+        },
+      };
+    });
+
+    const adapter = await import('../../tools/provenance/readSyntheticInput.mjs');
+    /** @type {{ adapter: typeof adapter; cli?: typeof import('../../tools/provenance/verifySyntheticCli.mjs') }} */
+    const modules = { adapter };
+    if (options.loadCli) {
+      modules.cli = await import('../../tools/provenance/verifySyntheticCli.mjs');
+    }
+    return fn(modules);
+  });
 }
 
 afterEach(() => {
@@ -400,33 +437,42 @@ describe.skipIf(process.platform !== 'linux')(
       expect(parseStdoutJson(result.stdout ?? '').failureCode).toBe('RULE5_CLI_MARKER_INVALID');
     });
 
-    it('rejects marker lstat/fstat identity mismatch via test-runner fstat mock', () => {
+    it('rejects marker lstat/fstat identity mismatch via isolated fs mock', async () => {
       const root = createTempRoot();
       writeMarker(root);
       writeInput(root, 'x.txt', 'MED=A');
 
-      const originalFstat = fsConstants.fstatSync.bind(fsConstants);
-      let fstatCalls = 0;
-      vi.spyOn(fsConstants, 'fstatSync').mockImplementation((fd) => {
-        fstatCalls += 1;
-        const stats = originalFstat(fd);
-        if (fstatCalls === 1) {
-          return Object.create(stats, {
-            ino: { value: Number(stats.ino) + 999999, enumerable: true },
-          });
-        }
-        return stats;
-      });
-
-      expect(() => readSyntheticInput(root, 'x.txt')).toThrow(Rule5SyntheticInputError);
-      try {
-        readSyntheticInput(root, 'x.txt');
-      } catch (err) {
-        expect(err).toBeInstanceOf(Rule5SyntheticInputError);
-        expect(/** @type {Rule5SyntheticInputError} */ err.failureCode).toBe(
-          'RULE5_CLI_PATH_CONFINEMENT_FAILED',
-        );
-      }
+      await withIsolatedFsMock(
+        (actual) => {
+          let fstatCalls = 0;
+          const originalFstat = actual.default.fstatSync.bind(actual.default);
+          return {
+            fstatSync: (fd) => {
+              fstatCalls += 1;
+              const stats = originalFstat(fd);
+              if (fstatCalls === 1) {
+                return Object.create(stats, {
+                  ino: { value: Number(stats.ino) + 999999, enumerable: true },
+                });
+              }
+              return stats;
+            },
+          };
+        },
+        async ({ adapter }) => {
+          expect(() => adapter.readSyntheticInput(root, 'x.txt')).toThrow(
+            adapter.Rule5SyntheticInputError,
+          );
+          try {
+            adapter.readSyntheticInput(root, 'x.txt');
+          } catch (err) {
+            expect(err).toBeInstanceOf(adapter.Rule5SyntheticInputError);
+            expect(/** @type {Rule5SyntheticInputError} */ err.failureCode).toBe(
+              'RULE5_CLI_PATH_CONFINEMENT_FAILED',
+            );
+          }
+        },
+      );
     });
 
     it('rejects root symlink component, input symlink, and directory input', () => {
@@ -463,73 +509,97 @@ describe.skipIf(process.platform !== 'linux')(
       expect(parseStdoutJson(result.stdout ?? '').failureCode).toBe('RULE5_CLI_UNSAFE_FILE_TYPE');
     });
 
-    it('rejects input hard link and input identity mismatch', () => {
+    it('rejects input hard link and input identity mismatch', async () => {
       const root = createTempRoot();
       writeMarker(root);
       writeInput(root, 'primary.txt', 'MED=A');
       linkSync(path.join(root, 'primary.txt'), path.join(root, 'alias.txt'));
 
-      const fstatSpy = vi.spyOn(fsConstants, 'fstatSync');
       const result = runCli(['--root', root, '--input', 'alias.txt', '--length-unit', 'ABSENT']);
       expect(result.status).toBe(4);
       expect(parseStdoutJson(result.stdout ?? '').failureCode).toBe('RULE5_CLI_HARDLINK_REJECTED');
-      expect(fstatSpy).toHaveBeenCalled();
-      fstatSpy.mockRestore();
 
       const root2 = createTempRoot();
       writeMarker(root2);
       writeInput(root2, 'probe.txt', 'MED=B');
-      const originalFstat = fsConstants.fstatSync.bind(fsConstants);
-      let fstatCalls = 0;
-      vi.spyOn(fsConstants, 'fstatSync').mockImplementation((fd) => {
-        fstatCalls += 1;
-        const stats = originalFstat(fd);
-        if (fstatCalls === 2) {
-          return Object.create(stats, {
-            ino: { value: Number(stats.ino) + 424242, enumerable: true },
-          });
-        }
-        return stats;
-      });
 
-      expect(() => readSyntheticInput(root2, 'probe.txt')).toThrow(Rule5SyntheticInputError);
-      try {
-        readSyntheticInput(root2, 'probe.txt');
-      } catch (err) {
-        expect(err).toBeInstanceOf(Rule5SyntheticInputError);
-        expect(/** @type {Rule5SyntheticInputError} */ err.failureCode).toBe(
-          'RULE5_CLI_PATH_CONFINEMENT_FAILED',
-        );
-      }
+      await withIsolatedFsMock(
+        (actual) => {
+          let fstatCalls = 0;
+          const originalFstat = actual.default.fstatSync.bind(actual.default);
+          return {
+            fstatSync: (fd) => {
+              fstatCalls += 1;
+              const stats = originalFstat(fd);
+              if (fstatCalls === 2) {
+                return Object.create(stats, {
+                  ino: { value: Number(stats.ino) + 424242, enumerable: true },
+                });
+              }
+              return stats;
+            },
+          };
+        },
+        async ({ adapter }) => {
+          expect(() => adapter.readSyntheticInput(root2, 'probe.txt')).toThrow(
+            adapter.Rule5SyntheticInputError,
+          );
+          try {
+            adapter.readSyntheticInput(root2, 'probe.txt');
+          } catch (err) {
+            expect(err).toBeInstanceOf(adapter.Rule5SyntheticInputError);
+            expect(/** @type {Rule5SyntheticInputError} */ err.failureCode).toBe(
+              'RULE5_CLI_PATH_CONFINEMENT_FAILED',
+            );
+          }
+        },
+      );
     });
 
-    it('uses real fstat after test-runner mocks are restored', () => {
+    it('uses real fstat after isolated fs mocks complete', async () => {
       const root = createTempRoot();
       writeMarker(root);
       writeInput(root, 'real-stat.txt', 'MED=R');
 
-      const originalFstat = fsConstants.fstatSync.bind(fsConstants);
-      let fstatCalls = 0;
-      vi.spyOn(fsConstants, 'fstatSync').mockImplementation((fd) => {
-        fstatCalls += 1;
-        const stats = originalFstat(fd);
-        if (fstatCalls === 1) {
-          return Object.create(stats, {
-            ino: { value: Number(stats.ino) + 111, enumerable: true },
-          });
-        }
-        return stats;
-      });
-
-      expect(() => readSyntheticInput(root, 'real-stat.txt')).toThrow(Rule5SyntheticInputError);
-      vi.restoreAllMocks();
+      await withIsolatedFsMock(
+        (actual) => {
+          let fstatCalls = 0;
+          const originalFstat = actual.default.fstatSync.bind(actual.default);
+          return {
+            fstatSync: (fd) => {
+              fstatCalls += 1;
+              const stats = originalFstat(fd);
+              if (fstatCalls === 1) {
+                return Object.create(stats, {
+                  ino: { value: Number(stats.ino) + 111, enumerable: true },
+                });
+              }
+              return stats;
+            },
+          };
+        },
+        async ({ adapter }) => {
+          expect(() => adapter.readSyntheticInput(root, 'real-stat.txt')).toThrow(
+            adapter.Rule5SyntheticInputError,
+          );
+        },
+      );
 
       const bytes = readSyntheticInput(root, 'real-stat.txt');
       expect(bytes.length).toBeGreaterThan(0);
     });
 
+    it('production adapter reads input using real fstat without mocks', () => {
+      const root = createTempRoot();
+      writeMarker(root);
+      writeInput(root, 'unmocked.txt', 'MED=U');
+
+      const bytes = readSyntheticInput(root, 'unmocked.txt');
+      expect(bytes.toString('utf8')).toBe('MED=U');
+    });
+
     it('asserts runtime O_NOFOLLOW availability via real constants', () => {
-      expect(fsConstants.constants.O_NOFOLLOW).toBeDefined();
+      expect(fs.constants.O_NOFOLLOW).toBeDefined();
       expect(isConfinedOpenSupported()).toBe(true);
     });
 
@@ -616,32 +686,47 @@ describe.skipIf(process.platform !== 'linux')(
       );
     });
 
-    it('maps O_NOFOLLOW unavailable to unsupported platform without fallback', () => {
-      const constantsSpy = vi.spyOn(fsConstants, 'constants', 'get').mockReturnValue({
-        ...fsConstants.constants,
-        O_NOFOLLOW: undefined,
-      });
-      let stdout = '';
-      const writeSpy = vi.spyOn(process.stdout, 'write').mockImplementation((chunk) => {
-        stdout += String(chunk);
-        return true;
-      });
-      const exitSpy = vi.spyOn(process, 'exit').mockImplementation(((code) => {
-        throw new Error(`exit:${code}`);
-      }) as never);
+    it('maps O_NOFOLLOW unavailable to unsupported platform without fallback', async () => {
+      await withIsolatedFsMock(
+        (actual) => ({
+          constants: {
+            ...actual.default.constants,
+            O_NOFOLLOW: undefined,
+          },
+        }),
+        async ({ cli }) => {
+          let stdout = '';
+          const writeSpy = vi.spyOn(process.stdout, 'write').mockImplementation((chunk) => {
+            stdout += String(chunk);
+            return true;
+          });
+          const exitSpy = vi.spyOn(process, 'exit').mockImplementation(((code) => {
+            throw new Error(`exit:${code}`);
+          }) as never);
 
-      expect(() =>
-        runVerifySyntheticCli(['--root', '/tmp/x', '--input', 'a.txt', '--length-unit', 'ABSENT']),
-      ).toThrow('exit:1');
-      expect(parseStdoutJson(stdout)).toEqual({
-        toolVersion: TOOL_VERSION,
-        outcome: 'ERROR',
-        failureCode: RULE5_CLI_UNSUPPORTED_PLATFORM,
-      });
-
-      constantsSpy.mockRestore();
-      writeSpy.mockRestore();
-      exitSpy.mockRestore();
+          try {
+            expect(() =>
+              cli!.runVerifySyntheticCli([
+                '--root',
+                '/tmp/x',
+                '--input',
+                'a.txt',
+                '--length-unit',
+                'ABSENT',
+              ]),
+            ).toThrow('exit:1');
+            expect(parseStdoutJson(stdout)).toEqual({
+              toolVersion: TOOL_VERSION,
+              outcome: 'ERROR',
+              failureCode: RULE5_CLI_UNSUPPORTED_PLATFORM,
+            });
+          } finally {
+            writeSpy.mockRestore();
+            exitSpy.mockRestore();
+          }
+        },
+        { loadCli: true },
+      );
     });
   },
 );
