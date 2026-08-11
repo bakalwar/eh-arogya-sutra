@@ -414,7 +414,7 @@ describe.skipIf(process.platform !== 'linux')(
       writeMarker(root);
       writeInput(root, 'primary.txt', 'MED=A');
       linkSync(path.join(root, 'primary.txt'), path.join(root, 'alias.txt'));
-      let result = runCli(['--root', root, '--input', 'alias.txt', '--length-unit', 'ABSENT']);
+      const result = runCli(['--root', root, '--input', 'alias.txt', '--length-unit', 'ABSENT']);
       expect(result.status).toBe(4);
       expect(parseStdoutJson(result.stdout ?? '').failureCode).toBe('RULE5_CLI_HARDLINK_REJECTED');
 
