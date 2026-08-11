@@ -99,7 +99,7 @@ C3B is **not** a protected-source runner, byte-proof engine, or clinical validat
 |----|------------|-------------------|
 | **C3B-Q01** | **`INSPECT_PARSE_WITH_EXPLICIT_OPTIONAL_COMPARE`** | Always: snapshot → inspect → parse. Compare only when a third argument is supplied and `assessmentMode === 'COMPARE'`. Omission = parse-only. `{ assessmentMode: 'NOT_APPLICABLE' }` runs compare path with NOT_APPLICABLE outcome when encoding valid. |
 | **C3B-Q02** | **`BYTE_ROOTS_BUFFER_AND_UINT8ARRAY_ONLY`** | Accepted roots: `Buffer` (when available) and `Uint8Array` only. All other roots → `INVALID_INPUT`. |
-| **C3B-Q03** | **`STRICT_TRAP_SAFE_OBSERVATIONAL_VALIDATION`** | See **§7 C3B-C01**. Config/expectation validated by observational trap-safe reads; no universal Proxy rejection claim. |
+| **C3B-Q03** | **`STRICT_TRAP_SAFE_PLAIN_OBJECT_INPUTS`** | See **§7 C3B-C01**. Normative meaning: observational trap-safe validation of plain-object inputs; no universal Proxy rejection claim. |
 | **C3B-Q04** | **`SINGLE_IMMUTABLE_BYTE_SNAPSHOT`** | Exactly one `Uint8Array.from` snapshot per call; downstream receives snapshot only. |
 | **C3B-Q05** | **`SYNTHETIC_ONLY_NO_IO_HASH_MANIFEST_CLI`** | No filesystem, network, subprocess, hash, manifest, or CLI surface in C3B v1. |
 | **C3B-Q06** | **`FIXED_DOWNSTREAM_IMPORT_SURFACE`** | Imports limited to `inspectByteCharacteristics`, `parseSyntheticStructureFromBytes`, `compareSyntheticStructure`, and wrapper-ambiguity symbols from parseStructure. |
