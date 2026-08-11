@@ -14,7 +14,6 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import fs from 'node:fs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { Rule5SyntheticInputError } from '../../tools/provenance/readSyntheticInput.mjs';
 import {
   MARKER_EXACT_BYTES,
   MARKER_FILENAME,
@@ -467,7 +466,7 @@ describe.skipIf(process.platform !== 'linux')(
             adapter.readSyntheticInput(root, 'x.txt');
           } catch (err) {
             expect(err).toBeInstanceOf(adapter.Rule5SyntheticInputError);
-            expect(/** @type {Rule5SyntheticInputError} */ err.failureCode).toBe(
+            expect(/** @type {{ failureCode: string }} */ (err).failureCode).toBe(
               'RULE5_CLI_PATH_CONFINEMENT_FAILED',
             );
           }
@@ -548,7 +547,7 @@ describe.skipIf(process.platform !== 'linux')(
             adapter.readSyntheticInput(root2, 'probe.txt');
           } catch (err) {
             expect(err).toBeInstanceOf(adapter.Rule5SyntheticInputError);
-            expect(/** @type {Rule5SyntheticInputError} */ err.failureCode).toBe(
+            expect(/** @type {{ failureCode: string }} */ (err).failureCode).toBe(
               'RULE5_CLI_PATH_CONFINEMENT_FAILED',
             );
           }
