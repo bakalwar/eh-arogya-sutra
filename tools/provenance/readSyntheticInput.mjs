@@ -27,14 +27,6 @@ export class Rule5SyntheticInputError extends Error {
   }
 }
 
-/** @type {null | { fstat?: (fd: number) => fs.Stats }} */
-let adapterTestSeam = null;
-
-/** @param {null | { fstat?: (fd: number) => fs.Stats }} seam */
-export function __setAdapterTestSeam(seam) {
-  adapterTestSeam = seam;
-}
-
 /**
  * @param {string} failureCode
  * @returns {never}
@@ -129,7 +121,7 @@ function validateMarker(markerPath, openFlags) {
   }
 
   try {
-    const postOpenStats = adapterTestSeam?.fstat ? adapterTestSeam.fstat(fd) : fs.fstatSync(fd);
+    const postOpenStats = fs.fstatSync(fd);
     if (!postOpenStats.isFile()) {
       fail(RULE5_CLI_MARKER_INVALID);
     }
@@ -193,7 +185,7 @@ function readBoundedInput(candidatePath, openFlags) {
   }
 
   try {
-    const postOpenStats = adapterTestSeam?.fstat ? adapterTestSeam.fstat(fd) : fs.fstatSync(fd);
+    const postOpenStats = fs.fstatSync(fd);
     if (!postOpenStats.isFile()) {
       fail(RULE5_CLI_UNSAFE_FILE_TYPE);
     }

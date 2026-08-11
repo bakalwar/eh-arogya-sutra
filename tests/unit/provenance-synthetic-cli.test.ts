@@ -18,18 +18,19 @@ import {
   MARKER_EXACT_BYTES,
   MARKER_FILENAME,
   Rule5SyntheticInputError,
-  __setAdapterTestSeam,
+  isConfinedOpenSupported,
   readSyntheticInput,
 } from '../../tools/provenance/readSyntheticInput.mjs';
+import * as adapterModule from '../../tools/provenance/readSyntheticInput.mjs';
 import {
   HELP_TEXT,
   RULE5_CLI_UNSUPPORTED_PLATFORM,
   RULE5_CLI_USAGE_ERROR,
   TOOL_VERSION,
   VERSION_TEXT,
-  __setCliTestSeam,
   runVerifySyntheticCli,
 } from '../../tools/provenance/verifySyntheticCli.mjs';
+import * as cliModule from '../../tools/provenance/verifySyntheticCli.mjs';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const CLI_PATH = path.join(REPO_ROOT, 'tools/provenance/verifySyntheticCli.mjs');
@@ -53,6 +54,11 @@ const FORBIDDEN_CLI_IMPORTS = [
   /from\s+['"]node:child_process['"]/,
   /process\.env/,
 ];
+
+const FORBIDDEN_EXPORT_NAME = /TestSeam|setAdapter|setCli|override|mock/i;
+
+const ADAPTER_EXPORTS = Object.keys(adapterModule);
+const CLI_EXPORTS = Object.keys(cliModule);
 
 const LEAKAGE_PATTERNS = [
   /sha256:/i,
@@ -133,8 +139,7 @@ function parseStdoutJson(stdout) {
 }
 
 afterEach(() => {
-  __setAdapterTestSeam(null);
-  __setCliTestSeam(null);
+  vi.restoreAllMocks();
   while (createdTempRoots.length > 0) {
     const target = createdTempRoots.pop();
     if (target && existsSync(target)) {
@@ -144,6 +149,57 @@ afterEach(() => {
 });
 
 describe('provenance verifySyntheticCli (P2-B3 confined synthetic CLI)', () => {
+  it('does not export production mutable test seam setters', () => {
+    expect(ADAPTER_EXPORTS).not.toContain('__setAdapterTestSeam');
+    expect(CLI_EXPORTS).not.toContain('__setCliTestSeam');
+    for (const name of [...ADAPTER_EXPORTS, ...CLI_EXPORTS]) {
+      expect(name).not.toMatch(FORBIDDEN_EXPORT_NAME);
+    }
+  });
+
+  it('adapter source contains no mutable seam state', () => {
+    const source = readFileSync(ADAPTER_PATH, 'utf8');
+    expect(source).not.toMatch(/adapterTestSeam|cliTestSeam|__setAdapterTestSeam|__setCliTestSeam/);
+    expect(source).not.toMatch(/TestSeam|setAdapter|setCli/);
+  });
+
+  it('reports programmatic export inventory for new modules', () => {
+    expect(ADAPTER_EXPORTS.sort()).toEqual(
+      [
+        'INPUT_MAX_BYTES',
+        'INPUT_MAX_READ',
+        'MARKER_EXACT_BYTE_LENGTH',
+        'MARKER_EXACT_BYTES',
+        'MARKER_FILENAME',
+        'MARKER_MAX_READ',
+        'MARKER_MAX_SIZE',
+        'RULE5_CLI_HARDLINK_REJECTED',
+        'RULE5_CLI_INPUT_NOT_FOUND',
+        'RULE5_CLI_INPUT_OVERSIZE',
+        'RULE5_CLI_MARKER_INVALID',
+        'RULE5_CLI_PATH_CONFINEMENT_FAILED',
+        'RULE5_CLI_READ_FAILED',
+        'RULE5_CLI_ROOT_INVALID',
+        'RULE5_CLI_UNSAFE_FILE_TYPE',
+        'RULE5_CLI_UNSUPPORTED_PLATFORM',
+        'Rule5SyntheticInputError',
+        'isConfinedOpenSupported',
+        'readSyntheticInput',
+      ].sort(),
+    );
+    expect(CLI_EXPORTS.sort()).toEqual(
+      [
+        'HELP_TEXT',
+        'RULE5_CLI_INTERNAL_ERROR',
+        'RULE5_CLI_UNSUPPORTED_PLATFORM',
+        'RULE5_CLI_USAGE_ERROR',
+        'TOOL_VERSION',
+        'VERSION_TEXT',
+        'runVerifySyntheticCli',
+      ].sort(),
+    );
+  });
+
   it('adapter import boundary allows only node:fs and node:path', () => {
     const source = readFileSync(ADAPTER_PATH, 'utf8');
     for (const pattern of FORBIDDEN_ADAPTER_IMPORTS) {
@@ -344,24 +400,22 @@ describe.skipIf(process.platform !== 'linux')(
       expect(parseStdoutJson(result.stdout ?? '').failureCode).toBe('RULE5_CLI_MARKER_INVALID');
     });
 
-    it('rejects marker lstat/fstat identity mismatch via adapter test seam', () => {
+    it('rejects marker lstat/fstat identity mismatch via test-runner fstat mock', () => {
       const root = createTempRoot();
       writeMarker(root);
       writeInput(root, 'x.txt', 'MED=A');
 
       const originalFstat = fsConstants.fstatSync.bind(fsConstants);
       let fstatCalls = 0;
-      __setAdapterTestSeam({
-        fstat: (fd) => {
-          fstatCalls += 1;
-          const stats = originalFstat(fd);
-          if (fstatCalls === 1) {
-            return Object.create(stats, {
-              ino: { value: Number(stats.ino) + 999999, enumerable: true },
-            });
-          }
-          return stats;
-        },
+      vi.spyOn(fsConstants, 'fstatSync').mockImplementation((fd) => {
+        fstatCalls += 1;
+        const stats = originalFstat(fd);
+        if (fstatCalls === 1) {
+          return Object.create(stats, {
+            ino: { value: Number(stats.ino) + 999999, enumerable: true },
+          });
+        }
+        return stats;
       });
 
       expect(() => readSyntheticInput(root, 'x.txt')).toThrow(Rule5SyntheticInputError);
@@ -414,26 +468,28 @@ describe.skipIf(process.platform !== 'linux')(
       writeMarker(root);
       writeInput(root, 'primary.txt', 'MED=A');
       linkSync(path.join(root, 'primary.txt'), path.join(root, 'alias.txt'));
+
+      const fstatSpy = vi.spyOn(fsConstants, 'fstatSync');
       const result = runCli(['--root', root, '--input', 'alias.txt', '--length-unit', 'ABSENT']);
       expect(result.status).toBe(4);
       expect(parseStdoutJson(result.stdout ?? '').failureCode).toBe('RULE5_CLI_HARDLINK_REJECTED');
+      expect(fstatSpy).toHaveBeenCalled();
+      fstatSpy.mockRestore();
 
       const root2 = createTempRoot();
       writeMarker(root2);
       writeInput(root2, 'probe.txt', 'MED=B');
       const originalFstat = fsConstants.fstatSync.bind(fsConstants);
       let fstatCalls = 0;
-      __setAdapterTestSeam({
-        fstat: (fd) => {
-          fstatCalls += 1;
-          const stats = originalFstat(fd);
-          if (fstatCalls === 2) {
-            return Object.create(stats, {
-              ino: { value: Number(stats.ino) + 424242, enumerable: true },
-            });
-          }
-          return stats;
-        },
+      vi.spyOn(fsConstants, 'fstatSync').mockImplementation((fd) => {
+        fstatCalls += 1;
+        const stats = originalFstat(fd);
+        if (fstatCalls === 2) {
+          return Object.create(stats, {
+            ino: { value: Number(stats.ino) + 424242, enumerable: true },
+          });
+        }
+        return stats;
       });
 
       expect(() => readSyntheticInput(root2, 'probe.txt')).toThrow(Rule5SyntheticInputError);
@@ -445,6 +501,36 @@ describe.skipIf(process.platform !== 'linux')(
           'RULE5_CLI_PATH_CONFINEMENT_FAILED',
         );
       }
+    });
+
+    it('uses real fstat after test-runner mocks are restored', () => {
+      const root = createTempRoot();
+      writeMarker(root);
+      writeInput(root, 'real-stat.txt', 'MED=R');
+
+      const originalFstat = fsConstants.fstatSync.bind(fsConstants);
+      let fstatCalls = 0;
+      vi.spyOn(fsConstants, 'fstatSync').mockImplementation((fd) => {
+        fstatCalls += 1;
+        const stats = originalFstat(fd);
+        if (fstatCalls === 1) {
+          return Object.create(stats, {
+            ino: { value: Number(stats.ino) + 111, enumerable: true },
+          });
+        }
+        return stats;
+      });
+
+      expect(() => readSyntheticInput(root, 'real-stat.txt')).toThrow(Rule5SyntheticInputError);
+      vi.restoreAllMocks();
+
+      const bytes = readSyntheticInput(root, 'real-stat.txt');
+      expect(bytes.length).toBeGreaterThan(0);
+    });
+
+    it('asserts runtime O_NOFOLLOW availability via real constants', () => {
+      expect(fsConstants.constants.O_NOFOLLOW).toBeDefined();
+      expect(isConfinedOpenSupported()).toBe(true);
     });
 
     it('accepts exactly 262144 bytes and rejects 262145 bytes', () => {
@@ -531,7 +617,10 @@ describe.skipIf(process.platform !== 'linux')(
     });
 
     it('maps O_NOFOLLOW unavailable to unsupported platform without fallback', () => {
-      __setCliTestSeam({ isConfinedOpenSupported: () => false });
+      const constantsSpy = vi.spyOn(fsConstants, 'constants', 'get').mockReturnValue({
+        ...fsConstants.constants,
+        O_NOFOLLOW: undefined,
+      });
       let stdout = '';
       const writeSpy = vi.spyOn(process.stdout, 'write').mockImplementation((chunk) => {
         stdout += String(chunk);
@@ -550,6 +639,7 @@ describe.skipIf(process.platform !== 'linux')(
         failureCode: RULE5_CLI_UNSUPPORTED_PLATFORM,
       });
 
+      constantsSpy.mockRestore();
       writeSpy.mockRestore();
       exitSpy.mockRestore();
     });
