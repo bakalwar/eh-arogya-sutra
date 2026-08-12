@@ -4,20 +4,24 @@
 |-------|--------|
 | **Stage** | **C3D** = protected-runner **implementation** stage |
 | **This document** | Records the **C3D implementation contract only** |
-| **Classification** | **`C3D_DOCUMENTATION_ONLY`** |
-| **Authorization (this tranche)** | **`R5_P2C3D_PROTECTED_RUNNER_CONTRACT_DOCUMENTATION_AUTHORIZED`** |
-| **Implementation** | **`C3D_IMPLEMENTATION_NOT_AUTHORIZED`** / **`C3D_SYNTHETIC_IMPLEMENTATION_NOT_EXECUTED`** |
-| **Status token** | **`P2_C3D_PROTECTED_RUNNER_IMPLEMENTATION_CONTRACT_DOCUMENTED`** |
+| **Classification (contract tranche)** | **`C3D_DOCUMENTATION_ONLY`** (historical for this contract document) |
+| **Authorization (contract tranche)** | **`R5_P2C3D_PROTECTED_RUNNER_CONTRACT_DOCUMENTATION_AUTHORIZED`** |
+| **Implementation (historical contract-facing)** | **`C3D_IMPLEMENTATION_NOT_AUTHORIZED`** / **`C3D_SYNTHETIC_IMPLEMENTATION_NOT_EXECUTED`** — valid for the **contract-documentation** tranche only |
+| **Status token (contract)** | **`P2_C3D_PROTECTED_RUNNER_IMPLEMENTATION_CONTRACT_DOCUMENTED`** |
+| **Companion post-merge implementation evidence** | [rule-05-windows-protected-runner-implementation-evidence-R5-M6B-P2C3D.md](./rule-05-windows-protected-runner-implementation-evidence-R5-M6B-P2C3D.md) |
+| **Current canonical `main` (post PR #81)** | `e9560ee2c457af2439f0b664f9f766446b636171` |
 | **Cost lock** | **`NO_PAID_API_SERVICE_DEPENDENCY_OR_CERTIFICATE`** / **`ZERO_PAID_ROUTE_AVAILABLE`** |
 | **C3E** | **`C3E_NOT_AUTHORIZED`** |
-| **Protected source** | **`PROTECTED_SOURCE_DISCOVERY_NOT_AUTHORIZED`** / **`PROTECTED_SOURCE_EXECUTION_NOT_AUTHORIZED`** |
+| **Protected source** | **`PROTECTED_SOURCE_DISCOVERY_NOT_AUTHORIZED`** / **`PROTECTED_SOURCE_ACCESS_NOT_AUTHORIZED`** / **`PROTECTED_SOURCE_EXECUTION_NOT_AUTHORIZED`** |
 | **Security-access** | **`SECURITY_ACCESS_DRY_RUN_NOT_AUTHORIZED`** / **`SECURITY_ACCESS_FULL_RUN_NOT_AUTHORIZED`** |
 | **Hash / manifest** | **`NO_HASH_COMPUTATION`** / **`NO_MANIFEST_PERSISTENCE`** |
 | **Byte proof** | **`BYTE_PROOF_PENDING`** |
 | **`ownerPrimaryVerified`** | **`OWNER_PRIMARY_VERIFIED_NOT_ADVANCED`** |
 | **Catalog / runtime** | **`CATALOG_ROW_COUNT_0`** / **`CLI_RUNTIME_NOT_CONNECTED`** |
 
-**Permanent lock:** Approval of this C3D **contract** does **not** authorize C3D **implementation**, does **not** authorize C3E, and does **not** authorize discovery, opening, or reading of protected-source bytes. Protected-source bytes remain inaccessible until a separate owner **C3E** authorization after C3D implementation merge, mandatory synthetic proof evidence, independent native security review, post-merge evidence, and an owner-visible checkpoint immediately before access.
+**Permanent lock:** Approval of this C3D **contract** did **not** by itself authorize C3D **implementation** or C3E. A **later**, separately authorized synthetic implementation was merged via **PR #81**; see the companion post-merge implementation evidence. Protected-source bytes remain inaccessible until a separate owner **C3E** authorization after an owner-visible checkpoint immediately before access.
+
+**Current post-merge status (supersedes stale “implementation not authorized / not executed” current-facing readings for synthetic C3D implementation only):** **`P2_C3D_SYNTHETIC_PROTECTED_RUNNER_IMPLEMENTATION_MERGED`** / **`C3D_MANDATORY_SYNTHETIC_EVIDENCE_21_OF_21_SUPPORTED`** / **`POST_C3D_INDEPENDENT_NATIVE_SECURITY_REVIEW_PASS`** / **`C3D_POST_MERGE_IMPLEMENTATION_EVIDENCE_DOCUMENTED`**. **C3E**, protected-source discovery/access/execution, dry/full run, hashing, manifest, `ownerPrimaryVerified`, catalog, and runtime remain **not** authorized.
 
 ---
 
@@ -27,20 +31,20 @@
 
 Define the exact, security-locked implementation contract for a **separate EHAS2 Windows protected-runner** component so a later, separately authorized C3D implementation can proceed without reopening settled C3A–C3C decisions.
 
-### 1.2 Non-goals (this tranche and until separately authorized)
+### 1.2 Non-goals (contract tranche; protected/C3E boundaries remain)
 
-| Forbidden now | Token / note |
+| Forbidden / not authorized by this contract document alone | Token / note |
 |---------------|--------------|
-| C3D implementation (Rust/Cargo/crate/tests) | **`C3D_IMPLEMENTATION_NOT_AUTHORIZED`** |
-| Synthetic C3D native execution | **`C3D_SYNTHETIC_IMPLEMENTATION_NOT_EXECUTED`** |
-| Protected-source discovery / open / read | **`PROTECTED_SOURCE_*_NOT_AUTHORIZED`** |
-| C3E dry or full security-access run | **`C3E_NOT_AUTHORIZED`** |
-| Hash / digest / byte proof | **`NO_HASH_COMPUTATION`** / **`BYTE_PROOF_PENDING`** |
-| Manifest creation or persistence | **`NO_MANIFEST_PERSISTENCE`** |
-| Catalog / CLI / runtime connection | **`CATALOG_ROW_COUNT_0`** / **`CLI_RUNTIME_NOT_CONNECTED`** |
-| `ownerPrimaryVerified` advancement | **`OWNER_PRIMARY_VERIFIED_NOT_ADVANCED`** |
-| Deployment / legacy project mutation | Explicit STOP |
-| Paid API / SaaS / CI / certificate / commercial native lib | **`NO_PAID_API_SERVICE_DEPENDENCY_OR_CERTIFICATE`** |
+| C3D implementation via **this** contract tranche | Historical: **`C3D_IMPLEMENTATION_NOT_AUTHORIZED`** — later separately authorized and merged via PR #81; see [implementation evidence](./rule-05-windows-protected-runner-implementation-evidence-R5-M6B-P2C3D.md) |
+| Synthetic C3D native execution via **this** contract tranche | Historical: **`C3D_SYNTHETIC_IMPLEMENTATION_NOT_EXECUTED`** — later executed under separate authorization (PR #81 evidence) |
+| Protected-source discovery / open / read | **`PROTECTED_SOURCE_*_NOT_AUTHORIZED`** (**current**) |
+| C3E dry or full security-access run | **`C3E_NOT_AUTHORIZED`** (**current**) |
+| Hash / digest / byte proof | **`NO_HASH_COMPUTATION`** / **`BYTE_PROOF_PENDING`** (**current**) |
+| Manifest creation or persistence | **`NO_MANIFEST_PERSISTENCE`** (**current**) |
+| Catalog / CLI / runtime connection | **`CATALOG_ROW_COUNT_0`** / **`CLI_RUNTIME_NOT_CONNECTED`** (**current**) |
+| `ownerPrimaryVerified` advancement | **`OWNER_PRIMARY_VERIFIED_NOT_ADVANCED`** (**current**) |
+| Deployment / legacy project mutation | Explicit STOP (**current**) |
+| Paid API / SaaS / CI / certificate / commercial native lib | **`NO_PAID_API_SERVICE_DEPENDENCY_OR_CERTIFICATE`** (**current**) |
 
 ### 1.3 Authoritative inputs (preserve; do not redesign)
 
@@ -452,19 +456,20 @@ C3B and C3C **normative** contracts are not rewritten.
 
 ## 15. STOP boundary
 
-**Stop after C3D contract documentation.** Do **not**:
+**Historical (contract-documentation tranche):** stop after C3D contract documentation; that tranche did **not** authorize implementation.
 
-- implement C3D
-- create Rust/Cargo files under `windowsProtectedRunner/` or elsewhere
-- compile or execute native helpers
-- create filesystem fixtures or elevate
+**Current post-merge STOP (after PR #81 + evidence documentation):** do **not**:
+
+- start C3E
 - discover / access / read protected sources
 - compute hashes or create manifests
-- run C3E dry/full access
+- run security-access dry/full access
 - advance `ownerPrimaryVerified`
 - connect catalog/runtime
 - deploy
-- mark this documentation PR Ready or merge without owner process
+- weaken C3D-Q01–Q33 normative locks in this contract
+
+Synthetic C3D implementation already merged under separate authorization is recorded in [rule-05-windows-protected-runner-implementation-evidence-R5-M6B-P2C3D.md](./rule-05-windows-protected-runner-implementation-evidence-R5-M6B-P2C3D.md).
 
 ---
 
@@ -472,8 +477,9 @@ C3B and C3C **normative** contracts are not rewritten.
 
 | Field | Value |
 |-------|--------|
-| **Verdict label** | **`P2_C3D_PROTECTED_RUNNER_IMPLEMENTATION_CONTRACT_DOCUMENTED`** |
-| **Meaning** | C3D protected-runner implementation contract documentation only |
-| **Does not imply** | C3D implemented; synthetic proofs executed; C3E authorized; protected bytes accessible; byte proof complete; `ownerPrimaryVerified` |
+| **Verdict label (contract tranche)** | **`P2_C3D_PROTECTED_RUNNER_IMPLEMENTATION_CONTRACT_DOCUMENTED`** |
+| **Meaning** | C3D protected-runner implementation contract documentation |
+| **Current implementation evidence** | **`P2_C3D_SYNTHETIC_PROTECTED_RUNNER_IMPLEMENTATION_MERGED`** / **`C3D_POST_MERGE_IMPLEMENTATION_EVIDENCE_DOCUMENTED`** (PR #81) |
+| **Does not imply** | C3E authorized; protected bytes accessible; byte proof complete; `ownerPrimaryVerified` |
 
-**Delivery token (documentation PR):** **`R5_P2C3D_PROTECTED_RUNNER_CONTRACT_DOCUMENTATION_DELIVERED_FOR_REVIEW`**
+**Delivery token (contract documentation PR):** **`R5_P2C3D_PROTECTED_RUNNER_CONTRACT_DOCUMENTATION_DELIVERED_FOR_REVIEW`**

@@ -572,23 +572,26 @@ P2-C3B implements synthetic in-memory inspect/parse/optional-compare orchestrati
 | **Runtime** | **`CLI_RUNTIME_NOT_CONNECTED`** |
 | **Byte proof (owner corpus)** | **`BYTE_PROOF_PENDING`** |
 | **Catalog** | **`CATALOG_ROW_COUNT_0`** |
-| **Next stages** | See §25.11 — **`P2_C3D_PROTECTED_RUNNER_IMPLEMENTATION_CONTRACT_DOCUMENTED`** / **`C3D_IMPLEMENTATION_NOT_AUTHORIZED`** / **`C3E_NOT_AUTHORIZED`** |
+| **Next stages** | See §25.11 — **`P2_C3D_SYNTHETIC_PROTECTED_RUNNER_IMPLEMENTATION_MERGED`** / **`C3D_POST_MERGE_IMPLEMENTATION_EVIDENCE_DOCUMENTED`** / **`C3E_NOT_AUTHORIZED`** |
 
-P2-C3C records the Windows handle-hardening synthetic spike **contract**, zero-paid toolchain evidence, and (after PR #78) **synthetic implementation merge evidence**. Historical labels `C3C_IMPLEMENTATION_NOT_AUTHORIZED` / `C3C_SYNTHETIC_SPIKE_NOT_EXECUTED` remain valid only as **pre-implementation** status. Current work does **not** authorize protected-source access, digests, manifest persistence, C3D implementation, C3E, catalog rows, **`ownerPrimaryVerified`**, or runtime connection. §25.1–§25.9 history is unchanged.
+P2-C3C records the Windows handle-hardening synthetic spike **contract**, zero-paid toolchain evidence, and (after PR #78) **synthetic implementation merge evidence**. Historical labels `C3C_IMPLEMENTATION_NOT_AUTHORIZED` / `C3C_SYNTHETIC_SPIKE_NOT_EXECUTED` remain valid only as **pre-implementation** status. Current work does **not** authorize protected-source access, digests, manifest persistence, C3E, catalog rows, **`ownerPrimaryVerified`**, or runtime connection. §25.1–§25.9 history is unchanged.
 
 ---
 
-## 25.11 P2-C3D protected-runner implementation contract status
+## 25.11 P2-C3D protected-runner implementation status
 
 | Status | Value |
 |--------|--------|
-| **Contract authorization token** | **`R5_P2C3D_PROTECTED_RUNNER_CONTRACT_DOCUMENTATION_AUTHORIZED`** |
+| **Contract authorization token (historical)** | **`R5_P2C3D_PROTECTED_RUNNER_CONTRACT_DOCUMENTATION_AUTHORIZED`** |
 | **P2-C3D contract** | [rule-05-windows-protected-runner-implementation-contract-R5-M6B-P2C3D.md](./rule-05-windows-protected-runner-implementation-contract-R5-M6B-P2C3D.md) |
-| **Classification (current)** | **`P2_C3D_PROTECTED_RUNNER_IMPLEMENTATION_CONTRACT_DOCUMENTED`** / **`C3D_DOCUMENTATION_ONLY`** / **`C3D_IMPLEMENTATION_NOT_AUTHORIZED`** / **`C3D_SYNTHETIC_IMPLEMENTATION_NOT_EXECUTED`** |
+| **P2-C3D post-merge evidence** | [rule-05-windows-protected-runner-implementation-evidence-R5-M6B-P2C3D.md](./rule-05-windows-protected-runner-implementation-evidence-R5-M6B-P2C3D.md) |
+| **Classification (current)** | **`P2_C3D_SYNTHETIC_PROTECTED_RUNNER_IMPLEMENTATION_MERGED`** / **`C3D_MANDATORY_SYNTHETIC_EVIDENCE_21_OF_21_SUPPORTED`** / **`POST_C3D_INDEPENDENT_NATIVE_SECURITY_REVIEW_PASS`** / **`C3D_POST_MERGE_IMPLEMENTATION_EVIDENCE_DOCUMENTED`** |
+| **Historical contract-tranche labels** | `P2_C3D_PROTECTED_RUNNER_IMPLEMENTATION_CONTRACT_DOCUMENTED` / `C3D_DOCUMENTATION_ONLY` / `C3D_IMPLEMENTATION_NOT_AUTHORIZED` / `C3D_SYNTHETIC_IMPLEMENTATION_NOT_EXECUTED` remain valid only as **pre-PR #81** status |
+| **PR / merge identity** | PR #81; reviewed head `03f232e3…`; merge `e9560ee2…` |
 | **Cost lock** | **`NO_PAID_API_SERVICE_DEPENDENCY_OR_CERTIFICATE`** / **`ZERO_PAID_ROUTE_AVAILABLE`** |
 | **Digest** | **`NO_HASH_COMPUTATION`** |
 | **Manifest** | **`NO_MANIFEST_PERSISTENCE`** |
-| **Protected source** | **`PROTECTED_SOURCE_DISCOVERY_NOT_AUTHORIZED`** / **`PROTECTED_SOURCE_EXECUTION_NOT_AUTHORIZED`** |
+| **Protected source** | **`PROTECTED_SOURCE_DISCOVERY_NOT_AUTHORIZED`** / **`PROTECTED_SOURCE_ACCESS_NOT_AUTHORIZED`** / **`PROTECTED_SOURCE_EXECUTION_NOT_AUTHORIZED`** |
 | **Dry run** | **`SECURITY_ACCESS_DRY_RUN_NOT_AUTHORIZED`** |
 | **Full run** | **`SECURITY_ACCESS_FULL_RUN_NOT_AUTHORIZED`** |
 | **C3E** | **`C3E_NOT_AUTHORIZED`** |
@@ -597,7 +600,7 @@ P2-C3C records the Windows handle-hardening synthetic spike **contract**, zero-p
 | **Byte proof (owner corpus)** | **`BYTE_PROOF_PENDING`** |
 | **Catalog** | **`CATALOG_ROW_COUNT_0`** |
 
-P2-C3D records the protected-runner **implementation contract** only. It does **not** authorize C3D implementation, synthetic C3D native execution, C3E, protected-source discovery/open/read, digests, manifest persistence, catalog rows, **`ownerPrimaryVerified`**, or runtime connection. C3D contract approval does **not** authorize C3E. §25.1–§25.10 history is unchanged.
+P2-C3D records the protected-runner **implementation contract** and (after PR #81) **synthetic implementation merge evidence**. Historical labels `C3D_IMPLEMENTATION_NOT_AUTHORIZED` / `C3D_SYNTHETIC_IMPLEMENTATION_NOT_EXECUTED` remain valid only as **pre-implementation** status. Current work does **not** authorize C3E, protected-source discovery/open/read, digests, manifest persistence, catalog rows, **`ownerPrimaryVerified`**, or runtime connection. C3D completion does **not** authorize C3E. §25.1–§25.10 history is unchanged.
 
 ---
 
