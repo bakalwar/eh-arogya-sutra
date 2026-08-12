@@ -1,0 +1,25 @@
+[package]
+name = "windows_handle_spike"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "MIT OR Apache-2.0"
+description = "P2-C3C synthetic Windows handle-hardening spike (out-of-process)"
+
+[[bin]]
+name = "windows_handle_spike"
+path = "src/main.rs"
+
+[lib]
+name = "windows_handle_spike"
+path = "src/lib.rs"
+
+[dependencies]
+windows-sys = { version = "=0.61.2", default-features = false, features = [
+    "Wdk_Foundation",
+    "Wdk_Storage_FileSystem",
+    "Win32_Foundation",
+    "Win32_Security",
+    "Win32_Storage_FileSystem",
+    "Win32_System_IO",
+] }
