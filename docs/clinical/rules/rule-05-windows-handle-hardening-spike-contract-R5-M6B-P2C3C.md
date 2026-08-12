@@ -16,6 +16,7 @@
 | **Companion P2-C3A contract** | [rule-05-windows-protected-runner-contract-R5-M6B-P2C3A.md](./rule-05-windows-protected-runner-contract-R5-M6B-P2C3A.md) |
 | **Companion P2-C3B contract** | [rule-05-synthetic-orchestration-contract-R5-M6B-P2C3B.md](./rule-05-synthetic-orchestration-contract-R5-M6B-P2C3B.md) |
 | **Companion inventory** | [rule-05-evidence-inventory-R5-M6.md](./rule-05-evidence-inventory-R5-M6.md) |
+| **Companion zero-paid toolchain evidence** | [rule-05-windows-handle-hardening-spike-zero-paid-toolchain-license-evidence-R5-M6B-P2C3C.md](./rule-05-windows-handle-hardening-spike-zero-paid-toolchain-license-evidence-R5-M6B-P2C3C.md) |
 | **Track B CA-1** | **EMPTY_STRUCTURAL_CONTRACT_PRESENT** — **catalog row count 0** |
 
 This document records the **final P2-C3C Windows handle-hardening synthetic spike contract** only. It performs **no** Rust or native implementation, toolchain installation, compilation, binary generation, filesystem or native API experiment, Windows spike execution, protected-source discovery or access, hashing, manifest creation or persistence, security-access dry run, full run, catalog population, or runtime connection.
@@ -400,19 +401,13 @@ Any PARTIAL / UNAVAILABLE / UNDOCUMENTED / skipped mandatory control → **`C3C_
 
 ## 15. License and no-paid gate
 
-Do **not** claim legal or toolchain approval before exact versions and applicable terms are separately recorded and reviewed.
+Authoritative zero-paid toolchain / license evidence reconciliation (completed vs pending; 17-row decision table) is recorded in:
 
-| Component | Classification |
-|-----------|----------------|
-| Windows APIs already supplied by the owner’s legitimately licensed supported Windows installation | **`ALREADY_LICENSED_OS_COMPONENT`** |
-| Rust toolchain | **`IMPLEMENTATION_BLOCKING_LICENSE_VERIFICATION_REQUIRED`** |
-| `windows-sys` / `windows` crate | **`IMPLEMENTATION_BLOCKING_LICENSE_VERIFICATION_REQUIRED`** |
-| MSVC Build Tools and Windows SDK | **`IMPLEMENTATION_BLOCKING_LICENSE_VERIFICATION_REQUIRED`** |
-| Any future dependency until classified | **`LICENSE_UNRESOLVED_BLOCKING`** |
-| Paid signing / API / service / cloud / CI / telemetry | **`PAID_OR_METERED_REJECTED`** |
-| Optional GitHub Actions | **`OPTIONAL_SUPPLEMENTARY_FREE_TIER_ONLY`** — must not incur paid usage; must not become mandatory proof infrastructure |
+[rule-05-windows-handle-hardening-spike-zero-paid-toolchain-license-evidence-R5-M6B-P2C3C.md](./rule-05-windows-handle-hardening-spike-zero-paid-toolchain-license-evidence-R5-M6B-P2C3C.md)
 
-License-unresolved or paid-only required components **block implementation authorization**.
+**Status:** **`P2-C3C ZERO_PAID_TOOLCHAIN_LICENSE_EVIDENCE_DOCUMENTATION_RECORDED`** / **`ZERO_PAID_ROUTE_PARTIALLY_VERIFIED`** / **`COMMUNITY_CPP_WORKLOAD_LICENSE_REVIEW_PENDING`** / **`WINDOWS_SDK_LICENSE_REVIEW_PENDING`** / **`EXACT_TOOLCHAIN_VERSION_SELECTION_PENDING`** / **`INSTALLED_ARTIFACT_VERIFICATION_PENDING`** / **`CARGO_LOCK_RESOLUTION_PENDING`** / **`C3C_IMPLEMENTATION_NOT_AUTHORIZED`**.
+
+Do **not** claim legal approval, full toolchain verification, installation, or compilation from this contract. License-unresolved or paid-only required components **block implementation authorization**. GitHub Actions / workflow paths are **excluded** from C3C v1.
 
 ---
 
@@ -420,9 +415,13 @@ License-unresolved or paid-only required components **block implementation autho
 
 The following paths are recorded for a **later** implementation token only. This documentation tranche **must not** add them:
 
-- `tools/provenance/windowsHandleSpike/` (Rust helper source + lockfile)
-- optional Windows-gated tests
-- optional free-tier CI smoke line
+1. `tools/provenance/windowsHandleSpike/Cargo.toml`
+2. `tools/provenance/windowsHandleSpike/Cargo.lock`
+3. `tools/provenance/windowsHandleSpike/rust-toolchain.toml`
+4. `tools/provenance/windowsHandleSpike/src/**/*.rs`
+5. `tools/provenance/windowsHandleSpike/tests/**/*.rs`
+
+Exactly **five** entries. No README, workflow, GitHub Actions, prebuilt binary, or install scripts in this allowlist.
 
 **Forbidden now and in C3C implementation unless separately authorized:** Node-API addon, committed `.exe`, protected paths, hash/manifest modules, C3B reuse for filesystem proof, catalog/runtime/DB, C3D/C3E.
 
