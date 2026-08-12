@@ -549,29 +549,32 @@ P2-C3B implements synthetic in-memory inspect/parse/optional-compare orchestrati
 
 ---
 
-## 25.10 P2-C3C Windows handle-hardening synthetic spike status (contract documentation only)
+## 25.10 P2-C3C Windows handle-hardening synthetic spike status
 
 | Status | Value |
 |--------|--------|
-| **Authorization token** | **`R5_P2C3C_WINDOWS_HANDLE_HARDENING_SPIKE_CONTRACT_DOCUMENTATION_AUTHORIZED`** |
+| **Contract authorization token** | **`R5_P2C3C_WINDOWS_HANDLE_HARDENING_SPIKE_CONTRACT_DOCUMENTATION_AUTHORIZED`** |
 | **P2-C3C contract** | [rule-05-windows-handle-hardening-spike-contract-R5-M6B-P2C3C.md](./rule-05-windows-handle-hardening-spike-contract-R5-M6B-P2C3C.md) |
 | **Zero-paid toolchain evidence** | [rule-05-windows-handle-hardening-spike-zero-paid-toolchain-license-evidence-R5-M6B-P2C3C.md](./rule-05-windows-handle-hardening-spike-zero-paid-toolchain-license-evidence-R5-M6B-P2C3C.md) |
-| **Classification** | **`DOCUMENTATION_ONLY`** / **`P2-C3C WINDOWS_HANDLE_HARDENING_SPIKE_CONTRACT_DOCUMENTATION_RECORDED`** / **`P2-C3C ZERO_PAID_TOOLCHAIN_LICENSE_EVIDENCE_DOCUMENTATION_RECORDED`** (historical pre-install) / **`P2-C3C ZERO_PAID_LOCAL_TOOLCHAIN_POST_INSTALL_EVIDENCE_RECORDED`** |
-| **Zero-paid route** | **`ZERO_PAID_LOCAL_TOOLCHAIN_INSTALLED_VERIFIED`** / **`OWNER_ACCEPTED_INSTALLED_COMMUNITY_ROUTE_EVIDENCED`** — exact MSVC / Windows SDK / rustup / rustc / Cargo fingerprints recorded; **`CARGO_DEPENDENCY_RESOLUTION_PENDING`** / **`CARGO_LOCK_RESOLUTION_PENDING`** |
-| **Implementation** | **`C3C_IMPLEMENTATION_NOT_AUTHORIZED`** |
-| **Spike execution** | **`C3C_SYNTHETIC_SPIKE_NOT_EXECUTED`** |
+| **Post-merge implementation evidence** | [rule-05-windows-handle-hardening-spike-implementation-evidence-R5-M6B-P2C3C.md](./rule-05-windows-handle-hardening-spike-implementation-evidence-R5-M6B-P2C3C.md) |
+| **Classification (current)** | **`P2_C3C_SYNTHETIC_WINDOWS_HANDLE_HARDENING_SPIKE_IMPLEMENTATION_MERGED`** / **`C3C_SYNTHETIC_SPIKE_MANDATORY_EVIDENCE_17_OF_17_SUPPORTED`** / **`POST_C3C_INDEPENDENT_SECURITY_REVIEW_PASS`** / **`C3C_POST_MERGE_IMPLEMENTATION_EVIDENCE_DOCUMENTED`** |
+| **Historical contract / install labels** | **`P2-C3C WINDOWS_HANDLE_HARDENING_SPIKE_CONTRACT_DOCUMENTATION_RECORDED`** / **`P2-C3C ZERO_PAID_TOOLCHAIN_LICENSE_EVIDENCE_DOCUMENTATION_RECORDED`** (historical pre-install) / **`P2-C3C ZERO_PAID_LOCAL_TOOLCHAIN_POST_INSTALL_EVIDENCE_RECORDED`** |
+| **Zero-paid route** | **`ZERO_PAID_LOCAL_TOOLCHAIN_INSTALLED_VERIFIED`** / **`OWNER_ACCEPTED_INSTALLED_COMMUNITY_ROUTE_EVIDENCED`** — exact MSVC / Windows SDK / rustup / rustc / Cargo fingerprints recorded; Cargo graph locked via PR #78 (`windows-sys 0.61.2` → `windows-link 0.2.1`) |
+| **Implementation** | **`P2_C3C_SYNTHETIC_WINDOWS_HANDLE_HARDENING_SPIKE_IMPLEMENTATION_MERGED`** (PR #78; reviewed head `8eb6732…`; merge `39b5e8a…`) |
+| **Spike evidence** | **`C3C_SYNTHETIC_SPIKE_MANDATORY_EVIDENCE_17_OF_17_SUPPORTED`** (T03 retained elevated DIRECT; other 16 standard-user; no committed `#[ignore]`) |
 | **Cost lock** | **`NO_PAID_API_SERVICE_DEPENDENCY_OR_CERTIFICATE`** |
 | **Digest** | **`NO_HASH_COMPUTATION`** |
 | **Manifest** | **`NO_MANIFEST_PERSISTENCE`** |
 | **Protected source** | **`PROTECTED_SOURCE_EXECUTION_NOT_AUTHORIZED`** |
 | **Dry run** | **`SECURITY_ACCESS_DRY_RUN_NOT_AUTHORIZED`** |
+| **Full run** | **`SECURITY_ACCESS_FULL_RUN_NOT_AUTHORIZED`** |
 | **`ownerPrimaryVerified`** | **`OWNER_PRIMARY_VERIFIED_NOT_ADVANCED`** |
 | **Runtime** | **`CLI_RUNTIME_NOT_CONNECTED`** |
 | **Byte proof (owner corpus)** | **`BYTE_PROOF_PENDING`** |
 | **Catalog** | **`CATALOG_ROW_COUNT_0`** |
 | **Next stages** | **`C3D_NOT_AUTHORIZED`** / **`C3E_NOT_AUTHORIZED`** |
 
-P2-C3C records the Windows handle-hardening synthetic spike **contract**, the historical **zero-paid toolchain / license evidence reconciliation**, and the **post-install installed-version evidence** as documentation only. It does **not** authorize Cargo operations, compilation, filesystem or native spike execution, protected-source access, digests, manifest persistence, C3D/C3E, catalog rows, **`ownerPrimaryVerified`**, or runtime connection. §25.1–§25.9 history is unchanged.
+P2-C3C records the Windows handle-hardening synthetic spike **contract**, zero-paid toolchain evidence, and (after PR #78) **synthetic implementation merge evidence**. Historical labels `C3C_IMPLEMENTATION_NOT_AUTHORIZED` / `C3C_SYNTHETIC_SPIKE_NOT_EXECUTED` remain valid only as **pre-implementation** status. Current work does **not** authorize protected-source access, digests, manifest persistence, C3D/C3E, catalog rows, **`ownerPrimaryVerified`**, or runtime connection. §25.1–§25.9 history is unchanged.
 
 ---
 

@@ -10,18 +10,22 @@
 | **Global cost lock** | **`NO_PAID_API_SERVICE_DEPENDENCY_OR_CERTIFICATE`** |
 | **Contract corrections** | **C3C-C02** through **C3C-C07** |
 | **Authorization token (delivery)** | **`R5_P2C3C_WINDOWS_HANDLE_HARDENING_SPIKE_CONTRACT_DOCUMENTATION_AUTHORIZED`** |
-| **Authorization ceiling** | **`P2-C3C WINDOWS_HANDLE_HARDENING_SPIKE_CONTRACT_DOCUMENTATION_RECORDED`** |
-| **Canonical baseline (`main`)** | `69834fce940789a0a55d6ec6deb7148f8d92daf1` |
+| **Authorization ceiling (contract documentation)** | **`P2-C3C WINDOWS_HANDLE_HARDENING_SPIKE_CONTRACT_DOCUMENTATION_RECORDED`** |
+| **Historical contract baseline (`main`)** | `69834fce940789a0a55d6ec6deb7148f8d92daf1` |
+| **Current canonical `main` (post PR #78)** | `39b5e8af27e280dc93515e8cc5361f265016b9ad` |
 | **Companion P2-A policy** | [rule-05-byte-verification-policy-R5-M6B-P2.md](./rule-05-byte-verification-policy-R5-M6B-P2.md) |
 | **Companion P2-C3A contract** | [rule-05-windows-protected-runner-contract-R5-M6B-P2C3A.md](./rule-05-windows-protected-runner-contract-R5-M6B-P2C3A.md) |
 | **Companion P2-C3B contract** | [rule-05-synthetic-orchestration-contract-R5-M6B-P2C3B.md](./rule-05-synthetic-orchestration-contract-R5-M6B-P2C3B.md) |
 | **Companion inventory** | [rule-05-evidence-inventory-R5-M6.md](./rule-05-evidence-inventory-R5-M6.md) |
 | **Companion zero-paid toolchain evidence** | [rule-05-windows-handle-hardening-spike-zero-paid-toolchain-license-evidence-R5-M6B-P2C3C.md](./rule-05-windows-handle-hardening-spike-zero-paid-toolchain-license-evidence-R5-M6B-P2C3C.md) |
+| **Companion post-merge implementation evidence** | [rule-05-windows-handle-hardening-spike-implementation-evidence-R5-M6B-P2C3C.md](./rule-05-windows-handle-hardening-spike-implementation-evidence-R5-M6B-P2C3C.md) |
 | **Track B CA-1** | **EMPTY_STRUCTURAL_CONTRACT_PRESENT** — **catalog row count 0** |
 
-This document records the **final P2-C3C Windows handle-hardening synthetic spike contract** only. It performs **no** Rust or native implementation, toolchain installation, compilation, binary generation, filesystem or native API experiment, Windows spike execution, protected-source discovery or access, hashing, manifest creation or persistence, security-access dry run, full run, catalog population, or runtime connection.
+This document records the **final P2-C3C Windows handle-hardening synthetic spike contract** (normative Q01–Q24 / C02–C07). The contract documentation tranche itself performed **no** implementation. A **later**, separately authorized implementation was merged via **PR #78**; see the companion post-merge implementation evidence.
 
-**C3C success is not claimed.** Current state: **contract documentation recorded only.**
+**Historical (pre-implementation) state preserved below:** contract documentation recorded only; implementation not yet authorized in that tranche.
+
+**Current post-merge status (supersedes stale “not authorized / not executed” current-facing readings of §3 for implementation/spike execution only):** **`P2_C3C_SYNTHETIC_WINDOWS_HANDLE_HARDENING_SPIKE_IMPLEMENTATION_MERGED`** / **`C3C_SYNTHETIC_SPIKE_MANDATORY_EVIDENCE_17_OF_17_SUPPORTED`** / **`POST_C3C_INDEPENDENT_SECURITY_REVIEW_PASS`**. C3D/C3E, protected-source execution, dry/full run, hashing, manifest, `ownerPrimaryVerified`, catalog, and runtime remain **not** authorized.
 
 ---
 
@@ -39,12 +43,14 @@ P2-C3C documentation does **not** authorize implementation or the next P2C3 stag
 
 ## 3. Required governance status
 
-| Token | Meaning |
+### 3.1 Historical governance status (contract-documentation tranche; preserved)
+
+| Token | Meaning (historical at contract recording) |
 |-------|---------|
 | **`P2-C3C WINDOWS_HANDLE_HARDENING_SPIKE_CONTRACT_DOCUMENTATION_RECORDED`** | This contract is recorded as documentation only |
-| **`DOCUMENTATION_ONLY`** | No implementation in this tranche |
-| **`C3C_IMPLEMENTATION_NOT_AUTHORIZED`** | Rust helper, toolchain, compile, and spike code are **not** authorized |
-| **`C3C_SYNTHETIC_SPIKE_NOT_EXECUTED`** | No Windows filesystem/native spike has been run |
+| **`DOCUMENTATION_ONLY`** | No implementation in the **contract** tranche |
+| **`C3C_IMPLEMENTATION_NOT_AUTHORIZED`** | *(historical)* Rust helper / spike code not authorized **by the contract tranche** |
+| **`C3C_SYNTHETIC_SPIKE_NOT_EXECUTED`** | *(historical)* No Windows filesystem/native spike had been run at contract recording |
 | **`PROTECTED_SOURCE_EXECUTION_NOT_AUTHORIZED`** | No protected bytes |
 | **`SECURITY_ACCESS_DRY_RUN_NOT_AUTHORIZED`** | No dry run |
 | **`NO_HASH_COMPUTATION`** | No digest computation or comparison |
@@ -56,6 +62,27 @@ P2-C3C documentation does **not** authorize implementation or the next P2C3 stag
 | **`C3D_NOT_AUTHORIZED`** | Protected-runner implementation not authorized |
 | **`C3E_NOT_AUTHORIZED`** | Security-access dry run not authorized |
 | **`NO_PAID_API_SERVICE_DEPENDENCY_OR_CERTIFICATE`** | Permanent global cost lock |
+
+### 3.2 Current post-merge status (after PR #78; supersedes §3.1 for implementation/spike-execution current-facing rows only)
+
+| Token | Meaning |
+|-------|---------|
+| **`P2_C3C_SYNTHETIC_WINDOWS_HANDLE_HARDENING_SPIKE_IMPLEMENTATION_MERGED`** | Synthetic spike implementation merged via PR #78 |
+| **`C3C_SYNTHETIC_SPIKE_MANDATORY_EVIDENCE_17_OF_17_SUPPORTED`** | Aggregate mandatory evidence **17/17** (T03 retained elevated DIRECT; other 16 standard-user) |
+| **`POST_C3C_INDEPENDENT_SECURITY_REVIEW_PASS`** | Independent security review PASS on reviewed head |
+| **`C3C_POST_MERGE_IMPLEMENTATION_EVIDENCE_DOCUMENTED`** | Post-merge evidence recorded in companion document |
+| **`C3D_NOT_AUTHORIZED`** | Still not authorized |
+| **`C3E_NOT_AUTHORIZED`** | Still not authorized |
+| **`PROTECTED_SOURCE_EXECUTION_NOT_AUTHORIZED`** | Still not authorized |
+| **`SECURITY_ACCESS_DRY_RUN_NOT_AUTHORIZED`** | Still not authorized |
+| **`SECURITY_ACCESS_FULL_RUN_NOT_AUTHORIZED`** | Still not authorized |
+| **`BYTE_PROOF_PENDING`** | Still pending |
+| **`OWNER_PRIMARY_VERIFIED_NOT_ADVANCED`** | Still not advanced |
+| **`CATALOG_ROW_COUNT_0`** | Still 0 |
+| **`CLI_RUNTIME_NOT_CONNECTED`** | Still not connected |
+| **`NO_PAID_API_SERVICE_DEPENDENCY_OR_CERTIFICATE`** | Permanent lock |
+
+Authoritative implementation inventory, B1/B2 corrections, and exact proof accounting: [rule-05-windows-handle-hardening-spike-implementation-evidence-R5-M6B-P2C3C.md](./rule-05-windows-handle-hardening-spike-implementation-evidence-R5-M6B-P2C3C.md).
 
 ---
 
@@ -405,15 +432,15 @@ Authoritative zero-paid toolchain / license evidence reconciliation (historical 
 
 [rule-05-windows-handle-hardening-spike-zero-paid-toolchain-license-evidence-R5-M6B-P2C3C.md](./rule-05-windows-handle-hardening-spike-zero-paid-toolchain-license-evidence-R5-M6B-P2C3C.md)
 
-**Status:** **`P2-C3C ZERO_PAID_TOOLCHAIN_LICENSE_EVIDENCE_DOCUMENTATION_RECORDED`** (historical pre-install) / **`P2-C3C ZERO_PAID_LOCAL_TOOLCHAIN_POST_INSTALL_EVIDENCE_RECORDED`** / **`OWNER_ACCEPTED_INSTALLED_COMMUNITY_ROUTE_EVIDENCED`** / **`ZERO_PAID_LOCAL_TOOLCHAIN_INSTALLED_VERIFIED`** / **`EXACT_MSVC_VERSION_RECORDED`** / **`EXACT_WINDOWS_SDK_VERSION_RECORDED`** / **`EXACT_RUSTUP_VERSION_RECORDED`** / **`EXACT_RUSTC_CARGO_FINGERPRINTS_RECORDED`** / **`CARGO_DEPENDENCY_RESOLUTION_PENDING`** / **`CARGO_LOCK_RESOLUTION_PENDING`** / **`C3C_IMPLEMENTATION_NOT_AUTHORIZED`** / **`C3C_SYNTHETIC_SPIKE_NOT_EXECUTED`** / **`NO_PAID_API_SERVICE_DEPENDENCY_OR_CERTIFICATE`**.
+**Historical post-install (pre-implementation) status preserved in the zero-paid evidence document.** **Current post-merge supersession:** Cargo/`windows-sys`/`windows-link` resolution and synthetic spike implementation are recorded via PR #78 and [rule-05-windows-handle-hardening-spike-implementation-evidence-R5-M6B-P2C3C.md](./rule-05-windows-handle-hardening-spike-implementation-evidence-R5-M6B-P2C3C.md) — **`P2_C3C_SYNTHETIC_WINDOWS_HANDLE_HARDENING_SPIKE_IMPLEMENTATION_MERGED`** / **`POST_C3C_INDEPENDENT_SECURITY_REVIEW_PASS`** / **`NO_PAID_API_SERVICE_DEPENDENCY_OR_CERTIFICATE`**.
 
-Do **not** claim legal approval, Cargo resolution, compilation, or C3C success from this contract. License-unresolved or paid-only required components **block implementation authorization**. GitHub Actions / workflow paths are **excluded** from C3C v1.
+Do **not** claim legal approval, protected-source readiness, C3D/C3E authorization, or clinical/`ownerPrimaryVerified` advancement from this contract. GitHub Actions / workflow paths remain **excluded** from C3C v1 protected-runner scope.
 
 ---
 
-## 16. Future implementation allowlist (not authorized)
+## 16. Implementation path allowlist (historical contract record; later executed under separate authorization)
 
-The following paths are recorded for a **later** implementation token only. This documentation tranche **must not** add them:
+The following paths were recorded at contract time for a **later** implementation token. The **contract documentation tranche** did not add them. They were subsequently implemented and merged under separate owner authorization via **PR #78** (exact 13 tracked files under these five patterns):
 
 1. `tools/provenance/windowsHandleSpike/Cargo.toml`
 2. `tools/provenance/windowsHandleSpike/Cargo.lock`
@@ -421,21 +448,17 @@ The following paths are recorded for a **later** implementation token only. This
 4. `tools/provenance/windowsHandleSpike/src/**/*.rs`
 5. `tools/provenance/windowsHandleSpike/tests/**/*.rs`
 
-Exactly **five** entries. No README, workflow, GitHub Actions, prebuilt binary, or install scripts in this allowlist.
+Exactly **five** pattern entries. No README, workflow, GitHub Actions, prebuilt binary, or install scripts in this allowlist.
 
-**Forbidden now and in C3C implementation unless separately authorized:** Node-API addon, committed `.exe`, protected paths, hash/manifest modules, C3B reuse for filesystem proof, catalog/runtime/DB, C3D/C3E.
+**Still forbidden unless separately authorized:** Node-API addon, committed `.exe` as tracked source, protected paths, hash/manifest modules, C3B reuse for filesystem proof, catalog/runtime/DB, C3D/C3E.
 
 ---
 
 ## 17. Explicit non-claims
 
-This document does **not** claim or authorize:
+This **contract** document does **not** by itself claim or authorize:
 
-- C3C implementation, compilation, or spike execution
-- C3C success
 - C3D or C3E
-- Native-helper selection as a completed proof
-- Windows filesystem safety for protected clinical bytes
 - Protected-source access or byte-proof completion
 - Hashing, digest comparison, or manifest construction/persistence
 - Security-access dry run or full run
@@ -445,15 +468,18 @@ This document does **not** claim or authorize:
 - Catalog population or runtime connection
 - Paid API, paid service, paid CI, paid dependency, or paid certificate
 - Legal/toolchain approval of Rust, `windows-sys`/`windows`, MSVC, or Windows SDK
+- Clinical or prescription correctness
+
+**Supersession note:** Synthetic C3C helper implementation and mandatory synthetic-spike evidence are recorded separately after PR #78 in [rule-05-windows-handle-hardening-spike-implementation-evidence-R5-M6B-P2C3C.md](./rule-05-windows-handle-hardening-spike-implementation-evidence-R5-M6B-P2C3C.md). That evidence still does **not** authorize protected-source execution or C3D/C3E.
 
 ---
 
 ## 18. STOP boundary
 
-**Stop after P2-C3C contract documentation.** Do **not** proceed without a **separate** owner implementation token for:
+**Contract documentation STOP (historical):** the contract tranche stopped before implementation.
 
-- Rust helper implementation, toolchain installation, compilation, or binary generation
-- Windows synthetic filesystem / native feasibility spike execution
+**Current STOP (post PR #78):** Do **not** proceed to C3D/C3E or protected-source work without a **separate** owner token for:
+
 - **C3D** protected-runner implementation — **`C3D_NOT_AUTHORIZED`**
 - **C3E** security-access dry run — **`C3E_NOT_AUTHORIZED`**
 - Hash computation, digest comparison, or structural assessment on protected corpus
@@ -466,8 +492,9 @@ This document does **not** claim or authorize:
 
 | Field | Value |
 |-------|--------|
-| **Verdict label** | **`P2-C3C WINDOWS_HANDLE_HARDENING_SPIKE_CONTRACT_DOCUMENTATION_RECORDED`** |
-| **Meaning** | Windows handle-hardening synthetic spike **contract documentation only** |
-| **Does not imply** | Spike executed; helper implemented; C3C success; C3D/C3E authorized; byte proof complete; owner-primary verified |
+| **Verdict label (contract)** | **`P2-C3C WINDOWS_HANDLE_HARDENING_SPIKE_CONTRACT_DOCUMENTATION_RECORDED`** |
+| **Current implementation pointer** | **`P2_C3C_SYNTHETIC_WINDOWS_HANDLE_HARDENING_SPIKE_IMPLEMENTATION_MERGED`** (PR #78; see companion implementation evidence) |
+| **Meaning** | Normative spike **contract** remains recorded; synthetic implementation merge is evidenced separately |
+| **Does not imply** | C3D/C3E authorized; protected-source ready; byte proof complete; owner-primary verified; clinical correctness |
 
 Evidence activation: **NONE**. Clinical validation: **0**. Runtime: **NOT_IMPLEMENTED** / **NOT_CONNECTED**. **`BYTE_PROOF_PENDING`**. **`CATALOG_ROW_COUNT_0`**.
