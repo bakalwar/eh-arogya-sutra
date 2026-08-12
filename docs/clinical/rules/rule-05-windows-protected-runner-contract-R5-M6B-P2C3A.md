@@ -72,11 +72,11 @@ No stage auto-authorizes the next. Each requires a **separate written owner auth
 | **C3A** | Windows protected-runner **technical contract** (this document) | **No** | **No** | **No** | **No** |
 | **C3B** | Pure in-memory orchestration core — **synthetic bytes only** — **`IMPLEMENTED`** — [P2-C3B contract](./rule-05-synthetic-orchestration-contract-R5-M6B-P2C3B.md) | **No** | **No** | **No** (C3B v1 excludes hash) | **No** |
 | — | **Independent security review after C3B** — **`POST_C3B_INDEPENDENT_SECURITY_REVIEW_PASS`** | — | — | — | — |
-| **C3C** | Windows filesystem / native **feasibility spike** — **synthetic temp files only** — **contract documentation recorded** — [P2-C3C contract](./rule-05-windows-handle-hardening-spike-contract-R5-M6B-P2C3C.md) — **`C3C_IMPLEMENTATION_NOT_AUTHORIZED`** / **`C3C_SYNTHETIC_SPIKE_NOT_EXECUTED`** | **Yes** (synthetic only; **not executed**) | **No** | **No** | **No** |
-| — | **Independent security review after C3C** | — | — | — | — |
-| **C3D** | Protected-runner **implementation** — only after native/OS-handle decision from C3C | Future | **No** until C3E token | **No** until separately authorized | **No** |
+| **C3C** | Windows filesystem / native **feasibility spike** — **synthetic temp files only** — **contract + implementation merged** — [P2-C3C contract](./rule-05-windows-handle-hardening-spike-contract-R5-M6B-P2C3C.md) / [P2-C3C evidence](./rule-05-windows-handle-hardening-spike-implementation-evidence-R5-M6B-P2C3C.md) — **`P2_C3C_SYNTHETIC_WINDOWS_HANDLE_HARDENING_SPIKE_IMPLEMENTATION_MERGED`** / **`C3C_SYNTHETIC_SPIKE_MANDATORY_EVIDENCE_17_OF_17_SUPPORTED`** / **`POST_C3C_INDEPENDENT_SECURITY_REVIEW_PASS`** / **`C3C_POST_MERGE_IMPLEMENTATION_EVIDENCE_DOCUMENTED`** (historical pre-implementation labels `C3C_IMPLEMENTATION_NOT_AUTHORIZED` / `C3C_SYNTHETIC_SPIKE_NOT_EXECUTED` remain valid only as pre-PR #78 status) | **Yes** (synthetic only; **executed** under C3C spike) | **No** | **No** | **No** |
+| — | **Independent security review after C3C** — **`POST_C3C_INDEPENDENT_SECURITY_REVIEW_PASS`** | — | — | — | — |
+| **C3D** | Protected-runner **implementation** — only after native/OS-handle decision from C3C — **implementation contract documented** — [P2-C3D contract](./rule-05-windows-protected-runner-implementation-contract-R5-M6B-P2C3D.md) — **`P2_C3D_PROTECTED_RUNNER_IMPLEMENTATION_CONTRACT_DOCUMENTED`** / **`C3D_DOCUMENTATION_ONLY`** / **`C3D_IMPLEMENTATION_NOT_AUTHORIZED`** / **`C3D_SYNTHETIC_IMPLEMENTATION_NOT_EXECUTED`** | Future (synthetic fixtures only when separately authorized) | **No** until C3E token | **No** until separately authorized | **No** |
 | — | **Independent security review after C3D** | — | — | — | — |
-| **C3E** | **Security-access dry run** — one exact owner-selected artifact | **Yes** | **Yes** (one file) | **No** (see §10) | **No** |
+| **C3E** | **Security-access dry run** — one exact owner-selected artifact — **`C3E_NOT_AUTHORIZED`** | **Yes** | **Yes** (one file) | **No** (see §10) | **No** |
 
 **Protected manifest builder** is **not** part of C3A–C3E (**P2C3-OD-19**).
 
@@ -312,8 +312,8 @@ P2-C3A does **not** claim:
 
 **Stop after P2-C3A documentation merge.** Do **not** proceed without separate owner authorization for:
 
-- **C3C** Windows synthetic filesystem / native feasibility spike — **contract documentation recorded** — [P2-C3C contract](./rule-05-windows-handle-hardening-spike-contract-R5-M6B-P2C3C.md) — **`C3C_IMPLEMENTATION_NOT_AUTHORIZED`** / **`C3C_SYNTHETIC_SPIKE_NOT_EXECUTED`** (P2-C3B remains implemented and post-merge security-reviewed — see [P2-C3B contract](./rule-05-synthetic-orchestration-contract-R5-M6B-P2C3B.md); C3C implementation/spike remain separately authorized and not started)
-- **C3D** protected-runner implementation — **`C3D_NOT_AUTHORIZED`**
+- **C3C** Windows synthetic filesystem / native feasibility spike — **implementation merged** (PR #78) and **post-merge evidence documented** (PR #79) — [P2-C3C contract](./rule-05-windows-handle-hardening-spike-contract-R5-M6B-P2C3C.md) / [P2-C3C evidence](./rule-05-windows-handle-hardening-spike-implementation-evidence-R5-M6B-P2C3C.md) — **`P2_C3C_SYNTHETIC_WINDOWS_HANDLE_HARDENING_SPIKE_IMPLEMENTATION_MERGED`** / **`C3C_POST_MERGE_IMPLEMENTATION_EVIDENCE_DOCUMENTED`** (P2-C3B remains implemented and post-merge security-reviewed — see [P2-C3B contract](./rule-05-synthetic-orchestration-contract-R5-M6B-P2C3B.md); historical `C3C_IMPLEMENTATION_NOT_AUTHORIZED` / `C3C_SYNTHETIC_SPIKE_NOT_EXECUTED` are pre-PR #78 only)
+- **C3D** protected-runner implementation — **contract documentation recorded** — [P2-C3D contract](./rule-05-windows-protected-runner-implementation-contract-R5-M6B-P2C3D.md) — **`P2_C3D_PROTECTED_RUNNER_IMPLEMENTATION_CONTRACT_DOCUMENTED`** / **`C3D_IMPLEMENTATION_NOT_AUTHORIZED`** / **`C3D_SYNTHETIC_IMPLEMENTATION_NOT_EXECUTED`** (C3D contract approval does **not** authorize C3D implementation or C3E)
 - **C3E** security-access dry run on protected bytes — **`C3E_NOT_AUTHORIZED`**
 - Hash computation, digest comparison, structural assessment on protected corpus
 - Manifest persistence or protected-local schema

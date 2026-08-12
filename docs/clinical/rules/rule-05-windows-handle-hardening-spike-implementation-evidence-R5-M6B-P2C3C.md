@@ -253,6 +253,8 @@ P2-C3C remains a **synthetic** Windows handle-hardening feasibility/control impl
 
 **C3D** (protected-runner implementation) and **C3E** (security-access dry run) require **separate** owner authorization tokens. PR #78 merge and this documentation do **not** open those gates.
 
+**Current next-stage pointer (documentation only):** the P2-C3D protected-runner **implementation contract** is recorded at [rule-05-windows-protected-runner-implementation-contract-R5-M6B-P2C3D.md](./rule-05-windows-protected-runner-implementation-contract-R5-M6B-P2C3D.md) — **`P2_C3D_PROTECTED_RUNNER_IMPLEMENTATION_CONTRACT_DOCUMENTED`** / **`C3D_DOCUMENTATION_ONLY`**. **C3D implementation remains unauthorized** — **`C3D_IMPLEMENTATION_NOT_AUTHORIZED`** / **`C3D_SYNTHETIC_IMPLEMENTATION_NOT_EXECUTED`**. **C3E** remains **`C3E_NOT_AUTHORIZED`**. C3D contract approval does **not** authorize C3E or protected-source access.
+
 ---
 
 ## 20. STOP boundary
