@@ -549,6 +549,30 @@ P2-C3B implements synthetic in-memory inspect/parse/optional-compare orchestrati
 
 ---
 
+## 25.10 P2-C3C Windows handle-hardening synthetic spike status (contract documentation only)
+
+| Status | Value |
+|--------|--------|
+| **Authorization token** | **`R5_P2C3C_WINDOWS_HANDLE_HARDENING_SPIKE_CONTRACT_DOCUMENTATION_AUTHORIZED`** |
+| **P2-C3C contract** | [rule-05-windows-handle-hardening-spike-contract-R5-M6B-P2C3C.md](./rule-05-windows-handle-hardening-spike-contract-R5-M6B-P2C3C.md) |
+| **Classification** | **`DOCUMENTATION_ONLY`** / **`P2-C3C WINDOWS_HANDLE_HARDENING_SPIKE_CONTRACT_DOCUMENTATION_RECORDED`** |
+| **Implementation** | **`C3C_IMPLEMENTATION_NOT_AUTHORIZED`** |
+| **Spike execution** | **`C3C_SYNTHETIC_SPIKE_NOT_EXECUTED`** |
+| **Cost lock** | **`NO_PAID_API_SERVICE_DEPENDENCY_OR_CERTIFICATE`** |
+| **Digest** | **`NO_HASH_COMPUTATION`** |
+| **Manifest** | **`NO_MANIFEST_PERSISTENCE`** |
+| **Protected source** | **`PROTECTED_SOURCE_EXECUTION_NOT_AUTHORIZED`** |
+| **Dry run** | **`SECURITY_ACCESS_DRY_RUN_NOT_AUTHORIZED`** |
+| **`ownerPrimaryVerified`** | **`OWNER_PRIMARY_VERIFIED_NOT_ADVANCED`** |
+| **Runtime** | **`CLI_RUNTIME_NOT_CONNECTED`** |
+| **Byte proof (owner corpus)** | **`BYTE_PROOF_PENDING`** |
+| **Catalog** | **`CATALOG_ROW_COUNT_0`** |
+| **Next stages** | **`C3D_NOT_AUTHORIZED`** / **`C3E_NOT_AUTHORIZED`** |
+
+P2-C3C records the Windows handle-hardening synthetic spike **contract** only. It does **not** implement a Rust helper, install a toolchain, compile, execute a filesystem or native spike, access protected source, compute digests, persist manifests, authorize C3D/C3E, populate catalog rows, set **`ownerPrimaryVerified`**, or connect runtime. §25.1–§25.9 history is unchanged.
+
+---
+
 ## 26. P2-OD-01–19 register (P2-A recorded)
 
 | ID | Decision | Recorded choice |
