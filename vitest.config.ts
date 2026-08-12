@@ -6,6 +6,7 @@ export default defineConfig({
       'tests/unit/**/*.test.ts',
       'tests/integration/**/*.test.ts',
       'packages/**/src/**/*.test.ts',
+      'packages/rule6/tests/**/*.test.ts',
     ],
     environment: 'node',
     testTimeout: 60_000,
