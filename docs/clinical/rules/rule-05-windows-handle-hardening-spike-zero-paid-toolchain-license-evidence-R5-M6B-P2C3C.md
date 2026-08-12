@@ -16,15 +16,16 @@
 | **Historical license-evidence baseline** | `3cd1e185ca3d176597cc77094654b90a3591d866` |
 | **Post-install verification date** | **2026-08-12** |
 | **Companion C3C contract** | [rule-05-windows-handle-hardening-spike-contract-R5-M6B-P2C3C.md](./rule-05-windows-handle-hardening-spike-contract-R5-M6B-P2C3C.md) |
+| **Companion post-merge implementation evidence** | [rule-05-windows-handle-hardening-spike-implementation-evidence-R5-M6B-P2C3C.md](./rule-05-windows-handle-hardening-spike-implementation-evidence-R5-M6B-P2C3C.md) |
 | **Companion P2-A policy** | [rule-05-byte-verification-policy-R5-M6B-P2.md](./rule-05-byte-verification-policy-R5-M6B-P2.md) |
 | **Companion inventory** | [rule-05-evidence-inventory-R5-M6.md](./rule-05-evidence-inventory-R5-M6.md) |
 | **Global cost lock** | **`NO_PAID_API_SERVICE_DEPENDENCY_OR_CERTIFICATE`** |
 
-This document records (1) the **historical** P2-C3C zero-paid toolchain / license-evidence reconciliation (pre-install) and (2) the **current** independently verified local post-install artifact evidence. Historical pre-install pending classifications remain visible below. Current status is in **§14–§20**.
+This document records (1) the **historical** P2-C3C zero-paid toolchain / license-evidence reconciliation (pre-install) and (2) the **post-install** independently verified local artifact evidence. Historical pre-install pending classifications remain visible below. Post-install classifications are in **§14–§20**.
 
-This documentation tranche does **not** authorize further installation, repair, update, uninstall, EULA acceptance, compilation, Cargo operations, native or filesystem experiments, protected-source access, hashing, manifest persistence, dry/full run, C3D/C3E, catalog, or runtime work.
+**Current post-merge supersession (after PR #78):** Cargo dependency/lock resolution and synthetic spike implementation are **no longer pending** — see [rule-05-windows-handle-hardening-spike-implementation-evidence-R5-M6B-P2C3C.md](./rule-05-windows-handle-hardening-spike-implementation-evidence-R5-M6B-P2C3C.md). This zero-paid document remains the authoritative record of **toolchain license / install fingerprints**; it does **not** re-authorize C3D/C3E, protected-source execution, hashing, manifest, catalog, or runtime work.
 
-**C3C success is not claimed.** Cargo dependency / lock resolution remains pending. Implementation remains unauthorized. Spike remains unexecuted.
+**Historical post-install sentence (preserved):** at post-install documentation time, Cargo dependency / lock resolution remained pending and implementation remained unauthorized.
 
 ---
 
@@ -211,9 +212,9 @@ Excluded unless separately authorized: README, workflow files, GitHub Actions, p
 | **`WINDOWS_SDK_LICENSE_REVIEW_PENDING`** | Pending (historical) |
 | **`EXACT_TOOLCHAIN_VERSION_SELECTION_PENDING`** | Pending (historical; superseded for installed MSVC/SDK/Rust versions by §14–§16) |
 | **`INSTALLED_ARTIFACT_VERIFICATION_PENDING`** | Pending (historical; superseded by post-install verification recorded here) |
-| **`CARGO_LOCK_RESOLUTION_PENDING`** | Pending (still current — see §19) |
-| **`C3C_IMPLEMENTATION_NOT_AUTHORIZED`** | Implementation blocked (still current) |
-| **`C3C_SYNTHETIC_SPIKE_NOT_EXECUTED`** | Spike not run (still current) |
+| **`CARGO_LOCK_RESOLUTION_PENDING`** | Pending (historical; later superseded by PR #78 — see §19) |
+| **`C3C_IMPLEMENTATION_NOT_AUTHORIZED`** | Implementation blocked (historical; later superseded by PR #78 — see §19) |
+| **`C3C_SYNTHETIC_SPIKE_NOT_EXECUTED`** | Spike not run (historical; later superseded by PR #78 — see §19) |
 | **`PROTECTED_SOURCE_EXECUTION_NOT_AUTHORIZED`** | No protected bytes |
 | **`SECURITY_ACCESS_DRY_RUN_NOT_AUTHORIZED`** | No dry run |
 | **`NO_HASH_COMPUTATION`** | No digests |
@@ -422,9 +423,9 @@ Do **not** claim all future Windows builds are supported. No username, machine n
 
 ## 17. Current post-install classifications (2026-08-12)
 
-Exactly **one** classification / status per row. Historical §5–§6 rows remain visible above and are not silently deleted.
+Exactly **one** classification / status per row **as of post-install evidence recording**. Historical §5–§6 rows remain visible above and are not silently deleted.
 
-| Item | Current status |
+| Item | Status at post-install recording |
 |---|---|
 | Licensed Windows 11 host | INSTALLED_VERIFIED |
 | Visual Studio Community product/channel | INSTALLED_VERIFIED |
@@ -438,14 +439,16 @@ Exactly **one** classification / status per row. Historical §5–§6 rows remai
 | x86_64-pc-windows-msvc target | INSTALLED_VERIFIED |
 | Rust component inventory | INSTALLED_VERIFIED |
 | Standalone Build Tools | EXCLUDED_FROM_V1 |
-| windows-sys 0.61.2 dependency resolution | PENDING_IMPLEMENTATION_AUTHORIZATION |
-| windows-link exact lock resolution | PENDING_IMPLEMENTATION_AUTHORIZATION |
-| Cargo.lock | PENDING_IMPLEMENTATION_AUTHORIZATION |
-| Compilation | NOT_PERFORMED |
-| Seventeen C3C mandatory proofs | NOT_PERFORMED |
-| Full C3C spike | NOT_EXECUTED |
-| C3C implementation | NOT_AUTHORIZED |
+| windows-sys 0.61.2 dependency resolution | PENDING_IMPLEMENTATION_AUTHORIZATION *(historical at post-install)* |
+| windows-link exact lock resolution | PENDING_IMPLEMENTATION_AUTHORIZATION *(historical at post-install)* |
+| Cargo.lock | PENDING_IMPLEMENTATION_AUTHORIZATION *(historical at post-install)* |
+| Compilation | NOT_PERFORMED *(historical at post-install)* |
+| Seventeen C3C mandatory proofs | NOT_PERFORMED *(historical at post-install)* |
+| Full C3C spike | NOT_EXECUTED *(historical at post-install)* |
+| C3C implementation | NOT_AUTHORIZED *(historical at post-install)* |
 | Paid service/API/CI/certificate | REJECTED |
+
+**Post-merge supersession (PR #78):** windows-sys 0.61.2 / windows-link 0.2.1 / Cargo.lock resolved; synthetic spike implemented and merged; mandatory evidence aggregate **17/17** supported as documented in [rule-05-windows-handle-hardening-spike-implementation-evidence-R5-M6B-P2C3C.md](./rule-05-windows-handle-hardening-spike-implementation-evidence-R5-M6B-P2C3C.md). Paid components remain **REJECTED**.
 
 ---
 
@@ -470,23 +473,27 @@ Microsoft EULA text is **not** reproduced here.
 
 ---
 
-## 19. Governance status (current post-install)
+## 19. Governance status (post-install recording + post-merge supersession)
 
 | Token | Status |
 |-------|--------|
-| **`P2-C3C ZERO_PAID_LOCAL_TOOLCHAIN_POST_INSTALL_EVIDENCE_RECORDED`** | This post-install evidence recorded |
+| **`P2-C3C ZERO_PAID_LOCAL_TOOLCHAIN_POST_INSTALL_EVIDENCE_RECORDED`** | Post-install evidence recorded |
 | **`OWNER_ACCEPTED_INSTALLED_COMMUNITY_ROUTE_EVIDENCED`** | Owner acceptance fact recorded |
 | **`ZERO_PAID_LOCAL_TOOLCHAIN_INSTALLED_VERIFIED`** | Local Community + MSVC + SDK + Rust fingerprints recorded |
 | **`EXACT_MSVC_VERSION_RECORDED`** | 14.51.36231 |
 | **`EXACT_WINDOWS_SDK_VERSION_RECORDED`** | 10.0.26100.0 |
 | **`EXACT_RUSTUP_VERSION_RECORDED`** | 1.29.0 |
 | **`EXACT_RUSTC_CARGO_FINGERPRINTS_RECORDED`** | rustc/Cargo 1.97.1 commits recorded |
-| **`CARGO_DEPENDENCY_RESOLUTION_PENDING`** | Pending |
-| **`CARGO_LOCK_RESOLUTION_PENDING`** | Pending |
-| **`C3C_IMPLEMENTATION_NOT_AUTHORIZED`** | Implementation blocked |
-| **`C3C_SYNTHETIC_SPIKE_NOT_EXECUTED`** | Spike not run |
+| **`CARGO_DEPENDENCY_RESOLUTION_PENDING`** | *(historical at post-install)* — **superseded** by PR #78 lock |
+| **`CARGO_LOCK_RESOLUTION_PENDING`** | *(historical at post-install)* — **superseded** by PR #78 lock |
+| **`C3C_IMPLEMENTATION_NOT_AUTHORIZED`** | *(historical at post-install)* — **superseded** by **`P2_C3C_SYNTHETIC_WINDOWS_HANDLE_HARDENING_SPIKE_IMPLEMENTATION_MERGED`** |
+| **`C3C_SYNTHETIC_SPIKE_NOT_EXECUTED`** | *(historical at post-install)* — **superseded** by **`C3C_SYNTHETIC_SPIKE_MANDATORY_EVIDENCE_17_OF_17_SUPPORTED`** |
+| **`P2_C3C_SYNTHETIC_WINDOWS_HANDLE_HARDENING_SPIKE_IMPLEMENTATION_MERGED`** | **Current** — PR #78 |
+| **`POST_C3C_INDEPENDENT_SECURITY_REVIEW_PASS`** | **Current** |
+| **`C3C_POST_MERGE_IMPLEMENTATION_EVIDENCE_DOCUMENTED`** | **Current** companion evidence |
 | **`PROTECTED_SOURCE_EXECUTION_NOT_AUTHORIZED`** | No protected bytes |
 | **`SECURITY_ACCESS_DRY_RUN_NOT_AUTHORIZED`** | No dry run |
+| **`SECURITY_ACCESS_FULL_RUN_NOT_AUTHORIZED`** | No full run |
 | **`NO_HASH_COMPUTATION`** | No digests |
 | **`NO_MANIFEST_PERSISTENCE`** | No manifest write |
 | **`OWNER_PRIMARY_VERIFIED_NOT_ADVANCED`** | Not advanced |
@@ -497,7 +504,7 @@ Microsoft EULA text is **not** reproduced here.
 | **`C3E_NOT_AUTHORIZED`** | Not authorized |
 | **`NO_PAID_API_SERVICE_DEPENDENCY_OR_CERTIFICATE`** | Permanent lock |
 
-Historical current-facing claims that installed MSVC / SDK / Rust versions remained unknown are **superseded** by §14–§16. Historical §5–§6 / §10 context is preserved.
+Historical current-facing claims that installed MSVC / SDK / Rust versions remained unknown are **superseded** by §14–§16. Historical §5–§6 / §10 context is preserved. Historical Cargo/implementation-pending rows above are **superseded** only as labeled.
 
 Another installation audit is **not** required unless the installed toolchain changes.
 
@@ -505,15 +512,14 @@ Another installation audit is **not** required unless the installed toolchain ch
 
 ## 20. Remaining pending work
 
-1. Separate implementation authorization.
-2. Create exact five-entry Rust helper tranche.
-3. Pin `windows-sys = 0.61.2`.
-4. Generate `Cargo.lock` under authorization.
-5. Verify exact `windows-link` resolution and license.
-6. Compile only after dependency / lock validation.
-7. Execute all 17 mandatory synthetic proofs.
-8. Independent post-C3C security review.
-9. Separate owner authorization before C3D.
+**Completed after post-install (separate authorizations; see implementation evidence):** Rust helper crate, `windows-sys`/`Cargo.lock` pin, synthetic 17-proof accounting, independent security review, PR #78 merge.
+
+**Still pending / not authorized:**
+
+1. Separate owner authorization before **C3D**.
+2. Separate owner authorization before **C3E** / security-access dry or full run.
+3. Protected-source execution, hashing, manifest persistence.
+4. `ownerPrimaryVerified` advancement, catalog population, runtime connection, deployment.
 
 ---
 
@@ -543,6 +549,7 @@ Do **not**, under this authorization:
 |-------|--------|
 | **Verdict label** | **`P2-C3C ZERO_PAID_LOCAL_TOOLCHAIN_POST_INSTALL_EVIDENCE_RECORDED`** |
 | **Meaning** | Independently verified local zero-paid toolchain installation and exact versions recorded as documentation only |
-| **Does not imply** | Cargo resolution complete; compilation done; C3C proven; implementation authorized; Microsoft blanket legal approval |
+| **Post-merge pointer** | Implementation/Cargo resolution evidenced in [rule-05-windows-handle-hardening-spike-implementation-evidence-R5-M6B-P2C3C.md](./rule-05-windows-handle-hardening-spike-implementation-evidence-R5-M6B-P2C3C.md) |
+| **Does not imply** | Microsoft blanket legal approval; C3D/C3E authorized; protected-source ready; `ownerPrimaryVerified` |
 
 Evidence activation: **NONE**. Clinical validation: **0**. Runtime: **NOT_CONNECTED**. **`BYTE_PROOF_PENDING`**. **`CATALOG_ROW_COUNT_0`**.
