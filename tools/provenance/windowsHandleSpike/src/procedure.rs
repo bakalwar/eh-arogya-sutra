@@ -348,31 +348,97 @@ fn verify_default_unnamed_stream_only(handle: HANDLE) -> Result<(), SpikeCode> {
         // If the API fails on this host, ADS control is unproven → fail closed.
         return Err(SpikeCode::AdsRejected);
     }
-    let mut offset = 0usize;
+    parse_file_stream_info_default_only(&buf)
+}
+
+/// Safe byte-slice parser for `FileStreamInfo` chains.
+///
+/// Native buffer bytes are treated as untrusted. Fail-closed via `AdsRejected`
+/// without emitting names, offsets, lengths, or raw buffer contents.
+pub(crate) fn parse_file_stream_info_default_only(buf: &[u8]) -> Result<(), SpikeCode> {
+    // Fixed fields before the flexible StreamName payload.
+    const NAME_FIELD_OFF: usize = std::mem::offset_of!(FILE_STREAM_INFO, StreamName);
+
+    let mut offset: usize = 0;
     loop {
-        if offset + size_of::<FILE_STREAM_INFO>() > buf.len() {
+        let fixed_end = offset
+            .checked_add(NAME_FIELD_OFF)
+            .ok_or(SpikeCode::AdsRejected)?;
+        if fixed_end > buf.len() {
             return Err(SpikeCode::AdsRejected);
         }
-        let info = unsafe { &*(buf.as_ptr().add(offset) as *const FILE_STREAM_INFO) };
-        let name_len = info.StreamNameLength as usize;
-        let name_u16 = unsafe {
-            std::slice::from_raw_parts(
-                info.StreamName.as_ptr(),
-                name_len / 2,
-            )
-        };
-        let name = String::from_utf16_lossy(name_u16);
+
+        let next_entry_offset = u32::from_le_bytes([
+            buf[offset],
+            buf[offset + 1],
+            buf[offset + 2],
+            buf[offset + 3],
+        ]);
+        let stream_name_length_u32 = u32::from_le_bytes([
+            buf[offset + 4],
+            buf[offset + 5],
+            buf[offset + 6],
+            buf[offset + 7],
+        ]);
+        let name_len = usize::try_from(stream_name_length_u32).map_err(|_| SpikeCode::AdsRejected)?;
+        if name_len % 2 != 0 {
+            return Err(SpikeCode::AdsRejected);
+        }
+
+        let name_start = fixed_end;
+        let name_end = name_start
+            .checked_add(name_len)
+            .ok_or(SpikeCode::AdsRejected)?;
+        if name_end > buf.len() {
+            return Err(SpikeCode::AdsRejected);
+        }
+
+        let entry_span = NAME_FIELD_OFF
+            .checked_add(name_len)
+            .ok_or(SpikeCode::AdsRejected)?;
+
+        if next_entry_offset != 0 {
+            let next_rel =
+                usize::try_from(next_entry_offset).map_err(|_| SpikeCode::AdsRejected)?;
+            // Must advance and cover fixed fields + declared name payload.
+            if next_rel == 0 || next_rel < entry_span {
+                return Err(SpikeCode::AdsRejected);
+            }
+            let next_abs = offset
+                .checked_add(next_rel)
+                .ok_or(SpikeCode::AdsRejected)?;
+            if next_abs > buf.len() {
+                return Err(SpikeCode::AdsRejected);
+            }
+            // Declared name must not cross into the next entry.
+            if name_end > next_abs {
+                return Err(SpikeCode::AdsRejected);
+            }
+        }
+
+        // Bounds proven: read UTF-16 name via safe byte chunks (no from_raw_parts).
+        let name_bytes = &buf[name_start..name_end];
+        let mut units = Vec::with_capacity(name_len / 2);
+        for pair in name_bytes.chunks_exact(2) {
+            units.push(u16::from_le_bytes([pair[0], pair[1]]));
+        }
+        let name = String::from_utf16_lossy(&units);
         // Default unnamed data stream is "::$DATA" or ":$DATA".
         let is_default = name == "::$DATA" || name == ":$DATA" || name.is_empty();
         if !is_default {
             return Err(SpikeCode::AdsRejected);
         }
-        if info.NextEntryOffset == 0 {
+
+        if next_entry_offset == 0 {
             break;
         }
-        offset = offset.saturating_add(info.NextEntryOffset as usize);
+        let next_rel = usize::try_from(next_entry_offset).map_err(|_| SpikeCode::AdsRejected)?;
+        // Loop termination: offset strictly advances (next_rel >= entry_span >= NAME_FIELD_OFF > 0).
+        offset = offset
+            .checked_add(next_rel)
+            .ok_or(SpikeCode::AdsRejected)?;
         if offset >= buf.len() {
-            break;
+            return Err(SpikeCode::AdsRejected);
         }
     }
     Ok(())
@@ -512,3 +578,132 @@ fn wide_to_string(buf: &[u16]) -> String {
 
 // Re-export OwnedHandle for tests in this crate.
 pub type SpikeOwnedHandle = OwnedHandle;
+
+#[cfg(test)]
+mod stream_info_bounds_tests {
+    use super::parse_file_stream_info_default_only;
+    use crate::codes::SpikeCode;
+    use windows_sys::Win32::Storage::FileSystem::FILE_STREAM_INFO;
+
+    const NAME_OFF: usize = std::mem::offset_of!(FILE_STREAM_INFO, StreamName);
+
+    fn utf16_le(s: &str) -> Vec<u8> {
+        s.encode_utf16().flat_map(|u| u.to_le_bytes()).collect()
+    }
+
+    /// Build one FileStreamInfo entry. `next` is NextEntryOffset (0 = terminal).
+    fn entry(next: u32, name_utf16_le: &[u8], name_len_override: Option<u32>) -> Vec<u8> {
+        let name_len = name_len_override.unwrap_or(name_utf16_le.len() as u32);
+        let mut v = Vec::new();
+        v.extend_from_slice(&next.to_le_bytes());
+        v.extend_from_slice(&name_len.to_le_bytes());
+        v.extend_from_slice(&0i64.to_le_bytes()); // StreamSize
+        v.extend_from_slice(&0i64.to_le_bytes()); // StreamAllocationSize
+        assert_eq!(v.len(), NAME_OFF);
+        v.extend_from_slice(name_utf16_le);
+        v
+    }
+
+    fn assert_ads(err: Result<(), SpikeCode>) {
+        assert_eq!(err, Err(SpikeCode::AdsRejected));
+        let msg = format!("{err:?}");
+        assert!(!msg.contains("::$DATA"));
+        assert!(!msg.contains("zone"));
+        assert!(!msg.contains("StreamName"));
+    }
+
+    #[test]
+    fn valid_terminal_unnamed_stream() {
+        let name = utf16_le("::$DATA");
+        let buf = entry(0, &name, None);
+        assert!(parse_file_stream_info_default_only(&buf).is_ok());
+    }
+
+    #[test]
+    fn valid_named_stream_rejected() {
+        let name = utf16_le(":zone:$DATA");
+        let buf = entry(0, &name, None);
+        assert_ads(parse_file_stream_info_default_only(&buf));
+    }
+
+    #[test]
+    fn odd_stream_name_length_rejected() {
+        let mut name = utf16_le("::$DATA");
+        name.push(0); // extra byte → odd declared length below
+        let buf = entry(0, &name, Some((name.len() as u32) | 1));
+        assert_ads(parse_file_stream_info_default_only(&buf));
+    }
+
+    #[test]
+    fn truncated_stream_name_payload_rejected() {
+        let name = utf16_le("::$DATA");
+        let mut buf = entry(0, &name, None);
+        // Claim full name length but truncate payload bytes.
+        buf.truncate(NAME_OFF + 4);
+        // Fix StreamNameLength to claim more than remains.
+        let claim = (name.len() as u32).to_le_bytes();
+        buf[4..8].copy_from_slice(&claim);
+        assert_ads(parse_file_stream_info_default_only(&buf));
+    }
+
+    #[test]
+    fn oversized_length_fields_fail_closed() {
+        // Even length near u32::MAX: payload end exceeds any small buffer.
+        let mut buf = vec![0u8; NAME_OFF];
+        buf[0..4].copy_from_slice(&0u32.to_le_bytes());
+        buf[4..8].copy_from_slice(&0xFFFF_FFF0u32.to_le_bytes());
+        assert_ads(parse_file_stream_info_default_only(&buf));
+    }
+
+    #[test]
+    fn next_entry_smaller_than_fixed_plus_name_rejected() {
+        let name = utf16_le("::$DATA");
+        let entry_span = (NAME_OFF + name.len()) as u32;
+        let buf = entry(entry_span - 2, &name, None); // even step back into name
+        assert_ads(parse_file_stream_info_default_only(&buf));
+    }
+
+    #[test]
+    fn next_entry_beyond_buffer_rejected() {
+        let name = utf16_le("::$DATA");
+        let mut buf = entry(0, &name, None);
+        let beyond = (buf.len() as u32).saturating_add(64);
+        buf[0..4].copy_from_slice(&beyond.to_le_bytes());
+        assert_ads(parse_file_stream_info_default_only(&buf));
+    }
+
+    #[test]
+    fn non_advancing_malformed_chain_rejected() {
+        // NextEntryOffset non-zero but smaller than fixed header alone.
+        let name = utf16_le("::$DATA");
+        let buf = entry(8, &name, None);
+        assert_ads(parse_file_stream_info_default_only(&buf));
+    }
+
+    #[test]
+    fn payload_crossing_next_entry_rejected() {
+        // Next lands inside the name payload.
+        let name = utf16_le("::$DATA");
+        let into_name = (NAME_OFF + 4) as u32;
+        let buf = entry(into_name, &name, None);
+        assert_ads(parse_file_stream_info_default_only(&buf));
+    }
+
+    #[test]
+    fn multi_entry_named_stream_rejected() {
+        let def = utf16_le("::$DATA");
+        let named = utf16_le(":zone:$DATA");
+        let e1_body = entry(0, &def, None); // temporary; patch next below
+        let e2 = entry(0, &named, None);
+        // Align next to cover e1 fully (no extra padding required by our validator).
+        let next = e1_body.len() as u32;
+        let mut e1 = entry(next, &def, None);
+        // Pad e1 to exactly `next` bytes if entry() produced shorter (should match).
+        while e1.len() < next as usize {
+            e1.push(0);
+        }
+        let mut buf = e1;
+        buf.extend_from_slice(&e2);
+        assert_ads(parse_file_stream_info_default_only(&buf));
+    }
+}
