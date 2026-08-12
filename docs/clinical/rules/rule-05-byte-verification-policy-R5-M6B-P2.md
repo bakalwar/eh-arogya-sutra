@@ -556,8 +556,8 @@ P2-C3B implements synthetic in-memory inspect/parse/optional-compare orchestrati
 | **Authorization token** | **`R5_P2C3C_WINDOWS_HANDLE_HARDENING_SPIKE_CONTRACT_DOCUMENTATION_AUTHORIZED`** |
 | **P2-C3C contract** | [rule-05-windows-handle-hardening-spike-contract-R5-M6B-P2C3C.md](./rule-05-windows-handle-hardening-spike-contract-R5-M6B-P2C3C.md) |
 | **Zero-paid toolchain evidence** | [rule-05-windows-handle-hardening-spike-zero-paid-toolchain-license-evidence-R5-M6B-P2C3C.md](./rule-05-windows-handle-hardening-spike-zero-paid-toolchain-license-evidence-R5-M6B-P2C3C.md) |
-| **Classification** | **`DOCUMENTATION_ONLY`** / **`P2-C3C WINDOWS_HANDLE_HARDENING_SPIKE_CONTRACT_DOCUMENTATION_RECORDED`** / **`P2-C3C ZERO_PAID_TOOLCHAIN_LICENSE_EVIDENCE_DOCUMENTATION_RECORDED`** |
-| **Zero-paid route** | **`ZERO_PAID_ROUTE_PARTIALLY_VERIFIED`** — Community C++ / SDK terms, exact toolchain versions, installed fingerprints, and `Cargo.lock` resolution remain pending |
+| **Classification** | **`DOCUMENTATION_ONLY`** / **`P2-C3C WINDOWS_HANDLE_HARDENING_SPIKE_CONTRACT_DOCUMENTATION_RECORDED`** / **`P2-C3C ZERO_PAID_TOOLCHAIN_LICENSE_EVIDENCE_DOCUMENTATION_RECORDED`** (historical pre-install) / **`P2-C3C ZERO_PAID_LOCAL_TOOLCHAIN_POST_INSTALL_EVIDENCE_RECORDED`** |
+| **Zero-paid route** | **`ZERO_PAID_LOCAL_TOOLCHAIN_INSTALLED_VERIFIED`** / **`OWNER_ACCEPTED_INSTALLED_COMMUNITY_ROUTE_EVIDENCED`** — exact MSVC / Windows SDK / rustup / rustc / Cargo fingerprints recorded; **`CARGO_DEPENDENCY_RESOLUTION_PENDING`** / **`CARGO_LOCK_RESOLUTION_PENDING`** |
 | **Implementation** | **`C3C_IMPLEMENTATION_NOT_AUTHORIZED`** |
 | **Spike execution** | **`C3C_SYNTHETIC_SPIKE_NOT_EXECUTED`** |
 | **Cost lock** | **`NO_PAID_API_SERVICE_DEPENDENCY_OR_CERTIFICATE`** |
@@ -571,7 +571,7 @@ P2-C3B implements synthetic in-memory inspect/parse/optional-compare orchestrati
 | **Catalog** | **`CATALOG_ROW_COUNT_0`** |
 | **Next stages** | **`C3D_NOT_AUTHORIZED`** / **`C3E_NOT_AUTHORIZED`** |
 
-P2-C3C records the Windows handle-hardening synthetic spike **contract** and the **zero-paid toolchain / license evidence reconciliation** as documentation only. It does **not** implement a Rust helper, install a toolchain, accept EULAs, compile, execute a filesystem or native spike, access protected source, compute digests, persist manifests, authorize C3D/C3E, populate catalog rows, set **`ownerPrimaryVerified`**, or connect runtime. §25.1–§25.9 history is unchanged.
+P2-C3C records the Windows handle-hardening synthetic spike **contract**, the historical **zero-paid toolchain / license evidence reconciliation**, and the **post-install installed-version evidence** as documentation only. It does **not** authorize Cargo operations, compilation, filesystem or native spike execution, protected-source access, digests, manifest persistence, C3D/C3E, catalog rows, **`ownerPrimaryVerified`**, or runtime connection. §25.1–§25.9 history is unchanged.
 
 ---
 

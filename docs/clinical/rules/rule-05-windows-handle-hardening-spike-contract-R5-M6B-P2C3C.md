@@ -401,13 +401,13 @@ Any PARTIAL / UNAVAILABLE / UNDOCUMENTED / skipped mandatory control → **`C3C_
 
 ## 15. License and no-paid gate
 
-Authoritative zero-paid toolchain / license evidence reconciliation (completed vs pending; 17-row decision table) is recorded in:
+Authoritative zero-paid toolchain / license evidence reconciliation (historical pre-install completed vs pending; 17-row decision table) and current post-install installed-version evidence are recorded in:
 
 [rule-05-windows-handle-hardening-spike-zero-paid-toolchain-license-evidence-R5-M6B-P2C3C.md](./rule-05-windows-handle-hardening-spike-zero-paid-toolchain-license-evidence-R5-M6B-P2C3C.md)
 
-**Status:** **`P2-C3C ZERO_PAID_TOOLCHAIN_LICENSE_EVIDENCE_DOCUMENTATION_RECORDED`** / **`ZERO_PAID_ROUTE_PARTIALLY_VERIFIED`** / **`COMMUNITY_CPP_WORKLOAD_LICENSE_REVIEW_PENDING`** / **`WINDOWS_SDK_LICENSE_REVIEW_PENDING`** / **`EXACT_TOOLCHAIN_VERSION_SELECTION_PENDING`** / **`INSTALLED_ARTIFACT_VERIFICATION_PENDING`** / **`CARGO_LOCK_RESOLUTION_PENDING`** / **`C3C_IMPLEMENTATION_NOT_AUTHORIZED`**.
+**Status:** **`P2-C3C ZERO_PAID_TOOLCHAIN_LICENSE_EVIDENCE_DOCUMENTATION_RECORDED`** (historical pre-install) / **`P2-C3C ZERO_PAID_LOCAL_TOOLCHAIN_POST_INSTALL_EVIDENCE_RECORDED`** / **`OWNER_ACCEPTED_INSTALLED_COMMUNITY_ROUTE_EVIDENCED`** / **`ZERO_PAID_LOCAL_TOOLCHAIN_INSTALLED_VERIFIED`** / **`EXACT_MSVC_VERSION_RECORDED`** / **`EXACT_WINDOWS_SDK_VERSION_RECORDED`** / **`EXACT_RUSTUP_VERSION_RECORDED`** / **`EXACT_RUSTC_CARGO_FINGERPRINTS_RECORDED`** / **`CARGO_DEPENDENCY_RESOLUTION_PENDING`** / **`CARGO_LOCK_RESOLUTION_PENDING`** / **`C3C_IMPLEMENTATION_NOT_AUTHORIZED`** / **`C3C_SYNTHETIC_SPIKE_NOT_EXECUTED`** / **`NO_PAID_API_SERVICE_DEPENDENCY_OR_CERTIFICATE`**.
 
-Do **not** claim legal approval, full toolchain verification, installation, or compilation from this contract. License-unresolved or paid-only required components **block implementation authorization**. GitHub Actions / workflow paths are **excluded** from C3C v1.
+Do **not** claim legal approval, Cargo resolution, compilation, or C3C success from this contract. License-unresolved or paid-only required components **block implementation authorization**. GitHub Actions / workflow paths are **excluded** from C3C v1.
 
 ---
 
