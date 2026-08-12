@@ -59,6 +59,16 @@ This records and disambiguates the existing 3/4/5 rule only. It does not approve
 
 Primary normative record: [Clinical Product Constitution §F](./CLINICAL_PRODUCT_CONSTITUTION.md#f-dynamic-prescription).
 
+## Ownership clarification (R6-ID-02)
+
+OD-013 (exact **3 / 4 / 5** oral mixture totals) and OD-014 (insufficient-evidence fail-closed) are owned by **Constitution §F** and the **Master Pipeline / Rule 9** constraint layer.
+
+They are **not** the Rule 6 engine identity and must **not** be treated as authorizing Rule 6 to set or override final mixture count. Rule 6 may propose evidence-supported composition candidates only; final count/packaging validation remains Rule 9 / §F.
+
+Authoritative Rule 6 contract: [rules/rule-06-multi-disease-organ-system-triad-contract.md](./rules/rule-06-multi-disease-organ-system-triad-contract.md).
+
+Historical inventory labels that described this file as “Rule 6 mixture evidence policy” are **scope-misaligned** relative to this lock and do not change OD-013/OD-014 substance.
+
 ## Status
 
 The OD-013 oral-mixture-count clarification is **OWNER_APPROVED** and recorded.

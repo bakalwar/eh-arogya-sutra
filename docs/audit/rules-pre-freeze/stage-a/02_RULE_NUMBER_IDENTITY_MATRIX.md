@@ -1,7 +1,7 @@
 # Stage A — Rule number identity matrix (micro-correction pass)
 
-**Stage A base main:** `658f3fd97e1e00fcafef74ddd3788d2cfa3bf1d7`  
-**Correction-pass reviewed head:** `d44375ea0234f73a0bc6172d24ca2685bd3e408a`  
+**Stage A base main:** `658f3fd97e1e00fcafef74ddd3788d2cfa3bf1d7`
+**Correction-pass reviewed head:** `d44375ea0234f73a0bc6172d24ca2685bd3e408a`
 **Total conflicts:** **7** · **Stage B blockers:** SAC-001, SAC-003
 
 ## Rule 4 — unified Stage A classification (SAC-003)
@@ -61,7 +61,7 @@ Read-only branch facts (`git` on local objects):
 | 3 | Organ-System Affinity Engine | **IDENTITY_OWNER_APPROVED** |
 | 4 | Potency | **IDENTITY_CANDIDATE_ONLY** + **FREEZE_STATUS_CONFLICT** |
 | 5 | Dosage (contracts) vs Monitoring (unmerged) | **IDENTITY_CONFLICT** |
-| 6 | Multi-Disease / Triad | **IDENTITY_CANDIDATE_ONLY** |
+| 6 | Multi-Disease / Organ-System Triad (MULTI_DISEASE_ORGAN_SYSTEM_TRIAD) | **IDENTITY_OWNER_LOCKED** (supersedes historical Stage A IDENTITY_CANDIDATE_ONLY) — canonical contract: docs/clinical/rules/rule-06-multi-disease-organ-system-triad-contract.md |
 | 7 | External Use Routes | **IDENTITY_CANDIDATE_ONLY** |
 | 8 | Disease-level Prakruti Inference | **IDENTITY_CANDIDATE_ONLY** |
 | 9 | Master Pipeline | **IDENTITY_CANDIDATE_ONLY** |
