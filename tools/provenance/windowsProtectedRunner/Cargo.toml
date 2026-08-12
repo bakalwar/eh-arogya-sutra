@@ -1,0 +1,26 @@
+[package]
+name = "ehas2_windows_protected_runner"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "MIT OR Apache-2.0"
+description = "P2-C3D synthetic Windows protected-runner (out-of-process; synthetic fixtures only)"
+
+[[bin]]
+name = "ehas2-windows-protected-runner"
+path = "src/main.rs"
+
+[lib]
+name = "ehas2_windows_protected_runner"
+path = "src/lib.rs"
+
+[dependencies]
+# Provenance: same windows-sys feature set and pin as C3C windowsHandleSpike (PR #78).
+windows-sys = { version = "=0.61.2", default-features = false, features = [
+    "Wdk_Foundation",
+    "Wdk_Storage_FileSystem",
+    "Win32_Foundation",
+    "Win32_Security",
+    "Win32_Storage_FileSystem",
+    "Win32_System_IO",
+] }
