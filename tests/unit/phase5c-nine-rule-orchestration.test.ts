@@ -29,9 +29,11 @@ describe('Phase 5C nine-rule orchestration contracts', () => {
     ]);
   });
 
-  it('Rule 8 remains NOT_IMPLEMENTED; production orchestration NOT_CONNECTED', () => {
+  it('Rule 8 shadow READY_FOR_VALIDATION; production orchestration NOT_CONNECTED', () => {
     const r8 = allNineRuleInterfaceResults().find((r) => r.ruleNumber === 8);
-    expect(r8?.status).toBe('NOT_IMPLEMENTED');
+    // nineRules metadata only: synthetic shadow package exists for technical validation.
+    expect(r8?.status).toBe('READY_FOR_VALIDATION');
+    expect(r8?.affectsClinicalSelection).toBe(false);
     expect(ORCHESTRATION_STATUS).toBe('NOT_CONNECTED');
     expect(VALIDATION_ORCHESTRATION_STATUS).toBe('READY_FOR_VALIDATION');
     expect(PRESCRIPTION_ENGINE_STATUS).toBe('PRESCRIPTION_ENGINE_NOT_CONNECTED');

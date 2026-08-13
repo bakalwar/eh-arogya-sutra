@@ -8,6 +8,7 @@ export default defineConfig({
       'packages/**/src/**/*.test.ts',
       'packages/rule6/tests/**/*.test.ts',
       'packages/rule7/tests/**/*.test.ts',
+      'packages/rule8/tests/**/*.test.ts',
     ],
     environment: 'node',
     testTimeout: 60_000,

@@ -77,9 +77,9 @@ export const NINE_RULE_DEFINITIONS = [
   },
   {
     ruleNumber: 8 as const,
+    /** Owner-locked identity DISEASE_LEVEL_PRAKRUTI_INFERENCE; shadow evaluator only — not production-connected. */
     ruleName: 'Disease-level Prakruti Inference',
-    /** Historically unwired on live MDE path — remain honest. */
-    phase5bStatus: 'NOT_IMPLEMENTED' as ClinicalRuleStatus,
+    phase5bStatus: 'READY_FOR_VALIDATION' as ClinicalRuleStatus,
     affectsClinicalSelection: false,
   },
   {
