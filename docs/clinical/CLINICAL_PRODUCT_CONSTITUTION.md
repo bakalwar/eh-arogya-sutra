@@ -18,7 +18,7 @@ Rule 6 post-merge shadow evidence pointer: [rules/rule-06-multi-disease-organ-sy
 
 Rule 6 relationship-data / evidence-intake contract (empty active registry; CE-OD-01…05; **no** real edges): [rules/rule-06-relationship-data-and-evidence-intake-contract.md](./rules/rule-06-relationship-data-and-evidence-intake-contract.md).
 
-Rule 7 External Use Routes canonical contract (`EXTERNAL_USE_ROUTES`; shadow-only; **no** impl): [rules/rule-07-external-use-routes-contract.md](./rules/rule-07-external-use-routes-contract.md).
+Rule 7 External Use Routes canonical contract (`EXTERNAL_USE_ROUTES`; shadow-only): [rules/rule-07-external-use-routes-contract.md](./rules/rule-07-external-use-routes-contract.md). Post-merge shadow evidence: [rules/rule-07-external-use-routes-implementation-evidence.md](./rules/rule-07-external-use-routes-implementation-evidence.md) (`RULE7_SHADOW_EVALUATOR_IMPLEMENTED`; orchestration **NOT_CONNECTED**; clinical activation **NONE**; real route/site mappings **0**).
 
 ## A. Scale
 

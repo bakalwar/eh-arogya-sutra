@@ -12,7 +12,7 @@ Orchestration: **NOT_CONNECTED**
 | 4 | Potency | READY_FOR_VALIDATION |
 | 5 | Monitoring, Follow-up & Post-Release Safety Surveillance | **NOT_IMPLEMENTED** |
 | 6 | Multi-Disease / Organ-System Triad | READY_FOR_VALIDATION |
-| 7 | External Use Routes | **IDENTITY/SCOPE OWNER_LOCKED** · contract documented · evaluator **NOT_IMPLEMENTED** (historical Phase 5B `READY_FOR_VALIDATION` label superseded for current EHAS2 Rule 7 posture) |
+| 7 | External Use Routes | **IDENTITY/SCOPE OWNER_LOCKED** · contract documented · shadow evaluator **IMPLEMENTED** (`@ehas2/rule7`; `affectsClinicalSelection: false`) · orchestration **NOT_CONNECTED** · clinical activation **NONE** (historical Phase 5B `READY_FOR_VALIDATION` / pre-PR #88 evaluator **NOT_IMPLEMENTED** wording superseded for current EHAS2 Rule 7 posture — see [rules/rule-07-external-use-routes-implementation-evidence.md](./rules/rule-07-external-use-routes-implementation-evidence.md)) |
 | 8 | Disease-level Prakruti Inference | **NOT_IMPLEMENTED** (historically unwired) |
 | 9 | Master Pipeline | NOT_CONNECTED |
 
