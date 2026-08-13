@@ -12,7 +12,7 @@ Orchestration: **NOT_CONNECTED**
 | 4 | Potency | READY_FOR_VALIDATION |
 | 5 | Monitoring, Follow-up & Post-Release Safety Surveillance | **NOT_IMPLEMENTED** |
 | 6 | Multi-Disease / Organ-System Triad | READY_FOR_VALIDATION |
-| 7 | External Use Routes | READY_FOR_VALIDATION |
+| 7 | External Use Routes | **IDENTITY/SCOPE OWNER_LOCKED** · contract documented · evaluator **NOT_IMPLEMENTED** (historical Phase 5B `READY_FOR_VALIDATION` label superseded for current EHAS2 Rule 7 posture) |
 | 8 | Disease-level Prakruti Inference | **NOT_IMPLEMENTED** (historically unwired) |
 | 9 | Master Pipeline | NOT_CONNECTED |
 
