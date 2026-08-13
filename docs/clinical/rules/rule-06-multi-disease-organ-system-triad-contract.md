@@ -8,21 +8,45 @@
 | **Document class** | OWNER_LOCKED canonical contract |
 | **Authority tokens** | `R6_ID01_TO_ID05_RECOMMENDED_OWNER_DECISIONS_APPROVED` · `R6_CANONICAL_CONTRACT_DOCUMENTATION_AUTHORIZED` |
 | **Contract version** | `ehas2-rule6-contract-v1` |
-| **Implementation** | `RULE6_IMPLEMENTATION_NOT_AUTHORIZED` · `RULE6_SHADOW_EVALUATOR_NOT_IMPLEMENTED` |
+| **Implementation (current)** | `RULE6_SHADOW_EVALUATOR_IMPLEMENTED` · evidence: [rule-06-multi-disease-organ-system-triad-implementation-evidence.md](./rule-06-multi-disease-organ-system-triad-implementation-evidence.md) |
 | **Runtime** | `RULE6_ORCHESTRATION_NOT_CONNECTED` · `RULE6_CLINICAL_ACTIVATION_NONE` |
 | **Paid services** | `NO_PAID_API_SERVICE_DEPENDENCY_OR_CERTIFICATE` |
 | **Rule 5 C3E** | `RULE6_INDEPENDENT_OF_RULE5_C3E` (C3E remains paused separately) |
+| **Owner governance** | `ELECTROHOMEOPATHY_CLINICAL_RULES_REQUIRE_OWNER_APPROVAL_TECHNICAL_ENGINEERING_DELEGATED` |
 
 **Status tokens (current):**
 
 - `RULE6_IDENTITY_OWNER_LOCKED`
 - `RULE6_SCOPE_OWNER_LOCKED`
 - `RULE6_CANONICAL_CONTRACT_DOCUMENTED`
+- `RULE6_SHADOW_EVALUATOR_IMPLEMENTED`
+- `RULE6_MANDATORY_PROOFS_20_OF_20_PASS`
+- `RULE6_ADDITIONAL_REGRESSIONS_24_PASS`
+- `RULE6_INDEPENDENT_IMPLEMENTATION_REVIEW_PASS`
+- `RULE6_ORCHESTRATION_NOT_CONNECTED`
+- `RULE6_CLINICAL_ACTIVATION_NONE`
+- `RULE6_REAL_MEDICINE_RELATIONSHIPS_0`
 - `RULE6_VALIDATED_RELATIONSHIP_DATA_PENDING`
+- `RULE6_PRODUCTION_OUTPUT_UNCHANGED`
+- `RULE6_INDEPENDENT_OF_RULE5_C3E`
 
 **Historical (superseded for current identity readiness):** Stage A `IDENTITY_CANDIDATE_ONLY` for Rule 6 — retained only as pre-owner-decision history.
 
-This document is the authoritative EHAS2 Rule 6 contract. It does **not** implement an evaluator, create `packages/rule6`, connect orchestration, or activate clinical selection.
+**Historical (superseded for current implementation readiness):** contract-documentation-tranche tokens `RULE6_IMPLEMENTATION_NOT_AUTHORIZED` · `RULE6_SHADOW_EVALUATOR_NOT_IMPLEMENTED` — superseded by PR #84 merge evidence; do not read as current status without the evidence document.
+
+This document is the authoritative EHAS2 Rule 6 **contract**. Shadow evaluator implementation evidence (post PR #84) is recorded separately. This contract still does **not** authorize orchestration connection, clinical activation, real medicine edges, or production prescription changes.
+
+---
+
+## 0. Owner clinical authority vs technical engineering
+
+**Directive:** `ELECTROHOMEOPATHY_CLINICAL_RULES_REQUIRE_OWNER_APPROVAL_TECHNICAL_ENGINEERING_DELEGATED`
+
+Clinical meaning for Electrohomeopathy rules (सिद्धांत, eligibility, relationships, formulas, contraindications, mixture-count clinical policy, potency/dosage/electricity/tablet/external/monitoring/emergency clinical behavior, thresholds/weights, and evidence/clinical approval status) requires **explicit owner approval** (Dr. Ghanshyam Bakalwar). Engineering must not invent these decisions; unresolved clinical questions → **STOP** and ask owner.
+
+Within this locked contract, technical engineering may implement schemas, deterministic validation, immutability, fixed errors, tests/CI, and package integration that preserve clinical meaning. Cost, security-policy change, protected-data access, production/runtime connection, external deploy, and legacy modification still require owner approval.
+
+Canonical cross-rule pointer: [../CLINICAL_PRODUCT_CONSTITUTION.md](../CLINICAL_PRODUCT_CONSTITUTION.md). Post-merge package evidence: [rule-06-multi-disease-organ-system-triad-implementation-evidence.md](./rule-06-multi-disease-organ-system-triad-implementation-evidence.md).
 
 ---
 
@@ -389,20 +413,20 @@ Every proposed composition must include medicine IDs, evidence / relationship ID
 
 ---
 
-## 13. Future implementation plan (not authorized now)
+## 13. Implementation plan (historical contract-doc note; superseded by PR #84 for package creation)
 
-Suggested package: `packages/rule6/`
+Suggested package: `packages/rule6/` — **now present on canonical main** (see post-merge evidence). The subsections below retain the original proof-matrix wording from the contract-documentation tranche.
 
-### 13.1 Future file allowlist (unauthorized until separate auth)
+### 13.1 Package paths (now implemented under separate auth; recorded post-merge)
 
 - `packages/rule6/package.json`
 - `packages/rule6/tsconfig.json`
 - `packages/rule6/src/**/*.ts`
 - `packages/rule6/tests/**/*.test.ts`
 
-Add other package-root files **only** if monorepo convention mechanically requires them (for example workspace listing). Do **not** connect orchestration or production in that first implementation auth without explicit extension.
+Mechanical root registration (typecheck / Vitest / lockfile) was limited to PR #84 allowlist. Do **not** connect orchestration or production without explicit extension.
 
-### 13.2 Mandatory future proof matrix
+### 13.2 Mandatory proof matrix
 
 Mechanical count: **20**
 
@@ -429,21 +453,22 @@ Mechanical count: **20**
 | P19 | No legacy / runtime connection |
 | P20 | Outcome / error vocabulary closed-set enforcement |
 
-Do **not** execute these tests in this documentation tranche.
+Do **not** treat the proof matrix above as unexecuted: post-merge evidence records P01–P20 + 24 additional regressions on main (PR #84).
 
 ---
 
 ## 14. STOP boundaries
 
-Under this contract and documentation authorization:
+Under this contract:
 
-- Do **not** implement Rule 6 code or create `packages/rule6`
-- Do **not** run clinical evaluation or connect orchestration / runtime
-- Do **not** activate clinical selection or alter production prescription
+- Do **not** connect orchestration / runtime or activate clinical selection
+- Do **not** alter production prescription
 - Do **not** resume Rule 5 C3E or depend on protected sources / hashes / manifests
 - Do **not** change Smart App Control
 - Do **not** modify the legacy repository
 - Do **not** invent thresholds, weights, medicine edges, or formula recipes
 - Do **not** use paid APIs / services / certificates
 
-**Separate authorizations required:** implementation; validated relationship data; independent clinical review; orchestration connection.
+**Historical (contract-documentation tranche only):** the prior STOP lines “Do not implement Rule 6 code or create `packages/rule6`” applied before PR #84. Shadow evaluator implementation is now recorded in [rule-06-multi-disease-organ-system-triad-implementation-evidence.md](./rule-06-multi-disease-organ-system-triad-implementation-evidence.md).
+
+**Separate authorizations required:** validated relationship data; independent clinical review; orchestration connection; production activation.
