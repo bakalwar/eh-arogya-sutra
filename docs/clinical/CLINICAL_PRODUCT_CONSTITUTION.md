@@ -2,6 +2,20 @@
 
 Permanent product requirements for E.H. AROGYA SUTRA 2. Guard tests protect these strings. This document does **not** prove clinical correctness.
 
+## Owner clinical authority vs technical engineering
+
+**Directive:** `ELECTROHOMEOPATHY_CLINICAL_RULES_REQUIRE_OWNER_APPROVAL_TECHNICAL_ENGINEERING_DELEGATED`
+
+Electrohomeopathy **clinical** content and meaning (सिद्धांत; disease/symptom/target interpretation; temperament/constitution meaning; medicine eligibility/ranking/selection/rejection; relationship/combination edges; formula composition; contraindications/exclusions; mixture-count clinical policy; potency; dosage; electricity; Tablet A/B; external applications; monitoring/follow-up clinical rules; emergency clinical behavior; clinical thresholds/weights; evidence validation and clinical approval status) require **explicit owner approval** by Dr. Ghanshyam Bakalwar before addition or change. AI/engineering must not invent these decisions. Unresolved clinical decision → **STOP** and ask owner.
+
+**Technical engineering** may proceed autonomously **within already approved clinical contracts** for architecture, schemas/types, canonicalization/validation, deterministic ordering, immutability, fixed error taxonomy, tests/CI, security/privacy, performance bounds, package/workspace integration, API/database/frontend engineering, PHI-free observability, and meaning-preserving refactors.
+
+Owner approval remains required for technical work that introduces cost/paid services, changes security policy, accesses protected data, changes clinical meaning, connects production/runtime, deploys externally, or modifies the legacy system.
+
+**Global cost lock:** `NO_PAID_API_SERVICE_DEPENDENCY_OR_CERTIFICATE`.
+
+Rule 6 post-merge shadow evidence pointer: [rules/rule-06-multi-disease-organ-system-triad-implementation-evidence.md](./rules/rule-06-multi-disease-organ-system-triad-implementation-evidence.md).
+
 ## A. Scale
 
 - Target up to **100,000 registered doctors**
