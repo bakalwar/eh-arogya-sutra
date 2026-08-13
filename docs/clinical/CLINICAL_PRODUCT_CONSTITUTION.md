@@ -20,6 +20,8 @@ Rule 6 relationship-data / evidence-intake contract (empty active registry; CE-O
 
 Rule 7 External Use Routes canonical contract (`EXTERNAL_USE_ROUTES`; shadow-only): [rules/rule-07-external-use-routes-contract.md](./rules/rule-07-external-use-routes-contract.md). Post-merge shadow evidence: [rules/rule-07-external-use-routes-implementation-evidence.md](./rules/rule-07-external-use-routes-implementation-evidence.md) (`RULE7_SHADOW_EVALUATOR_IMPLEMENTED`; orchestration **NOT_CONNECTED**; clinical activation **NONE**; real route/site mappings **0**).
 
+Rule 8 Disease-level Prakruti Inference canonical contract (`DISEASE_LEVEL_PRAKRUTI_INFERENCE`; shadow-only; **no** impl; real approved disease→prakriti mappings **0**; separate from Rule 1; `NOT_REQUIRED_FOR_PRESCRIPTION`): [rules/rule-08-disease-level-prakruti-inference-contract.md](./rules/rule-08-disease-level-prakruti-inference-contract.md).
+
 ## A. Scale
 
 - Target up to **100,000 registered doctors**
