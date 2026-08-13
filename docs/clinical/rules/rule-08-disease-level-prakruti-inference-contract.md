@@ -8,31 +8,35 @@
 | **Document class** | OWNER_LOCKED canonical contract |
 | **Authority tokens** | `R8_ID01_TO_ID05_RECOMMENDED_DECISIONS_APPROVED` · `R8_DISEASE_LEVEL_PRAKRUTI_CANONICAL_CONTRACT_DOCUMENTATION_AUTHORIZED` |
 | **Contract version** | `ehas2-rule8-contract-v1` |
-| **Implementation (current)** | `RULE8_SHADOW_EVALUATOR_NOT_IMPLEMENTED` · `RULE8_IMPLEMENTATION_NOT_AUTHORIZED` |
-| **Runtime** | `RULE8_ORCHESTRATION_NOT_CONNECTED` · `RULE8_CLINICAL_ACTIVATION_NONE` · `RULE8_MEDICINE_SELECTION_INFLUENCE_NONE` |
+| **Implementation (current)** | `RULE8_SHADOW_EVALUATOR_IMPLEMENTED` · evidence: [rule-08-disease-level-prakruti-inference-implementation-evidence.md](./rule-08-disease-level-prakruti-inference-implementation-evidence.md) |
+| **Runtime** | `RULE8_ORCHESTRATION_NOT_CONNECTED` · `RULE8_CLINICAL_ACTIVATION_NONE` · `RULE8_MEDICINE_SELECTION_INFLUENCE_NONE` · `RULE8_PRESCRIPTION_EFFECT_NONE` |
 | **Prescription posture** | `RULE8_NOT_REQUIRED_FOR_PRESCRIPTION` · `RULE8_PRODUCTION_RX_UNCHANGED` |
 | **Real approved disease→prakriti mappings** | **`0`** |
 | **Paid services** | `NO_PAID_API_SERVICE_DEPENDENCY_OR_CERTIFICATE` |
 | **Rule 5 C3E** | `RULE8_INDEPENDENT_OF_RULE5_C3E` (C3E remains paused separately) |
 | **Owner governance** | `ELECTROHOMEOPATHY_CLINICAL_RULES_REQUIRE_OWNER_APPROVAL_TECHNICAL_ENGINEERING_DELEGATED` |
 | **Canonical `origin/main` base (at documentation start)** | `b2d03c4632b5e0b18cd595bb54b474bbbb9e461d` |
+| **Canonical `origin/main` (post PR #92 shadow merge)** | `39a2c2e9cc2e522f3b5524d86595575849ae3139` |
 
 **Status tokens (current):**
 
 - `RULE8_IDENTITY_OWNER_LOCKED`
 - `RULE8_SCOPE_OWNER_LOCKED`
 - `RULE8_CANONICAL_CONTRACT_DOCUMENTED`
-- `RULE8_SHADOW_EVALUATOR_NOT_IMPLEMENTED`
-- `RULE8_IMPLEMENTATION_NOT_AUTHORIZED`
+- `RULE8_SHADOW_EVALUATOR_IMPLEMENTED`
+- `RULE8_MANDATORY_PROOFS_PASS`
+- `RULE8_INDEPENDENT_TECHNICAL_REVIEW_PASS`
+- `RULE8_REAL_DISEASE_PRAKRUTI_MAPPINGS_0`
+- `RULE8_PRODUCTION_MAPPING_REGISTRY_EMPTY`
 - `RULE8_ORCHESTRATION_NOT_CONNECTED`
 - `RULE8_CLINICAL_ACTIVATION_NONE`
 - `RULE8_MEDICINE_SELECTION_INFLUENCE_NONE`
+- `RULE8_PRESCRIPTION_EFFECT_NONE`
 - `RULE8_NOT_REQUIRED_FOR_PRESCRIPTION`
 - `RULE8_PRODUCTION_RX_UNCHANGED`
-- `RULE8_REAL_APPROVED_DISEASE_PRAKRUTI_MAPPINGS_0`
 - `RULE8_CLINICAL_EVIDENCE_PENDING`
 - `RULE8_NO_MEDICINE_FORMULA_OR_TREATMENT_AUTHORITY`
-- `RULE8_SEPARATE_FROM_RULE1`
+- `RULE8_RULE1_SEPARATION_PRESERVED`
 - `RULE8_INDEPENDENT_OF_RULE5_C3E`
 - `RULE8_INDEPENDENT_OF_RULE6_RELATIONSHIP_DATA`
 - `RULE8_INDEPENDENT_OF_RULE7_ROUTE_MAPPINGS`
@@ -40,7 +44,9 @@
 
 **Historical (superseded for current identity readiness):** Stage A `IDENTITY_CANDIDATE_ONLY` for Rule 8 — retained only as pre-owner-decision history. Phase 5C readiness docs remain historical recommendations until this contract.
 
-This document is the authoritative EHAS2 Rule 8 **contract**. It does **not** create `packages/rule8`, implement an evaluator, invent disease→prakriti mappings, connect orchestration, activate clinical selection, influence medicine selection, or change production prescription output.
+**Historical (superseded for current implementation readiness):** contract-documentation-tranche tokens `RULE8_SHADOW_EVALUATOR_NOT_IMPLEMENTED` · `RULE8_IMPLEMENTATION_NOT_AUTHORIZED` — superseded by PR #92 merge evidence; do not read as current status without the evidence document.
+
+This document is the authoritative EHAS2 Rule 8 **contract**. Post-merge shadow package evidence: [rule-08-disease-level-prakruti-inference-implementation-evidence.md](./rule-08-disease-level-prakruti-inference-implementation-evidence.md). It does **not** connect orchestration, activate clinical selection, invent disease→prakriti mappings or clinical vocabulary, grant medicine-selection influence, or change production prescription output.
 
 ---
 
@@ -317,9 +323,8 @@ Do **not** execute these tests in this documentation tranche.
 
 ## 10. Explicit STOP
 
-Under **`R8_DISEASE_LEVEL_PRAKRUTI_CANONICAL_CONTRACT_DOCUMENTATION_AUTHORIZED`**:
+Under **`R8_DISEASE_LEVEL_PRAKRUTI_CANONICAL_CONTRACT_DOCUMENTATION_AUTHORIZED`** (contract tranche) and continuing post-merge boundaries:
 
-- Do **not** implement Rule 8 code or create `packages/rule8`
 - Do **not** invent or commit real disease→prakriti mappings (count remains **0**)
 - Do **not** invent prakriti-category clinical meanings, thresholds, or weights
 - Do **not** connect orchestration / runtime or activate clinical selection
@@ -330,4 +335,6 @@ Under **`R8_DISEASE_LEVEL_PRAKRUTI_CANONICAL_CONTRACT_DOCUMENTATION_AUTHORIZED`*
 - Do **not** use paid APIs / services / certificates
 - Do **not** deploy
 
-**Separate authorizations required:** shadow implementation; validated disease→prakriti evidence data; Rule 1 reconciliation contract (if ever); independent clinical review; orchestration connection; production activation.
+**Historical (contract-documentation tranche only):** “Do not implement Rule 8 code or create `packages/rule8`” applied under the contract-docs authorization and is **superseded** for package presence by separately authorized PR #92 (`RULE8_SHADOW_EVALUATOR_IMPLEMENTED`). That historical STOP line must **not** be read as forbidding the merged shadow package; remaining STOP bullets above still apply.
+
+**Separate authorizations required:** validated disease→prakriti evidence data; owner clinical vocabulary; Rule 1 reconciliation contract (if ever); independent clinical review of concrete mappings; orchestration connection; production activation.
