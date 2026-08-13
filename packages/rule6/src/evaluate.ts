@@ -36,6 +36,25 @@ function edgeMentionsMedicine(edge: Rule6RelationshipEdge, medicineId: string): 
   return edge.targetMedicineIdOrSet.includes(medicineId);
 }
 
+function edgeEndpoints(edge: Rule6RelationshipEdge): string[] {
+  if (typeof edge.targetMedicineIdOrSet === 'string') {
+    return sortedUnique([edge.sourceMedicineId, edge.targetMedicineIdOrSet]);
+  }
+  return sortedUnique([edge.sourceMedicineId, ...edge.targetMedicineIdOrSet]);
+}
+
+function isSelfEdge(edge: Rule6RelationshipEdge): boolean {
+  return edgeEndpoints(edge).length === 1;
+}
+
+function endpointsAvailable(
+  edge: Rule6RelationshipEdge,
+  poolSet: ReadonlySet<string>,
+  safetySet: ReadonlySet<string>,
+): boolean {
+  return edgeEndpoints(edge).every((id) => poolSet.has(id) && !safetySet.has(id));
+}
+
 function applicabilitySatisfied(edge: Rule6RelationshipEdge, ctx: Set<string>): boolean {
   if (edge.applicabilityConditions.length === 0) return true;
   return edge.applicabilityConditions.every((c) => ctx.has(c));
@@ -67,6 +86,7 @@ function evaluateCandidates(input: Rule6Input): {
   const ctx = contextTokens(input);
   const safety = new Set(input.safetyExclusionRefs);
   const pool = sortedUnique(input.candidateMedicinePool);
+  const poolSet = new Set(pool);
   const evaluations: Rule6CandidateEvaluation[] = [];
   const selected: string[] = [];
   const rejected: string[] = [];
@@ -101,6 +121,7 @@ function evaluateCandidates(input: Rule6Input): {
       edgeMentionsMedicine(e, medicineId),
     );
     const activating: Rule6RelationshipEdge[] = [];
+    const incomplete: Rule6RelationshipEdge[] = [];
     const contradictory: Rule6RelationshipEdge[] = [];
 
     for (const edge of related) {
@@ -114,10 +135,16 @@ function evaluateCandidates(input: Rule6Input): {
         reasons.push(RULE6_REASON_CODES.PROHIBITION_ACTIVE);
         continue;
       }
-      if (isActivatingEdge(edge)) {
+      if (!isActivatingEdge(edge)) {
+        reasons.push(RULE6_REASON_CODES.EDGE_NON_ACTIVATING);
+        continue;
+      }
+      // Self-edges may activate a singleton; multi-endpoint edges require every endpoint available.
+      if (isSelfEdge(edge) || endpointsAvailable(edge, poolSet, safety)) {
         activating.push(edge);
       } else {
-        reasons.push(RULE6_REASON_CODES.EDGE_NON_ACTIVATING);
+        incomplete.push(edge);
+        reasons.push(RULE6_REASON_CODES.INCOMPLETE_RELATIONSHIP);
       }
     }
 
@@ -131,6 +158,20 @@ function evaluateCandidates(input: Rule6Input): {
         reasonCodes: Object.freeze(sortedUnique(reasons)),
         evidenceIds: Object.freeze(sortedUnique(contradictory.map((e) => e.evidenceSourceId))),
         edgeIds: Object.freeze(sortedUnique(contradictory.map((e) => e.edgeId))),
+      });
+      continue;
+    }
+
+    if (incomplete.length > 0 && activating.length === 0) {
+      unresolved = true;
+      reasons.push(RULE6_REASON_CODES.INCOMPLETE_RELATIONSHIP);
+      blockers.push(RULE6_REASON_CODES.INCOMPLETE_RELATIONSHIP);
+      evaluations.push({
+        medicineId,
+        state: 'UNRESOLVED',
+        reasonCodes: Object.freeze(sortedUnique(reasons)),
+        evidenceIds: Object.freeze(sortedUnique(incomplete.map((e) => e.evidenceSourceId))),
+        edgeIds: Object.freeze(sortedUnique(incomplete.map((e) => e.edgeId))),
       });
       continue;
     }
@@ -229,19 +270,35 @@ function proposeCompositions(
     }
   }
 
-  // Single-medicine compositions for eligible medicines not appearing in a pair.
+  // Singletons only from self-edges (never from incomplete/multi-endpoint edges).
   const covered = new Set<string>();
   for (const c of compositions) {
     for (const m of c.medicineIds) covered.add(m);
   }
+  const selfEligible = new Set<string>();
+  for (const edge of input.relationshipEvidenceRegistry.edges) {
+    if (!isActivatingEdge(edge) || !isSelfEdge(edge)) continue;
+    if (!applicabilitySatisfied(edge, new Set(ctx))) continue;
+    if (prohibitionActive(edge, new Set(ctx))) continue;
+    const only = edgeEndpoints(edge)[0];
+    if (only && eligibleSet.has(only)) selfEligible.add(only);
+  }
   for (const medicineId of selected) {
     if (covered.has(medicineId)) continue;
-    const ev = evalById.get(medicineId);
+    if (!selfEligible.has(medicineId)) continue;
+    const selfEdges = input.relationshipEvidenceRegistry.edges.filter(
+      (edge) =>
+        isActivatingEdge(edge) &&
+        isSelfEdge(edge) &&
+        edgeMentionsMedicine(edge, medicineId) &&
+        applicabilitySatisfied(edge, new Set(ctx)) &&
+        !prohibitionActive(edge, new Set(ctx)),
+    );
     compositions.push({
       compositionId: `shadow-comp-${medicineId}`,
       medicineIds: Object.freeze([medicineId]),
-      evidenceIds: Object.freeze([...(ev?.evidenceIds ?? [])]),
-      relationshipEdgeIds: Object.freeze([...(ev?.edgeIds ?? [])]),
+      evidenceIds: Object.freeze(sortedUnique(selfEdges.map((e) => e.evidenceSourceId))),
+      relationshipEdgeIds: Object.freeze(sortedUnique(selfEdges.map((e) => e.edgeId))),
       targetOrSystemReasons: Object.freeze(sortedUnique(ctx)),
       rejectionOrBlockerInfo: Object.freeze([]),
       rule9ValidationRequired: true,
@@ -284,24 +341,20 @@ function proposeCompositions(
 
 function decideStatus(args: {
   input: Rule6Input;
-  selected: readonly string[];
   compositions: readonly Rule6CompositionCandidate[];
   unresolved: boolean;
   tieUnresolved: boolean;
-  blockedBySafety: boolean;
-  poolSize: number;
 }): Rule6Outcome {
-  const { input, selected, compositions, unresolved, tieUnresolved, blockedBySafety, poolSize } =
-    args;
+  const { input, compositions, unresolved, tieUnresolved } = args;
 
   if (input.upstreamApplicability.status === 'NOT_APPLICABLE') {
     return 'NOT_APPLICABLE';
   }
-  if (blockedBySafety && selected.length === 0 && poolSize > 0) {
-    const allSafetyRejected =
-      input.candidateMedicinePool.length > 0 &&
-      input.candidateMedicinePool.every((m) => input.safetyExclusionRefs.includes(m));
-    if (allSafetyRejected) return 'BLOCKED_BY_SAFETY';
+  const pool = input.candidateMedicinePool;
+  const allSafetyRejected =
+    pool.length > 0 && pool.every((m) => input.safetyExclusionRefs.includes(m));
+  if (allSafetyRejected) {
+    return 'BLOCKED_BY_SAFETY';
   }
   if (
     input.rule1TemperamentRef.status === 'NOT_EVALUABLE' ||
@@ -315,12 +368,6 @@ function decideStatus(args: {
   }
   if (compositions.length > 0) {
     return 'SHADOW_CANDIDATES_PROPOSED';
-  }
-  if (blockedBySafety && selected.length === 0) {
-    return 'BLOCKED_BY_SAFETY';
-  }
-  if (selected.length === 0) {
-    return 'EVALUATED_NO_ELIGIBLE_CANDIDATE';
   }
   return 'EVALUATED_NO_ELIGIBLE_CANDIDATE';
 }
@@ -410,12 +457,9 @@ export function evaluateRule6Shadow(rawInput: unknown): Rule6Output {
 
     const status = decideStatus({
       input,
-      selected: result.selected,
       compositions,
       unresolved: result.unresolved,
       tieUnresolved,
-      blockedBySafety: result.blockedBySafety,
-      poolSize: input.candidateMedicinePool.length,
     });
 
     const finalCompositions =
