@@ -62,7 +62,7 @@ Read-only branch facts (`git` on local objects):
 | 4 | Potency | **IDENTITY_CANDIDATE_ONLY** + **FREEZE_STATUS_CONFLICT** |
 | 5 | Dosage (contracts) vs Monitoring (unmerged) | **IDENTITY_CONFLICT** |
 | 6 | Multi-Disease / Organ-System Triad (MULTI_DISEASE_ORGAN_SYSTEM_TRIAD) | **IDENTITY_OWNER_LOCKED** (supersedes historical Stage A IDENTITY_CANDIDATE_ONLY) — canonical contract: docs/clinical/rules/rule-06-multi-disease-organ-system-triad-contract.md |
-| 7 | External Use Routes | **IDENTITY_CANDIDATE_ONLY** |
+| 7 | External Use Routes (`EXTERNAL_USE_ROUTES`) | **IDENTITY_OWNER_LOCKED** (supersedes historical Stage A IDENTITY_CANDIDATE_ONLY) — canonical contract: docs/clinical/rules/rule-07-external-use-routes-contract.md |
 | 8 | Disease-level Prakruti Inference | **IDENTITY_CANDIDATE_ONLY** |
 | 9 | Master Pipeline | **IDENTITY_CANDIDATE_ONLY** |
 
