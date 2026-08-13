@@ -8,31 +8,39 @@
 | **Document class** | OWNER_LOCKED canonical contract |
 | **Authority tokens** | `R7_ID01_TO_ID05_RECOMMENDED_DECISIONS_APPROVED` · `R7_EXTERNAL_USE_ROUTES_CANONICAL_CONTRACT_DOCUMENTATION_AUTHORIZED` |
 | **Contract version** | `ehas2-rule7-contract-v1` |
-| **Implementation (current)** | `RULE7_SHADOW_EVALUATOR_NOT_IMPLEMENTED` · `RULE7_IMPLEMENTATION_NOT_AUTHORIZED` |
+| **Implementation (current)** | `RULE7_SHADOW_EVALUATOR_IMPLEMENTED` · evidence: [rule-07-external-use-routes-implementation-evidence.md](./rule-07-external-use-routes-implementation-evidence.md) |
 | **Runtime** | `RULE7_ORCHESTRATION_NOT_CONNECTED` · `RULE7_CLINICAL_ACTIVATION_NONE` |
 | **Paid services** | `NO_PAID_API_SERVICE_DEPENDENCY_OR_CERTIFICATE` |
 | **Rule 5 C3E** | `RULE7_INDEPENDENT_OF_RULE5_C3E` (C3E remains paused separately) |
 | **Owner governance** | `ELECTROHOMEOPATHY_CLINICAL_RULES_REQUIRE_OWNER_APPROVAL_TECHNICAL_ENGINEERING_DELEGATED` |
 | **Canonical `origin/main` base (at documentation start)** | `60d295cf99f0325bbec3239d40a66ee200f4292e` |
+| **Canonical `origin/main` (post PR #88 shadow merge)** | `4220afb66a8dcbab6fd76365784fcac6b12f4387` |
 
 **Status tokens (current):**
 
 - `RULE7_IDENTITY_OWNER_LOCKED`
 - `RULE7_SCOPE_OWNER_LOCKED`
 - `RULE7_CANONICAL_CONTRACT_DOCUMENTED`
-- `RULE7_SHADOW_EVALUATOR_NOT_IMPLEMENTED`
-- `RULE7_IMPLEMENTATION_NOT_AUTHORIZED`
+- `RULE7_SHADOW_EVALUATOR_IMPLEMENTED`
+- `RULE7_MANDATORY_PROOFS_PASS`
+- `RULE7_INDEPENDENT_TECHNICAL_REVIEW_PASS`
+- `RULE7_REAL_CLINICAL_ROUTE_MAPPINGS_0`
+- `RULE7_REAL_SITE_MAPPINGS_0`
 - `RULE7_ORCHESTRATION_NOT_CONNECTED`
 - `RULE7_CLINICAL_ACTIVATION_NONE`
 - `RULE7_EXTERNAL_MEDICINE_RULES_NOT_AUTHORIZED`
-- `RULE7_PRODUCTION_OUTPUT_UNCHANGED`
+- `RULE7_PRODUCTION_RX_UNCHANGED`
+- `RULE7_CLINICAL_EVIDENCE_PENDING`
+- `RULE7_NO_ORAL_COPY`
 - `RULE7_INDEPENDENT_OF_RULE5_C3E`
 - `RULE7_INDEPENDENT_OF_RULE6_RELATIONSHIP_DATA`
 - `NO_PAID_API_SERVICE_DEPENDENCY_OR_CERTIFICATE`
 
 **Historical (superseded for current identity readiness):** Stage A `IDENTITY_CANDIDATE_ONLY` for Rule 7 — retained only as pre-owner-decision history.
 
-This document is the authoritative EHAS2 Rule 7 **contract**. It does **not** create `packages/rule7`, implement an evaluator, connect orchestration, activate clinical selection, authorize external medicines, or change production prescription output.
+**Historical (superseded for current implementation readiness):** contract-documentation-tranche tokens `RULE7_SHADOW_EVALUATOR_NOT_IMPLEMENTED` · `RULE7_IMPLEMENTATION_NOT_AUTHORIZED` — superseded by PR #88 merge evidence; do not read as current status without the evidence document.
+
+This document is the authoritative EHAS2 Rule 7 **contract**. Post-merge shadow package evidence: [rule-07-external-use-routes-implementation-evidence.md](./rule-07-external-use-routes-implementation-evidence.md). It does **not** connect orchestration, activate clinical selection, authorize external medicines, invent clinical route/site meanings, or change production prescription output.
 
 ---
 
@@ -46,7 +54,7 @@ Within this locked contract, technical engineering may design schemas/types, det
 
 Unresolved clinical decision → **STOP** and ask owner.
 
-Canonical cross-rule pointer: [../CLINICAL_PRODUCT_CONSTITUTION.md](../CLINICAL_PRODUCT_CONSTITUTION.md).
+Canonical cross-rule pointer: [../CLINICAL_PRODUCT_CONSTITUTION.md](../CLINICAL_PRODUCT_CONSTITUTION.md). Post-merge package evidence: [rule-07-external-use-routes-implementation-evidence.md](./rule-07-external-use-routes-implementation-evidence.md).
 
 ---
 
@@ -242,22 +250,22 @@ When separately authorized to implement:
 
 ---
 
-## 9. Future implementation plan (not authorized now)
+## 9. Implementation plan and proof matrix
 
-### 9.1 Suggested package allowlist (unauthorized until separate auth)
+### 9.1 Package allowlist (shadow implementation merged via PR #88)
 
 - `packages/rule7/package.json`
 - `packages/rule7/tsconfig.json`
 - `packages/rule7/src/**/*.ts`
 - `packages/rule7/tests/**/*.test.ts`
 
-Mechanical root registration (typecheck / Vitest / lockfile) **only** if monorepo convention requires it under that separate implementation authorization.
+Mechanical root registration (typecheck / Vitest / lockfile) and Rule 7 `nineRules.ts` metadata alignment were included under the separate shadow-implementation authorization (PR #88). Evidence: [rule-07-external-use-routes-implementation-evidence.md](./rule-07-external-use-routes-implementation-evidence.md).
 
-Do **not** connect orchestration or production in the first implementation auth without explicit extension.
+Do **not** connect orchestration or production without explicit separate owner authorization.
 
-### 9.2 Mandatory future proof matrix
+### 9.2 Mandatory proof matrix
 
-Mechanical count: **16**
+Mechanical count: **16** (executed on reviewed head of PR #88; see evidence document)
 
 | # | Proof category |
 |---|----------------|
@@ -278,15 +286,14 @@ Mechanical count: **16**
 | P15 | No PHI / protected-path leakage |
 | P16 | Outcome / error vocabulary closed-set enforcement |
 
-Do **not** execute these tests in this documentation tranche.
+**Historical (contract-documentation tranche only):** “Do not execute these tests in this documentation tranche” applied before PR #88. Shadow proofs are recorded in the evidence document.
 
 ---
 
 ## 10. Explicit STOP
 
-Under **`R7_EXTERNAL_USE_ROUTES_CANONICAL_CONTRACT_DOCUMENTATION_AUTHORIZED`**:
+Under **`R7_EXTERNAL_USE_ROUTES_CANONICAL_CONTRACT_DOCUMENTATION_AUTHORIZED`** (contract tranche) and continuing post-merge boundaries:
 
-- Do **not** implement Rule 7 code or create `packages/rule7`
 - Do **not** add external medicine clinical rules, formulas, strengths, or instructions
 - Do **not** connect orchestration / runtime or activate clinical selection
 - Do **not** alter production prescription
@@ -296,4 +303,6 @@ Under **`R7_EXTERNAL_USE_ROUTES_CANONICAL_CONTRACT_DOCUMENTATION_AUTHORIZED`**:
 - Do **not** use paid APIs / services / certificates
 - Do **not** deploy
 
-**Separate authorizations required:** shadow implementation; validated route/site evidence data; external-medicine clinical rules (if ever); independent clinical review; orchestration connection; production activation.
+**Historical (contract-documentation tranche only):** the prior STOP line “Do not implement Rule 7 code or create `packages/rule7`” applied before PR #88. Shadow evaluator implementation is now recorded in [rule-07-external-use-routes-implementation-evidence.md](./rule-07-external-use-routes-implementation-evidence.md).
+
+**Separate authorizations required:** validated route/site evidence data; external-medicine clinical rules (if ever); independent clinical review of concrete mappings; orchestration connection; production activation.
