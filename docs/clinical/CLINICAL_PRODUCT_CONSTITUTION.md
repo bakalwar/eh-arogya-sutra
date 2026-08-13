@@ -16,6 +16,8 @@ Owner approval remains required for technical work that introduces cost/paid ser
 
 Rule 6 post-merge shadow evidence pointer: [rules/rule-06-multi-disease-organ-system-triad-implementation-evidence.md](./rules/rule-06-multi-disease-organ-system-triad-implementation-evidence.md).
 
+Rule 6 relationship-data / evidence-intake contract (empty active registry; CE-OD-01…05; **no** real edges): [rules/rule-06-relationship-data-and-evidence-intake-contract.md](./rules/rule-06-relationship-data-and-evidence-intake-contract.md).
+
 ## A. Scale
 
 - Target up to **100,000 registered doctors**

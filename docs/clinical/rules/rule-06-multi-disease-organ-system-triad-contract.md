@@ -13,6 +13,7 @@
 | **Paid services** | `NO_PAID_API_SERVICE_DEPENDENCY_OR_CERTIFICATE` |
 | **Rule 5 C3E** | `RULE6_INDEPENDENT_OF_RULE5_C3E` (C3E remains paused separately) |
 | **Owner governance** | `ELECTROHOMEOPATHY_CLINICAL_RULES_REQUIRE_OWNER_APPROVAL_TECHNICAL_ENGINEERING_DELEGATED` |
+| **Relationship-data / evidence-intake** | `R6_CE_OD01_TO_OD05_RECOMMENDED_DECISIONS_APPROVED` · contract: [rule-06-relationship-data-and-evidence-intake-contract.md](./rule-06-relationship-data-and-evidence-intake-contract.md) |
 
 **Status tokens (current):**
 
@@ -27,6 +28,8 @@
 - `RULE6_CLINICAL_ACTIVATION_NONE`
 - `RULE6_REAL_MEDICINE_RELATIONSHIPS_0`
 - `RULE6_VALIDATED_RELATIONSHIP_DATA_PENDING`
+- `RULE6_RELATIONSHIP_DATA_CONTRACT_DOCUMENTED`
+- `RULE6_ACTIVE_RELATIONSHIP_REGISTRY_EMPTY`
 - `RULE6_PRODUCTION_OUTPUT_UNCHANGED`
 - `RULE6_INDEPENDENT_OF_RULE5_C3E`
 
@@ -333,6 +336,8 @@ Errors use **code-only** fixed messages suitable for logs (no PHI, no protected 
 
 No medicine relationships are added by this document.
 
+**Data governance companion (empty active registry, lifecycle, intake planning, owner batches, STOP before real edges):** [rule-06-relationship-data-and-evidence-intake-contract.md](./rule-06-relationship-data-and-evidence-intake-contract.md) (`R6_CE_OD01_TO_OD05_RECOMMENDED_DECISIONS_APPROVED`).
+
 ### 9.1 Required edge fields (key order)
 
 1. `edgeId`
@@ -471,4 +476,4 @@ Under this contract:
 
 **Historical (contract-documentation tranche only):** the prior STOP lines “Do not implement Rule 6 code or create `packages/rule6`” applied before PR #84. Shadow evaluator implementation is now recorded in [rule-06-multi-disease-organ-system-triad-implementation-evidence.md](./rule-06-multi-disease-organ-system-triad-implementation-evidence.md).
 
-**Separate authorizations required:** validated relationship data; independent clinical review; orchestration connection; production activation.
+**Separate authorizations required:** real relationship **data** addition (after relationship-data contract review); independent clinical review of concrete edges; orchestration connection; production activation. Relationship-data / intake **documentation** is recorded in [rule-06-relationship-data-and-evidence-intake-contract.md](./rule-06-relationship-data-and-evidence-intake-contract.md).
