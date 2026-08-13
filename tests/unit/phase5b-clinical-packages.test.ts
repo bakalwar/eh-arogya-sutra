@@ -107,7 +107,7 @@ describe('Phase 5B clinical contracts / nine-rule interfaces', () => {
     expect(r.tabletSectionB.status).toBe('NOT_IMPLEMENTED');
   });
 
-  it('every rule supports unresolved-capable status field and Rule 8 is not implemented', () => {
+  it('every rule supports unresolved-capable status field; Rule 8 shadow is READY_FOR_VALIDATION only', () => {
     const results = allNineRuleInterfaceResults();
     expect(results).toHaveLength(9);
     for (const r of results) {
@@ -116,8 +116,11 @@ describe('Phase 5B clinical contracts / nine-rule interfaces', () => {
       expect(r).toHaveProperty('deterministicFingerprint');
     }
     const r8 = results.find((x) => x.ruleNumber === 8);
-    expect(r8?.status).toBe('NOT_IMPLEMENTED');
-    expect(NINE_RULE_DEFINITIONS[7]?.phase5bStatus).toBe('NOT_IMPLEMENTED');
+    // Shadow package present for technical validation — not clinical readiness / production.
+    expect(r8?.status).toBe('READY_FOR_VALIDATION');
+    expect(NINE_RULE_DEFINITIONS[7]?.phase5bStatus).toBe('READY_FOR_VALIDATION');
+    expect(NINE_RULE_DEFINITIONS[7]?.affectsClinicalSelection).toBe(false);
+    expect(r8?.affectsClinicalSelection).toBe(false);
     expect(ORCHESTRATION_STATUS).toBe('NOT_CONNECTED');
     expect(TABLET_ENGINE_STATUS).toBe('NOT_IMPLEMENTED');
   });
