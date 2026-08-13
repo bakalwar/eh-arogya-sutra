@@ -65,7 +65,7 @@ Read-only branch facts (`git` on local objects):
 | 6 | Multi-Disease / Organ-System Triad (MULTI_DISEASE_ORGAN_SYSTEM_TRIAD) | **IDENTITY_OWNER_LOCKED** (supersedes historical Stage A IDENTITY_CANDIDATE_ONLY) — canonical contract: docs/clinical/rules/rule-06-multi-disease-organ-system-triad-contract.md |
 | 7 | External Use Routes (`EXTERNAL_USE_ROUTES`) | **IDENTITY_OWNER_LOCKED** (supersedes historical Stage A IDENTITY_CANDIDATE_ONLY) — canonical contract: docs/clinical/rules/rule-07-external-use-routes-contract.md |
 | 8 | Disease-level Prakruti Inference (`DISEASE_LEVEL_PRAKRUTI_INFERENCE`) | **IDENTITY_OWNER_LOCKED** (supersedes historical Stage A IDENTITY_CANDIDATE_ONLY) — canonical contract: docs/clinical/rules/rule-08-disease-level-prakruti-inference-contract.md |
-| 9 | Master Pipeline | **IDENTITY_CANDIDATE_ONLY** |
+| 9 | Master Pipeline (`MASTER_PIPELINE`) | **IDENTITY_OWNER_LOCKED** (supersedes historical Stage A IDENTITY_CANDIDATE_ONLY) — canonical contract: docs/clinical/rules/rule-09-master-pipeline-contract.md |
 
 ## OD-013 / OD-014 (SAC-005)
 
