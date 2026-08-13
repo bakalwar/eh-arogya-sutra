@@ -42,15 +42,16 @@ Read-only branch facts (`git` on local objects):
 
 | Question | Evidence-backed answer |
 |----------|------------------------|
-| Name in constitution §D? | **No** |
-| Canonical name documented | `rule-8-readiness-decision.md` — “Disease-level Prakruti Inference” (EH_9 / Phase 5A vocabulary) |
-| Name owner-approved? | **Not** via constitution; readiness doc **does not** approve identity—final line **OWNER_DECISION_REQUIRED** |
-| Readiness decision | Recommends **NOT_REQUIRED_FOR_PRESCRIPTION** for Phase 5D (recommendation, not full spec freeze) |
-| Implementation | **NOT_IMPLEMENTED** (`nineRules.ts`, interface status) |
-| Prescription requirement | **Not required** per readiness recommendation; wiring would be **new authority decision** |
+| Name in constitution §D? | Pointer added via Rule 8 canonical contract documentation tranche (see clinical constitution Rule 8 pointer) |
+| Canonical name documented | **Disease-level Prakruti Inference** — [rule-08-disease-level-prakruti-inference-contract.md](../../../clinical/rules/rule-08-disease-level-prakruti-inference-contract.md) |
+| Name owner-approved? | **Yes** — `R8_ID01_TO_ID05_RECOMMENDED_DECISIONS_APPROVED` / `ACCEPT_DISEASE_LEVEL_PRAKRUTI_INFERENCE` |
+| Identity token | `DISEASE_LEVEL_PRAKRUTI_INFERENCE` |
+| Implementation | **NOT_IMPLEMENTED** (`RULE8_SHADOW_EVALUATOR_NOT_IMPLEMENTED` · `RULE8_IMPLEMENTATION_NOT_AUTHORIZED`) |
+| Prescription requirement | **`NOT_REQUIRED_FOR_PRESCRIPTION`** until separate activation; medicine-selection influence **NONE** |
+| Real approved mappings | **`0`** |
 | Legacy overstatement | Matrix row: docs claim clinical effect; MDE unwired — **LEGACY_REFERENCE_ONLY** |
 
-**Final Rule 8 identity status (Stage A):** **IDENTITY_CANDIDATE_ONLY** (name + responsibility **OWNER_DECISION_REQUIRED** for live clinical authority)
+**Final Rule 8 identity status (current):** **IDENTITY_OWNER_LOCKED** (supersedes historical Stage A `IDENTITY_CANDIDATE_ONLY`)
 
 ## Matrix (baseline `main`)
 
@@ -63,7 +64,7 @@ Read-only branch facts (`git` on local objects):
 | 5 | Dosage (contracts) vs Monitoring (unmerged) | **IDENTITY_CONFLICT** |
 | 6 | Multi-Disease / Organ-System Triad (MULTI_DISEASE_ORGAN_SYSTEM_TRIAD) | **IDENTITY_OWNER_LOCKED** (supersedes historical Stage A IDENTITY_CANDIDATE_ONLY) — canonical contract: docs/clinical/rules/rule-06-multi-disease-organ-system-triad-contract.md |
 | 7 | External Use Routes (`EXTERNAL_USE_ROUTES`) | **IDENTITY_OWNER_LOCKED** (supersedes historical Stage A IDENTITY_CANDIDATE_ONLY) — canonical contract: docs/clinical/rules/rule-07-external-use-routes-contract.md |
-| 8 | Disease-level Prakruti Inference | **IDENTITY_CANDIDATE_ONLY** |
+| 8 | Disease-level Prakruti Inference (`DISEASE_LEVEL_PRAKRUTI_INFERENCE`) | **IDENTITY_OWNER_LOCKED** (supersedes historical Stage A IDENTITY_CANDIDATE_ONLY) — canonical contract: docs/clinical/rules/rule-08-disease-level-prakruti-inference-contract.md |
 | 9 | Master Pipeline | **IDENTITY_CANDIDATE_ONLY** |
 
 ## OD-013 / OD-014 (SAC-005)
