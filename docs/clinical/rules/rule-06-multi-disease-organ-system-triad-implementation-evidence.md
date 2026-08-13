@@ -152,9 +152,13 @@ No documentation, workflows, other Rules, orchestration, medicine/relationship d
 - `RULE6_CLINICAL_ACTIVATION_NONE`
 - `RULE6_REAL_MEDICINE_RELATIONSHIPS_0`
 - `RULE6_VALIDATED_RELATIONSHIP_DATA_PENDING`
+- `RULE6_RELATIONSHIP_DATA_CONTRACT_DOCUMENTED` (see companion relationship-data contract; owner CE-OD-01…05)
+- `RULE6_ACTIVE_RELATIONSHIP_REGISTRY_EMPTY`
 - `RULE6_PRODUCTION_OUTPUT_UNCHANGED`
 - `RULE6_INDEPENDENT_OF_RULE5_C3E`
 - `NO_PAID_API_SERVICE_DEPENDENCY_OR_CERTIFICATE`
+
+**Owner clinical-evidence decisions (governance):** `R6_CE_OD01_TO_OD05_RECOMMENDED_DECISIONS_APPROVED` — [rule-06-relationship-data-and-evidence-intake-contract.md](./rule-06-relationship-data-and-evidence-intake-contract.md). Does **not** add real edges.
 
 **Historical (pre-PR #84 / contract-documentation tranche only):** `RULE6_IMPLEMENTATION_NOT_AUTHORIZED` · `RULE6_SHADOW_EVALUATOR_NOT_IMPLEMENTED` — do not read as current post-merge status without this evidence document and companion pointer updates.
 
@@ -194,4 +198,4 @@ Under this documentation authorization:
 - Do **not** use paid APIs / services / certificates
 - Do **not** deploy
 
-**Separate owner authorizations required** before: validated relationship data; independent clinical review; orchestration connection; production activation.
+**Separate owner authorizations required** before: real relationship data addition; independent clinical review of concrete edges; orchestration connection; production activation. Relationship-data contract documentation: [rule-06-relationship-data-and-evidence-intake-contract.md](./rule-06-relationship-data-and-evidence-intake-contract.md).
