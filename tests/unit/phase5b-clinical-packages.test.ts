@@ -107,7 +107,7 @@ describe('Phase 5B clinical contracts / nine-rule interfaces', () => {
     expect(r.tabletSectionB.status).toBe('NOT_IMPLEMENTED');
   });
 
-  it('every rule supports unresolved-capable status field; Rule 8 shadow is READY_FOR_VALIDATION only', () => {
+  it('every rule supports unresolved-capable status field; Rule 8/9 shadow is READY_FOR_VALIDATION only', () => {
     const results = allNineRuleInterfaceResults();
     expect(results).toHaveLength(9);
     for (const r of results) {
@@ -121,6 +121,11 @@ describe('Phase 5B clinical contracts / nine-rule interfaces', () => {
     expect(NINE_RULE_DEFINITIONS[7]?.phase5bStatus).toBe('READY_FOR_VALIDATION');
     expect(NINE_RULE_DEFINITIONS[7]?.affectsClinicalSelection).toBe(false);
     expect(r8?.affectsClinicalSelection).toBe(false);
+    const r9 = results.find((x) => x.ruleNumber === 9);
+    expect(r9?.status).toBe('READY_FOR_VALIDATION');
+    expect(NINE_RULE_DEFINITIONS[8]?.phase5bStatus).toBe('READY_FOR_VALIDATION');
+    expect(NINE_RULE_DEFINITIONS[8]?.affectsClinicalSelection).toBe(false);
+    expect(r9?.affectsClinicalSelection).toBe(false);
     expect(ORCHESTRATION_STATUS).toBe('NOT_CONNECTED');
     expect(TABLET_ENGINE_STATUS).toBe('NOT_IMPLEMENTED');
   });

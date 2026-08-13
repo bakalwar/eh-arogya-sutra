@@ -84,9 +84,10 @@ export const NINE_RULE_DEFINITIONS = [
   },
   {
     ruleNumber: 9 as const,
+    /** Owner-locked identity MASTER_PIPELINE; shadow validator/packager only — not production-connected. */
     ruleName: 'Master Pipeline',
     phase5bStatus: 'READY_FOR_VALIDATION' as ClinicalRuleStatus,
-    affectsClinicalSelection: true,
+    affectsClinicalSelection: false,
   },
 ] as const;
 
