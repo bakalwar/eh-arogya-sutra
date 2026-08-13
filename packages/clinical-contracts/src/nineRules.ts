@@ -70,9 +70,10 @@ export const NINE_RULE_DEFINITIONS = [
   },
   {
     ruleNumber: 7 as const,
+    /** Owner-locked identity EXTERNAL_USE_ROUTES; shadow evaluator only — not production-connected. */
     ruleName: 'External Use Routes',
     phase5bStatus: 'READY_FOR_VALIDATION' as ClinicalRuleStatus,
-    affectsClinicalSelection: true,
+    affectsClinicalSelection: false,
   },
   {
     ruleNumber: 8 as const,
