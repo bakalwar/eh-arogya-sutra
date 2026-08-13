@@ -130,11 +130,13 @@ Plain-data, versioned schema. Identifiers are canonical references. **No PHI**. 
 
 1. `contractVersion` — must equal `ehas2-rule8-input-v1` (or a later owner-approved version supported by the evaluator)
 2. `requestId` — non-PHI synthetic evaluation / request identifier
-3. `diseaseConditionRefs` — disease / condition canonical IDs only (no free-text clinical narrative authority)
+3. `diseaseConditionRefs` — disease / condition canonical IDs only (no free-text clinical narrative authority). Reference IDs carry **no** Electrohomeopathy clinical meaning until a separately owner-approved closed disease vocabulary / mapping-data tranche exists.
 4. `rule1TemperamentRef` — reference to Rule 1 result envelope (identity + version + status) **or** explicit `{ "status": "UNAVAILABLE" }`
 5. `prakritiEvidenceRegistry` — evidence registry for disease-level prakriti indication (may contain **zero** activating entries)
 6. `evidenceDataVersions` — version stamps for evidence corpora used
 7. `upstreamApplicability` — upstream applicability envelope (applicable / not applicable / not evaluable)
+
+Strict schema validation **rejects unknown top-level keys** (and unknown keys inside locked nested objects). Extra keys → `INVALID_INPUT`.
 
 ### 5.2 Input prohibitions
 
@@ -161,7 +163,7 @@ Shadow-only deterministic result. Deep-frozen after construction. Key order fixe
 6. `applicability`
 7. `evaluatedDiseaseRefs`
 8. `prakritiIndications` — list of disease-level prakriti indication records (empty allowed)
-9. `notClinicallyIndicated` — boolean **or** structured reason block when status is `NOT_CLINICALLY_INDICATED`
+9. `notClinicallyIndicated` — canonical type is **boolean only**: must be exactly `true` when `status === NOT_CLINICALLY_INDICATED`, otherwise exactly `false`. Reasons/blockers belong in `reasonCodes` and/or `blockersOrUnresolvedEvidence` (never a dual structured alternate for this field).
 10. `rule1ComparisonState` — closed comparison posture (`NOT_COMPARED` \| `UNAVAILABLE` \| `CONSISTENT` \| `CONFLICT` \| `UNRESOLVED`) without inventing merged clinical meaning
 11. `evidenceRefs`
 12. `reasonCodes`
@@ -172,13 +174,15 @@ Shadow-only deterministic result. Deep-frozen after construction. Key order fixe
 17. `medicineSelectionInfluence` — always `NONE`
 18. `notRequiredForPrescription` — always `true` under this contract stage
 
+Strict schema validation **rejects unknown top-level keys** (and unknown keys inside locked nested objects). Extra keys → `INVALID_INPUT`.
+
 ### 6.2 Prakriti indication record (when present; non-medicine)
 
 Fields (key order):
 
 1. `indicationId`
 2. `diseaseConditionRef`
-3. `prakritiCategoryRef` — canonical category reference ID only (no prose clinical essay; no medicine ID)
+3. `prakritiCategoryRef` — canonical category reference ID only (no prose clinical essay; no medicine ID). Category reference IDs carry **no** Electrohomeopathy clinical meaning until a separately owner-approved closed prakriti-category vocabulary / evidence tranche exists.
 4. `eligibilityState` — `ELIGIBLE` \| `REJECTED` \| `UNRESOLVED` \| `EVIDENCE_INSUFFICIENT`
 5. `evidenceRefs`
 6. `reasonCodes`
@@ -193,6 +197,16 @@ Fields (key order):
 4. `SHADOW_PRAKRUTI_INDICATIONS_PROPOSED`
 5. `BLOCKED_BY_RULE1_CONTRADICTION`
 6. `UNRESOLVED_EVIDENCE`
+
+**Deterministic outcome precedence** (first matching wins; evaluator must not invent ties):
+
+1. Upstream / applicability yields not-applicable → `NOT_APPLICABLE`
+2. Input or registry structurally invalid for evaluation → fixed error (`INVALID_INPUT` / `INVALID_EVIDENCE_REGISTRY` / …) rather than a clinical outcome
+3. Rule 1 comparison state is `CONFLICT` under the locked fail-closed posture → `BLOCKED_BY_RULE1_CONTRADICTION`
+4. Evidence contradictory, disputed, superseded, or otherwise unresolved → `UNRESOLVED_EVIDENCE`
+5. Required evidence missing or insufficient to evaluate → `NOT_EVALUABLE`
+6. Evaluable, but no conjunctively validated + owner-approved + active indication → `NOT_CLINICALLY_INDICATED`
+7. Otherwise, only when §7 conjunctive gates all hold → `SHADOW_PRAKRUTI_INDICATIONS_PROPOSED`
 
 ### 6.4 Fixed implementation / configuration errors
 
@@ -263,11 +277,11 @@ Do **not** connect orchestration or production in the first implementation auth 
 
 ### 9.2 Mandatory future proof matrix
 
-Mechanical count: **16**
+Mechanical count: **16** (unchanged; do **not** add P17/P18)
 
 | # | Proof category |
 |---|----------------|
-| P01 | Strict schema validation |
+| P01 | Strict schema validation (includes reject-unknown-keys) |
 | P02 | Deterministic canonical copy |
 | P03 | Positive prakriti indication only with approved active evidence |
 | P04 | Unvalidated / inventory evidence → non-activating |
@@ -275,7 +289,7 @@ Mechanical count: **16**
 | P06 | Contradictory evidence fail-closed |
 | P07 | Rule 1 separation — no overwrite / no silent merge |
 | P08 | Rule 1 conflict → fail-closed (no hidden positive) |
-| P09 | No medicine / formula / treatment fields in output |
+| P09 | No medicine / formula / treatment / Rx-effect / runtime influence (see §9.2.1) |
 | P10 | `NOT_CLINICALLY_INDICATED` valid empty success-path outcome |
 | P11 | Input non-mutation |
 | P12 | Deep-freeze output |
@@ -283,6 +297,19 @@ Mechanical count: **16**
 | P14 | Code-only errors |
 | P15 | No PHI / protected-path leakage |
 | P16 | Outcome / error vocabulary closed-set enforcement |
+
+#### 9.2.1 P09 — mandatory no-Rx-effect and no-runtime obligations
+
+When separately authorized to implement, **P09 must fail** unless **all** of the following are proven true on every evaluated path (skipped / mocked / unavailable checks **must not** count as PASS):
+
+1. Output (and indication records) contain **no** medicine, formula, treatment, potency, dosage, electricity, Tablet A/B, external-application, monitoring, mixture-count, or final-Rx fields.
+2. `medicineSelectionInfluence` is always exactly `NONE`.
+3. Prescription / Rx effect is always exactly `NONE` (no field, side channel, or caller contract may encode a non-`NONE` Rule 8 prescription effect under this stage).
+4. `clinicalActivation` is always exactly `NONE`.
+5. `notRequiredForPrescription` is always exactly `true`.
+6. Rule 8 orchestration / runtime status remains exactly `NOT_CONNECTED`. Because orchestration status is **intentionally not** an evaluator output-schema key, P09 must verify **both** (a) the locked output invariants in items 1–5 and 7, **and** (b) absence of any Rule 8 orchestration/runtime connector or wiring inside the authorized implementation scope (package allowlist + any separately authorized mechanical registration only — no apps/orchestrator/runtime wiring).
+7. No evaluator result may alter, approve, block, rank, boost, demote, or reject a medicine or prescription.
+8. Any violation of items 1–7 **must fail** the mandatory P09 proof.
 
 Do **not** execute these tests in this documentation tranche.
 
