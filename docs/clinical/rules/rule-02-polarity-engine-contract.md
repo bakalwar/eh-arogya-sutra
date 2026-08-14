@@ -10,8 +10,9 @@
 | **Contract version** | `ehas2-rule2-contract-v1` |
 | **Input contract version** | `ehas2-rule2-input-v1` |
 | **Output contract version** | `ehas2-rule2-output-v1` |
-| **Implementation (current)** | `RULE2_SHADOW_EVALUATOR_NOT_IMPLEMENTED` · `RULE2_IMPLEMENTATION_NOT_AUTHORIZED` |
-| **Package** | `packages/rule2` **absent** · `@ehas2/rule2` **absent** |
+| **Implementation (current)** | `RULE2_SHADOW_EVALUATOR_IMPLEMENTED` · technical `READY_FOR_VALIDATION` (PR #101) — **not** clinical readiness |
+| **Package** | `packages/rule2` **present** · `@ehas2/rule2@0.1.0-shadow` / `evaluateRule2Shadow` |
+| **Post-merge evidence** | [rule-02-polarity-engine-implementation-evidence.md](./rule-02-polarity-engine-implementation-evidence.md) |
 | **Runtime** | `RULE2_ORCHESTRATION_NOT_CONNECTED` · `RULE2_CLINICAL_ACTIVATION_NONE` · `RULE2_MEDICINE_SELECTION_INFLUENCE_NONE` · `RULE2_FORMULA_MUTATION_NONE` · `RULE2_PRESCRIPTION_EFFECT_NONE` · `RULE2_PRODUCTION_RX_UNCHANGED` |
 | **Real validated Rule 2 formula/slot polarity mappings** | **`0`** |
 | **Evidence catalog** | `RULE2_EVIDENCE_CATALOG_NOT_CREATED` |
@@ -32,8 +33,8 @@
 - `RULE2_IDENTITY_POLARITY_ENGINE`
 - `RULE2_IDENTITY_OWNER_LOCKED`
 - `RULE2_CANONICAL_CONTRACT_DOCUMENTED`
-- `RULE2_SHADOW_EVALUATOR_NOT_IMPLEMENTED`
-- `RULE2_IMPLEMENTATION_NOT_AUTHORIZED`
+- `RULE2_SHADOW_EVALUATOR_IMPLEMENTED`
+- `RULE2_TECHNICAL_READY_FOR_VALIDATION`
 - `RULE2_REAL_VALIDATED_MAPPINGS_0`
 - `RULE2_EVIDENCE_CATALOG_NOT_CREATED`
 - `RULE2_EMPTY_REGISTRY_FAIL_CLOSED`
@@ -46,9 +47,11 @@
 - `RULE2_INDEPENDENT_OF_RULE5_C3E`
 - `NO_PAID_API_SERVICE_DEPENDENCY_OR_CERTIFICATE`
 
-**Historical / interface alias (R2-ID-05):** EH_9 / Phase 5B / `nineRules` / clinical-validation dashboard short label **“Polarity”** is a **historical / interface alias** only. Current owner-locked display name is **Polarity Engine**; machine identity is **`POLARITY_ENGINE`**. Dashboard rename is **not** authorized by this documentation tranche. Historical interface stub `affectsClinicalSelection: true` is **not** clinical authority; future separately authorized implementation should align metadata to `false` under R2-ID-04 shadow posture.
+**Historical / interface alias (R2-ID-05):** EH_9 / Phase 5B / clinical-validation dashboard short label **“Polarity”** is a **historical / interface alias** only. Current owner-locked display name is **Polarity Engine**; machine identity is **`POLARITY_ENGINE`**. Dashboard rename remains **not** authorized by the contract documentation tranche and was **not** performed in PR #101. Historical interface stub `affectsClinicalSelection: true` was **not** clinical authority; PR #101 aligned `nineRules` Rule 2 metadata to `affectsClinicalSelection: false` under R2-ID-04 shadow posture (technical only).
 
-This document is the authoritative EHAS2 Rule 2 **focused canonical contract**. It does **not** create `packages/rule2`, invent formula/slot polarity mappings, create an evidence catalog, connect orchestration, activate clinical selection, grant medicine-selection influence, mutate formulas, integrate Rule 4, or change production prescription output.
+**Historical (superseded for package readiness by PR #101):** contract-tranche tokens `RULE2_SHADOW_EVALUATOR_NOT_IMPLEMENTED` · `RULE2_IMPLEMENTATION_NOT_AUTHORIZED` and “`packages/rule2` absent” — retain only as pre-implementation history. See [rule-02-polarity-engine-implementation-evidence.md](./rule-02-polarity-engine-implementation-evidence.md).
+
+This document is the authoritative EHAS2 Rule 2 **focused canonical contract**. The synthetic shadow package on main (PR #101) does **not** invent real formula/slot polarity mappings, create an evidence catalog, connect orchestration, activate clinical selection, grant medicine-selection influence, mutate formulas, integrate Rule 4, or change production prescription output.
 
 ---
 
@@ -93,9 +96,9 @@ Canonical cross-rule pointer: [../CLINICAL_PRODUCT_CONSTITUTION.md](../CLINICAL_
 | Machine identity | `POLARITY_ENGINE` |
 | Identity status | `RULE2_IDENTITY_OWNER_LOCKED` |
 | Contract status | `RULE2_CANONICAL_CONTRACT_DOCUMENTED` |
-| Evaluator | `RULE2_SHADOW_EVALUATOR_NOT_IMPLEMENTED` |
-| Implementation | `RULE2_IMPLEMENTATION_NOT_AUTHORIZED` |
-| Package | `packages/rule2` absent |
+| Evaluator | `RULE2_SHADOW_EVALUATOR_IMPLEMENTED` (synthetic shadow; PR #101) |
+| Implementation | Technical package authorized and merged; clinical activation **still** `NONE` |
+| Package | `packages/rule2` present (`@ehas2/rule2@0.1.0-shadow`) |
 | Orchestration | `NOT_CONNECTED` |
 | Clinical activation | `NONE` |
 | Medicine-selection influence | `NONE` |
@@ -494,13 +497,13 @@ Every future output under this contract stage:
 | Runtime | `NOT_CONNECTED` |
 | Not clinically activated prescription | `true` |
 
-Historical interface `affectsClinicalSelection: true` is a **stub** and **not** authority. Future separately authorized implementation should align it to `false` under R2-ID-04.
+Historical interface `affectsClinicalSelection: true` was a **stub** and **not** authority. PR #101 aligned `nineRules` Rule 2 to `affectsClinicalSelection: false` under R2-ID-04 (technical metadata only; dashboard short **Polarity** alias unchanged).
 
 ---
 
-## 17. Future implementation allowlist (do not create in this tranche)
+## 17. Implementation allowlist — historical supersession (contract tranche)
 
-Documented for a **later** separately authorized implementation PR only:
+**Historical (contract documentation tranche):** the following paths were documented for a **later** separately authorized implementation PR and were **not** created in PR #100:
 
 - `packages/rule2/package.json`
 - `packages/rule2/tsconfig.json`
@@ -512,13 +515,19 @@ Documented for a **later** separately authorized implementation PR only:
 - Rule 2-only `nineRules.ts` alignment (`Polarity Engine` / `affectsClinicalSelection: false`)
 - Directly affected Rule 2 status tests
 
-**Excluded without separate owner authorization:** apps/dashboard mutation, Rule 4 adapter mutation, orchestration, datasets/catalog, medicine registry edits, protected/C3E, legacy checkout, deployment, clinical activation, production Rx.
+**Current (after PR #101):** those package/integration paths were created under `R2_POLARITY_ENGINE_SYNTHETIC_SHADOW_IMPLEMENTATION_AUTHORIZED` and merged — see [rule-02-polarity-engine-implementation-evidence.md](./rule-02-polarity-engine-implementation-evidence.md). This supersession is **package/technical only**.
+
+**Still excluded without separate owner authorization:** apps/dashboard mutation, Rule 4 adapter mutation, orchestration, datasets/catalog, medicine registry edits, protected/C3E, legacy checkout, deployment, clinical activation, production Rx, real polarity mappings.
 
 ---
 
 ## 18. Mandatory proof matrix (P01–P18)
 
-Mechanical count: **exactly 18**. Sequential and unique. Skipped / mocked / unavailable ≠ PASS. **Do not execute** proofs in this documentation tranche.
+Mechanical count: **exactly 18**. Sequential and unique. Skipped / mocked / unavailable ≠ PASS.
+
+**Historical (contract documentation tranche):** proofs were **not** executed in PR #100.
+
+**Current (after PR #101):** P01–P18 (+ adversarial regressions) are implemented and recorded in the synthetic shadow package / exact-head CI — see [rule-02-polarity-engine-implementation-evidence.md](./rule-02-polarity-engine-implementation-evidence.md). Proof execution does **not** equal clinical validation.
 
 | # | Proof obligation |
 |---|------------------|
@@ -567,13 +576,14 @@ This contract does **not** authorize or claim:
 
 ## 20. STOP
 
-**STOP** before:
+**Historical (contract documentation tranche):** STOP before creating `packages/rule2` / evaluator/tests in PR #100 (package work was separately authorized later as PR #101).
 
-- Creating `packages/rule2`
-- Evaluator / tests implementation
-- Mappings / catalog creation
+**Current STOP** (unchanged clinical / production gates):
+
+- Real polarity mappings / evidence catalog creation
+- Medicine selection / formula mutation / potency-electricity decisions
 - Rule 4 integration
-- Orchestration / activation
-- Production connection
+- Orchestration / clinical activation / production Rx connection
+- C3E / protected-source / legacy mutation / paid services / deployment
 
-Next authorized step after independent review + owner merge of this documentation: **separate** Rule 2 synthetic shadow implementation authorization (not granted here).
+Post-merge technical evidence: [rule-02-polarity-engine-implementation-evidence.md](./rule-02-polarity-engine-implementation-evidence.md).
