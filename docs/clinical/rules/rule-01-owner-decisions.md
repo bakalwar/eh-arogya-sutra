@@ -4,6 +4,8 @@
 **Effective:** Phase 5R-1F documentation freeze
 **EHAS2 code:** NOT_IMPLEMENTED (this document does not activate runtime)
 
+**Current focused canonical contract (identity/scope/schemas; does not rewrite this register):** [rule-01-temperament-engine-contract.md](./rule-01-temperament-engine-contract.md) — machine identity **`TEMPERAMENT_ENGINE`**; owner decisions **R1-ID-01…R1-ID-05** (`R1_ID01_TO_ID05_RECOMMENDED_DECISIONS_APPROVED`).
+
 This file records **final owner answers** captured for EHAS2. Cursor must not extend these with new clinical thresholds, medicines, or fallbacks without a new owner phase.
 
 ---
@@ -14,6 +16,7 @@ This file records **final owner answers** captured for EHAS2. Cursor must not ex
 |------|----------|-----|
 | Rule number | 1 | OWNER-APPROVED |
 | Canonical name | Temperament Engine | OWNER-APPROVED |
+| Machine identity token | `TEMPERAMENT_ENGINE` | OWNER-APPROVED (`R1-ID-01`; see [rule-01-temperament-engine-contract.md](./rule-01-temperament-engine-contract.md)) |
 | Legacy status | LIVE_BUT_PARTIAL | LEGACY-PROVEN |
 | EHAS2 implementation | NOT_IMPLEMENTED | IMPLEMENTATION-PENDING |
 | Clinical authority | OWNER_APPROVED_SPECIFICATION | OWNER-APPROVED |

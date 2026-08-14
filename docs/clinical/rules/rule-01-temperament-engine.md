@@ -195,6 +195,7 @@ Rule 1 remains separate from:
 
 ## References
 
+- **Focused canonical contract (current identity/scope/schemas):** [rule-01-temperament-engine-contract.md](./rule-01-temperament-engine-contract.md) (`TEMPERAMENT_ENGINE`; `R1_ID01_TO_ID05_RECOMMENDED_DECISIONS_APPROVED`) — does **not** rewrite this frozen clinical body
 - Owner decisions: [rule-01-owner-decisions.md](./rule-01-owner-decisions.md)
 - Blood / Lymph governance addendum (R1-CP-Q2): [rule-01-blood-lymph-owner-decisions.md](./rule-01-blood-lymph-owner-decisions.md) — later owner-approved governance baseline only; **frozen temperament logic in this document is unchanged**; **no** runtime implementation or direct medicine-selection authority
 - Evidence / workflow governance (R1-CP-Q3): [rule-01-q3-evidence-workflow-owner-decisions.md](./rule-01-q3-evidence-workflow-owner-decisions.md) — **Q3G-TIE** supersedes **future** interactive follow-up-question behavior on equal tie; frozen **historical body above remains preserved**; exact unresolved equal tie → **`UNRESOLVED_TIE`** (not MIXED/default); **no** code or runtime implementation authorized by the Q3 record
