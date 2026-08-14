@@ -1,8 +1,9 @@
 # Rule 2 — Test Requirements (Post-Freeze)
 
-**Rule 2 EHAS2 runtime:** NOT_IMPLEMENTED
+**Rule 2 EHAS2 runtime:** NOT_IMPLEMENTED / NOT_AUTHORIZED
 **Legacy direct tests:** 16 in `test_formula_polarity_policy_engine.py` — **LEGACY-PROVEN** (partial; does not prove EHAS2 owner spec)
 
+**Canonical package proof matrix (P01–P18):** [rule-02-polarity-engine-contract.md](./rule-02-polarity-engine-contract.md) §18 — documentation only in the contract tranche; do not execute until separately authorized implementation. Owner scenario intent below remains preserved.
 ---
 
 ## Required before Rule 2 implementation sign-off

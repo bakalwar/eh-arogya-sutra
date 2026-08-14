@@ -3,6 +3,24 @@
 **Authority:** OWNER-APPROVED
 **EHAS2 code:** NOT_IMPLEMENTED
 
+**Current-facing canonical contract:** [rule-02-polarity-engine-contract.md](./rule-02-polarity-engine-contract.md) (`R2_ID01_TO_ID05_RECOMMENDED_DECISIONS_APPROVED` · `R2_POLARITY_ENGINE_CANONICAL_CONTRACT_DOCUMENTATION_AUTHORIZED`)
+
+---
+
+## R2-ID-01 … R2-ID-05 register (current owner lock)
+
+Combined token: `R2_ID01_TO_ID05_RECOMMENDED_DECISIONS_APPROVED`
+
+| ID | Approval token | Locked effect | Does not authorize |
+|----|----------------|---------------|--------------------|
+| **R2-ID-01** | `R2_ID01_ACCEPT_POLARITY_ENGINE_TOKEN` | Machine identity `POLARITY_ENGINE`; display **Polarity Engine** | Package / mappings / orch / Rx |
+| **R2-ID-02** | `R2_ID02_MIXED_THERAPEUTIC_POLICY_LOCKED` | MIXED → UNRESOLVED + therapeutic NEUTRAL + doctor review; no opposite invented; no legacy coerce | Potency MIXED ladders / selection |
+| **R2-ID-03** | `R2_ID03_EMPTY_REGISTRY_FAIL_CLOSED_SYNTHETIC_ONLY` | Real registry empty; mappings **0**; synthetic-only; medicine-registry `.polarity` ≠ Rule 2 disease evidence | Catalog / inventing rows / auto-promotion |
+| **R2-ID-04** | `R2_ID04_SHADOW_INFLUENCE_NONE` | Annotation-only; medicine influence **NONE**; formula mutation **NONE**; orch **NOT_CONNECTED**; activation/Rx **NONE** | Live selection / production effect |
+| **R2-ID-05** | `R2_ID05_POLARITY_ENGINE_DISPLAY_ALIAS_POLICY` | Canonical display Polarity Engine; short “Polarity” = historical/interface alias | Dashboard rename in contract docs tranche |
+
+Full normative register: [rule-02-polarity-engine-contract.md](./rule-02-polarity-engine-contract.md) §2.
+
 ---
 
 ## Identity
@@ -11,9 +29,10 @@
 |------|----------|-----|
 | Rule number | 2 | OWNER-APPROVED |
 | Canonical name | Polarity Engine | OWNER-APPROVED |
+| Machine identity | `POLARITY_ENGINE` | OWNER-APPROVED (`R2-ID-01`) |
 | Clinical authority | Formula-specific policy engine | OWNER-APPROVED |
 | Legacy status | LIVE_BUT_PARTIAL | LEGACY-PROVEN |
-| EHAS2 implementation | NOT_IMPLEMENTED | IMPLEMENTATION-PENDING |
+| EHAS2 implementation | NOT_IMPLEMENTED / NOT_AUTHORIZED | IMPLEMENTATION-PENDING |
 | mutates_mixtures | false | OWNER-APPROVED |
 
 ---

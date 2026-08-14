@@ -1,9 +1,12 @@
 # Rule 2 — Polarity Engine (Owner-Approved Specification)
 
-**Status:** OWNER-APPROVED · **EHAS2 runtime:** IMPLEMENTATION-PENDING · **Legacy:** LIVE_BUT_PARTIAL (forensic reference only)
+**Status:** OWNER-APPROVED · **EHAS2 identity/scope:** OWNER_LOCKED (`POLARITY_ENGINE`) · **EHAS2 canonical contract:** DOCUMENTED ([rule-02-polarity-engine-contract.md](./rule-02-polarity-engine-contract.md); `R2_ID01_TO_ID05_RECOMMENDED_DECISIONS_APPROVED`) · **EHAS2 runtime:** IMPLEMENTATION-PENDING / **NOT_AUTHORIZED** · `packages/rule2` absent · mappings **0** · catalog **NOT_CREATED** · medicine influence **NONE** · formula mutation **NONE** · orch **NOT_CONNECTED** · activation/Rx **NONE** · **Legacy:** LIVE_BUT_PARTIAL (forensic reference only)
+
+**Current-facing contract pointer (does not rewrite frozen body below):** [rule-02-polarity-engine-contract.md](./rule-02-polarity-engine-contract.md)
 
 **Rule number:** 2
 **Canonical name:** Polarity Engine
+**Machine identity:** `POLARITY_ENGINE`
 **Clinical authority:** Formula-specific policy engine (conceptual SoT when implemented)
 **Legacy reference:** `formula_polarity_policy_engine.resolve_formula_specific_polarity` — **LEGACY-PROVEN**; EHAS2 must implement owner rules below, not silent legacy scoring coerce.
 
