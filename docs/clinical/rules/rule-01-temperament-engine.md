@@ -1,6 +1,8 @@
 # Rule 1 — Temperament Engine (Owner-Approved Specification)
 
-**Status:** OWNER-APPROVED · **EHAS2 runtime:** IMPLEMENTATION-PENDING · **Legacy:** LIVE_BUT_PARTIAL (forensic reference only)
+**Status:** OWNER-APPROVED · **EHAS2 synthetic shadow:** **IMPLEMENTED** (`@ehas2/rule1` / `evaluateRule1Shadow`; PR #98; technical `READY_FOR_VALIDATION`; mappings **0**; catalog **NOT_CREATED**; orch **NOT_CONNECTED**; activation/influence/Rx **NONE**) · **Legacy:** LIVE_BUT_PARTIAL (forensic reference only)
+
+**Current-facing evidence pointer (does not rewrite frozen body below):** [rule-01-temperament-engine-implementation-evidence.md](./rule-01-temperament-engine-implementation-evidence.md) · contract: [rule-01-temperament-engine-contract.md](./rule-01-temperament-engine-contract.md)
 
 **Rule number:** 1
 **Canonical name:** Temperament Engine
