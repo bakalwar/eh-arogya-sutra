@@ -8,27 +8,36 @@
 | **Document class** | OWNER_LOCKED canonical contract |
 | **Authority tokens** | `R9_ID01_TO_ID05_RECOMMENDED_DECISIONS_APPROVED` · `R9_MASTER_PIPELINE_CANONICAL_CONTRACT_DOCUMENTATION_AUTHORIZED` |
 | **Contract version** | `ehas2-rule9-contract-v1` |
-| **Implementation (current)** | `RULE9_SHADOW_EVALUATOR_NOT_IMPLEMENTED` · `RULE9_IMPLEMENTATION_NOT_AUTHORIZED` |
+| **Implementation (current)** | `RULE9_SHADOW_VALIDATOR_IMPLEMENTED` · evidence: [rule-09-master-pipeline-implementation-evidence.md](./rule-09-master-pipeline-implementation-evidence.md) |
 | **Runtime** | `RULE9_ORCHESTRATION_NOT_CONNECTED` · `RULE9_CLINICAL_ACTIVATION_NONE` · `RULE9_MEDICINE_SELECTION_INFLUENCE_NONE` · `RULE9_PRESCRIPTION_EFFECT_NONE` |
-| **Prescription posture** | Shadow package only under this contract · production Rx **unauthorized** · `RULE9_PRODUCTION_RX_UNCHANGED` |
-| **Complexity-tier classifier** | **Separate** owner-approved input required · **not** inferred by Rule 9 · criteria **not** defined in this tranche |
+| **Prescription posture** | Shadow package only under this contract · production Rx **unauthorized** · `RULE9_PRODUCTION_RX_UNCHANGED` · `RULE9_NOT_CLINICALLY_ACTIVATED_PRESCRIPTION` |
+| **Real Rule 9 clinical data/mappings** | **`0`** · production mapping registry **empty** |
+| **Complexity-tier classifier** | **Separate** owner-approved input required · **not** inferred by Rule 9 · criteria **not** implemented (`RULE9_COMPLEXITY_CRITERIA_NOT_IMPLEMENTED`) |
 | **Paid services** | `NO_PAID_API_SERVICE_DEPENDENCY_OR_CERTIFICATE` |
 | **Rule 5 C3E** | `RULE9_INDEPENDENT_OF_RULE5_C3E` (C3E remains paused separately) |
 | **Owner governance** | `ELECTROHOMEOPATHY_CLINICAL_RULES_REQUIRE_OWNER_APPROVAL_TECHNICAL_ENGINEERING_DELEGATED` |
 | **Canonical `origin/main` base (at documentation start)** | `8af924c82d7660f232b02f763447f6b707d94dea` |
+| **Canonical `origin/main` (post PR #95 shadow merge)** | `24010d41234de598ba4532d3756afd6c58e52801` |
 
 **Status tokens (current):**
 
 - `RULE9_IDENTITY_OWNER_LOCKED`
 - `RULE9_SCOPE_OWNER_LOCKED`
 - `RULE9_CANONICAL_CONTRACT_DOCUMENTED`
-- `RULE9_SHADOW_EVALUATOR_NOT_IMPLEMENTED`
-- `RULE9_IMPLEMENTATION_NOT_AUTHORIZED`
+- `RULE9_SHADOW_VALIDATOR_IMPLEMENTED`
+- `RULE9_MASTER_PIPELINE_VALIDATE_REJECT_PACKAGE_ONLY`
+- `RULE9_REAL_CLINICAL_DATA_0`
+- `RULE9_PRODUCTION_MAPPING_REGISTRY_EMPTY`
+- `RULE9_COMPLEXITY_CRITERIA_NOT_IMPLEMENTED`
 - `RULE9_ORCHESTRATION_NOT_CONNECTED`
 - `RULE9_CLINICAL_ACTIVATION_NONE`
 - `RULE9_MEDICINE_SELECTION_INFLUENCE_NONE`
 - `RULE9_PRESCRIPTION_EFFECT_NONE`
 - `RULE9_PRODUCTION_RX_UNCHANGED`
+- `RULE9_NOT_CLINICALLY_ACTIVATED_PRESCRIPTION`
+- `RULE9_TECHNICAL_READY_FOR_VALIDATION_NOT_CLINICAL_READY`
+- `RULE9_UPSTREAM_RULES_1_TO_8_NOT_REINTERPRETED`
+- `RULE9_NO_SELECTION_NO_COMPOSITION_MUTATION`
 - `RULE9_NO_NEW_SELECTION`
 - `RULE9_NO_COMPOSITION_MUTATION`
 - `RULE9_COUNT_VALIDATE_OR_REJECT_ONLY`
@@ -40,7 +49,9 @@
 
 **Historical (superseded for current identity readiness):** Stage A `IDENTITY_CANDIDATE_ONLY` for Rule 9 — retained only as pre-owner-decision history. Phase 5C synthetic “EXECUTED” validation-wrapper labeling remains **historical / non-authoritative** for this owner-locked contract and must **not** be read as Rule 9 clinical implementation, production orchestration, or prescription authority.
 
-This document is the authoritative EHAS2 Rule 9 **contract**. It does **not** create `packages/rule9`, implement an evaluator, connect Phase 5C/Python orchestration, invent complexity criteria, invent clinical data, activate clinical selection, or change production prescription output.
+**Historical (superseded for current implementation readiness):** contract-documentation-tranche tokens `RULE9_SHADOW_EVALUATOR_NOT_IMPLEMENTED` · `RULE9_IMPLEMENTATION_NOT_AUTHORIZED` — superseded by PR #95 merge evidence; do not read as current status without the evidence document. Alias note: historical “evaluator” wording maps to current `RULE9_SHADOW_VALIDATOR_IMPLEMENTED` / `evaluateRule9Shadow` (validate/reject/package surface).
+
+This document is the authoritative EHAS2 Rule 9 **contract**. Post-merge shadow package evidence: [rule-09-master-pipeline-implementation-evidence.md](./rule-09-master-pipeline-implementation-evidence.md). It does **not** connect Phase 5C/Python orchestration, invent complexity criteria, invent clinical data, activate clinical selection, or change production prescription output.
 
 ---
 
@@ -99,7 +110,10 @@ Canonical cross-rule pointer: [../CLINICAL_PRODUCT_CONSTITUTION.md](../CLINICAL_
 
 ### 3.2 Out of scope (this stage and locked prohibitions)
 
-- Creating `packages/rule9` or implementing an evaluator (separate authorization required)
+**Historical (contract-documentation tranche):** Creating `packages/rule9` or implementing an evaluator was out of scope under the contract-docs authorization and is **superseded** for package presence by separately authorized PR #95. See [rule-09-master-pipeline-implementation-evidence.md](./rule-09-master-pipeline-implementation-evidence.md).
+
+**Still out of scope / locked prohibitions:**
+
 - Connecting Phase 5C/Python orchestration or production AnalyzeComplete
 - Complexity criteria / classifier contract (separate owner tranche)
 - New medicine selection, ranking, boosting, demotion, removal, reordering
@@ -317,9 +331,9 @@ When evidence cannot justify the required 3/4/5 **without** filler/unsupported m
 
 ---
 
-## 8. Determinism and immutability (future implementation)
+## 8. Determinism and immutability
 
-When separately authorized to implement:
+**Current (shadow package on main via PR #95):** the merged `@ehas2/rule9` surface enforces:
 
 - Deep-copy validated input; do not mutate caller input
 - Deterministic key order and lexicographic sorting of lists
@@ -328,24 +342,28 @@ When separately authorized to implement:
 - Code-only fixed errors (no PHI / protected paths / medicine dumps)
 - Never serialize raw `Error.stack` into user-facing or clinical outputs
 
+**Historical note:** this section was written as “future implementation” during the contract-documentation tranche; those requirements are now technically enforced by the shadow validator/packager. See [rule-09-master-pipeline-implementation-evidence.md](./rule-09-master-pipeline-implementation-evidence.md).
+
 ---
 
-## 9. Future implementation plan (not authorized now)
+## 9. Implementation plan and proof matrix
 
-### 9.1 Suggested package allowlist (unauthorized until separate auth)
+### 9.1 Package allowlist (shadow package merged)
+
+**Current:** the following paths exist on canonical main via separately authorized PR #95 (`RULE9_SHADOW_VALIDATOR_IMPLEMENTED`):
 
 - `packages/rule9/package.json`
 - `packages/rule9/tsconfig.json`
 - `packages/rule9/src/**/*.ts`
 - `packages/rule9/tests/**/*.test.ts`
 
-Mechanical root registration (typecheck / Vitest / lockfile) and Rule 9 `nineRules.ts` metadata alignment **only** under that separate implementation authorization.
+Mechanical root registration (typecheck / Vitest / lockfile) and Rule 9 `nineRules.ts` metadata alignment were performed under that implementation authorization.
 
 Do **not** connect Phase 5C/Python orchestration, production AnalyzeComplete, or clinical activation without explicit separate owner authorization.
 
-### 9.2 Mandatory future proof matrix (synthetic cross-rule)
+### 9.2 Mandatory proof matrix (synthetic cross-rule)
 
-Mechanical count: **18** (do **not** execute in this documentation tranche)
+Mechanical count: **18**. **Current:** P01–P18 executed on the merged shadow package (plus R01–R08); see evidence document. **Historical (contract-documentation tranche):** “do **not** execute in this documentation tranche” applied only to the contract-docs authorization.
 
 | # | Proof category |
 |---|----------------|
@@ -368,13 +386,13 @@ Mechanical count: **18** (do **not** execute in this documentation tranche)
 | P17 | Code-only errors; no PHI / protected-path / raw stack leakage |
 | P18 | Outcome / error vocabulary closed-set; `clinicalActivation`/`prescriptionEffect` always `NONE` |
 
-Do **not** execute these tests in this documentation tranche.
+**Historical (contract-documentation tranche only):** “Do **not** execute these tests in this documentation tranche” applied under the contract-docs authorization and is **superseded** for proof execution by separately authorized PR #95. Remaining clinical/governance STOP bullets in §10 still apply.
 
 ---
 
 ## 10. Explicit STOP
 
-Under **`R9_MASTER_PIPELINE_CANONICAL_CONTRACT_DOCUMENTATION_AUTHORIZED`**:
+Under **`R9_MASTER_PIPELINE_CANONICAL_CONTRACT_DOCUMENTATION_AUTHORIZED`** (contract-documentation tranche):
 
 - Do **not** implement Rule 9 code or create `packages/rule9`
 - Do **not** connect Phase 5C/Python orchestration or production runtime
@@ -389,7 +407,9 @@ Under **`R9_MASTER_PIPELINE_CANONICAL_CONTRACT_DOCUMENTATION_AUTHORIZED`**:
 - Do **not** use paid APIs / services / certificates
 - Do **not** deploy
 
-**Separate authorizations required:** shadow implementation; complexity-classifier contract; validated clinical evidence for upstream Rules as needed; independent clinical review of concrete packaging semantics beyond this lock; orchestration connection; production activation.
+**Historical (contract-documentation tranche only):** “Do not implement Rule 9 code or create `packages/rule9`” applied under the contract-docs authorization and is **superseded** for package presence by separately authorized PR #95 (`RULE9_SHADOW_VALIDATOR_IMPLEMENTED`). That historical STOP line must **not** be read as forbidding the merged shadow package; remaining STOP bullets above still apply.
+
+**Separate authorizations required:** complexity-classifier contract; validated clinical evidence for upstream Rules as needed; independent clinical review of concrete packaging semantics beyond this lock; orchestration connection; production activation. (Shadow implementation authorization was executed via PR #95.)
 
 ---
 
