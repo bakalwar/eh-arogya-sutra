@@ -34,9 +34,10 @@ export type ClinicalRuleResult = {
 export const NINE_RULE_DEFINITIONS = [
   {
     ruleNumber: 1 as const,
-    ruleName: 'Temperament (Prakriti)',
+    /** Owner-locked identity TEMPERAMENT_ENGINE; synthetic shadow package; not production-connected. */
+    ruleName: 'Temperament Engine',
     phase5bStatus: 'READY_FOR_VALIDATION' as ClinicalRuleStatus,
-    affectsClinicalSelection: true,
+    affectsClinicalSelection: false,
   },
   {
     ruleNumber: 2 as const,

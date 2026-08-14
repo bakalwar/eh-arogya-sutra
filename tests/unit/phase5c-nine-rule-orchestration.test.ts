@@ -17,7 +17,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 describe('Phase 5C nine-rule orchestration contracts', () => {
   it('preserves exact canonical rule names and order 1–9', () => {
     expect(NINE_RULE_DEFINITIONS.map((r) => r.ruleName)).toEqual([
-      'Temperament (Prakriti)',
+      'Temperament Engine',
       'Polarity',
       'Organ / System Affinity',
       'Potency',
@@ -29,7 +29,11 @@ describe('Phase 5C nine-rule orchestration contracts', () => {
     ]);
   });
 
-  it('Rule 8/9 shadow READY_FOR_VALIDATION; production orchestration NOT_CONNECTED', () => {
+  it('Rule 1/8/9 shadow READY_FOR_VALIDATION; production orchestration NOT_CONNECTED', () => {
+    const r1 = allNineRuleInterfaceResults().find((r) => r.ruleNumber === 1);
+    expect(r1?.status).toBe('READY_FOR_VALIDATION');
+    expect(r1?.affectsClinicalSelection).toBe(false);
+    expect(r1?.ruleName).toBe('Temperament Engine');
     const r8 = allNineRuleInterfaceResults().find((r) => r.ruleNumber === 8);
     // nineRules metadata only: synthetic shadow package exists for technical validation.
     expect(r8?.status).toBe('READY_FOR_VALIDATION');
