@@ -10,16 +10,17 @@
 | **Contract version** | `ehas2-rule1-contract-v1` |
 | **Input contract version** | `ehas2-rule1-input-v1` |
 | **Output contract version** | `ehas2-rule1-output-v1` |
-| **Implementation (current)** | `RULE1_SHADOW_EVALUATOR_NOT_IMPLEMENTED` · `RULE1_IMPLEMENTATION_NOT_AUTHORIZED` |
-| **Package** | `packages/rule1` **absent** · `@ehas2/rule1` **absent** |
-| **Runtime** | `RULE1_ORCHESTRATION_NOT_CONNECTED` · `RULE1_CLINICAL_ACTIVATION_NONE` · `RULE1_MEDICINE_SELECTION_INFLUENCE_NONE` · `RULE1_PRODUCTION_RX_UNCHANGED` |
+| **Implementation (current)** | `RULE1_SHADOW_EVALUATOR_IMPLEMENTED` · evidence: [rule-01-temperament-engine-implementation-evidence.md](./rule-01-temperament-engine-implementation-evidence.md) |
+| **Package** | `@ehas2/rule1` / `evaluateRule1Shadow` (synthetic shadow only) |
+| **Runtime** | `RULE1_ORCHESTRATION_NOT_CONNECTED` · `RULE1_CLINICAL_ACTIVATION_NONE` · `RULE1_MEDICINE_SELECTION_INFLUENCE_NONE` · `RULE1_PRESCRIPTION_EFFECT_NONE` · `RULE1_PRODUCTION_RX_UNCHANGED` |
 | **Real validated symptom/case→temperament mappings** | **`0`** |
 | **Evidence catalog** | `RULE1_EVIDENCE_CATALOG_NOT_CREATED` |
-| **Evidence registry posture** | `RULE1_EMPTY_REGISTRY_FAIL_CLOSED` |
+| **Evidence registry posture** | `RULE1_PRODUCTION_REGISTRY_EMPTY` · `RULE1_EMPTY_REGISTRY_FAIL_CLOSED` |
 | **Paid services** | `NO_PAID_API_SERVICE_DEPENDENCY_OR_CERTIFICATE` |
 | **Rule 5 C3E** | `RULE1_INDEPENDENT_OF_RULE5_C3E` (C3E remains `C3E_NOT_AUTHORIZED` separately) |
 | **Owner governance** | `ELECTROHOMEOPATHY_CLINICAL_RULES_REQUIRE_OWNER_APPROVAL_TECHNICAL_ENGINEERING_DELEGATED` |
-| **Canonical `origin/main` base (documentation tranche)** | `a89202c3e5d1042a0e06f240408ae4c1ce1f4159` |
+| **Canonical `origin/main` base (contract documentation tranche)** | `a89202c3e5d1042a0e06f240408ae4c1ce1f4159` |
+| **Canonical `origin/main` (post PR #98 shadow merge)** | `478d94ac3c86de3880c0edc717fc8b5b35dcff86` |
 | **Companion frozen clinical specification** | [rule-01-temperament-engine.md](./rule-01-temperament-engine.md) (historical body preserved; Q3G-TIE normative for future implementation) |
 | **Companion owner decisions** | [rule-01-owner-decisions.md](./rule-01-owner-decisions.md) · [rule-01-q3-evidence-workflow-owner-decisions.md](./rule-01-q3-evidence-workflow-owner-decisions.md) · [rule-01-blood-lymph-owner-decisions.md](./rule-01-blood-lymph-owner-decisions.md) |
 | **Rule 8 separation authority** | [rule-08-disease-level-prakruti-inference-contract.md](./rule-08-disease-level-prakruti-inference-contract.md) (`R8-ID-02`) |
@@ -30,25 +31,30 @@
 - `RULE1_IDENTITY_OWNER_LOCKED`
 - `RULE1_SCOPE_OWNER_LOCKED`
 - `RULE1_CANONICAL_CONTRACT_DOCUMENTED`
-- `RULE1_SHADOW_EVALUATOR_NOT_IMPLEMENTED`
-- `RULE1_IMPLEMENTATION_NOT_AUTHORIZED`
+- `RULE1_SHADOW_EVALUATOR_IMPLEMENTED`
+- `RULE1_TECHNICAL_READY_FOR_VALIDATION`
 - `RULE1_REAL_VALIDATED_MAPPINGS_0`
 - `RULE1_EVIDENCE_CATALOG_NOT_CREATED`
+- `RULE1_PRODUCTION_REGISTRY_EMPTY`
 - `RULE1_EMPTY_REGISTRY_FAIL_CLOSED`
 - `RULE1_RULE8_SEPARATION_LOCKED`
+- `RULE1_RULE8_SEPARATION_PRESERVED` (alias of locked separation posture)
 - `RULE1_MEDICINE_SELECTION_INFLUENCE_NONE`
 - `RULE1_ORCHESTRATION_NOT_CONNECTED`
 - `RULE1_CLINICAL_ACTIVATION_NONE`
+- `RULE1_PRESCRIPTION_EFFECT_NONE`
 - `RULE1_PRODUCTION_RX_UNCHANGED`
 - `RULE1_Q3G_TIE_NORMATIVE`
 - `RULE1_INDEPENDENT_OF_RULE5_C3E`
 - `NO_PAID_API_SERVICE_DEPENDENCY_OR_CERTIFICATE`
 
-**Historical / interface alias (superseded for current identity readiness):** Phase 5B / EH_9 interface display **“Temperament (Prakriti)”** in `nineRules.ts` and nine-rule interface status remains identifiable as a **historical alias** only. Current owner-locked display name is **Temperament Engine**; machine identity is **`TEMPERAMENT_ENGINE`**. Do not treat the alias as a competing canonical token.
+**Historical / interface alias (superseded for current identity readiness):** Phase 5B / EH_9 / clinical-dashboard display **“Temperament (Prakriti)”** remains identifiable as a **historical alias** only. Current owner-locked display name is **Temperament Engine**; machine identity is **`TEMPERAMENT_ENGINE`**. `nineRules` Rule 1 display is **Temperament Engine** with technical `READY_FOR_VALIDATION` and `affectsClinicalSelection: false`. Do not treat the historical alias as a competing canonical token or as production readiness.
 
-**Historical (preserved, superseded for future equal-tie implementation):** Interactive follow-up / MIXED-as-tie-fallback prose in the frozen clinical body of [rule-01-temperament-engine.md](./rule-01-temperament-engine.md) remains **preserved in place**. Future implementation is governed by **Q3G-TIE** (`R1-ID-05`): exact remaining tie → **`UNRESOLVED_TIE`**; no question bank; `MIXED` only when genuinely evidence-supported.
+**Historical (preserved, superseded for equal-tie implementation):** Interactive follow-up / MIXED-as-tie-fallback prose in the frozen clinical body of [rule-01-temperament-engine.md](./rule-01-temperament-engine.md) remains **preserved in place**. Implemented shadow behavior is governed by **Q3G-TIE** (`R1-ID-05`): exact remaining tie → **`UNRESOLVED_TIE`**; no question bank; `MIXED` only when genuinely evidence-supported (current scorer does not emit `MIXED` as a primary indication — fail-closed residual; see evidence).
 
-This document is the authoritative EHAS2 Rule 1 **focused canonical contract** for a future separately authorized shadow evaluator. It does **not** create `packages/rule1`, invent symptom→temperament mappings, connect orchestration, activate clinical selection, grant medicine-selection influence, or change production prescription output.
+**Historical (superseded for current implementation readiness):** contract-documentation-tranche tokens `RULE1_SHADOW_EVALUATOR_NOT_IMPLEMENTED` · `RULE1_IMPLEMENTATION_NOT_AUTHORIZED`, and “`packages/rule1` absent” wording — superseded by PR #98 merge evidence; do not read as current package status without [rule-01-temperament-engine-implementation-evidence.md](./rule-01-temperament-engine-implementation-evidence.md).
+
+This document is the authoritative EHAS2 Rule 1 **focused canonical contract**. Post-merge synthetic shadow package evidence: [rule-01-temperament-engine-implementation-evidence.md](./rule-01-temperament-engine-implementation-evidence.md). It does **not** invent symptom→temperament mappings, create an evidence catalog, connect orchestration, activate clinical selection, grant medicine-selection influence, or change production prescription output.
 
 ---
 
@@ -93,16 +99,16 @@ Canonical cross-rule pointer: [../CLINICAL_PRODUCT_CONSTITUTION.md](../CLINICAL_
 | Machine identity | `TEMPERAMENT_ENGINE` |
 | Identity status | `RULE1_IDENTITY_OWNER_LOCKED` |
 | Contract status | `RULE1_CANONICAL_CONTRACT_DOCUMENTED` |
-| Evaluator | `RULE1_SHADOW_EVALUATOR_NOT_IMPLEMENTED` |
-| Implementation authorization | `RULE1_IMPLEMENTATION_NOT_AUTHORIZED` |
-| Package | absent |
+| Evaluator | `RULE1_SHADOW_EVALUATOR_IMPLEMENTED` (synthetic shadow only) |
+| Technical interface status | `RULE1_TECHNICAL_READY_FOR_VALIDATION` (`affectsClinicalSelection: false`) |
+| Package | `@ehas2/rule1` / `evaluateRule1Shadow` |
 | Orchestration | `NOT_CONNECTED` |
 | Clinical activation | `NONE` |
 | Medicine-selection influence | `NONE` |
 | Production Rx effect | `NONE` / unchanged |
 | Real validated mappings | **`0`** |
 | Evidence catalog | `NOT_CREATED` |
-| Registry | empty / fail-closed |
+| Registry | empty / fail-closed (`RULE1_PRODUCTION_REGISTRY_EMPTY`) |
 
 ---
 
@@ -426,27 +432,17 @@ Any future influence requires a **separate** owner-approved clinical and activat
 
 ---
 
-## 14. Future implementation allowlist (not authorized now)
+## 14. Future implementation allowlist (historical contract-docs STOP; package presence superseded)
 
-Suggested package allowlist — **do not create** under this documentation authorization:
+**Historical (contract-documentation tranche only):** “Do not create `packages/rule1`” applied under the contract-docs authorization and is **superseded for package presence** by separately authorized PR #98 (`RULE1_SHADOW_EVALUATOR_IMPLEMENTED`). That historical STOP line must **not** be read as forbidding the merged synthetic shadow package.
 
-- `packages/rule1/package.json`
-- `packages/rule1/tsconfig.json`
-- `packages/rule1/src/**`
-- `packages/rule1/tests/**`
-- Mechanical root typecheck registration
-- Mechanical Vitest registration
-- Lockfile workspace entry
-- Rule 1-only `nineRules.ts` metadata alignment
-- Directly affected Rule 1 status tests
-
-**Excluded:** apps, dashboards, orchestration wiring, clinical datasets/mappings, protected sources, legacy checkout, deployment, C3E/SAC.
+**Still excluded without separate owner authorization:** apps/dashboards mutation, orchestration wiring, clinical datasets/mappings/catalog, protected sources, legacy checkout, deployment, C3E/SAC, clinical activation, medicine-selection influence, production Rx.
 
 ---
 
 ## 15. Mandatory proof matrix (P01–P18)
 
-Mechanical count: **exactly 18**. Sequential and unique. Skipped / mocked / unavailable ≠ PASS. **Do not execute** in this documentation tranche.
+Mechanical count: **exactly 18**. Sequential and unique. Skipped / mocked / unavailable ≠ PASS. **Historical note:** “Do not execute” applied to the **contract-documentation** tranche only. Proofs were executed under separately authorized PR #98 implementation; see [rule-01-temperament-engine-implementation-evidence.md](./rule-01-temperament-engine-implementation-evidence.md).
 
 | # | Proof obligation |
 |---|------------------|
@@ -498,11 +494,10 @@ This contract does **not** claim or authorize:
 
 ## 17. STOP
 
-Under **`R1_TEMPERAMENT_ENGINE_CANONICAL_CONTRACT_DOCUMENTATION_AUTHORIZED`**:
+Under **`R1_TEMPERAMENT_ENGINE_CANONICAL_CONTRACT_DOCUMENTATION_AUTHORIZED`** (contract-documentation tranche):
 
-- Do **not** create `packages/rule1` or implement evaluator/tests
 - Do **not** create mapping data or evidence catalog
-- Do **not** treat this document as implementation authorization
+- Do **not** treat the contract-documentation tranche alone as implementation authorization (package presence was separately authorized via PR #98)
 - Do **not** connect orchestration / runtime or activate clinical selection
 - Do **not** alter production prescription
 - Do **not** invent keywords, thresholds, or clinical relationships
@@ -511,4 +506,6 @@ Under **`R1_TEMPERAMENT_ENGINE_CANONICAL_CONTRACT_DOCUMENTATION_AUTHORIZED`**:
 - Do **not** use paid APIs / services / certificates
 - Do **not** deploy
 
-**Separate authorizations required:** shadow package implementation; validated evidence catalog / mappings; independent clinical review of concrete edges; Rule 1↔Rule 8 reconciliation (if ever); orchestration connection; production activation.
+**Historical (superseded for package presence only):** “Do not create `packages/rule1` or implement evaluator/tests” applied under the contract-docs authorization and is **superseded** by separately authorized PR #98 (`RULE1_SHADOW_EVALUATOR_IMPLEMENTED`). Remaining STOP bullets above still apply.
+
+**Separate authorizations required:** validated evidence catalog / mappings; independent clinical review of concrete edges; Rule 1↔Rule 8 reconciliation (if ever); orchestration connection; production activation; residual corrections.

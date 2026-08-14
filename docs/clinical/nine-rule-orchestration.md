@@ -6,8 +6,8 @@ Isolated, deterministic nine-rule clinical orchestration for **synthetic validat
 
 ## Canonical names (EH_9 — do not invent)
 
-1. Temperament (Prakriti)  
-2. Polarity  
+1. Temperament (Prakriti) — historical EH_9 / Phase 5B alias; **EHAS2 current:** Temperament Engine / `TEMPERAMENT_ENGINE`; post-merge synthetic shadow evidence: [rules/rule-01-temperament-engine-implementation-evidence.md](./rules/rule-01-temperament-engine-implementation-evidence.md) (`RULE1_SHADOW_EVALUATOR_IMPLEMENTED`; orchestration **NOT_CONNECTED**; clinical activation **NONE**; medicine influence **NONE**; mappings **0**)
+2. Polarity
 3. Organ / System Affinity  
 4. Potency  
 5. Monitoring, Follow-up & Post-Release Safety Surveillance
