@@ -57,7 +57,7 @@ Read-only branch facts (`git` on local objects):
 
 | Rule | Primary name on `main` | Stage A status |
 |------|------------------------|----------------|
-| 1 | Temperament Engine | **IDENTITY_OWNER_APPROVED** |
+| 1 | Temperament Engine (`TEMPERAMENT_ENGINE`) | **IDENTITY_OWNER_LOCKED** (supersedes historical Stage A label-only row; focused canonical contract: docs/clinical/rules/rule-01-temperament-engine-contract.md) |
 | 2 | Polarity Engine | **IDENTITY_OWNER_APPROVED** |
 | 3 | Organ-System Affinity Engine | **IDENTITY_OWNER_APPROVED** |
 | 4 | Potency | **IDENTITY_CANDIDATE_ONLY** + **FREEZE_STATUS_CONFLICT** |

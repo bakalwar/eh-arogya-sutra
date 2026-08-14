@@ -6,7 +6,7 @@ Orchestration: **NOT_CONNECTED**
 
 | # | Name | Phase 5B status |
 |---|------|-----------------|
-| 1 | Temperament (Prakriti) | READY_FOR_VALIDATION |
+| 1 | Temperament Engine (`TEMPERAMENT_ENGINE`) | **IDENTITY/SCOPE OWNER_LOCKED** · canonical contract documented · evaluator **NOT_IMPLEMENTED** · impl **NOT_AUTHORIZED** · mappings **0** · medicine influence **NONE** · orch **NOT_CONNECTED** · activation **NONE** (historical Phase 5B display alias “Temperament (Prakriti)” / `READY_FOR_VALIDATION` = interface stub only — see [rules/rule-01-temperament-engine-contract.md](./rules/rule-01-temperament-engine-contract.md)) |
 | 2 | Polarity | READY_FOR_VALIDATION |
 | 3 | Organ / System Affinity | READY_FOR_VALIDATION |
 | 4 | Potency | READY_FOR_VALIDATION |

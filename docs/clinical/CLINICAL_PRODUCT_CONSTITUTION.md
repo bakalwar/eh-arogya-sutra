@@ -14,6 +14,8 @@ Owner approval remains required for technical work that introduces cost/paid ser
 
 **Global cost lock:** `NO_PAID_API_SERVICE_DEPENDENCY_OR_CERTIFICATE`.
 
+Rule 1 Temperament Engine canonical contract (`TEMPERAMENT_ENGINE`; identity/scope owner-locked; shadow medicine-selection influence **NONE**; evaluator **NOT_IMPLEMENTED**; real validated mappings **0**; evidence catalog **NOT_CREATED**; Rule 8 separation locked): [rules/rule-01-temperament-engine-contract.md](./rules/rule-01-temperament-engine-contract.md) (`R1_ID01_TO_ID05_RECOMMENDED_DECISIONS_APPROVED`). Frozen clinical specification (body preserved): [rules/rule-01-temperament-engine.md](./rules/rule-01-temperament-engine.md).
+
 Rule 6 post-merge shadow evidence pointer: [rules/rule-06-multi-disease-organ-system-triad-implementation-evidence.md](./rules/rule-06-multi-disease-organ-system-triad-implementation-evidence.md).
 
 Rule 6 relationship-data / evidence-intake contract (empty active registry; CE-OD-01…05; **no** real edges): [rules/rule-06-relationship-data-and-evidence-intake-contract.md](./rules/rule-06-relationship-data-and-evidence-intake-contract.md).
@@ -68,18 +70,21 @@ Only validated supported image types may influence analysis.
 
 Future integration must use the verified versioned **nine-rule engine**.
 
-### Rule 1 — Temperament Engine (Phase 5R-1F freeze)
+### Rule 1 — Temperament Engine (Phase 5R-1F freeze + canonical contract)
 
-**Status:** OWNER-APPROVED specification · EHAS2 **NOT_IMPLEMENTED** · legacy reference LIVE_BUT_PARTIAL only.
+**Status:** OWNER-APPROVED specification · identity token **`TEMPERAMENT_ENGINE`** owner-locked (`R1_ID01_TO_ID05_RECOMMENDED_DECISIONS_APPROVED`) · focused canonical contract documented · EHAS2 shadow evaluator **NOT_IMPLEMENTED** · `packages/rule1` **absent** · orchestration **NOT_CONNECTED** · clinical activation **NONE** · medicine-selection influence **NONE** · production Rx **unchanged** · real validated mappings **`0`** · evidence catalog **NOT_CREATED** · legacy reference LIVE_BUT_PARTIAL only.
 
-- Canonical name: **Temperament Engine** (Rule 1).
+- Canonical name: **Temperament Engine** (Rule 1); machine identity **`TEMPERAMENT_ENGINE`**. Historical interface alias “Temperament (Prakriti)” is superseded for identity readiness.
+- Focused canonical contract: [rules/rule-01-temperament-engine-contract.md](./rules/rule-01-temperament-engine-contract.md).
 - EH Temperament outputs: `LYMPHATIC`, `SANGUINE`, `BILIOUS_HEPATIC`, `NERVOUS`, `MIXED`, `UNKNOWN`.
 - **EH Temperament** and **Tridosha mapping** (`dosha_mapping`, `dosha_classification`) are **separate fields** — do not collapse into one ambiguous `prakriti` string.
 - Insufficient evidence → `UNKNOWN` and `ADDITIONAL_INFORMATION_REQUIRED` — no silent Lymphatic, Mixed, or Balanced default; no dictionary-order tie-break.
+- Exact remaining equal tie → **`UNRESOLVED_TIE`** (Q3G-TIE normative for future implementation); no interactive question bank.
 - BP (systolic ≥140 / <100) is **supporting evidence only** (+3 Sanguine / +2 Lymphatic) and requires separate approved symptom or observation evidence before a resolved temperament.
 - Photos: supporting observation only; never sole authority; no skin-colour or ordinary-face automatic temperament.
-- Rule 1 supplies evidence to downstream engines; it **must not** directly select medicine, formula, potency, electricity, tablet, or external application.
-- Full spec: [rules/rule-01-temperament-engine.md](./rules/rule-01-temperament-engine.md).
+- Rule 1 **must not** directly select medicine, formula, potency, electricity, tablet, or external application. First shadow medicine-selection influence is **`NONE`** (R1-ID-03); historical impact-matrix “YES” = future downstream evidence influence only.
+- Separate from Rule 8 disease-level prakriti — no overwrite / silent merge; conflict fail-closed pending separate reconciliation contract.
+- Full frozen clinical spec (body preserved): [rules/rule-01-temperament-engine.md](./rules/rule-01-temperament-engine.md).
 - **Blood / Lymph governance (R1-CP-Q2):** Integrated SANGUINE/Blood and LYMPHATIC/Lymph axis decisions are recorded in [rules/rule-01-blood-lymph-owner-decisions.md](./rules/rule-01-blood-lymph-owner-decisions.md) — **governance-only**, **NOT_IMPLEMENTED**, **NOT_CONNECTED**; no direct or fixed medicine selection; future Rule 6 candidate use requires separate owner approval and evidence rules.
 - **Evidence / workflow governance (R1-CP-Q3):** Typed Blood/Lymph axis values, evidence classes, minimum combination rules, no-interactive-question workflow, tie supersession, and red-flag vocabulary are recorded in [rules/rule-01-q3-evidence-workflow-owner-decisions.md](./rules/rule-01-q3-evidence-workflow-owner-decisions.md) — **governance-only**, **NOT_IMPLEMENTED**, **NOT_CONNECTED**; no direct medicine selection; future Rule 6 and separate owner activation required.
 

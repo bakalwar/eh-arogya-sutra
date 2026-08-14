@@ -9,9 +9,9 @@
 
 ## Canonical names (EH_9 audit — do not invent)
 
-From `docs/EH_9_RULE_ENGINE_AUDIT/01_RULE_ENGINE_LIST.md` in the old project:
+From `docs/EH_9_RULE_ENGINE_AUDIT/01_RULE_ENGINE_LIST.md` in the old project (historical EH_9 labels):
 
-1. Temperament (Prakriti)
+1. Temperament (Prakriti) — **EHAS2 current:** **Temperament Engine** / machine identity **`TEMPERAMENT_ENGINE`** (owner-locked; historical EH_9 / Phase 5B alias retained above)
 2. Polarity
 3. Organ / System Affinity
 4. Potency
@@ -20,6 +20,8 @@ From `docs/EH_9_RULE_ENGINE_AUDIT/01_RULE_ENGINE_LIST.md` in the old project:
 7. External Use Routes
 8. Disease-level Prakruti Inference
 9. Master Pipeline
+
+**EHAS2 Rule 1 authority:** identity/scope owner-locked (`TEMPERAMENT_ENGINE`); focused canonical contract: [rules/rule-01-temperament-engine-contract.md](./rules/rule-01-temperament-engine-contract.md) (`R1_ID01_TO_ID05_RECOMMENDED_DECISIONS_APPROVED`). Shadow evaluator **NOT_IMPLEMENTED** · mappings **0** · medicine influence **NONE** · orch **NOT_CONNECTED**. Frozen clinical body: [rules/rule-01-temperament-engine.md](./rules/rule-01-temperament-engine.md).
 
 **EHAS2 Rule 5 authority (R5-M0):** Rule 5 is **not** Dosage. Owner-approved identity and post-release scope: [rules/rule-05-owner-decisions-R5-M0.md](./rules/rule-05-owner-decisions-R5-M0.md). EHAS2 implementation **NOT_IMPLEMENTED** · runtime **NOT_CONNECTED**. Dosage scheduling/generation remains **`DOSAGE_ENGINE_AUDIT_PENDING`** (unnumbered, non-authoritative). Legacy `calc_dosage` and related MDE dosage paths below are **LEGACY_REFERENCE_ONLY** — not EHAS2 clinical authority for Rule 5. v1 code metadata may still say **Dosage** until **R5-M1b**.
 
@@ -41,7 +43,7 @@ chief_complaint → systems (R3) → prakriti (R1) → constitution
 
 | Rule | Source | Inputs | Outputs | Clinical effect | Fallback | Test | Migration decision |
 |------|--------|--------|---------|-----------------|----------|------|-------------------|
-| 1 Temperament | `MultiDiseaseEngine.detect_prakriti`; `clinical_engines.detect_prakriti` | symptoms, BP | Lymphatic/Sanguine/Bilious/Nervous/**UNKNOWN** | Selection boost | UNKNOWN if no evidence | Partial | Migrate; unify photo temperament |
+| 1 Temperament Engine | **EHAS2 canonical contract:** [rules/rule-01-temperament-engine-contract.md](./rules/rule-01-temperament-engine-contract.md) (`TEMPERAMENT_ENGINE`, owner-locked, `R1_ID01_TO_ID05_RECOMMENDED_DECISIONS_APPROVED`). Frozen clinical spec (body preserved): [rules/rule-01-temperament-engine.md](./rules/rule-01-temperament-engine.md). Legacy row (reference only): `MultiDiseaseEngine.detect_prakriti` / `clinical_engines.detect_prakriti` | Canonical shadow inputs per contract; legacy: symptoms, BP | Shadow temperament indication / fail-closed outcomes per contract; legacy: Lymphatic/Sanguine/Bilious/Nervous/**UNKNOWN** | **Shadow-only when implemented**; current evaluator **NOT_IMPLEMENTED**; medicine-selection influence **NONE**; orchestration **NOT_CONNECTED**; clinical activation **NONE**; production Rx **unchanged**; real validated mappings **0**; legacy “selection boost” = LEGACY_REFERENCE_ONLY | No Lymphatic/Mixed/Balanced default; exact tie → `UNRESOLVED_TIE` (Q3G-TIE) | Future P01–P18 (contract); not executed | EHAS2: identity/scope/contract documented · package **absent** · empty registry fail-closed · Rule 8 separation locked · independent of Rule 5 C3E |
 | 2 Polarity | Live: `formula_polarity_policy_engine`; legacy `detect_polarity` | slot/case context | POSITIVE/NEGATIVE/MIXED/UNRESOLVED | Selection + potency | UNRESOLVED→MIXED for legacy scoring | `test_formula_polarity_policy_engine.py` | Keep policy engine; deprecate dual path |
 | 3 Organ/System | `integrated_engine.detect_systems`; `detect_active_systems` | symptoms, gender, CC | systems + details | Plans + boosts | keyword / METABOLIC last resort | Partial | First detector; disease-pack only |
 | 4 Potency | `potency_engine.get_unified_clinical_potency` | polarity, phase, BP, severity, age, system | dilution | Mixture dilution | Internal defaults | potency metadata tests | Single SoT |
