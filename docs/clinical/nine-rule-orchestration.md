@@ -14,7 +14,7 @@ Isolated, deterministic nine-rule clinical orchestration for **synthetic validat
 6. Multi-Disease / Organ-System Triad  
 7. External Use Routes  
 8. Disease-level Prakruti Inference  
-9. Master Pipeline — EHAS2 owner-locked identity `MASTER_PIPELINE`; canonical contract: [rules/rule-09-master-pipeline-contract.md](./rules/rule-09-master-pipeline-contract.md). Phase 5C synthetic Rule 9 wrapper remains validation-only and is **not** the owner-locked clinical implementation.
+9. Master Pipeline — EHAS2 owner-locked identity `MASTER_PIPELINE`; canonical contract: [rules/rule-09-master-pipeline-contract.md](./rules/rule-09-master-pipeline-contract.md); post-merge shadow evidence: [rules/rule-09-master-pipeline-implementation-evidence.md](./rules/rule-09-master-pipeline-implementation-evidence.md) (`RULE9_SHADOW_VALIDATOR_IMPLEMENTED`; orchestration **NOT_CONNECTED**; clinical activation **NONE**). Phase 5C synthetic Rule 9 wrapper remains validation-only and is **not** the owner-locked clinical implementation or production orchestration.
 
 ## Rule 5 — documentation identity (R5-M0)
 

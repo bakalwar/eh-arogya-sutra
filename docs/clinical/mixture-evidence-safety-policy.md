@@ -67,7 +67,7 @@ They are **not** the Rule 6 engine identity and must **not** be treated as autho
 
 Authoritative Rule 6 contract: [rules/rule-06-multi-disease-organ-system-triad-contract.md](./rules/rule-06-multi-disease-organ-system-triad-contract.md).
 
-Authoritative Rule 9 contract (validate/reject/package-only; no composition mutation; complexity tier not inferred): [rules/rule-09-master-pipeline-contract.md](./rules/rule-09-master-pipeline-contract.md) (`R9_ID01_TO_ID05_RECOMMENDED_DECISIONS_APPROVED`).
+Authoritative Rule 9 contract (validate/reject/package-only; no composition mutation; complexity tier not inferred): [rules/rule-09-master-pipeline-contract.md](./rules/rule-09-master-pipeline-contract.md) (`R9_ID01_TO_ID05_RECOMMENDED_DECISIONS_APPROVED`). Post-merge shadow evidence: [rules/rule-09-master-pipeline-implementation-evidence.md](./rules/rule-09-master-pipeline-implementation-evidence.md) (`RULE9_SHADOW_VALIDATOR_IMPLEMENTED`; real clinical data/mappings **0**; orchestration **NOT_CONNECTED**).
 
 Historical inventory labels that described this file as “Rule 6 mixture evidence policy” are **scope-misaligned** relative to this lock and do not change OD-013/OD-014 substance.
 
