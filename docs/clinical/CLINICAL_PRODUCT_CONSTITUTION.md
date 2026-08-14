@@ -90,18 +90,19 @@ Future integration must use the verified versioned **nine-rule engine**.
 
 ### Rule 2 — Polarity Engine (Phase 5R-2F freeze)
 
-**Status:** OWNER-APPROVED specification · EHAS2 **NOT_IMPLEMENTED** · legacy reference LIVE_BUT_PARTIAL only.
+**Status:** OWNER-APPROVED specification · identity/scope **OWNER_LOCKED** (`POLARITY_ENGINE`) · focused canonical contract **documented** · EHAS2 evaluator **NOT_IMPLEMENTED** / implementation **NOT_AUTHORIZED** · `packages/rule2` absent · mappings **0** · catalog **NOT_CREATED** · medicine influence **NONE** · formula mutation **NONE** · orch **NOT_CONNECTED** · activation/Rx **NONE** · legacy reference LIVE_BUT_PARTIAL only.
 
-- Canonical name: **Polarity Engine** (Rule 2).
+- Canonical name: **Polarity Engine** (Rule 2); machine identity **`POLARITY_ENGINE`** (`R2_ID01_TO_ID05_RECOMMENDED_DECISIONS_APPROVED`). Short EH_9/interface label “Polarity” = historical alias only.
 - **Formula-specific** disease polarity + **required therapeutic polarity** per formula; **`mutates_mixtures` = false** — annotation only.
 - Rule 2 **must not** select medicine, potency, electricity, mixture count, or target pathology, or issue prescriptions.
-- Law of opposites: POSITIVE disease → NEGATIVE therapeutic; NEGATIVE disease → POSITIVE therapeutic; resolved neutral support → NEUTRAL therapeutic.
+- Law of opposites: POSITIVE disease → NEGATIVE therapeutic; NEGATIVE disease → POSITIVE therapeutic; resolved neutral support → NEUTRAL therapeutic. **MIXED** → UNRESOLVED + therapeutic NEUTRAL + doctor review (`R2-ID-02`); no legacy coerce.
 - UNRESOLVED → `required_therapeutic_polarity` NEUTRAL, `OWNER_APPROVED_NEUTRAL_FALLBACK`, `doctor_review_required`; do not overwrite raw uncertainty as proven neutral disease state.
 - SUPPORT_ONLY distinct from UNRESOLVED; support formulas → NEUTRAL therapeutic, `RESOLVED_SUPPORT_ROLE`.
 - No global case polarity on all formulas; BP/report/photo isolation per owner spec.
 - `case_polarity_summary` display-only; `formula_polarities` authoritative for downstream annotation consumers (not direct selection by Rule 2).
+- Empty real registry / fail-closed; medicine-registry `.polarity` is **not** Rule 2 disease-polarity evidence.
 - Potency and electricity selection: separate engines (**AUDIT_PENDING**).
-- Full spec: [rules/rule-02-polarity-engine.md](./rules/rule-02-polarity-engine.md).
+- Focused canonical contract: [rules/rule-02-polarity-engine-contract.md](./rules/rule-02-polarity-engine-contract.md). Frozen clinical body: [rules/rule-02-polarity-engine.md](./rules/rule-02-polarity-engine.md).
 
 ### Rule 3 — Organ-System Affinity Engine (Phase 5R-3F freeze)
 

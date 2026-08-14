@@ -7,7 +7,7 @@ Orchestration: **NOT_CONNECTED**
 | # | Name | Phase 5B status |
 |---|------|-----------------|
 | 1 | Temperament Engine (`TEMPERAMENT_ENGINE`) | **IDENTITY/SCOPE OWNER_LOCKED** · canonical contract documented · synthetic shadow evaluator **IMPLEMENTED** (`@ehas2/rule1`; `evaluateRule1Shadow`; technical `READY_FOR_VALIDATION`; `affectsClinicalSelection: false`) · mappings **0** · catalog **NOT_CREATED** · registry empty/fail-closed · medicine influence **NONE** · orch **NOT_CONNECTED** · activation **NONE** · Rx effect **NONE** (historical Phase 5B/dashboard display alias “Temperament (Prakriti)” does not override canonical identity or prove production readiness — see [rules/rule-01-temperament-engine-implementation-evidence.md](./rules/rule-01-temperament-engine-implementation-evidence.md)) |
-| 2 | Polarity | READY_FOR_VALIDATION |
+| 2 | Polarity Engine (`POLARITY_ENGINE`) | **IDENTITY/SCOPE OWNER_LOCKED** · canonical contract documented · evaluator **NOT_IMPLEMENTED** · implementation **NOT_AUTHORIZED** · `packages/rule2` absent · mappings **0** · catalog **NOT_CREATED** · empty registry/fail-closed · formula mutation **NONE** · medicine influence **NONE** · orch **NOT_CONNECTED** · activation **NONE** · Rx effect **NONE** (historical Phase 5B/EH_9/dashboard short alias “Polarity” and stub `affectsClinicalSelection: true` do not override canonical identity or authorize selection — see [rules/rule-02-polarity-engine-contract.md](./rules/rule-02-polarity-engine-contract.md)) |
 | 3 | Organ / System Affinity | READY_FOR_VALIDATION |
 | 4 | Potency | READY_FOR_VALIDATION |
 | 5 | Monitoring, Follow-up & Post-Release Safety Surveillance | **NOT_IMPLEMENTED** |

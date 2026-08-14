@@ -12,7 +12,7 @@
 From `docs/EH_9_RULE_ENGINE_AUDIT/01_RULE_ENGINE_LIST.md` in the old project (historical EH_9 labels):
 
 1. Temperament (Prakriti) — **EHAS2 current:** **Temperament Engine** / machine identity **`TEMPERAMENT_ENGINE`** (owner-locked; historical EH_9 / Phase 5B alias retained above)
-2. Polarity
+2. Polarity — **EHAS2 current:** **Polarity Engine** / machine identity **`POLARITY_ENGINE`** (owner-locked; historical EH_9 / Phase 5B short alias retained above)
 3. Organ / System Affinity
 4. Potency
 5. Monitoring, Follow-up & Post-Release Safety Surveillance
@@ -22,6 +22,8 @@ From `docs/EH_9_RULE_ENGINE_AUDIT/01_RULE_ENGINE_LIST.md` in the old project (hi
 9. Master Pipeline
 
 **EHAS2 Rule 1 authority:** identity/scope owner-locked (`TEMPERAMENT_ENGINE`); focused canonical contract: [rules/rule-01-temperament-engine-contract.md](./rules/rule-01-temperament-engine-contract.md) (`R1_ID01_TO_ID05_RECOMMENDED_DECISIONS_APPROVED`). Post-merge synthetic shadow evidence: [rules/rule-01-temperament-engine-implementation-evidence.md](./rules/rule-01-temperament-engine-implementation-evidence.md) (`RULE1_SHADOW_EVALUATOR_IMPLEMENTED`, PR #98). Package `@ehas2/rule1` / `evaluateRule1Shadow`. Technical `READY_FOR_VALIDATION` · `affectsClinicalSelection: false` · mappings **0** · catalog **NOT_CREATED** · registry empty/fail-closed · medicine influence **NONE** · orch **NOT_CONNECTED** · activation/Rx **NONE**. Frozen clinical body: [rules/rule-01-temperament-engine.md](./rules/rule-01-temperament-engine.md).
+
+**EHAS2 Rule 2 authority:** identity/scope owner-locked (`POLARITY_ENGINE`); focused canonical contract: [rules/rule-02-polarity-engine-contract.md](./rules/rule-02-polarity-engine-contract.md) (`R2_ID01_TO_ID05_RECOMMENDED_DECISIONS_APPROVED`). Evaluator **NOT_IMPLEMENTED** · implementation **NOT_AUTHORIZED** · `packages/rule2` absent · mappings **0** · catalog **NOT_CREATED** · empty registry/fail-closed · formula mutation **NONE** · medicine influence **NONE** · orch **NOT_CONNECTED** · activation/Rx **NONE**. Frozen clinical body: [rules/rule-02-polarity-engine.md](./rules/rule-02-polarity-engine.md). Historical matrix rows describing legacy selection coerce remain **LEGACY_REFERENCE_ONLY** and do not override this contract.
 
 **EHAS2 Rule 5 authority (R5-M0):** Rule 5 is **not** Dosage. Owner-approved identity and post-release scope: [rules/rule-05-owner-decisions-R5-M0.md](./rules/rule-05-owner-decisions-R5-M0.md). EHAS2 implementation **NOT_IMPLEMENTED** · runtime **NOT_CONNECTED**. Dosage scheduling/generation remains **`DOSAGE_ENGINE_AUDIT_PENDING`** (unnumbered, non-authoritative). Legacy `calc_dosage` and related MDE dosage paths below are **LEGACY_REFERENCE_ONLY** — not EHAS2 clinical authority for Rule 5. v1 code metadata may still say **Dosage** until **R5-M1b**.
 

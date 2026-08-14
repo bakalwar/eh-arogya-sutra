@@ -1,7 +1,9 @@
 # Rule 2 — Data Contract (Phase 5R-2F Freeze)
 
-**Runtime:** IMPLEMENTATION-PENDING
+**Runtime:** IMPLEMENTATION-PENDING / **NOT_AUTHORIZED**
 **Authority:** OWNER-APPROVED field semantics
+
+**Current-facing package contract (schemas / outcomes / P-matrix):** [rule-02-polarity-engine-contract.md](./rule-02-polarity-engine-contract.md) (`POLARITY_ENGINE` · `R2_ID01_TO_ID05_RECOMMENDED_DECISIONS_APPROVED`). This freeze document preserves **field-semantics examples** only; it is **not** by itself an implementation-grade package contract. Where camelCase package keys appear in the canonical contract, they map to the snake_case semantics below without changing clinical meaning.
 
 Rule 2 output is **per formula** (array element). Do **not** include `selected_potency`, `selected_electricity`, or `medicine_id` in Rule 2 payloads.
 
