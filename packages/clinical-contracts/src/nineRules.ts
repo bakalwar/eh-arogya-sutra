@@ -41,9 +41,10 @@ export const NINE_RULE_DEFINITIONS = [
   },
   {
     ruleNumber: 2 as const,
-    ruleName: 'Polarity',
+    /** Owner-locked identity POLARITY_ENGINE; synthetic shadow package; not production-connected. */
+    ruleName: 'Polarity Engine',
     phase5bStatus: 'READY_FOR_VALIDATION' as ClinicalRuleStatus,
-    affectsClinicalSelection: true,
+    affectsClinicalSelection: false,
   },
   {
     ruleNumber: 3 as const,

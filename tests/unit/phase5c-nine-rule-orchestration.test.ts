@@ -18,7 +18,7 @@ describe('Phase 5C nine-rule orchestration contracts', () => {
   it('preserves exact canonical rule names and order 1–9', () => {
     expect(NINE_RULE_DEFINITIONS.map((r) => r.ruleName)).toEqual([
       'Temperament Engine',
-      'Polarity',
+      'Polarity Engine',
       'Organ / System Affinity',
       'Potency',
       'Monitoring, Follow-up & Post-Release Safety Surveillance',
