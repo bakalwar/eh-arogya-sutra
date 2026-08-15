@@ -59,7 +59,7 @@ Read-only branch facts (`git` on local objects):
 |------|------------------------|----------------|
 | 1 | Temperament Engine (`TEMPERAMENT_ENGINE`) | **IDENTITY_OWNER_LOCKED** (supersedes historical Stage A label-only row; focused canonical contract: docs/clinical/rules/rule-01-temperament-engine-contract.md) |
 | 2 | Polarity Engine (`POLARITY_ENGINE`) | **IDENTITY_OWNER_LOCKED** (supersedes historical Stage A `IDENTITY_OWNER_APPROVED` label-only row; focused canonical contract: docs/clinical/rules/rule-02-polarity-engine-contract.md; `R2_ID01_TO_ID05_RECOMMENDED_DECISIONS_APPROVED`) |
-| 3 | Organ-System Affinity Engine | **IDENTITY_OWNER_APPROVED** |
+| 3 | Organ-System Affinity Engine (`ORGAN_SYSTEM_AFFINITY`) | **IDENTITY_OWNER_LOCKED** (supersedes historical Stage A `IDENTITY_OWNER_APPROVED`; focused canonical contract: docs/clinical/rules/rule-03-organ-system-affinity-contract.md) |
 | 4 | Potency | **IDENTITY_CANDIDATE_ONLY** + **FREEZE_STATUS_CONFLICT** |
 | 5 | Dosage (contracts) vs Monitoring (unmerged) | **IDENTITY_CONFLICT** |
 | 6 | Multi-Disease / Organ-System Triad (MULTI_DISEASE_ORGAN_SYSTEM_TRIAD) | **IDENTITY_OWNER_LOCKED** (supersedes historical Stage A IDENTITY_CANDIDATE_ONLY) — canonical contract: docs/clinical/rules/rule-06-multi-disease-organ-system-triad-contract.md |
