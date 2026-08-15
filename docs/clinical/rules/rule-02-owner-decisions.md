@@ -1,7 +1,8 @@
 # Rule 2 — Owner Decisions (Phase 5R-2F Freeze)
 
 **Authority:** OWNER-APPROVED
-**EHAS2 code:** NOT_IMPLEMENTED
+**EHAS2 code (current technical package):** `RULE2_SHADOW_EVALUATOR_IMPLEMENTED` (`@ehas2/rule2@0.1.0-shadow` / `evaluateRule2Shadow`; merged PR #101); canonical identity `POLARITY_ENGINE` / display **Polarity Engine**; canonical contract documented; technical `READY_FOR_VALIDATION` only — **not** clinical validation; real mappings **0**; catalog `NOT_CREATED`; production registry empty; Rule 4 not connected; orch `NOT_CONNECTED`; medicine-selection influence `NONE`; formula mutation `NONE`; clinical activation `NONE`; prescription/Rx effect `NONE`; production posture unchanged
+**Historical (superseded by PR #101 for the synthetic technical shadow package only):** `NOT_IMPLEMENTED` / `NOT_AUTHORIZED`. That historical package/evaluator status does not supersede or weaken continuing clinical/runtime prohibitions.
 
 **Current-facing canonical contract:** [rule-02-polarity-engine-contract.md](./rule-02-polarity-engine-contract.md) (`R2_ID01_TO_ID05_RECOMMENDED_DECISIONS_APPROVED` · `R2_POLARITY_ENGINE_CANONICAL_CONTRACT_DOCUMENTATION_AUTHORIZED`)
 
@@ -32,7 +33,7 @@ Full normative register: [rule-02-polarity-engine-contract.md](./rule-02-polarit
 | Machine identity | `POLARITY_ENGINE` | OWNER-APPROVED (`R2-ID-01`) |
 | Clinical authority | Formula-specific policy engine | OWNER-APPROVED |
 | Legacy status | LIVE_BUT_PARTIAL | LEGACY-PROVEN |
-| EHAS2 implementation | NOT_IMPLEMENTED / NOT_AUTHORIZED | IMPLEMENTATION-PENDING |
+| EHAS2 implementation | Synthetic shadow **IMPLEMENTED** (`@ehas2/rule2` / `evaluateRule2Shadow`; PR #101); technical `READY_FOR_VALIDATION`; clinical activation **NONE**; orch `NOT_CONNECTED`; mappings **0**; catalog `NOT_CREATED`; influence/mutation/Rx `NONE` | TECHNICAL-SHADOW (historical: `NOT_IMPLEMENTED` / `NOT_AUTHORIZED` superseded by PR #101 for synthetic package only) |
 | mutates_mixtures | false | OWNER-APPROVED |
 
 ---

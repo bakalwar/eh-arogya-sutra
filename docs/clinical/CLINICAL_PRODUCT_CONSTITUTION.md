@@ -16,6 +16,8 @@ Owner approval remains required for technical work that introduces cost/paid ser
 
 Rule 1 Temperament Engine canonical contract (`TEMPERAMENT_ENGINE`; identity/scope owner-locked; shadow medicine-selection influence **NONE**; synthetic shadow evaluator **IMPLEMENTED** (`@ehas2/rule1` / `evaluateRule1Shadow`; PR #98); technical `READY_FOR_VALIDATION`; real validated mappings **0**; evidence catalog **NOT_CREATED**; production registry empty/fail-closed; Rule 8 separation locked; orchestration **NOT_CONNECTED**; clinical activation **NONE**; prescription effect **NONE**): [rules/rule-01-temperament-engine-contract.md](./rules/rule-01-temperament-engine-contract.md) (`R1_ID01_TO_ID05_RECOMMENDED_DECISIONS_APPROVED`). Post-merge shadow evidence: [rules/rule-01-temperament-engine-implementation-evidence.md](./rules/rule-01-temperament-engine-implementation-evidence.md) (`RULE1_SHADOW_EVALUATOR_IMPLEMENTED`). Frozen clinical specification (body preserved): [rules/rule-01-temperament-engine.md](./rules/rule-01-temperament-engine.md).
 
+Rule 2 Polarity Engine canonical contract (`POLARITY_ENGINE`; identity/scope owner-locked; synthetic shadow evaluator **IMPLEMENTED** (`@ehas2/rule2` / `evaluateRule2Shadow`; PR #101); technical `READY_FOR_VALIDATION`; real polarity mappings **0**; evidence catalog **NOT_CREATED**; production registry empty/fail-closed; formula mutation **NONE**; medicine-selection influence **NONE**; Rule 4 **not** connected; orchestration **NOT_CONNECTED**; clinical activation **NONE**; prescription effect **NONE**): [rules/rule-02-polarity-engine-contract.md](./rules/rule-02-polarity-engine-contract.md) (`R2_ID01_TO_ID05_RECOMMENDED_DECISIONS_APPROVED`). Post-merge shadow evidence: [rules/rule-02-polarity-engine-implementation-evidence.md](./rules/rule-02-polarity-engine-implementation-evidence.md) (`RULE2_SHADOW_EVALUATOR_IMPLEMENTED`). Frozen clinical specification (body preserved): [rules/rule-02-polarity-engine.md](./rules/rule-02-polarity-engine.md).
+
 Rule 6 post-merge shadow evidence pointer: [rules/rule-06-multi-disease-organ-system-triad-implementation-evidence.md](./rules/rule-06-multi-disease-organ-system-triad-implementation-evidence.md).
 
 Rule 6 relationship-data / evidence-intake contract (empty active registry; CE-OD-01…05; **no** real edges): [rules/rule-06-relationship-data-and-evidence-intake-contract.md](./rules/rule-06-relationship-data-and-evidence-intake-contract.md).
@@ -90,7 +92,7 @@ Future integration must use the verified versioned **nine-rule engine**.
 
 ### Rule 2 — Polarity Engine (Phase 5R-2F freeze)
 
-**Status:** OWNER-APPROVED specification · identity/scope **OWNER_LOCKED** (`POLARITY_ENGINE`) · focused canonical contract **documented** · EHAS2 evaluator **NOT_IMPLEMENTED** / implementation **NOT_AUTHORIZED** · `packages/rule2` absent · mappings **0** · catalog **NOT_CREATED** · medicine influence **NONE** · formula mutation **NONE** · orch **NOT_CONNECTED** · activation/Rx **NONE** · legacy reference LIVE_BUT_PARTIAL only.
+**Status:** OWNER-APPROVED specification · identity/scope **OWNER_LOCKED** (`POLARITY_ENGINE`) · focused canonical contract **documented** · EHAS2 synthetic shadow evaluator **IMPLEMENTED** (`@ehas2/rule2` / `evaluateRule2Shadow`; PR #101; `RULE2_SHADOW_EVALUATOR_IMPLEMENTED`) · technical `READY_FOR_VALIDATION` · `affectsClinicalSelection: false` · mappings **0** · catalog **NOT_CREATED** · medicine influence **NONE** · formula mutation **NONE** · orch **NOT_CONNECTED** · activation/Rx **NONE** · legacy reference LIVE_BUT_PARTIAL only. Post-merge evidence: [rules/rule-02-polarity-engine-implementation-evidence.md](./rules/rule-02-polarity-engine-implementation-evidence.md).
 
 - Canonical name: **Polarity Engine** (Rule 2); machine identity **`POLARITY_ENGINE`** (`R2_ID01_TO_ID05_RECOMMENDED_DECISIONS_APPROVED`). Short EH_9/interface label “Polarity” = historical alias only.
 - **Formula-specific** disease polarity + **required therapeutic polarity** per formula; **`mutates_mixtures` = false** — annotation only.
@@ -102,7 +104,7 @@ Future integration must use the verified versioned **nine-rule engine**.
 - `case_polarity_summary` display-only; `formula_polarities` authoritative for downstream annotation consumers (not direct selection by Rule 2).
 - Empty real registry / fail-closed; medicine-registry `.polarity` is **not** Rule 2 disease-polarity evidence.
 - Potency and electricity selection: separate engines (**AUDIT_PENDING**).
-- Focused canonical contract: [rules/rule-02-polarity-engine-contract.md](./rules/rule-02-polarity-engine-contract.md). Frozen clinical body: [rules/rule-02-polarity-engine.md](./rules/rule-02-polarity-engine.md).
+- Focused canonical contract: [rules/rule-02-polarity-engine-contract.md](./rules/rule-02-polarity-engine-contract.md). Post-merge shadow evidence: [rules/rule-02-polarity-engine-implementation-evidence.md](./rules/rule-02-polarity-engine-implementation-evidence.md). Frozen clinical body: [rules/rule-02-polarity-engine.md](./rules/rule-02-polarity-engine.md).
 
 ### Rule 3 — Organ-System Affinity Engine (Phase 5R-3F freeze)
 

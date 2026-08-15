@@ -1,8 +1,8 @@
 # Rule 2 — Polarity Engine (Owner-Approved Specification)
 
-**Status:** OWNER-APPROVED · **EHAS2 identity/scope:** OWNER_LOCKED (`POLARITY_ENGINE`) · **EHAS2 canonical contract:** DOCUMENTED ([rule-02-polarity-engine-contract.md](./rule-02-polarity-engine-contract.md); `R2_ID01_TO_ID05_RECOMMENDED_DECISIONS_APPROVED`) · **EHAS2 runtime:** IMPLEMENTATION-PENDING / **NOT_AUTHORIZED** · `packages/rule2` absent · mappings **0** · catalog **NOT_CREATED** · medicine influence **NONE** · formula mutation **NONE** · orch **NOT_CONNECTED** · activation/Rx **NONE** · **Legacy:** LIVE_BUT_PARTIAL (forensic reference only)
+**Status:** OWNER-APPROVED · **EHAS2 identity/scope:** OWNER_LOCKED (`POLARITY_ENGINE`) · **EHAS2 canonical contract:** DOCUMENTED ([rule-02-polarity-engine-contract.md](./rule-02-polarity-engine-contract.md); `R2_ID01_TO_ID05_RECOMMENDED_DECISIONS_APPROVED`) · **EHAS2 synthetic shadow package:** **IMPLEMENTED** (`@ehas2/rule2` / `evaluateRule2Shadow`; PR #101; technical `READY_FOR_VALIDATION` ≠ clinical readiness) · mappings **0** · catalog **NOT_CREATED** · medicine influence **NONE** · formula mutation **NONE** · orch **NOT_CONNECTED** · activation/Rx **NONE** · **Legacy:** LIVE_BUT_PARTIAL (forensic reference only)
 
-**Current-facing contract pointer (does not rewrite frozen body below):** [rule-02-polarity-engine-contract.md](./rule-02-polarity-engine-contract.md)
+**Current-facing contract pointer (does not rewrite frozen body below):** [rule-02-polarity-engine-contract.md](./rule-02-polarity-engine-contract.md) · Post-merge evidence: [rule-02-polarity-engine-implementation-evidence.md](./rule-02-polarity-engine-implementation-evidence.md)
 
 **Rule number:** 2
 **Canonical name:** Polarity Engine
