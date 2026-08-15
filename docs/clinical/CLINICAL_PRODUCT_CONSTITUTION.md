@@ -108,17 +108,19 @@ Future integration must use the verified versioned **nine-rule engine**.
 
 ### Rule 3 — Organ-System Affinity Engine (Phase 5R-3F freeze)
 
-**Status:** OWNER-APPROVED specification · EHAS2 **NOT_IMPLEMENTED** · legacy reference LIVE_AND_AUTHORITATIVE_BUT_CONFLICTED only.
+**Status:** OWNER-APPROVED specification · identity/scope **OWNER_LOCKED** (`ORGAN_SYSTEM_AFFINITY`) · focused canonical contract **documented** · EHAS2 runtime evaluator **NOT_IMPLEMENTED** / **NOT_AUTHORIZED** · package absent · mappings **0** · catalog **NOT_CREATED** · no closed real organ-system catalog · medicine influence **NONE** · orch **NOT_CONNECTED** · activation/Rx **NONE** · legacy reference LIVE_AND_AUTHORITATIVE_BUT_CONFLICTED only.
 
 - Canonical name: **Organ-System Affinity Engine** (Rule 3).
+- Machine identity: **`ORGAN_SYSTEM_AFFINITY`** (`R3-ID-01`).
 - UI name: **Rule 3 — Active Organ Systems**.
+- Historical / non-authoritative interface alias: **Organ / System Affinity** (`R3-ID-02`).
 - **Organ-System Triad** is a separate concept — rule number **AUDIT_PENDING** (not Rule 3).
 - Parallel model: normalized evidence → **Rule 1 Temperament Engine** and **Rule 3 Organ-System Affinity Engine**; neither mutates the other’s frozen result.
 - Structured evidence only — no concatenating report/photo text into a global symptom blob.
 - UNRESOLVED: `active_systems = []`, `INSUFFICIENT_ORGAN_SYSTEM_EVIDENCE`, `prescription_issue_allowed = false`; **no automatic METABOLIC fallback**.
 - Report/photo isolation per owner spec; ordinary photo must not set organ system.
 - Rule 3 may supply evidence downstream; it **must not** select medicine, potency, electricity, dosage, or final prescription.
-- Full spec: [rules/rule-03-organ-system-affinity.md](./rules/rule-03-organ-system-affinity.md).
+- Focused canonical contract: [rules/rule-03-organ-system-affinity-contract.md](./rules/rule-03-organ-system-affinity-contract.md) (`R3_ID01_TO_ID05_RECOMMENDED_DECISIONS_APPROVED`). Frozen clinical body: [rules/rule-03-organ-system-affinity.md](./rules/rule-03-organ-system-affinity.md).
 
 Every result must record:
 
