@@ -1,7 +1,9 @@
 # Rule 3 — Test Requirements (Post-Freeze)
 
-**Rule 3 EHAS2 runtime:** NOT_IMPLEMENTED
+**Rule 3 EHAS2 runtime:** NOT_IMPLEMENTED / NOT_AUTHORIZED
 **Legacy direct tests:** Partial — `test_s1_gender_anatomy_gate.py`, `test_s1_safe_keyword_policy.py` exercise `detect_systems` only; **LEGACY-PROVEN** (does not prove EHAS2 owner spec)
+
+**Canonical package proof matrix (P01–P18):** [rule-03-organ-system-affinity-contract.md](./rule-03-organ-system-affinity-contract.md) §15 — documentation only in the contract tranche; do not execute until separately authorized implementation. Owner scenario intent below remains preserved.
 
 ---
 

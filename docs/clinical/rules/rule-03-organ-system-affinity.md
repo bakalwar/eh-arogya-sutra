@@ -1,10 +1,14 @@
 # Rule 3 — Organ-System Affinity Engine (Owner-Approved Specification)
 
-**Status:** OWNER-APPROVED · **EHAS2 runtime:** NOT_IMPLEMENTED · **Legacy:** LIVE_AND_AUTHORITATIVE_BUT_CONFLICTED (forensic reference only)
+**Status:** OWNER-APPROVED · **EHAS2 identity/scope:** OWNER_LOCKED (`ORGAN_SYSTEM_AFFINITY`) · **EHAS2 canonical contract:** DOCUMENTED ([rule-03-organ-system-affinity-contract.md](./rule-03-organ-system-affinity-contract.md); `R3_ID01_TO_ID05_RECOMMENDED_DECISIONS_APPROVED`) · **EHAS2 runtime:** IMPLEMENTATION-PENDING / **NOT_AUTHORIZED** · `packages/rule3` absent · mappings **0** · catalog **NOT_CREATED** · no closed real organ-system catalog · medicine influence **NONE** · formula mutation **NONE** · orch **NOT_CONNECTED** · activation/Rx **NONE** · **Legacy:** LIVE_AND_AUTHORITATIVE_BUT_CONFLICTED (forensic reference only)
+
+**Current-facing contract pointer (does not rewrite frozen body below):** [rule-03-organ-system-affinity-contract.md](./rule-03-organ-system-affinity-contract.md)
 
 **Rule number:** 3
 **Canonical name:** Organ-System Affinity Engine
+**Machine identity:** `ORGAN_SYSTEM_AFFINITY`
 **UI name:** Rule 3 — Active Organ Systems
+**Historical interface alias:** Organ / System Affinity (non-authoritative)
 **Clinical authority:** OWNER-APPROVED specification (this document)
 **Organ-System Triad:** separate clinical/marketing concept — **rule number AUDIT_PENDING** (not Rule 3)
 

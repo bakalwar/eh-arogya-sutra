@@ -4,6 +4,8 @@
 
 Forensic source: Phase 5R-3 audit artifacts under `%TEMP%\ehas2_rule3_forensic_audit\`.
 
+**Current-facing canonical contract (does not rewrite rejected table below):** [rule-03-organ-system-affinity-contract.md](./rule-03-organ-system-affinity-contract.md) (`ORGAN_SYSTEM_AFFINITY` · `R3_ID01_TO_ID05_RECOMMENDED_DECISIONS_APPROVED`).
+
 ---
 
 ## Explicitly rejected (OWNER-APPROVED)

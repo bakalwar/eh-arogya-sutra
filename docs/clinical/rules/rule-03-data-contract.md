@@ -1,9 +1,11 @@
 # Rule 3 — Data Contract (Phase 5R-3F Freeze)
 
-**Runtime:** IMPLEMENTATION-PENDING
+**Runtime:** IMPLEMENTATION-PENDING / **NOT_AUTHORIZED**
 **Authority:** OWNER-APPROVED field semantics
 
-Rule 3 output is the **organ/system Single Source of Truth**. Downstream engines consume this payload; Rule 3 must not embed medicine IDs, potency, electricity, or dosage.
+**Current-facing package contract (schemas / outcomes / P-matrix):** [rule-03-organ-system-affinity-contract.md](./rule-03-organ-system-affinity-contract.md) (`ORGAN_SYSTEM_AFFINITY` · `R3_ID01_TO_ID05_RECOMMENDED_DECISIONS_APPROVED`). This freeze document preserves **field-semantics examples** only; it is **not** by itself an implementation-grade package contract. Example scores / confidences are **non-normative**. Historical example organ-system labels are **not** a closed approved catalog (`R3-ID-05`).
+
+Rule 3 output is the **organ/system Single Source of Truth** (when implemented). Downstream engines consume this payload; Rule 3 must not embed medicine IDs, potency, electricity, or dosage.
 
 ---
 
