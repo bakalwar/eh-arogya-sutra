@@ -19,7 +19,7 @@ describe('Phase 5C nine-rule orchestration contracts', () => {
     expect(NINE_RULE_DEFINITIONS.map((r) => r.ruleName)).toEqual([
       'Temperament Engine',
       'Polarity Engine',
-      'Organ / System Affinity',
+      'Organ-System Affinity Engine',
       'Potency',
       'Monitoring, Follow-up & Post-Release Safety Surveillance',
       'Multi-Disease / Organ-System Triad',
@@ -34,6 +34,10 @@ describe('Phase 5C nine-rule orchestration contracts', () => {
     expect(r1?.status).toBe('READY_FOR_VALIDATION');
     expect(r1?.affectsClinicalSelection).toBe(false);
     expect(r1?.ruleName).toBe('Temperament Engine');
+    const r3 = allNineRuleInterfaceResults().find((r) => r.ruleNumber === 3);
+    expect(r3?.status).toBe('READY_FOR_VALIDATION');
+    expect(r3?.affectsClinicalSelection).toBe(false);
+    expect(r3?.ruleName).toBe('Organ-System Affinity Engine');
     const r8 = allNineRuleInterfaceResults().find((r) => r.ruleNumber === 8);
     // nineRules metadata only: synthetic shadow package exists for technical validation.
     expect(r8?.status).toBe('READY_FOR_VALIDATION');

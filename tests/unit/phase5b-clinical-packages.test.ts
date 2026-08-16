@@ -107,7 +107,7 @@ describe('Phase 5B clinical contracts / nine-rule interfaces', () => {
     expect(r.tabletSectionB.status).toBe('NOT_IMPLEMENTED');
   });
 
-  it('every rule supports unresolved-capable status field; Rule 1/2/8/9 shadow is READY_FOR_VALIDATION only', () => {
+  it('every rule supports unresolved-capable status field; Rule 1/2/3/8/9 shadow is READY_FOR_VALIDATION only', () => {
     const results = allNineRuleInterfaceResults();
     expect(results).toHaveLength(9);
     for (const r of results) {
@@ -129,6 +129,13 @@ describe('Phase 5B clinical contracts / nine-rule interfaces', () => {
     expect(NINE_RULE_DEFINITIONS[1]?.phase5bStatus).toBe('READY_FOR_VALIDATION');
     expect(NINE_RULE_DEFINITIONS[1]?.affectsClinicalSelection).toBe(false);
     expect(r2?.affectsClinicalSelection).toBe(false);
+    const r3 = results.find((x) => x.ruleNumber === 3);
+    // Synthetic shadow package present for technical validation — not clinical readiness / production.
+    expect(r3?.status).toBe('READY_FOR_VALIDATION');
+    expect(r3?.ruleName).toBe('Organ-System Affinity Engine');
+    expect(NINE_RULE_DEFINITIONS[2]?.phase5bStatus).toBe('READY_FOR_VALIDATION');
+    expect(NINE_RULE_DEFINITIONS[2]?.affectsClinicalSelection).toBe(false);
+    expect(r3?.affectsClinicalSelection).toBe(false);
     const r8 = results.find((x) => x.ruleNumber === 8);
     expect(r8?.status).toBe('READY_FOR_VALIDATION');
     expect(NINE_RULE_DEFINITIONS[7]?.phase5bStatus).toBe('READY_FOR_VALIDATION');

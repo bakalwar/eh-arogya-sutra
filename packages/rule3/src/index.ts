@@ -1,0 +1,57 @@
+export {
+  RULE3_ANNOTATION_KEY_ORDER,
+  RULE3_DETECTION_METHOD_CLASSES,
+  RULE3_EVIDENCE_ENTRY_KEY_ORDER,
+  RULE3_FAILURE_CODES,
+  RULE3_INDICATION_STATUSES,
+  RULE3_INPUT_KEY_ORDER,
+  RULE3_LIFECYCLE_CLASSES,
+  RULE3_OUTCOMES,
+  RULE3_OUTPUT_KEY_ORDER,
+  RULE3_PRODUCTION_MAPPING_REGISTRY,
+  RULE3_REASON_CODES,
+  RULE3_REGISTRY_KEY_ORDER,
+  RULE3_SYNTHETIC_TEST_CLASSIFICATION,
+  RULE3_SYSTEM_ROLES,
+  RULE3_UNRESOLVED_REASON,
+  RULE3_VERIFICATION_STATUSES,
+} from './constants.js';
+export type {
+  Rule3DetectionMethodClass,
+  Rule3FailureCode,
+  Rule3IndicationStatus,
+  Rule3LifecycleClass,
+  Rule3Outcome,
+  Rule3SystemRole,
+  Rule3VerificationStatus,
+} from './constants.js';
+export { Rule3EvaluationError } from './errors.js';
+export { evaluateRule3Shadow } from './evaluate.js';
+export type {
+  Rule3CaseOrganSystemSummary,
+  Rule3DoctorSuppliedStructuredEvidenceItem,
+  Rule3EvidenceBindingRef,
+  Rule3EvidenceDataVersions,
+  Rule3Input,
+  Rule3OrganSystemAffinityEvidenceRegistry,
+  Rule3OrganSystemAnnotation,
+  Rule3OrganSystemEvidenceEntry,
+  Rule3Output,
+  Rule3StructuredFindingRefs,
+  Rule3UpstreamApplicability,
+} from './types.js';
+export {
+  RULE3_APPROVED_UI_LABEL,
+  RULE3_CONTRACT_DOCUMENT_VERSION,
+  RULE3_DISPLAY_TITLE,
+  RULE3_EVIDENCE_CATALOG_STATUS,
+  RULE3_INPUT_CONTRACT_VERSION,
+  RULE3_NOT_CLINICALLY_ACTIVATED_PRESCRIPTION,
+  RULE3_ORCHESTRATION_STATUS,
+  RULE3_OUTPUT_CONTRACT_VERSION,
+  RULE3_PRESCRIPTION_EFFECT,
+  RULE3_REAL_CLOSED_ORGAN_SYSTEM_CATALOG_STATUS,
+  RULE3_RULE_IDENTITY,
+  RULE3_RULE_NUMBER,
+  RULE3_RUNTIME_STATUS,
+} from './version.js';
