@@ -8,7 +8,7 @@ Isolated, deterministic nine-rule clinical orchestration for **synthetic validat
 
 1. Temperament (Prakriti) — historical EH_9 / Phase 5B alias; **EHAS2 current:** Temperament Engine / `TEMPERAMENT_ENGINE`; post-merge synthetic shadow evidence: [rules/rule-01-temperament-engine-implementation-evidence.md](./rules/rule-01-temperament-engine-implementation-evidence.md) (`RULE1_SHADOW_EVALUATOR_IMPLEMENTED`; orchestration **NOT_CONNECTED**; clinical activation **NONE**; medicine influence **NONE**; mappings **0**)
 2. Polarity — historical EH_9 / Phase 5B short alias; **EHAS2 current:** Polarity Engine / `POLARITY_ENGINE`; post-merge synthetic shadow evidence: [rules/rule-02-polarity-engine-implementation-evidence.md](./rules/rule-02-polarity-engine-implementation-evidence.md) (`RULE2_SHADOW_EVALUATOR_IMPLEMENTED`; orchestration **NOT_CONNECTED**; clinical activation **NONE**; medicine influence **NONE**; formula mutation **NONE**; mappings **0**; dashboard short **Polarity** alias unchanged)
-3. Organ / System Affinity  
+3. Organ / System Affinity — historical EH_9 / Phase 5B short alias; **EHAS2 current:** Organ-System Affinity Engine / `ORGAN_SYSTEM_AFFINITY`; post-merge synthetic shadow evidence: [rules/rule-03-organ-system-affinity-implementation-evidence.md](./rules/rule-03-organ-system-affinity-implementation-evidence.md) (`RULE3_SHADOW_EVALUATOR_IMPLEMENTED`; orchestration **NOT_CONNECTED**; clinical activation **NONE**; medicine influence **NONE**; formula mutation **NONE**; mappings **0**; dashboard short **Organ / System Affinity** alias unchanged)
 4. Potency  
 5. Monitoring, Follow-up & Post-Release Safety Surveillance
 6. Multi-Disease / Organ-System Triad  

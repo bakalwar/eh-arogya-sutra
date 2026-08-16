@@ -12,8 +12,9 @@
 | **Contract version** | `ehas2-rule3-contract-v1` |
 | **Input contract version** | `ehas2-rule3-input-v1` |
 | **Output contract version** | `ehas2-rule3-output-v1` |
-| **Implementation (current)** | `RULE3_SHADOW_EVALUATOR_NOT_IMPLEMENTED` · `RULE3_IMPLEMENTATION_NOT_AUTHORIZED` |
-| **Package** | `packages/rule3` **absent** · `@ehas2/rule3` **absent** |
+| **Implementation (current)** | `RULE3_SHADOW_EVALUATOR_IMPLEMENTED` · technical `READY_FOR_VALIDATION` (PR #104) — **not** clinical readiness |
+| **Package** | `packages/rule3` **present** · `@ehas2/rule3@0.1.0-shadow` / `evaluateRule3Shadow` |
+| **Post-merge evidence** | [rule-03-organ-system-affinity-implementation-evidence.md](./rule-03-organ-system-affinity-implementation-evidence.md) |
 | **Runtime** | `RULE3_ORCHESTRATION_NOT_CONNECTED` · `RULE3_CLINICAL_ACTIVATION_NONE` · `RULE3_MEDICINE_SELECTION_INFLUENCE_NONE` · `RULE3_FORMULA_MUTATION_NONE` · `RULE3_PRESCRIPTION_EFFECT_NONE` · `RULE3_PRODUCTION_RX_UNCHANGED` |
 | **Real validated organ-system mappings** | **`0`** |
 | **Evidence catalog** | `RULE3_EVIDENCE_CATALOG_NOT_CREATED` |
@@ -34,8 +35,8 @@
 - `RULE3_IDENTITY_ORGAN_SYSTEM_AFFINITY`
 - `RULE3_IDENTITY_OWNER_LOCKED`
 - `RULE3_CANONICAL_CONTRACT_DOCUMENTED`
-- `RULE3_SHADOW_EVALUATOR_NOT_IMPLEMENTED`
-- `RULE3_IMPLEMENTATION_NOT_AUTHORIZED`
+- `RULE3_SHADOW_EVALUATOR_IMPLEMENTED`
+- `RULE3_TECHNICAL_READY_FOR_VALIDATION`
 - `RULE3_REAL_VALIDATED_MAPPINGS_0`
 - `RULE3_EVIDENCE_CATALOG_NOT_CREATED`
 - `RULE3_REAL_CLOSED_ORGAN_SYSTEM_CATALOG_NOT_CREATED`
@@ -49,11 +50,13 @@
 - `RULE3_INDEPENDENT_OF_RULE5_C3E`
 - `NO_PAID_API_SERVICE_DEPENDENCY_OR_CERTIFICATE`
 
-**Historical / interface alias (R3-ID-02):** Phase 5B / EH_9 / `nineRules` / clinical-validation dashboard label **“Organ / System Affinity”** is a **historical / non-authoritative interface alias** only. Current owner-locked display name is **Organ-System Affinity Engine**; machine identity is **`ORGAN_SYSTEM_AFFINITY`**; approved UI label remains **Rule 3 — Active Organ Systems**. Dashboard / `nineRules.ts` rename is **not** authorized by this documentation tranche. Historical interface stub `affectsClinicalSelection: true` is **metadata drift, not clinical authority**; future separately authorized implementation should align metadata to `false` under R3-ID-04.
+**Historical / interface alias (R3-ID-02):** Phase 5B / EH_9 / clinical-validation dashboard label **“Organ / System Affinity”** is a **historical / non-authoritative interface alias** only. Current owner-locked display name is **Organ-System Affinity Engine**; machine identity is **`ORGAN_SYSTEM_AFFINITY`**; approved UI label remains **Rule 3 — Active Organ Systems**. Dashboard rename remains **not** authorized by the contract documentation tranche and was **not** performed in PR #104. Historical interface stub `affectsClinicalSelection: true` was **not** clinical authority; PR #104 aligned `nineRules` Rule 3 metadata to `affectsClinicalSelection: false` under R3-ID-04 shadow posture (technical only).
+
+**Historical (superseded for package readiness by PR #104):** contract-tranche tokens `RULE3_SHADOW_EVALUATOR_NOT_IMPLEMENTED` · `RULE3_IMPLEMENTATION_NOT_AUTHORIZED` and “`packages/rule3` absent” — retain only as pre-implementation history. See [rule-03-organ-system-affinity-implementation-evidence.md](./rule-03-organ-system-affinity-implementation-evidence.md).
 
 **Non-authority labels:** `RULE9_RULE_IDENTITIES[3]`, Rule 4 binding-port types, Phase 5C synthetic wrappers, and legacy `detect_systems` / `detect_active_systems` **cannot** redefine Rule 3 identity or clinical meaning.
 
-This document is the authoritative EHAS2 Rule 3 **focused canonical contract**. It does **not** create `packages/rule3`, invent a closed real organ-system catalog, invent real organ-system mappings, create an evidence catalog, connect orchestration, activate clinical selection, grant medicine-selection influence, mutate formulas, integrate Rule 4, execute proofs, or change production prescription output.
+This document is the authoritative EHAS2 Rule 3 **focused canonical contract**. The synthetic shadow package on main (PR #104) does **not** invent a closed real organ-system catalog, invent real organ-system mappings, create an evidence catalog, connect orchestration, activate clinical selection, grant medicine-selection influence, mutate formulas, integrate Rule 4, or change production prescription output.
 
 ---
 
@@ -99,9 +102,9 @@ Canonical cross-rule pointer: [../CLINICAL_PRODUCT_CONSTITUTION.md](../CLINICAL_
 | Historical interface alias | Organ / System Affinity (non-authoritative) |
 | Identity status | `RULE3_IDENTITY_OWNER_LOCKED` |
 | Contract status | `RULE3_CANONICAL_CONTRACT_DOCUMENTED` |
-| Evaluator | `RULE3_SHADOW_EVALUATOR_NOT_IMPLEMENTED` |
-| Implementation | `RULE3_IMPLEMENTATION_NOT_AUTHORIZED` |
-| Package | `packages/rule3` absent |
+| Evaluator | `RULE3_SHADOW_EVALUATOR_IMPLEMENTED` (technical shadow only) |
+| Implementation | Technical `READY_FOR_VALIDATION` (PR #104) — **not** clinical readiness |
+| Package | `packages/rule3` present · `@ehas2/rule3@0.1.0-shadow` |
 | Orchestration | `NOT_CONNECTED` |
 | Clinical activation | `NONE` |
 | Medicine-selection influence | `NONE` |
@@ -513,9 +516,9 @@ Rule 3 evidence supply must **not** itself issue or modify a prescription.
 
 ---
 
-## 15. Mandatory future proof matrix (P01–P18)
+## 15. Mandatory proof matrix (P01–P18)
 
-**Documentation targets only — do not execute in this tranche.**
+**Contract-documentation tranche historically labeled these as documentation targets only (“do not execute in this tranche”).** Focused P01–P18 execution landed in PR #104 (`@ehas2/rule3` tests). See [rule-03-organ-system-affinity-implementation-evidence.md](./rule-03-organ-system-affinity-implementation-evidence.md). Technical PASS ≠ clinical validation.
 
 | ID | Proof intent |
 |----|----------------|
@@ -538,22 +541,22 @@ Rule 3 evidence supply must **not** itself issue or modify a prescription.
 | **P17** | Fixed errors; PHI / path leakage prevention |
 | **P18** | Package / orchestration / activation / Rx boundaries |
 
-Mechanical count: **exactly 18**. Sequential and unique. Skipped ≠ PASS. **Do not execute** proofs in this documentation tranche.
+Mechanical count: **exactly 18**. Sequential and unique. Skipped ≠ PASS. Contract-documentation tranche historically recorded “do not execute” for P01–P18; **PR #104** executed the focused proof suite in `@ehas2/rule3` tests (see [rule-03-organ-system-affinity-implementation-evidence.md](./rule-03-organ-system-affinity-implementation-evidence.md)). Technical PASS ≠ clinical validation.
 
 ---
 
-## 16. Future implementation allowlist (do not create in this tranche)
+## 16. Implementation allowlist (historical contract-tranche note; executed by PR #104)
 
-Documented for a **later** separately authorized implementation PR only:
+The contract-documentation tranche documented the following as a **later** separately authorized implementation allowlist. **PR #104** created that technical shadow package under `R3_ORGAN_SYSTEM_AFFINITY_SYNTHETIC_SHADOW_IMPLEMENTATION_AUTHORIZED` and merged it to `main`. This section is retained as **historical allowlist memory**, not as a current “package absent” claim:
 
-- `packages/rule3/**`
+- `packages/rule3/**` (**present** on main after PR #104)
 - Root typecheck registration
 - Vitest registration
 - Workspace lockfile (Rule 3 workspace entry only)
 - Rule 3-only `nineRules` metadata alignment (`Organ-System Affinity Engine` / `affectsClinicalSelection: false`)
 - Rule 3-only phase5b / phase5c assertions
 
-**Excluded without separate owner authorization:** apps/dashboard mutation, Rule 4 adapter mutation, Rule 6/7/9 orchestration, datasets/catalog, closed real organ-system catalog, medicine registry edits, protected/C3E, legacy checkout, workflows/deployment, clinical activation, production Rx, paid services.
+**Still excluded without separate owner authorization:** apps/dashboard mutation, Rule 4 adapter mutation, Rule 6/7/9 orchestration, datasets/catalog, closed real organ-system catalog, medicine registry edits, protected/C3E, legacy checkout, workflows/deployment, clinical activation, production Rx, paid services.
 
 ---
 
@@ -561,7 +564,6 @@ Documented for a **later** separately authorized implementation PR only:
 
 This contract does **not** authorize:
 
-- Package / evaluator / tests
 - Real organ-system catalog
 - Real mappings / evidence rows
 - Candidate→active clinical promotion rule
@@ -576,20 +578,22 @@ This contract does **not** authorize:
 - Paid services
 - Deployment
 
+*(Historical note: “Package / evaluator / tests” was a contract-tranche non-claim before PR #104. The synthetic shadow package now exists under separate implementation authorization; clinical/runtime non-claims above remain current.)*
+
 ---
 
 ## 18. STOP
 
 **STOP** before:
 
-- Creating `packages/rule3`
-- Evaluator / tests implementation
-- Executing P01–P18
 - Mappings / catalog / closed real organ-system list creation
+- Candidate→active clinical promotion / normative clinical thresholds
 - Orchestration / activation / production connection
 - Rule 4 wiring
-- Dashboard / `nineRules.ts` mutation in this tranche
+- Dashboard rename (historical alias retained)
 - C3E / SAC / protected-source access
 - Legacy mutation / paid services / deployment
 
-Next authorized step after independent review + owner merge of this documentation: **separate** Rule 3 synthetic shadow implementation authorization (not granted here).
+*(Historical contract-tranche STOP items “Creating `packages/rule3`”, “Evaluator / tests implementation”, and “Executing P01–P18” were satisfied only as **technical shadow** work under separate PR #104 authorization — not as clinical readiness.)*
+
+Post-merge technical evidence: [rule-03-organ-system-affinity-implementation-evidence.md](./rule-03-organ-system-affinity-implementation-evidence.md). Next clinical/runtime steps require **separate** owner authorization.
