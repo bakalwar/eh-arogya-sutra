@@ -20,6 +20,8 @@ Rule 2 Polarity Engine canonical contract (`POLARITY_ENGINE`; identity/scope own
 
 Rule 3 Organ-System Affinity Engine canonical contract (`ORGAN_SYSTEM_AFFINITY`; identity/scope owner-locked; synthetic shadow evaluator **IMPLEMENTED** (`@ehas2/rule3` / `evaluateRule3Shadow`; PR #104); technical `READY_FOR_VALIDATION`; real organ-system mappings **0**; evidence catalog **NOT_CREATED**; no closed real organ-system catalog; production registry empty/fail-closed; formula mutation **NONE**; medicine-selection influence **NONE**; Rule 4 **not** connected; orchestration **NOT_CONNECTED**; clinical activation **NONE**; prescription effect **NONE**): [rules/rule-03-organ-system-affinity-contract.md](./rules/rule-03-organ-system-affinity-contract.md) (`R3_ID01_TO_ID05_RECOMMENDED_DECISIONS_APPROVED`). Post-merge shadow evidence: [rules/rule-03-organ-system-affinity-implementation-evidence.md](./rules/rule-03-organ-system-affinity-implementation-evidence.md) (`RULE3_SHADOW_EVALUATOR_IMPLEMENTED`). Frozen clinical specification (body preserved): [rules/rule-03-organ-system-affinity.md](./rules/rule-03-organ-system-affinity.md).
 
+Rule 4 Potency Engine focused identity/status contract (`POTENCY_ENGINE`; identity/scope owner-locked; `LIMITED_FREEZE`; `SHADOW_IMPLEMENTED_PHASES_1_TO_10` in `@ehas2/clinical-contracts` Rule 4 modules + Python mirror; standalone `packages/rule4` **absent**; technical `READY_FOR_VALIDATION`; canonical `affectsClinicalSelection: false`; TH-01…TH-04 **pending**; DA-01…DA-07 **not executable**; default `RULE4_ENGINE_MODE=off`; activation/Rx/production **not authorized**): [rules/rule-04-potency-engine-canonical-status-contract.md](./rules/rule-04-potency-engine-canonical-status-contract.md) (`R4_ID01_TO_R4_ID07_OWNER_DECISIONS_ACCEPTED`). Frozen clinical bodies unchanged: [rules/rule-04-SAC-003-freeze-clarification.md](./rules/rule-04-SAC-003-freeze-clarification.md) · [rules/rule-04-potency-engine-DRAFT.md](./rules/rule-04-potency-engine-DRAFT.md).
+
 Rule 6 post-merge shadow evidence pointer: [rules/rule-06-multi-disease-organ-system-triad-implementation-evidence.md](./rules/rule-06-multi-disease-organ-system-triad-implementation-evidence.md).
 
 Rule 6 relationship-data / evidence-intake contract (empty active registry; CE-OD-01…05; **no** real edges): [rules/rule-06-relationship-data-and-evidence-intake-contract.md](./rules/rule-06-relationship-data-and-evidence-intake-contract.md).
@@ -105,7 +107,7 @@ Future integration must use the verified versioned **nine-rule engine**.
 - No global case polarity on all formulas; BP/report/photo isolation per owner spec.
 - `case_polarity_summary` display-only; `formula_polarities` authoritative for downstream annotation consumers (not direct selection by Rule 2).
 - Empty real registry / fail-closed; medicine-registry `.polarity` is **not** Rule 2 disease-polarity evidence.
-- Potency and electricity selection: separate engines (**AUDIT_PENDING**).
+- Potency selection: separate Rule 4 **Potency Engine** (`POTENCY_ENGINE`; identity/status owner-locked — [rules/rule-04-potency-engine-canonical-status-contract.md](./rules/rule-04-potency-engine-canonical-status-contract.md)). Electricity selection remains a separate engine track (**AUDIT_PENDING**).
 - Focused canonical contract: [rules/rule-02-polarity-engine-contract.md](./rules/rule-02-polarity-engine-contract.md). Post-merge shadow evidence: [rules/rule-02-polarity-engine-implementation-evidence.md](./rules/rule-02-polarity-engine-implementation-evidence.md). Frozen clinical body: [rules/rule-02-polarity-engine.md](./rules/rule-02-polarity-engine.md).
 
 ### Rule 3 — Organ-System Affinity Engine (Phase 5R-3F freeze)
@@ -123,6 +125,10 @@ Future integration must use the verified versioned **nine-rule engine**.
 - Report/photo isolation per owner spec; ordinary photo must not set organ system.
 - Rule 3 may supply evidence downstream; it **must not** select medicine, potency, electricity, dosage, or final prescription.
 - Focused canonical contract: [rules/rule-03-organ-system-affinity-contract.md](./rules/rule-03-organ-system-affinity-contract.md) (`R3_ID01_TO_ID05_RECOMMENDED_DECISIONS_APPROVED`). Frozen clinical body: [rules/rule-03-organ-system-affinity.md](./rules/rule-03-organ-system-affinity.md).
+
+### Rule 4 — Potency Engine (identity / Limited Freeze / shadow status)
+
+**Status:** identity/scope **OWNER_LOCKED** (`POTENCY_ENGINE`) · focused identity/status contract **documented** · `LIMITED_FREEZE` (Q1–Q18; SAC-003) · `SHADOW_IMPLEMENTED_PHASES_1_TO_10` (in `@ehas2/clinical-contracts` Rule 4 modules + Python mirror; standalone `packages/rule4` **absent**) · technical `READY_FOR_VALIDATION` · canonical `affectsClinicalSelection: false` · TH-01…TH-04 **pending** · DA-01…DA-07 **not executable** · default `RULE4_ENGINE_MODE=off` · activation/Rx/production **not authorized**. Authority: [rules/rule-04-potency-engine-canonical-status-contract.md](./rules/rule-04-potency-engine-canonical-status-contract.md) (`R4_ID01_TO_R4_ID07_OWNER_DECISIONS_ACCEPTED`). Frozen clinical bodies (unchanged): [rules/rule-04-SAC-003-freeze-clarification.md](./rules/rule-04-SAC-003-freeze-clarification.md) · [rules/rule-04-potency-engine-DRAFT.md](./rules/rule-04-potency-engine-DRAFT.md) · [rules/rule-04-owner-decisions-DRAFT.md](./rules/rule-04-owner-decisions-DRAFT.md). Historical alias **Potency**; code metadata drift (`affectsClinicalSelection: true`) unresolved and **not** clinical authority.
 
 Every result must record:
 
