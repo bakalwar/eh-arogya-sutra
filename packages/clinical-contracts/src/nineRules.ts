@@ -48,9 +48,10 @@ export const NINE_RULE_DEFINITIONS = [
   },
   {
     ruleNumber: 3 as const,
-    ruleName: 'Organ / System Affinity',
+    /** Owner-locked identity ORGAN_SYSTEM_AFFINITY; synthetic technical shadow only; no real catalog/mappings; not production-connected. */
+    ruleName: 'Organ-System Affinity Engine',
     phase5bStatus: 'READY_FOR_VALIDATION' as ClinicalRuleStatus,
-    affectsClinicalSelection: true,
+    affectsClinicalSelection: false,
   },
   {
     ruleNumber: 4 as const,
