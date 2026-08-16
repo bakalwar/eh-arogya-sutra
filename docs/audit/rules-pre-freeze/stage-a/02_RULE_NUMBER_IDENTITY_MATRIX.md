@@ -6,15 +6,20 @@
 
 ## Rule 4 — unified Stage A classification (SAC-003)
 
-| Field | Stage A value |
-|-------|----------------|
-| Identity | **IDENTITY_CANDIDATE_ONLY** |
-| Specification authority | **NORMATIVE_CANDIDATE** |
-| Freeze status | **FREEZE_STATUS_CONFLICT** |
-| Owner decision | **OWNER_DECISION_REQUIRED** |
-| Runtime | **SHADOW_ONLY** / **PRODUCTION_NOT_CONNECTED** |
+| Field | Current (post R4-ID-01…R4-ID-07) | Historical Stage A (superseded for identity/status) |
+|-------|----------------------------------|-----------------------------------------------------|
+| Identity | **IDENTITY_OWNER_LOCKED** (`POTENCY_ENGINE`) | **IDENTITY_CANDIDATE_ONLY** — *Historical (superseded by R4-ID-01…R4-ID-07 owner lock)* |
+| Display | **Potency Engine** | Short alias **Potency** remains historical/non-authoritative |
+| Specification authority | Focused identity/status contract documented | **NORMATIVE_CANDIDATE** (Stage A-era) |
+| Freeze status | **LIMITED_FREEZE** (Q1–Q18 per SAC-003; TH/DA excluded) | **FREEZE_STATUS_CONFLICT** — *Historical (superseded by R4-ID-01…R4-ID-07 owner lock + SAC-003 Limited Freeze reading)* |
+| Owner decision | `R4_ID01_TO_R4_ID07_OWNER_DECISIONS_ACCEPTED` | **OWNER_DECISION_REQUIRED** (Stage A-era) |
+| Runtime | **SHADOW_IMPLEMENTED_PHASES_1_TO_10** · default `RULE4_ENGINE_MODE=off` · **PRODUCTION_NOT_CONNECTED** | **SHADOW_ONLY** / **PRODUCTION_NOT_CONNECTED** |
+| Technical status | technical `READY_FOR_VALIDATION` — **not** clinical readiness | — |
+| Packaging | `packages/rule4` **absent**; shadow home = `packages/clinical-contracts/src/rule4/**` + Python mirror | — |
 
-Do **not** call Rule 4 formally frozen in Stage A conclusions. Status table “DOCUMENTATION FROZEN” = **CONFLICTING_HISTORICAL_STATUS_CLAIM**.
+Focused canonical identity/status contract: [rule-04-potency-engine-canonical-status-contract.md](../../../clinical/rules/rule-04-potency-engine-canonical-status-contract.md).
+
+Do **not** treat Stage A-era “not formally frozen” wording as reopening Q1–Q18. Limited Freeze + SAC-003 govern clinical documentation freeze; this matrix row now records **identity owner-lock** separately from production connection.
 
 **Authority EOF read:** `docs/clinical/rules/rule-04-owner-decisions-DRAFT.md` — **complete** (5707 lines); internal **NOT_FROZEN** vs **FROZEN** markers documented in `01_…` (SAC-003).
 
@@ -60,7 +65,7 @@ Read-only branch facts (`git` on local objects):
 | 1 | Temperament Engine (`TEMPERAMENT_ENGINE`) | **IDENTITY_OWNER_LOCKED** (supersedes historical Stage A label-only row; focused canonical contract: docs/clinical/rules/rule-01-temperament-engine-contract.md) |
 | 2 | Polarity Engine (`POLARITY_ENGINE`) | **IDENTITY_OWNER_LOCKED** (supersedes historical Stage A `IDENTITY_OWNER_APPROVED` label-only row; focused canonical contract: docs/clinical/rules/rule-02-polarity-engine-contract.md; `R2_ID01_TO_ID05_RECOMMENDED_DECISIONS_APPROVED`) |
 | 3 | Organ-System Affinity Engine (`ORGAN_SYSTEM_AFFINITY`) | **IDENTITY_OWNER_LOCKED** (supersedes historical Stage A `IDENTITY_OWNER_APPROVED`; focused canonical contract: docs/clinical/rules/rule-03-organ-system-affinity-contract.md) |
-| 4 | Potency | **IDENTITY_CANDIDATE_ONLY** + **FREEZE_STATUS_CONFLICT** |
+| 4 | Potency Engine (`POTENCY_ENGINE`) | **IDENTITY_OWNER_LOCKED** (supersedes historical Stage A `IDENTITY_CANDIDATE_ONLY` + `FREEZE_STATUS_CONFLICT` — *Historical (superseded by R4-ID-01…R4-ID-07 owner lock)*); focused identity/status contract: docs/clinical/rules/rule-04-potency-engine-canonical-status-contract.md; Limited Freeze Q1–Q18 / TH·DA pending per SAC-003; shadow Phases 1–10 retained in clinical-contracts (no `@ehas2/rule4`) |
 | 5 | Dosage (contracts) vs Monitoring (unmerged) | **IDENTITY_CONFLICT** |
 | 6 | Multi-Disease / Organ-System Triad (MULTI_DISEASE_ORGAN_SYSTEM_TRIAD) | **IDENTITY_OWNER_LOCKED** (supersedes historical Stage A IDENTITY_CANDIDATE_ONLY) — canonical contract: docs/clinical/rules/rule-06-multi-disease-organ-system-triad-contract.md |
 | 7 | External Use Routes (`EXTERNAL_USE_ROUTES`) | **IDENTITY_OWNER_LOCKED** (supersedes historical Stage A IDENTITY_CANDIDATE_ONLY) — canonical contract: docs/clinical/rules/rule-07-external-use-routes-contract.md |
