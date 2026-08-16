@@ -1,9 +1,9 @@
 # Rule 3 — Test Requirements (Post-Freeze)
 
-**Rule 3 EHAS2 runtime:** NOT_IMPLEMENTED / NOT_AUTHORIZED
+**Rule 3 EHAS2 technical package:** synthetic shadow evaluator **IMPLEMENTED** (`@ehas2/rule3`; PR #104) — technical `READY_FOR_VALIDATION` only; clinical/runtime activation **NOT_AUTHORIZED**
 **Legacy direct tests:** Partial — `test_s1_gender_anatomy_gate.py`, `test_s1_safe_keyword_policy.py` exercise `detect_systems` only; **LEGACY-PROVEN** (does not prove EHAS2 owner spec)
 
-**Canonical package proof matrix (P01–P18):** [rule-03-organ-system-affinity-contract.md](./rule-03-organ-system-affinity-contract.md) §15 — documentation only in the contract tranche; do not execute until separately authorized implementation. Owner scenario intent below remains preserved.
+**Canonical package proof matrix (P01–P18):** [rule-03-organ-system-affinity-contract.md](./rule-03-organ-system-affinity-contract.md) §15 — executed in `@ehas2/rule3` focused tests under PR #104 (see [rule-03-organ-system-affinity-implementation-evidence.md](./rule-03-organ-system-affinity-implementation-evidence.md)). Owner scenario intent below remains preserved. Technical PASS ≠ clinical validation.
 
 ---
 
@@ -79,6 +79,6 @@
 |---------|-----|
 | Owner scenarios | OWNER-APPROVED |
 | Legacy partial tests | LEGACY-PROVEN |
-| EHAS2 test implementation | IMPLEMENTATION-PENDING |
+| EHAS2 test implementation | IMPLEMENTED in `@ehas2/rule3` focused suite (PR #104); technical only |
 
 Test PASS ≠ clinical correctness.

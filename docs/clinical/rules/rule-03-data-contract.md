@@ -1,11 +1,12 @@
 # Rule 3 — Data Contract (Phase 5R-3F Freeze)
 
-**Runtime:** IMPLEMENTATION-PENDING / **NOT_AUTHORIZED**
-**Authority:** OWNER-APPROVED field semantics
+**Technical package:** synthetic shadow evaluator **IMPLEMENTED** (`@ehas2/rule3`; PR #104) — technical only
+**Clinical/runtime integration:** **NOT_AUTHORIZED** / orchestration **NOT_CONNECTED** / activation **NONE**
+**Authority:** OWNER-APPROVED field semantics (freeze body preserved)
 
-**Current-facing package contract (schemas / outcomes / P-matrix):** [rule-03-organ-system-affinity-contract.md](./rule-03-organ-system-affinity-contract.md) (`ORGAN_SYSTEM_AFFINITY` · `R3_ID01_TO_ID05_RECOMMENDED_DECISIONS_APPROVED`). This freeze document preserves **field-semantics examples** only; it is **not** by itself an implementation-grade package contract. Example scores / confidences are **non-normative**. Historical example organ-system labels are **not** a closed approved catalog (`R3-ID-05`).
+**Current-facing package contract (schemas / outcomes / P-matrix):** [rule-03-organ-system-affinity-contract.md](./rule-03-organ-system-affinity-contract.md) (`ORGAN_SYSTEM_AFFINITY` · `R3_ID01_TO_ID05_RECOMMENDED_DECISIONS_APPROVED`). Post-merge technical evidence: [rule-03-organ-system-affinity-implementation-evidence.md](./rule-03-organ-system-affinity-implementation-evidence.md). This freeze document preserves **field-semantics examples** only; it is **not** by itself an orchestration/activation authority. Example scores / confidences are **non-normative**. Historical example organ-system labels are **not** a closed approved catalog (`R3-ID-05`).
 
-Rule 3 output is the **organ/system Single Source of Truth** (when implemented). Downstream engines consume this payload; Rule 3 must not embed medicine IDs, potency, electricity, or dosage.
+Rule 3 technical package defines the shadow organ/system annotation envelope. **Clinical/runtime** consumption of Rule 3 as production Single Source of Truth remains **pending / not authorized**. Downstream engines must not treat this freeze as live SoT wiring. Rule 3 must not embed medicine IDs, potency, electricity, or dosage.
 
 ---
 

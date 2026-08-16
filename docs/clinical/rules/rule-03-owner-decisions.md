@@ -1,10 +1,11 @@
 # Rule 3 — Owner Decisions (Phase 5R-3F Freeze)
 
 **Authority:** OWNER-APPROVED
-**EHAS2 code:** NOT_IMPLEMENTED (this freeze register does not activate runtime)
+**EHAS2 technical package:** synthetic shadow evaluator **IMPLEMENTED** (`@ehas2/rule3` / `evaluateRule3Shadow`; PR #104) — technical `READY_FOR_VALIDATION` only; this freeze register still does **not** activate clinical/runtime selection
 **Forensic basis:** Phase 5R-3 (`%TEMP%\ehas2_rule3_forensic_audit\`)
 
 **Current-facing canonical contract:** [rule-03-organ-system-affinity-contract.md](./rule-03-organ-system-affinity-contract.md) (`ORGAN_SYSTEM_AFFINITY` · `R3_ID01_TO_ID05_RECOMMENDED_DECISIONS_APPROVED` · `R3_ORGAN_SYSTEM_AFFINITY_CANONICAL_CONTRACT_DOCUMENTATION_AUTHORIZED`)
+**Post-merge technical evidence:** [rule-03-organ-system-affinity-implementation-evidence.md](./rule-03-organ-system-affinity-implementation-evidence.md) (`RULE3_SHADOW_EVALUATOR_IMPLEMENTED`)
 
 ---
 
@@ -17,7 +18,7 @@ Combined token: `R3_ID01_TO_ID05_RECOMMENDED_DECISIONS_APPROVED`
 | **R3-ID-01** | `R3_ID01_ACCEPT_ORGAN_SYSTEM_AFFINITY_TOKEN` | Machine identity `ORGAN_SYSTEM_AFFINITY`; display **Organ-System Affinity Engine** | Package / mappings / orch / Rx |
 | **R3-ID-02** | `R3_ID02_DISPLAY_ALIAS_POLICY_LOCKED` | Canonical display Organ-System Affinity Engine; UI **Rule 3 — Active Organ Systems**; short “Organ / System Affinity” = historical/interface alias | Dashboard rename in contract docs tranche |
 | **R3-ID-03** | `R3_ID03_EMPTY_REGISTRY_FAIL_CLOSED_SYNTHETIC_ONLY` | Real registry empty; mappings **0**; catalog **NOT_CREATED**; synthetic-only; fail-closed | Catalog inventing / auto-promotion |
-| **R3-ID-04** | `R3_ID04_SHADOW_INFLUENCE_NONE` | Annotation/evidence-supply only; medicine influence **NONE**; orch **NOT_CONNECTED**; activation/Rx **NONE**; future `affectsClinicalSelection: false` | Live selection / production effect |
+| **R3-ID-04** | `R3_ID04_SHADOW_INFLUENCE_NONE` | Annotation/evidence-supply only; medicine influence **NONE**; orch **NOT_CONNECTED**; activation/Rx **NONE**; `affectsClinicalSelection: false` aligned in `nineRules` via PR #104 (technical only) | Live selection / production effect |
 | **R3-ID-05** | `R3_ID05_SYSTEM_VOCAB_FAIL_CLOSED_NO_CATALOG_YET` | No closed real organ-system catalog; unknown real tokens fail closed; `SYS_SYN_*` / `EVID_SYN_*` / `CASE_SYN_*` fixtures only | Promoting historical examples into approved catalog |
 
 Full normative register: [rule-03-organ-system-affinity-contract.md](./rule-03-organ-system-affinity-contract.md) §2.
@@ -33,7 +34,7 @@ Full normative register: [rule-03-organ-system-affinity-contract.md](./rule-03-o
 | Machine identity | `ORGAN_SYSTEM_AFFINITY` | OWNER-APPROVED (`R3-ID-01`) |
 | UI name | Rule 3 — Active Organ Systems | OWNER-APPROVED |
 | Historical interface alias | Organ / System Affinity | OWNER-APPROVED (`R3-ID-02`; non-authoritative) |
-| Implementation | NOT_IMPLEMENTED / NOT_AUTHORIZED | IMPLEMENTATION-PENDING (package absent; contract documented) |
+| Implementation | Synthetic shadow **IMPLEMENTED** (PR #104); clinical/runtime activation **NOT_AUTHORIZED** | Technical package present; clinical readiness not granted |
 | Legacy status | LIVE_AND_AUTHORITATIVE_BUT_CONFLICTED | LEGACY-PROVEN |
 | Clinical authority | OWNER-APPROVED specification | OWNER-APPROVED |
 | Organ-System Triad rule number | AUDIT_PENDING (not Rule 3) | OWNER-APPROVED |
