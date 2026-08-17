@@ -327,6 +327,49 @@ This document does **not** authorize:
 
 ---
 
+## 7. Legacy Anti-Patterns That Must Never Re-enter EHAS2
+
+**Classification:** DOCUMENTATION_ONLY — negative constraints for future implementation. This section does **not** activate selection, import mappings or datasets, add tests or packages, change CQ-001A identity, execute DA-07, connect orchestration, or rewrite E2E-01…E2E-14.
+
+Legacy clinic-path existence is **not** EHAS2 authority. The following prohibitions are evidence-backed and must not re-enter EHAS2.
+
+### 7.1 Prohibitions
+
+1. **Tablet A** must not copy, subset, or use a derived formula from Oral Mixtures A–E.
+2. **Presentation / UI / renderer** must not fill empty Tablet B from Tablet A or from an oral formula.
+3. Completing the required **3 / 4 / 5** oral-mixture count must not add score-list filler, zero-evidence medicines, or silent defaults.
+4. **C11** must not return to canonical identity or selection. Historical v1 snapshot only; no replacement or remapping (CQ-001A unchanged).
+5. **BP alone** must not determine polarity, temperament, organ, potency, or medicine selection.
+6. Missing organ / root evidence must not be coerced into **METABOLIC**, **GYNE**, or any other default system.
+7. An unmatched / ghost disease, routing label, or chief-complaint label alone must not create a prescription.
+8. Dictionary order, registry order, or equal-score list order must not be the clinical tie winner.
+9. A keyword, raw OCR text, photo, or report label alone must not be a medicine / formula / potency / dose selector.
+10. UI, summary renderer, or presentation adapter must not invent or copy any medicine or formula.
+11. Legacy `calc_dosage` age overwrite and silent **5 / 15-drop** defaults must not enter EHAS2.
+12. Legacy `potency_logic`, stale `potency_rules`, legacy **D100 / D200** shortcut paths, and keyword→potency must not be EHAS2 potency authority.
+13. External medicine may come only from **approved route / site evidence**. Fixed keyword MM1F sets and oral-derived external fallbacks are prohibited.
+14. Legacy hardcoded mapping dictionaries, scoring weights, and the **116,284-row** disease dataset must not be copied or imported as EHAS2 clinical authority.
+15. Same-system repetition or formula duplication must not be used merely to fill slot count.
+16. Missing evidence must yield **UNRESOLVED** / no slot — never a false complete summary.
+
+### 7.2 Future implementation acceptance tests (not added here)
+
+When implementation is **separately** authorized, acceptance tests must at least prove:
+
+- Tablet A identity is independent of Oral
+- when Tablet B is empty, the UI is also empty and shows a reason
+- no filler medicines
+- no C11
+- no BP-only selection
+- no METABOLIC default
+- no renderer mutation
+- no dose overwrite
+- unknown disease fails closed
+
+This annex does **not** add those tests now.
+
+---
+
 ## Status tokens (current)
 
 - `EHAS2_E2E_CANONICAL_WORKFLOW_CONTRACT_DOCUMENTED`
@@ -336,4 +379,5 @@ This document does **not** authorize:
 - `EHAS2_E2E_FINAL_APPROVAL_REQUIRED_FOR_ISSUE`
 - `EHAS2_E2E_CQ001A_IDENTITY_38_C11_EXCLUDED`
 - `EHAS2_E2E_DA07_ADULT_PROPOSAL_NOT_EXECUTABLE`
+- `EHAS2_E2E_LEGACY_ANTI_PATTERNS_DOCUMENTED`
 - `NO_PAID_API_SERVICE_DEPENDENCY_OR_CERTIFICATE`
