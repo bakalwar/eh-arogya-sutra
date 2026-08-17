@@ -144,10 +144,6 @@ CREATE TABLE clinical_evidence_extraction_candidates (
       'object_key', 'objectKey', 'object_url', 'path', 'url', 'filename',
       'storage', 'bucket', 'public_url', 'presigned_url'
     ])
-    AND (
-      SELECT bool_and(k IN ('page', 'blockIndex', 'bbox'))
-      FROM jsonb_object_keys(source_locator) AS k
-    )
   ),
   CONSTRAINT clinical_evidence_extraction_candidates_heading_bound CHECK (
     candidate_type <> 'REPORT_HEADING' OR char_length(raw_text) <= 200

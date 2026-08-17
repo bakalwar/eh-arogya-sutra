@@ -1,12 +1,13 @@
 import type { TenantContext, TransactionContext } from '../tenantContext.js';
-import type {
-  CandidateStatus,
-  CandidateType,
-  ExtractionCandidateDto,
-  ExtractionMethod,
-  LimitationCode,
-  ScriptHint,
-  SourceLocator,
+import {
+  assertNoStorageInLocator,
+  type CandidateStatus,
+  type CandidateType,
+  type ExtractionCandidateDto,
+  type ExtractionMethod,
+  type LimitationCode,
+  type ScriptHint,
+  type SourceLocator,
 } from '@ehas2/evidence-extract';
 
 export type ExtractionRunRecord = {
@@ -209,6 +210,12 @@ export class PgExtractionRepository {
   ): Promise<ExtractionCandidateDto[]> {
     const out: ExtractionCandidateDto[] = [];
     for (const c of candidates) {
+      assertNoStorageInLocator(c.sourceLocator);
+      const locator: SourceLocator = {
+        page: c.sourceLocator.page,
+        ...(c.sourceLocator.blockIndex == null ? {} : { blockIndex: c.sourceLocator.blockIndex }),
+        ...(c.sourceLocator.bbox ? { bbox: c.sourceLocator.bbox } : {}),
+      };
       const r = await tx.query(
         `INSERT INTO clinical_evidence_extraction_candidates (
            extraction_run_id, organization_id, clinic_id, patient_id, consultation_id,
@@ -227,7 +234,7 @@ export class PgExtractionRepository {
           c.consultationId,
           c.evidenceItemId,
           c.pageNumber,
-          JSON.stringify(c.sourceLocator),
+          JSON.stringify(locator),
           c.candidateType,
           c.rawText,
           c.normalizedText,
