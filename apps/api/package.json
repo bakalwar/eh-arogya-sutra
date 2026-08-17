@@ -14,6 +14,7 @@
   "dependencies": {
     "@ehas2/config": "*",
     "@ehas2/database": "*",
+    "@ehas2/evidence-ingest": "*",
     "@ehas2/observability": "*",
     "@ehas2/security": "*",
     "@ehas2/management-contracts": "*",

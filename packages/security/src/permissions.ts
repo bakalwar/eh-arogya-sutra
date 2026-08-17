@@ -18,6 +18,8 @@ export const Permission = {
   PrescriptionRead: 'prescription.read',
   PrescriptionReview: 'prescription.review',
   ReportMetadataRead: 'report.metadata.read',
+  EvidenceIngest: 'evidence.ingest',
+  EvidenceMetadataRead: 'evidence.metadata.read',
   ClinicConfigWrite: 'clinic.config.write',
   /** Phase 3D — doctor self-service professional profile (not management safe-view). */
   DoctorProfileRead: 'doctor.profile.read',
@@ -90,6 +92,8 @@ const DOCTOR_PERMISSIONS: readonly PermissionName[] = [
   Permission.PrescriptionRead,
   Permission.PrescriptionReview,
   Permission.ReportMetadataRead,
+  Permission.EvidenceIngest,
+  Permission.EvidenceMetadataRead,
   Permission.DoctorProfileRead,
   Permission.DoctorProfileWrite,
   Permission.ClinicProfileRead,
@@ -277,6 +281,8 @@ export function assertNoManagementPhiByDefault(role: PlatformRoleName): boolean 
     !perms.includes(Permission.DoctorProfileWrite) &&
     !perms.includes(Permission.ClinicProfileWrite) &&
     !perms.includes(Permission.ClinicHoursWrite) &&
+    !perms.includes(Permission.EvidenceIngest) &&
+    !perms.includes(Permission.EvidenceMetadataRead) &&
     !perms.includes(Permission.PatientPhiBreakGlass) &&
     !perms.includes(Permission.SuperAdminControlPlane) &&
     !perms.includes(Permission.OpsSecurityRead)

@@ -76,6 +76,25 @@ export async function withTenantTransaction<T>(
   }
 }
 
+/** Recover from unique violations without aborting the outer tenant transaction (25P02). */
+export async function runInSavepoint<T>(
+  tx: TransactionContext,
+  name: string,
+  fn: () => Promise<T>,
+): Promise<T> {
+  const ident = name.replace(/[^A-Za-z0-9_]/g, '_');
+  await tx.query(`SAVEPOINT ${ident}`);
+  try {
+    const out = await fn();
+    await tx.query(`RELEASE SAVEPOINT ${ident}`);
+    return out;
+  } catch (err) {
+    await tx.query(`ROLLBACK TO SAVEPOINT ${ident}`);
+    await tx.query(`RELEASE SAVEPOINT ${ident}`);
+    throw err;
+  }
+}
+
 /** Admin/migrator connection without tenant GUC (schema ops only). */
 export async function withAdminClient<T>(
   fn: (query: TransactionContext['query']) => Promise<T>,

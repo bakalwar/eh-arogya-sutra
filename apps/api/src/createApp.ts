@@ -17,6 +17,9 @@ import { requirePermission, type AuthedRequest } from './middleware/authorizatio
 import { sendError } from './http/errors.js';
 import { registerProfileRoutes, type ProfileRouteDeps } from './routes/profiles.js';
 import { registerAuthRoutes, type AuthRouteDeps } from './routes/auth.js';
+import { registerPatientRoutes, type PatientRouteDeps } from './routes/patients.js';
+import { registerConsultationRoutes, type ConsultationRouteDeps } from './routes/consultations.js';
+import { registerEvidenceRoutes, type EvidenceRouteDeps } from './routes/evidence.js';
 import type { TenantContextResolver } from './middleware/tenantBridge.js';
 
 export type CreateAppDeps = {
@@ -33,6 +36,10 @@ export type CreateAppDeps = {
   doctors?: ProfileRouteDeps['doctors'];
   clinics?: ProfileRouteDeps['clinics'];
   memberships?: ProfileRouteDeps['memberships'];
+  patients?: PatientRouteDeps['patients'];
+  consultations?: ConsultationRouteDeps['consultations'];
+  intake?: ConsultationRouteDeps['intake'];
+  evidence?: EvidenceRouteDeps['evidence'];
   auth?: AuthRouteDeps['auth'];
   allowedOrigins?: string[];
 };
@@ -135,6 +142,10 @@ export function createApp(deps: CreateAppDeps = {}) {
       patientDatabase: false,
       doctorClinicProfileApi: true,
       profileUploads: false,
+      evidenceIngestFoundation: true,
+      ocr: false,
+      productionObjectStore: false,
+      malwareScanner: false,
       passkeys: 'PASSKEY_NOT_CONNECTED',
       database,
       databaseCode: database === 'DATABASE_NOT_INSTALLED' ? 'DATABASE_NOT_INSTALLED' : database,
@@ -168,6 +179,11 @@ export function createApp(deps: CreateAppDeps = {}) {
         patientPersistence: false,
         profileApi: true,
         profileUploads: false,
+        evidenceIngestFoundation: true,
+        ocr: false,
+        clinicalEngine: false,
+        productionObjectStore: false,
+        malwareScanner: false,
         passkeys: 'PASSKEY_NOT_CONNECTED',
       },
       requestId: req.requestId,
@@ -187,19 +203,22 @@ export function createApp(deps: CreateAppDeps = {}) {
     memberships: deps.memberships,
   });
 
-  app.get(
-    `${EHAS2_API_NAMESPACE}/patients`,
-    requirePermission(Permission.PatientRead),
-    (req: RequestWithId, res) => {
-      sendError(
-        res,
-        501,
-        'NOT_IMPLEMENTED',
-        'Patient HTTP persistence is not implemented (Phase 4A auth core only)',
-        req.requestId ?? 'unknown',
-      );
-    },
-  );
+  const resolveTenant =
+    deps.resolveTenantContext ?? ((req) => (req as RequestWithId).sessionTenant ?? null);
+
+  registerPatientRoutes(app, {
+    resolveTenantContext: resolveTenant,
+    patients: deps.patients,
+  });
+  registerConsultationRoutes(app, {
+    resolveTenantContext: resolveTenant,
+    consultations: deps.consultations,
+    intake: deps.intake,
+  });
+  registerEvidenceRoutes(app, {
+    resolveTenantContext: resolveTenant,
+    evidence: deps.evidence,
+  });
 
   app.use(`${EHAS2_API_NAMESPACE}/analysis`, (req: RequestWithId, res) => {
     sendError(
@@ -277,14 +296,14 @@ export function createApp(deps: CreateAppDeps = {}) {
     );
   });
 
-  const isProd = (process.env.EHAS2_NODE_ENV ?? process.env.NODE_ENV) === 'production';
   app.use((err: unknown, req: RequestWithId, res: Response, _next: NextFunction) => {
     const requestId = req.requestId ?? 'unknown';
-    if (!isProd && err instanceof Error) {
-      logInfo('api_error', { requestId, message: err.message });
-    } else {
-      logInfo('api_error', { requestId, message: 'internal_error' });
+    const typed = err as { type?: string; status?: number };
+    if (typed?.type === 'entity.too.large' || typed?.status === 413) {
+      sendError(res, 413, 'PAYLOAD_TOO_LARGE', 'Upload exceeds size limit', requestId);
+      return;
     }
+    logInfo('api_error', { requestId, message: 'internal_error' });
     sendError(res, 500, 'INTERNAL_ERROR', 'Internal server error', requestId);
   });
 

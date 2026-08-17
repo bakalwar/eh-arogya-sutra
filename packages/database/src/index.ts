@@ -39,7 +39,13 @@ export {
   assertProfileAccessContext,
   assertClinicAdminRole,
 } from './tenantContext.js';
-export { getPool, closePool, withTenantTransaction, withAdminClient } from './pool.js';
+export {
+  getPool,
+  closePool,
+  withTenantTransaction,
+  withAdminClient,
+  runInSavepoint,
+} from './pool.js';
 export {
   migrateUp,
   migrateDownLast,
@@ -87,6 +93,7 @@ export {
   PgSummarySnapshotRepository,
   PgReportFindingRepository,
   PgAuditEventRepository,
+  assertAuditMetadataSafe,
   UNSCOPED_PATIENT_METHODS_FORBIDDEN,
 } from './repositories/postgres.js';
 export {
@@ -97,6 +104,22 @@ export {
 export { PgIdempotencyRepository } from './repositories/idempotency.js';
 export { PatientService, patientService } from './services/patientService.js';
 export { ConsultationService, consultationService } from './services/consultationService.js';
+export {
+  ConsultationIntakeService,
+  consultationIntakeService,
+} from './services/consultationIntakeService.js';
+export type { ConsultationIntakePatch } from './services/consultationIntakeService.js';
+export { EvidenceService, evidenceService } from './services/evidenceService.js';
+export type { EvidenceServiceDeps } from './services/evidenceService.js';
+export { PgEvidenceRepository } from './repositories/evidence.js';
+export type { EvidenceItemRecord, EvidenceJobRecord } from './repositories/evidence.js';
+export { PgConsultationIntakeRepository } from './repositories/consultationIntake.js';
+export type {
+  ConsultationIntakeBundle,
+  VitalsIntake,
+  SymptomIntake,
+  ClinicalContextIntake,
+} from './repositories/consultationIntake.js';
 export {
   DoctorProfileService,
   ClinicProfileService,

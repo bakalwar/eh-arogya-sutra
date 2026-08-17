@@ -1,5 +1,9 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": { "outDir": "dist", "rootDir": "src", "composite": true },
-  "references": [{ "path": "../../packages/observability" }]
+  "references": [
+    { "path": "../../packages/observability" },
+    { "path": "../../packages/database" },
+    { "path": "../../packages/evidence-ingest" }
+  ]
 }

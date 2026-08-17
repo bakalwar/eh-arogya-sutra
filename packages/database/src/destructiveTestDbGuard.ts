@@ -31,6 +31,7 @@ export const ISOLATED_TEST_PG_ALLOWLIST_DATABASES = [
   'ehas2_phase3c_test',
   'ehas2_phase3d_test',
   'ehas2_phase4a_preflight',
+  'ehas2_phase_evidence_test',
 ] as const;
 
 export const ISOLATED_TEST_PG_ALLOWED_PORT = '55432';

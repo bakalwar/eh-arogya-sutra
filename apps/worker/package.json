@@ -10,6 +10,8 @@
     "lint": "eslint src"
   },
   "dependencies": {
+    "@ehas2/database": "*",
+    "@ehas2/evidence-ingest": "*",
     "@ehas2/observability": "*"
   }
 }
