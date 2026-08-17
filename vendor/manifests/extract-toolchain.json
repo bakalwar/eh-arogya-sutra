@@ -1,0 +1,46 @@
+{
+  "schemaVersion": "f3b-1",
+  "pipelineConfigVersion": "f3b-pipeline-1.0.0",
+  "pdfjs": {
+    "name": "pdfjs-dist",
+    "version": "4.10.38",
+    "license": "Apache-2.0",
+    "licenseUrl": "https://raw.githubusercontent.com/mozilla/pdf.js/master/LICENSE",
+    "registryUrl": "https://registry.npmjs.org/pdfjs-dist/4.10.38",
+    "nodeEngines": ">=20"
+  },
+  "canvas": {
+    "name": "@napi-rs/canvas",
+    "version": "0.1.80",
+    "license": "MIT",
+    "registryUrl": "https://registry.npmjs.org/@napi-rs/canvas/0.1.80",
+    "optional": true,
+    "purpose": "Bounded PDF page rasterization for OCR fallback only"
+  },
+  "tesseract": {
+    "version": "5.5.3",
+    "license": "Apache-2.0",
+    "licenseUrl": "https://raw.githubusercontent.com/tesseract-ocr/tesseract/main/LICENSE",
+    "sourceTag": "5.5.3",
+    "sourceUrl": "https://github.com/tesseract-ocr/tesseract/releases/tag/5.5.3",
+    "versionOutputMustContain": "5.5.3"
+  },
+  "tessdataFast": {
+    "repository": "https://github.com/tesseract-ocr/tessdata_fast",
+    "commit": "0524a178a2846d890906375d0988c4d844b1e124",
+    "license": "Apache-2.0",
+    "licenseUrl": "https://raw.githubusercontent.com/tesseract-ocr/tessdata/main/LICENSE",
+    "languages": {
+      "eng": {
+        "file": "eng.traineddata",
+        "downloadUrl": "https://github.com/tesseract-ocr/tessdata_fast/raw/0524a178a2846d890906375d0988c4d844b1e124/eng.traineddata",
+        "sha256": "f05f14b01d3f85883cb0a35bf26bad973d8ce32641d5efb218cd522a69fa2343"
+      },
+      "hin": {
+        "file": "hin.traineddata",
+        "downloadUrl": "https://github.com/tesseract-ocr/tessdata_fast/raw/0524a178a2846d890906375d0988c4d844b1e124/hin.traineddata",
+        "sha256": "579e006fcfbeaf498bd315e9ac260fc79b127b1be6082fda904ad9d390c45c14"
+      }
+    }
+  }
+}

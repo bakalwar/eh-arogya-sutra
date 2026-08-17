@@ -55,6 +55,15 @@ jobs:
           done
       - name: Install (lockfile)
         run: npm ci
+      - name: Install tesseract build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            autoconf automake libtool pkg-config \
+            libpng-dev libjpeg-dev libtiff-dev zlib1g-dev \
+            libleptonica-dev curl git
+      - name: Bootstrap extract tools
+        run: npm run bootstrap:extract-tools
       - name: Bootstrap clinical extract tools
         run: npm run bootstrap:clinical-extract
       - name: Boundary verification
@@ -77,8 +86,19 @@ jobs:
       - name: F3A extraction candidate selector firewall
         run: |
           set -e
-          if grep -R -E '@ehas2/rule[1-9]|tesseract|pdf-parse|pdfjs|analyzeComplete|LibreTranslate' packages/evidence-extract/src --exclude=types.ts packages/database/src/repositories/extraction.ts apps/worker/src/jobs/extractCandidates.ts; then
+          if grep -R -E '@ehas2/rule[1-9]|tesseract|pdf-parse|pdfjs|analyzeComplete|LibreTranslate' \
+            packages/evidence-extract/src --exclude=types.ts \
+            packages/database/src/repositories/extraction.ts \
+            apps/worker/src/jobs/extractCandidates.ts; then
             echo 'Forbidden OCR/engine coupling in F3A extraction paths' >&2
+            exit 1
+          fi
+      - name: F3B adapters selector firewall
+        run: |
+          set -e
+          if grep -R -E '@ehas2/rule[1-9]|tesseract\.js|pdf-parse|analyzeComplete|LibreTranslate|evaluateRule[1-9]' \
+            packages/evidence-extract-adapters/src; then
+            echo 'Forbidden selector/engine coupling in F3B adapters package' >&2
             exit 1
           fi
       - name: Set up Python
