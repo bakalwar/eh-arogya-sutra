@@ -283,7 +283,7 @@ Oral, Tablet A, Tablet B और External medicine identity CQ-001A canonical ide
 
 - **No** original photo/PDF stored permanently (Constitution §C).
 - Extraction, if ever implemented, must be **source-linked** and **confidence-scored**; low-confidence → doctor review, not silent selector use.
-- Real patient artifacts must not be committed as clinical fixtures.
+- Identifiable clinical artifacts must not be committed as fixtures.
 - Auth / PHI controls remain **SECURITY_REQUIRED** before production ingest.
 
 This document does **not** implement ingest, OCR, or storage.
