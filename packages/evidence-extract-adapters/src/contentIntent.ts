@@ -10,9 +10,7 @@ export const CONTENT_INTENT = {
 
 export type { ContentIntent };
 
-export type ExtractionIntentGate =
-  | { ok: true }
-  | { ok: false; code: LimitationCode };
+export type ExtractionIntentGate = { ok: true } | { ok: false; code: LimitationCode };
 
 export function assertExtractionAllowed(contentIntent: ContentIntent): ExtractionIntentGate {
   if (contentIntent === CONTENT_INTENT.UNCLASSIFIED) {

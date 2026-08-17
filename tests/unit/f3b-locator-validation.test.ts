@@ -22,9 +22,9 @@ describe('F3B locator validation', () => {
   });
 
   it('rejects storage-bearing locator keys', () => {
-    expect(() =>
-      validateAndCanonicalizeLocator({ page: 1, object_key: 'secret/path' }),
-    ).toThrow(/SOURCE_LOCATOR_STORAGE_FORBIDDEN|MALFORMED_LOCATOR/);
+    expect(() => validateAndCanonicalizeLocator({ page: 1, object_key: 'secret/path' })).toThrow(
+      /SOURCE_LOCATOR_STORAGE_FORBIDDEN|MALFORMED_LOCATOR/,
+    );
   });
 
   it('rejects out-of-range pages', () => {

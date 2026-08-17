@@ -75,16 +75,12 @@ export class TesseractSidecar {
       let settled = false;
       let stdoutBytes = 0;
       let stderrBytes = 0;
-      const child = spawn(
-        binary,
-        [inputPath, outputBase, '-l', TESSERACT_LANGUAGES, 'tsv'],
-        {
-          shell: false,
-          stdio: ['ignore', 'pipe', 'pipe'],
-          env: { ...process.env, TESSDATA_PREFIX: tessdataPrefix },
-          detached: process.platform !== 'win32',
-        },
-      );
+      const child = spawn(binary, [inputPath, outputBase, '-l', TESSERACT_LANGUAGES, 'tsv'], {
+        shell: false,
+        stdio: ['ignore', 'pipe', 'pipe'],
+        env: { ...process.env, TESSDATA_PREFIX: tessdataPrefix },
+        detached: process.platform !== 'win32',
+      });
 
       const finish = (result: TesseractOcrResult) => {
         if (settled) return;

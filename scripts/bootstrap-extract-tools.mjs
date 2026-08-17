@@ -45,7 +45,10 @@ function tesseractBin() {
 function run(cmd, args, opts = {}) {
   const r = spawnSync(cmd, args, { stdio: 'inherit', shell: false, ...opts });
   if (r.status !== 0) {
-    fail('OCR_TOOLCHAIN_REPRODUCIBILITY_BLOCKED', `${cmd} ${args.join(' ')} failed (exit ${r.status})`);
+    fail(
+      'OCR_TOOLCHAIN_REPRODUCIBILITY_BLOCKED',
+      `${cmd} ${args.join(' ')} failed (exit ${r.status})`,
+    );
   }
 }
 
@@ -65,9 +68,7 @@ function ensureTessdata(manifest) {
     }
     const computed = sha256File(dest);
     const expected =
-      spec.sha256 === 'PLACEHOLDER_VERIFIED_BY_BOOTSTRAP'
-        ? verified[lang]?.sha256
-        : spec.sha256;
+      spec.sha256 === 'PLACEHOLDER_VERIFIED_BY_BOOTSTRAP' ? verified[lang]?.sha256 : spec.sha256;
     if (!expected) {
       verified[lang] = { file: spec.file, sha256: computed };
       verifiedChanged = true;
@@ -93,7 +94,10 @@ function buildTesseractLinux(manifest) {
   const bin = tesseractBin();
   if (fs.existsSync(bin)) {
     const versionOut = spawnSync(bin, ['--version'], { encoding: 'utf8' });
-    if (versionOut.status === 0 && versionOut.stdout.includes(manifest.tesseract.versionOutputMustContain)) {
+    if (
+      versionOut.status === 0 &&
+      versionOut.stdout.includes(manifest.tesseract.versionOutputMustContain)
+    ) {
       console.log(`Tesseract ${tag} already installed at ${bin}`);
       return;
     }

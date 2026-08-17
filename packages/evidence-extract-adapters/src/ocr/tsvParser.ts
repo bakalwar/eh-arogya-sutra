@@ -5,11 +5,7 @@ export type TsvWordBlock = {
   blockIndex: number;
 };
 
-export function parseTsv(
-  tsv: string,
-  pageWidth: number,
-  pageHeight: number,
-): TsvWordBlock[] {
+export function parseTsv(tsv: string, pageWidth: number, pageHeight: number): TsvWordBlock[] {
   const lines = tsv.split(/\r?\n/);
   if (lines.length < 2) return [];
   const header = lines[0]?.split('\t') ?? [];

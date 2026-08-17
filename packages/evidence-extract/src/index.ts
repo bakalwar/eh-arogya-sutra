@@ -56,11 +56,7 @@ export {
   boundUnit,
   boundRange,
 } from './normalize.js';
-export {
-  extractJobsEnabled,
-  extractOcrJobsEnabled,
-  claimableEvidenceJobTypes,
-} from './flags.js';
+export { extractJobsEnabled, extractOcrJobsEnabled, claimableEvidenceJobTypes } from './flags.js';
 export {
   DeterministicFakeExtractor,
   NeverSettlingExtractor,

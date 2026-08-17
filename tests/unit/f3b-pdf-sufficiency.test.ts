@@ -9,7 +9,9 @@ import {
 
 describe('F3B PDF text layer sufficiency', () => {
   it('marks whitespace-only pages insufficient', () => {
-    const metrics = pageTextMetrics({ items: [{ text: '   \n\t  ', bbox: { x: 0.1, y: 0.1, w: 0.2, h: 0.05 } }] });
+    const metrics = pageTextMetrics({
+      items: [{ text: '   \n\t  ', bbox: { x: 0.1, y: 0.1, w: 0.2, h: 0.05 } }],
+    });
     expect(metrics.whitespaceOnly).toBe(true);
     expect(isTextLayerInsufficient(metrics)).toBe(true);
   });

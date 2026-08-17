@@ -63,9 +63,8 @@ function requireDb(): void {
 }
 
 async function seedDoctor(): Promise<TenantContext> {
-  const { PgUserRepository, PgOrganizationRepository, PgMembershipRepository } = await import(
-    '../../packages/database/src/repositories/postgres.js'
-  );
+  const { PgUserRepository, PgOrganizationRepository, PgMembershipRepository } =
+    await import('../../packages/database/src/repositories/postgres.js');
   const users = new PgUserRepository();
   const orgs = new PgOrganizationRepository();
   const memberships = new PgMembershipRepository();
@@ -175,9 +174,9 @@ describe('F3B open-source OCR extraction (non-production)', () => {
     await service.enqueueExtractCandidates(tenant, hindiId, new Date(), ocrEnv);
     await service.runDueJobs(tenant, 'ehas2-f3b-ocr-hi', new Date(), ocrEnv);
     const hindiCandidates = await service.listExtractionCandidates(tenant, hindiId, ocrEnv);
-    expect(hindiCandidates.some((c) => c.rawText.includes('हीमोग्लोबिन') || c.rawText.includes('g/dL'))).toBe(
-      true,
-    );
+    expect(
+      hindiCandidates.some((c) => c.rawText.includes('हीमोग्लोबिन') || c.rawText.includes('g/dL')),
+    ).toBe(true);
 
     const blockedId = await storedPdf(tenant, bornDigitalEnglishPdf(), 'UNCLASSIFIED');
     await service.enqueueExtractCandidates(tenant, blockedId, new Date(), ocrEnv);

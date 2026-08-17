@@ -33,10 +33,7 @@ describe('F3B adapters selector firewall', () => {
   });
 
   it('segment output avoids selector-forbidden candidate fields', () => {
-    const segment = fs.readFileSync(
-      path.join(adaptersSrc, 'segment/textToCandidates.ts'),
-      'utf8',
-    );
+    const segment = fs.readFileSync(path.join(adaptersSrc, 'segment/textToCandidates.ts'), 'utf8');
     for (const field of CANDIDATE_SELECTOR_FORBIDDEN_FIELD_NAMES) {
       expect(segment).not.toMatch(new RegExp(`\\b${field}\\b\\s*:`));
     }
