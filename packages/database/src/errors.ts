@@ -53,6 +53,9 @@ import {
   IdempotencyConflictError,
   InvalidConsultationTransitionError,
   ImmutableArtifactError,
+  RateLimitedError,
+  RateLimitUnavailableError,
+  ObjectStoreUnavailableError,
 } from './domainErrors.js';
 
 /** Hide connection details from API/clients. */
@@ -86,6 +89,15 @@ export function sanitizeDatabaseError(err: unknown): { code: string; message: st
   }
   if (err instanceof IdempotencyConflictError) {
     return { code: err.code, message: 'Idempotency conflict' };
+  }
+  if (err instanceof RateLimitedError) {
+    return { code: err.code, message: 'RATE_LIMITED' };
+  }
+  if (err instanceof RateLimitUnavailableError) {
+    return { code: err.code, message: 'RATE_LIMIT_UNAVAILABLE' };
+  }
+  if (err instanceof ObjectStoreUnavailableError) {
+    return { code: err.code, message: 'OBJECT_STORE_UNAVAILABLE' };
   }
   return { code: 'DATABASE_ERROR', message: 'Database operation failed' };
 }

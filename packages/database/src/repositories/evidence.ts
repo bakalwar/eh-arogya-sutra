@@ -252,7 +252,7 @@ export class PgEvidenceRepository {
   ): Promise<EvidenceItemRecord> {
     const r = await tx.query(
       `UPDATE clinical_evidence_items SET
-         processing_status = 'MALWARE_PENDING',
+         processing_status = 'STORED_TEMP',
          detected_mime = $4,
          byte_size = $5,
          content_sha256 = $6,
@@ -273,6 +273,27 @@ export class PgEvidenceRepository {
         input.auditEventId,
         tenant.actorId,
       ],
+    );
+    return mapEvidence(r.rows[0] as Record<string, unknown>);
+  }
+
+  async markQuarantined(
+    tenant: TenantContext,
+    tx: TransactionContext,
+    evidenceId: string,
+    code: string,
+  ): Promise<EvidenceItemRecord> {
+    const r = await tx.query(
+      `UPDATE clinical_evidence_items SET
+         processing_status = 'QUARANTINED',
+         malware_scan_result = 'INFECTED',
+         rejection_code = $4,
+         rejection_reason_safe = $4,
+         updated_at = now(),
+         updated_by_actor_id = $5
+       WHERE id = $1 AND organization_id = $2 AND clinic_id = $3
+       RETURNING *`,
+      [evidenceId, tenant.organizationId, tenant.clinicId, code, tenant.actorId],
     );
     return mapEvidence(r.rows[0] as Record<string, unknown>);
   }
@@ -373,6 +394,43 @@ export class PgEvidenceRepository {
     };
   }
 
+  async listBlobs(
+    tenant: TenantContext,
+    tx: TransactionContext,
+    limit = 50,
+  ): Promise<EvidenceBlobRecord[]> {
+    const r = await tx.query(
+      `SELECT * FROM clinical_evidence_blobs
+       WHERE organization_id = $1 AND clinic_id = $2
+       ORDER BY updated_at ASC
+       LIMIT $3`,
+      [tenant.organizationId, tenant.clinicId, Math.min(100, Math.max(1, limit))],
+    );
+    return (r.rows as Record<string, unknown>[]).map((row) => ({
+      evidenceId: String(row.evidence_id),
+      objectKey: String(row.object_key),
+      bytesPresent: Boolean(row.bytes_present),
+      storageProvider: 'memory_fake',
+    }));
+  }
+
+  async countOpenJobs(
+    tenant: TenantContext,
+    tx: TransactionContext,
+    now: Date,
+  ): Promise<{ depth: number; oldestAgeMs: number }> {
+    const r = await tx.query(
+      `SELECT count(*)::int AS n,
+              COALESCE(EXTRACT(EPOCH FROM ($3::timestamptz - min(next_run_at))), 0) * 1000 AS oldest_ms
+       FROM clinical_evidence_jobs
+       WHERE organization_id = $1 AND clinic_id = $2
+         AND status IN ('PENDING', 'FAILED', 'LEASED')`,
+      [tenant.organizationId, tenant.clinicId, now.toISOString()],
+    );
+    const row = r.rows[0] as { n: number; oldest_ms: number };
+    return { depth: Number(row.n), oldestAgeMs: Math.max(0, Number(row.oldest_ms)) };
+  }
+
   async findBlob(
     tenant: TenantContext,
     tx: TransactionContext,
@@ -424,7 +482,9 @@ export class PgEvidenceRepository {
     workerId: string,
     now: Date,
     leaseMs: number,
+    batchSize = 20,
   ): Promise<EvidenceJobRecord[]> {
+    const limit = Math.min(20, Math.max(1, batchSize));
     const r = await tx.query(
       `UPDATE clinical_evidence_jobs SET
          status = 'LEASED',
@@ -445,7 +505,7 @@ export class PgEvidenceRepository {
            )
          ORDER BY next_run_at ASC
          FOR UPDATE SKIP LOCKED
-         LIMIT 20
+         LIMIT $6
        )
        RETURNING *`,
       [
@@ -454,6 +514,7 @@ export class PgEvidenceRepository {
         now.toISOString(),
         workerId,
         new Date(now.getTime() + leaseMs).toISOString(),
+        limit,
       ],
     );
     return (r.rows as Record<string, unknown>[]).map(mapJob);

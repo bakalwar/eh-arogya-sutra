@@ -1,15 +1,15 @@
-import express, { type Express, type Response } from 'express';
+import { type Express, type Response } from 'express';
 import { EHAS2_API_NAMESPACE } from '@ehas2/shared';
 import { Permission } from '@ehas2/security';
 import { evidenceService, type EvidenceService } from '@ehas2/database';
-import { MAX_EVIDENCE_BYTES } from '@ehas2/evidence-ingest';
+import { requestBodyChunks, parseContentLengthHeader } from '../http/streamBody.js';
 import { requirePermission } from '../middleware/authorization.js';
 import {
   requireTenantContext,
   type TenantAuthedRequest,
   type TenantContextResolver,
 } from '../middleware/tenantBridge.js';
-import { sendDomainError, sendError, sendSuccess } from '../http/errors.js';
+import { sendDomainError, sendSuccess } from '../http/errors.js';
 import { assertExactJsonKeys } from '../http/exactJsonBody.js';
 import { ingestRateLimit } from '../middleware/uploadLimits.js';
 
@@ -97,37 +97,28 @@ export function registerEvidenceRoutes(app: Express, deps: EvidenceRouteDeps): v
   app.put(
     `${ns}/consultations/:consultationId/evidence/:evidenceId/bytes`,
     ...write,
-    express.raw({
-      type: ['application/pdf', 'image/jpeg', 'image/png', 'application/octet-stream'],
-      limit: MAX_EVIDENCE_BYTES,
-    }),
     async (req: TenantAuthedRequest, res) => {
       privateNoStore(res);
+      const ac = new AbortController();
+      const onAbort = (): void => ac.abort();
+      req.on('aborted', onAbort);
       try {
-        const buf = Buffer.isBuffer(req.body)
-          ? req.body
-          : req.body instanceof Uint8Array
-            ? Buffer.from(req.body)
-            : null;
-        if (!buf) {
-          sendError(
-            res,
-            400,
-            'VALIDATION_ERROR',
-            'Raw evidence bytes required',
-            req.requestId ?? 'unknown',
-          );
-          return;
-        }
         const data = await evidence.receiveBytes(
           req.tenantContext!,
           String(req.params.consultationId),
           String(req.params.evidenceId),
-          buf,
+          requestBodyChunks(req),
+          process.env,
+          {
+            declaredLength: parseContentLengthHeader(req.header('content-length')),
+            signal: ac.signal,
+          },
         );
         sendSuccess(res, metadataOnly(data), req.requestId ?? 'unknown');
       } catch (err) {
         sendDomainError(res, err, req.requestId ?? 'unknown');
+      } finally {
+        req.off('aborted', onAbort);
       }
     },
   );

@@ -30,6 +30,9 @@ export {
   InvalidConsultationTransitionError,
   ImmutableArtifactError,
   AccessDeniedError,
+  RateLimitedError,
+  RateLimitUnavailableError,
+  ObjectStoreUnavailableError,
 } from './domainErrors.js';
 export {
   type TenantContext,

@@ -34,15 +34,21 @@ describe('evidence selector firewall', () => {
     }
   });
 
-  it('evidence-ingest and F1 routes do not import rules, OCR, or analyzeComplete', () => {
+  it('evidence-ingest and F1/F2A routes do not import rules, OCR, or analyzeComplete', () => {
     const files = [
-      'packages/evidence-ingest/src/index.ts',
-      'packages/evidence-ingest/src/validateFile.ts',
-      'packages/evidence-ingest/src/objectStore.ts',
-      'packages/evidence-ingest/src/malwareScan.ts',
+      ...fs
+        .readdirSync(path.join(root, 'packages/evidence-ingest/src'))
+        .filter((f) => f.endsWith('.ts') && f !== 'types.ts')
+        .map((f) => `packages/evidence-ingest/src/${f}`),
       'packages/database/src/services/evidenceService.ts',
+      'packages/database/src/repositories/evidence.ts',
       'apps/api/src/routes/evidence.ts',
+      'apps/api/src/http/streamBody.ts',
+      'apps/api/src/middleware/uploadLimits.ts',
+      'apps/worker/src/index.ts',
       'apps/worker/src/jobs/evidenceRetention.ts',
+      'apps/worker/src/jobs/evidencePoller.ts',
+      'packages/observability/src/evidenceMetrics.ts',
     ];
     const blob = files.map(read).join('\n');
     expect(blob).not.toMatch(/@ehas2\/rule[1-9]/);

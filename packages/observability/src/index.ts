@@ -8,6 +8,14 @@ export function logInfo(message: string, fields: LogFields = {}): void {
   console.log(JSON.stringify(payload));
 }
 
+export {
+  recordEvidenceEvent,
+  snapshotEvidenceMetrics,
+  resetEvidenceMetrics,
+  assertEvidenceMetricSafe,
+} from './evidenceMetrics.js';
+export type { EvidenceSafeMetric, EvidenceSafeMetricName } from './evidenceMetrics.js';
+
 export const OBSERVABILITY_PACKAGE_STATUS = 'NOT_IMPLEMENTED' as const;
 
 /**

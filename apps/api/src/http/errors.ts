@@ -4,6 +4,9 @@ import {
   ConflictError,
   IdempotencyConflictError,
   MembershipInactiveError,
+  ObjectStoreUnavailableError,
+  RateLimitedError,
+  RateLimitUnavailableError,
   ResourceNotFoundError,
   TenantContextRequiredError,
   ValidationError,
@@ -23,6 +26,8 @@ export type ApiErrorCode =
   | 'CONFLICT'
   | 'TENANT_CONTEXT_REQUIRED'
   | 'RATE_LIMITED'
+  | 'RATE_LIMIT_UNAVAILABLE'
+  | 'OBJECT_STORE_UNAVAILABLE'
   | 'PAYLOAD_TOO_LARGE'
   | 'IDEMPOTENCY_CONFLICT';
 
@@ -75,6 +80,26 @@ export function sendDomainError(res: Response, err: unknown, requestId: string):
   }
   if (err instanceof IdempotencyConflictError) {
     sendError(res, 409, 'IDEMPOTENCY_CONFLICT', 'Idempotency key conflict', requestId);
+    return;
+  }
+  if (err instanceof RateLimitedError) {
+    res.setHeader('Retry-After', String(err.retryAfterSec));
+    sendError(
+      res,
+      429,
+      'RATE_LIMITED',
+      'Too many evidence ingest attempts. Try again shortly.',
+      requestId,
+    );
+    return;
+  }
+  if (err instanceof RateLimitUnavailableError) {
+    res.setHeader('Retry-After', String(err.retryAfterSec));
+    sendError(res, 503, 'RATE_LIMIT_UNAVAILABLE', 'Rate limit service unavailable', requestId);
+    return;
+  }
+  if (err instanceof ObjectStoreUnavailableError) {
+    sendError(res, 503, 'OBJECT_STORE_UNAVAILABLE', 'Object store unavailable', requestId);
     return;
   }
   const code = (err as { code?: string } | null)?.code;
