@@ -976,6 +976,14 @@ const FORBIDDEN_AUDIT_KEYS = new Set([
   'address_line1',
   'registration_number',
   'email',
+  'object_key',
+  'object_url',
+  'public_url',
+  'filename',
+  'original_filename',
+  'original_path',
+  'storage_credential',
+  'presigned_url',
 ]);
 
 const AUDIT_METADATA_MAX_DEPTH = 8;

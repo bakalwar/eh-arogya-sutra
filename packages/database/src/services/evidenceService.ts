@@ -1,18 +1,29 @@
 import {
+  DELETION_VERIFY_SLA_MS,
   EVIDENCE_SOURCE_TYPES,
   EVIDENCE_TTL_MINUTES,
   EVIDENCE_TYPES,
   MAX_EVIDENCE_PER_CONSULTATION,
-  assertMalwareUnavailableIsNotClean,
+  WORKER_CLAIM_BATCH,
+  assertMalwareGateSatisfied,
   buildEvidenceObjectKey,
+  bytesAsStream,
   defaultMalwareScanner,
-  getMemoryFakeObjectStore,
+  jobBackoffMs,
+  resolveEvidenceObjectStore,
+  resolveEvidenceRateLimiter,
   sanitizeEvidenceFilename,
+  scanPrivateObject,
+  stageBoundedStream,
+  StreamIngestError,
   validateEvidenceBytes,
+  type DurableRateLimiter,
   type EvidenceObjectStore,
   type EvidenceSourceType,
   type EvidenceType,
   type MalwareScanner,
+  type RateLimitDecision,
+  type StagedEvidenceBytes,
 } from '@ehas2/evidence-ingest';
 import { assertTenantContext, type TenantContext } from '../tenantContext.js';
 import { runInSavepoint, withTenantTransaction } from '../pool.js';
@@ -26,6 +37,9 @@ import {
 import {
   ConflictError,
   IdempotencyConflictError,
+  ObjectStoreUnavailableError,
+  RateLimitedError,
+  RateLimitUnavailableError,
   ResourceNotFoundError,
   ValidationError,
 } from '../domainErrors.js';
@@ -35,6 +49,14 @@ const evidenceRepo = new PgEvidenceRepository();
 const consultations = new PgConsultationRepository();
 const audit = new PgAuditEventRepository();
 const idempotency = new PgIdempotencyRepository();
+
+export type EvidenceSafeMetricSink = (event: {
+  name: string;
+  code?: string;
+  malware?: 'CLEAN' | 'INFECTED' | 'UNAVAILABLE';
+  count?: number;
+  ms?: number;
+}) => void;
 
 function assertCaseOwner(tenant: TenantContext, doctorUserId: string): void {
   if (tenant.actorRole === 'ClinicAdmin') return;
@@ -63,20 +85,50 @@ function assertConsultationBinding(itemConsultationId: string, pathConsultationI
   }
 }
 
+function throwRate(decision: RateLimitDecision): void {
+  if (decision.ok) return;
+  if (decision.code === 'RATE_LIMIT_UNAVAILABLE') {
+    throw new RateLimitUnavailableError(decision.retryAfterSec);
+  }
+  throw new RateLimitedError(decision.retryAfterSec);
+}
+
+function isStoreUnavailable(err: unknown): boolean {
+  const code = (err as { code?: string } | null)?.code;
+  return code === 'STORE_UNAVAILABLE' || code === 'OBJECT_STORE_UNAVAILABLE';
+}
+
+function safeJobErrorCode(err: unknown): string {
+  const code = (err as { code?: string } | null)?.code;
+  if (code && /^[A-Z][A-Z0-9_]{2,64}$/.test(code)) return code.slice(0, 64);
+  return 'JOB_FAILED';
+}
+
 export type EvidenceServiceDeps = {
   store?: EvidenceObjectStore;
   malwareScanner?: MalwareScanner;
+  rateLimiter?: DurableRateLimiter;
+  onSafeMetric?: EvidenceSafeMetricSink;
+  jitterMs?: () => number;
 };
 
 export class EvidenceService {
   constructor(private readonly deps: EvidenceServiceDeps = {}) {}
 
-  private store(): EvidenceObjectStore {
-    return this.deps.store ?? getMemoryFakeObjectStore();
+  private store(env: Record<string, string | undefined> = process.env): EvidenceObjectStore {
+    return resolveEvidenceObjectStore(this.deps.store, env);
   }
 
   private scanner(): MalwareScanner {
     return this.deps.malwareScanner ?? defaultMalwareScanner;
+  }
+
+  private limiter(): DurableRateLimiter {
+    return resolveEvidenceRateLimiter(this.deps.rateLimiter);
+  }
+
+  private metric(event: Parameters<EvidenceSafeMetricSink>[0]): void {
+    this.deps.onSafeMetric?.(event);
   }
 
   async initiate(
@@ -94,6 +146,14 @@ export class EvidenceService {
   ): Promise<EvidenceItemRecord> {
     assertTenantContext(tenant);
     assertUuid(input.consultationId, 'consultationId');
+    throwRate(
+      await this.limiter().tryInitiate({
+        actorId: tenant.actorId,
+        organizationId: tenant.organizationId,
+        clinicId: tenant.clinicId,
+        consultationId: input.consultationId,
+      }),
+    );
     const evidenceType = input.evidenceType;
     const sourceType = input.sourceType;
     if (!isEvidenceType(evidenceType)) throw new ValidationError('Invalid evidenceType');
@@ -116,7 +176,7 @@ export class EvidenceService {
     const requestHash = hashPayload(payload);
     const expiresAt = new Date(Date.now() + EVIDENCE_TTL_MINUTES * 60_000);
     try {
-      return await withTenantTransaction(
+      const created = await withTenantTransaction(
         tenant,
         async (tx) => {
           const existingKey = await idempotency.resolveOrThrow(
@@ -142,7 +202,7 @@ export class EvidenceService {
           if (count >= MAX_EVIDENCE_PER_CONSULTATION) {
             throw new ValidationError('EVIDENCE_LIMIT');
           }
-          const created = await evidenceRepo.insertCreated(tenant, tx, {
+          const createdRow = await evidenceRepo.insertCreated(tenant, tx, {
             patientId: consultation.patientId,
             consultationId: input.consultationId,
             evidenceType,
@@ -159,11 +219,11 @@ export class EvidenceService {
               key: input.idempotencyKey,
               requestHash,
               resourceType: 'evidence',
-              resourceId: created.id,
+              resourceId: createdRow.id,
             });
           }
           await evidenceRepo.enqueueJob(tenant, tx, {
-            evidenceId: created.id,
+            evidenceId: createdRow.id,
             jobType: 'DELETE_ORIGINAL',
             nextRunAt: expiresAt,
           });
@@ -174,15 +234,27 @@ export class EvidenceService {
             actorRole: tenant.actorRole,
             eventType: 'evidence_intake_created',
             resourceType: 'evidence',
-            resourceId: created.id,
+            resourceId: createdRow.id,
             outcome: 'SUCCESS',
-            metadata: { evidenceType: input.evidenceType, status: created.processingStatus },
+            metadata: { evidenceType: input.evidenceType, status: createdRow.processingStatus },
           });
-          return created;
+          return createdRow;
         },
         env,
       );
+      this.metric({ name: 'ingest_created', code: 'INTAKE_CREATED' });
+      return created;
     } catch (err) {
+      if (err instanceof RateLimitedError || err instanceof RateLimitUnavailableError) {
+        this.metric({ name: 'rate_limit_denial', code: err.code });
+        throw err;
+      }
+      if (err instanceof ResourceNotFoundError) {
+        this.metric({ name: 'cross_tenant_denial', code: 'NOT_FOUND' });
+      }
+      if (err instanceof ValidationError) {
+        this.metric({ name: 'ingest_rejected', code: err.message });
+      }
       if (err instanceof IdempotencyConflictError || err instanceof ValidationError) throw err;
       if (isUniqueViolation(err) && input.idempotencyKey) {
         const replay = await withTenantTransaction(
@@ -218,15 +290,83 @@ export class EvidenceService {
     tenant: TenantContext,
     consultationId: string,
     evidenceId: string,
-    bytes: Uint8Array,
+    bytes: Uint8Array | AsyncIterable<Uint8Array>,
     env: Record<string, string | undefined> = process.env,
+    options: { declaredLength?: number | null; signal?: AbortSignal } = {},
   ): Promise<EvidenceItemRecord> {
     assertTenantContext(tenant);
     assertUuid(consultationId, 'consultationId');
     assertUuid(evidenceId, 'evidenceId');
+    const lease = await this.limiter().acquireUploadLease({ actorId: tenant.actorId });
+    throwRate(lease);
+    const leaseId = lease.ok ? lease.leaseId : undefined;
+    let staged: StagedEvidenceBytes | null = null;
+    let consumedBytes = 0;
     let putObjectKey: string | null = null;
+    let claimed = false;
     try {
-      return await withTenantTransaction(
+      const storeHealth = await this.store(env).health();
+      if (!storeHealth.ok) throw new ObjectStoreUnavailableError();
+
+      const claimedOrReplay = await withTenantTransaction(
+        tenant,
+        async (tx) => {
+          const existing = await evidenceRepo.findById(tenant, tx, evidenceId);
+          if (!existing) throw new ResourceNotFoundError();
+          assertConsultationBinding(existing.consultationId, consultationId);
+          const consultation = await consultations.findById(tenant, tx, existing.consultationId);
+          if (!consultation) throw new ResourceNotFoundError();
+          assertCaseOwner(tenant, consultation.doctorUserId);
+          if (
+            existing.processingStatus === 'MALWARE_PENDING' ||
+            existing.processingStatus === 'STORED_TEMP'
+          ) {
+            return { replay: existing };
+          }
+          const won = await evidenceRepo.claimBytesValidating(tenant, tx, evidenceId);
+          if (won) return { item: won };
+          const latest = await evidenceRepo.findById(tenant, tx, evidenceId);
+          if (!latest) throw new ResourceNotFoundError();
+          if (
+            latest.processingStatus === 'MALWARE_PENDING' ||
+            latest.processingStatus === 'STORED_TEMP'
+          ) {
+            return { replay: latest };
+          }
+          if (latest.processingStatus === 'VALIDATING') {
+            throw new ConflictError('EVIDENCE_BYTES_IN_PROGRESS');
+          }
+          throw new ValidationError('EVIDENCE_NOT_ACCEPTING_BYTES');
+        },
+        env,
+      );
+      if ('replay' in claimedOrReplay && claimedOrReplay.replay) {
+        return claimedOrReplay.replay;
+      }
+      claimed = true;
+
+      const body = bytes instanceof Uint8Array ? bytesAsStream(bytes) : bytes;
+      try {
+        staged = await stageBoundedStream({
+          body,
+          declaredLength: options.declaredLength,
+          signal: options.signal,
+        });
+      } catch (err) {
+        if (err instanceof StreamIngestError) {
+          this.metric({ name: 'ingest_rejected', code: err.code });
+          throw new ValidationError(err.code);
+        }
+        throw err;
+      }
+      const byteDecision = await this.limiter().consumeBytes(tenant.actorId, staged.size);
+      if (!byteDecision.ok) {
+        this.metric({ name: 'rate_limit_denial', code: byteDecision.code });
+        throwRate(byteDecision);
+      }
+      consumedBytes = staged.size;
+      const raw = await staged.readAll();
+      const validated = await withTenantTransaction(
         tenant,
         async (tx) => {
           const item = await evidenceRepo.findById(tenant, tx, evidenceId);
@@ -235,22 +375,16 @@ export class EvidenceService {
           const consultation = await consultations.findById(tenant, tx, item.consultationId);
           if (!consultation) throw new ResourceNotFoundError();
           assertCaseOwner(tenant, consultation.doctorUserId);
-          if (item.processingStatus !== 'INTAKE_CREATED') {
-            if (
-              item.processingStatus === 'MALWARE_PENDING' ||
-              item.processingStatus === 'STORED_TEMP'
-            ) {
-              return item;
-            }
+          if (item.processingStatus !== 'VALIDATING') {
             throw new ValidationError('EVIDENCE_NOT_ACCEPTING_BYTES');
           }
-          const validated = validateEvidenceBytes({
+          const result = validateEvidenceBytes({
             filename: item.filenameSanitized,
             declaredMime: item.declaredMime,
-            bytes,
+            bytes: raw,
           });
-          if (!validated.ok) {
-            await evidenceRepo.markRejected(tenant, tx, evidenceId, validated.code);
+          if (!result.ok) {
+            await evidenceRepo.markRejected(tenant, tx, evidenceId, result.code);
             await evidenceRepo.enqueueJob(tenant, tx, {
               evidenceId,
               jobType: 'DELETE_ORIGINAL',
@@ -265,17 +399,114 @@ export class EvidenceService {
               resourceType: 'evidence',
               resourceId: evidenceId,
               outcome: 'FAILED',
-              metadata: { code: validated.code },
+              metadata: { code: result.code },
             });
-            throw new ValidationError(validated.code);
+            return { replay: null, item, ok: false as const, code: result.code };
           }
+          if (result.contentSha256 !== staged!.sha256) {
+            await evidenceRepo.markRejected(tenant, tx, evidenceId, 'SHA_MISMATCH');
+            return { replay: null, item, ok: false as const, code: 'SHA_MISMATCH' };
+          }
+          return { replay: null, item, ok: true as const, validated: result };
+        },
+        env,
+      );
+      if ('code' in validated && validated.ok === false) {
+        this.metric({ name: 'ingest_rejected', code: validated.code });
+        await this.limiter().releaseBytes(tenant.actorId, consumedBytes);
+        consumedBytes = 0;
+        throw new ValidationError(validated.code);
+      }
+      if (validated.replay) {
+        await this.limiter().releaseBytes(tenant.actorId, consumedBytes);
+        consumedBytes = 0;
+        return validated.replay;
+      }
+      const item = validated.item;
+      const file = validated.validated!;
+      const objectKey = buildEvidenceObjectKey({
+        organizationId: tenant.organizationId,
+        clinicId: tenant.clinicId,
+        consultationId: item.consultationId,
+        evidenceId: item.id,
+        contentSha256: file.contentSha256,
+      });
+      try {
+        await this.store(env).put(objectKey, raw);
+        putObjectKey = objectKey;
+      } catch (err) {
+        try {
+          await this.store(env).abortPartial(objectKey);
+        } catch {
+          /* ignore */
+        }
+        putObjectKey = null;
+        if (isStoreUnavailable(err)) throw new ObjectStoreUnavailableError();
+        throw err;
+      }
+      const scan = await scanPrivateObject(this.scanner(), { objectKey });
+      this.metric({ name: 'malware_result', malware: scan, code: scan });
+      if (scan === 'INFECTED') {
+        await withTenantTransaction(
+          tenant,
+          async (tx) => {
+            await evidenceRepo.upsertBlob(tenant, tx, {
+              evidenceId: item.id,
+              objectKey,
+              bytesPresent: true,
+            });
+            await evidenceRepo.markQuarantined(tenant, tx, evidenceId, 'MALWARE_INFECTED');
+            await evidenceRepo.enqueueJob(tenant, tx, {
+              evidenceId: item.id,
+              jobType: 'DELETE_ORIGINAL',
+              nextRunAt: new Date(),
+            });
+          },
+          env,
+        );
+        putObjectKey = null;
+        this.metric({ name: 'ingest_rejected', code: 'MALWARE_INFECTED' });
+        throw new ValidationError('MALWARE_INFECTED');
+      }
+      if (!assertMalwareGateSatisfied(scan)) {
+        try {
+          await this.store(env).delete(objectKey);
+        } catch {
+          /* best-effort */
+        }
+        putObjectKey = null;
+        await withTenantTransaction(
+          tenant,
+          async (tx) => {
+            await evidenceRepo.upsertBlob(tenant, tx, {
+              evidenceId: item.id,
+              objectKey,
+              bytesPresent: false,
+            });
+            await evidenceRepo.markRejected(tenant, tx, evidenceId, 'MALWARE_UNAVAILABLE');
+            await evidenceRepo.enqueueJob(tenant, tx, {
+              evidenceId: item.id,
+              jobType: 'VERIFY_DELETION',
+              nextRunAt: new Date(),
+            });
+          },
+          env,
+        );
+        this.metric({ name: 'ingest_rejected', code: 'MALWARE_UNAVAILABLE' });
+        throw new ValidationError('MALWARE_UNAVAILABLE');
+      }
+      return await withTenantTransaction(
+        tenant,
+        async (tx) => {
           const duplicate = await evidenceRepo.findBySha(
             tenant,
             tx,
             item.consultationId,
-            validated.contentSha256,
+            file.contentSha256,
           );
           if (duplicate && duplicate.id !== item.id) {
+            await this.store(env).delete(objectKey);
+            putObjectKey = null;
             await evidenceRepo.markRejected(tenant, tx, evidenceId, 'DUPLICATE_FINGERPRINT');
             await evidenceRepo.enqueueJob(tenant, tx, {
               evidenceId,
@@ -283,48 +514,6 @@ export class EvidenceService {
               nextRunAt: new Date(),
             });
             return duplicate;
-          }
-          const objectKey = buildEvidenceObjectKey({
-            organizationId: tenant.organizationId,
-            clinicId: tenant.clinicId,
-            consultationId: item.consultationId,
-            evidenceId: item.id,
-            contentSha256: validated.contentSha256,
-          });
-          await this.store().put(objectKey, bytes);
-          putObjectKey = objectKey;
-          const scan = await this.scanner().scan(objectKey);
-          if (!assertMalwareUnavailableIsNotClean(scan) || scan === 'CLEAN') {
-            await this.store().delete(objectKey);
-            putObjectKey = null;
-            await evidenceRepo.upsertBlob(tenant, tx, {
-              evidenceId: item.id,
-              objectKey,
-              bytesPresent: false,
-            });
-            await evidenceRepo.markRejected(tenant, tx, evidenceId, 'MALWARE_CLEAN_FORBIDDEN');
-            await evidenceRepo.enqueueJob(tenant, tx, {
-              evidenceId: item.id,
-              jobType: 'VERIFY_DELETION',
-              nextRunAt: new Date(),
-            });
-            throw new ValidationError('MALWARE_CLEAN_FORBIDDEN');
-          }
-          if (scan === 'INFECTED') {
-            await this.store().delete(objectKey);
-            putObjectKey = null;
-            await evidenceRepo.upsertBlob(tenant, tx, {
-              evidenceId: item.id,
-              objectKey,
-              bytesPresent: false,
-            });
-            await evidenceRepo.markRejected(tenant, tx, evidenceId, 'MALWARE_INFECTED');
-            await evidenceRepo.enqueueJob(tenant, tx, {
-              evidenceId: item.id,
-              jobType: 'VERIFY_DELETION',
-              nextRunAt: new Date(),
-            });
-            throw new ValidationError('MALWARE_INFECTED');
           }
           try {
             return await runInSavepoint(tx, 'evidence_sha_store', async () => {
@@ -334,9 +523,9 @@ export class EvidenceService {
                 bytesPresent: true,
               });
               const stored = await evidenceRepo.markStoredTemp(tenant, tx, item.id, {
-                detectedMime: validated.detectedMime,
-                byteSize: validated.byteSize,
-                contentSha256: validated.contentSha256,
+                detectedMime: file.detectedMime,
+                byteSize: file.byteSize,
+                contentSha256: file.contentSha256,
                 malwareScanResult: scan,
                 auditEventId: null,
               });
@@ -356,7 +545,7 @@ export class EvidenceService {
                 outcome: 'SUCCESS',
                 metadata: {
                   status: stored.processingStatus,
-                  byteSize: validated.byteSize,
+                  byteSize: file.byteSize,
                   malware: scan,
                 },
               });
@@ -365,13 +554,13 @@ export class EvidenceService {
             });
           } catch (err) {
             if (isUniqueViolation(err)) {
-              await this.store().delete(objectKey);
+              await this.store(env).delete(objectKey);
               putObjectKey = null;
               const winner = await evidenceRepo.findBySha(
                 tenant,
                 tx,
                 item.consultationId,
-                validated.contentSha256,
+                file.contentSha256,
               );
               await evidenceRepo.markRejected(tenant, tx, evidenceId, 'DUPLICATE_FINGERPRINT');
               await evidenceRepo.enqueueJob(tenant, tx, {
@@ -388,17 +577,54 @@ export class EvidenceService {
         env,
       );
     } catch (err) {
+      if (claimed) {
+        try {
+          await withTenantTransaction(
+            tenant,
+            async (tx) => evidenceRepo.revertValidatingToIntake(tenant, tx, evidenceId),
+            env,
+          );
+        } catch {
+          /* ignore */
+        }
+      }
       if (putObjectKey) {
         try {
-          await this.store().delete(putObjectKey);
+          await this.store(env).delete(putObjectKey);
         } catch {
           /* best-effort orphan cleanup */
         }
       }
+      if (consumedBytes > 0) {
+        try {
+          await this.limiter().releaseBytes(tenant.actorId, consumedBytes);
+        } catch {
+          /* ignore */
+        }
+      }
+      if (err instanceof RateLimitedError || err instanceof RateLimitUnavailableError) {
+        this.metric({ name: 'rate_limit_denial', code: err.code });
+      }
       if (isUniqueViolation(err)) {
         throw new ConflictError('DUPLICATE_FINGERPRINT');
       }
+      if (isStoreUnavailable(err)) throw new ObjectStoreUnavailableError();
       throw err;
+    } finally {
+      if (staged) {
+        try {
+          await staged.dispose();
+        } catch {
+          /* ignore */
+        }
+      }
+      if (leaseId) {
+        try {
+          await this.limiter().releaseUploadLease(leaseId);
+        } catch {
+          /* ignore */
+        }
+      }
     }
   }
 
@@ -473,7 +699,7 @@ export class EvidenceService {
         await evidenceRepo.markDeletePending(tenant, tx, evidenceId);
         const blob = await evidenceRepo.findBlob(tenant, tx, evidenceId);
         if (blob) {
-          await this.store().delete(blob.objectKey);
+          await this.store(env).delete(blob.objectKey);
           await evidenceRepo.upsertBlob(tenant, tx, {
             evidenceId,
             objectKey: blob.objectKey,
@@ -510,34 +736,53 @@ export class EvidenceService {
     workerId: string,
     now: Date = new Date(),
     env: Record<string, string | undefined> = process.env,
-  ): Promise<{ processed: number; succeeded: number; failed: number }> {
+  ): Promise<{ processed: number; succeeded: number; failed: number; dead: number }> {
     assertTenantContext(tenant);
     let processed = 0;
     let succeeded = 0;
     let failed = 0;
+    let dead = 0;
     const claimed = await withTenantTransaction(
       tenant,
-      async (tx) => evidenceRepo.claimDueJobs(tenant, tx, workerId, now, 30_000),
+      async (tx) => {
+        const queue = await evidenceRepo.countOpenJobs(tenant, tx, now);
+        this.metric({ name: 'queue_depth', count: queue.depth });
+        this.metric({ name: 'queue_oldest_age_ms', ms: queue.oldestAgeMs, count: 0 });
+        return evidenceRepo.claimDueJobs(tenant, tx, workerId, now, 30_000, WORKER_CLAIM_BATCH);
+      },
       env,
     );
     for (const job of claimed) {
+      if (job.attempt > 1) this.metric({ name: 'lease_reclaim', code: 'LEASE_RECLAIM' });
       processed += 1;
+      const started = Date.now();
       try {
         await this.executeJob(tenant, job, now, env);
         succeeded += 1;
-      } catch {
+        const ms = Date.now() - started;
+        if (job.jobType === 'DELETE_ORIGINAL')
+          this.metric({ name: 'delete_latency_ms', ms, count: 0 });
+        if (job.jobType === 'VERIFY_DELETION')
+          this.metric({ name: 'verify_latency_ms', ms, count: 0 });
+      } catch (err) {
         failed += 1;
+        const code = safeJobErrorCode(err);
         await withTenantTransaction(
           tenant,
           async (tx) => {
             const nextAttempt = job.attempt >= job.maxAttempts ? 'DEAD' : 'FAILED';
-            const backoff = new Date(now.getTime() + Math.min(job.attempt, 5) * 15_000);
+            if (nextAttempt === 'DEAD') {
+              dead += 1;
+              this.metric({ name: 'dead_count', code });
+            }
+            const jitter = this.deps.jitterMs?.() ?? Math.floor(Math.random() * 1000);
+            const backoff = new Date(now.getTime() + jobBackoffMs(job.attempt, jitter));
             await evidenceRepo.finishJob(
               tenant,
               tx,
               job,
               nextAttempt,
-              'JOB_FAILED',
+              code,
               nextAttempt === 'FAILED' ? backoff : null,
             );
             await audit.append(tx, {
@@ -549,14 +794,67 @@ export class EvidenceService {
               resourceType: 'evidence',
               resourceId: job.evidenceId,
               outcome: 'FAILED',
-              metadata: { code: 'JOB_FAILED', jobType: job.jobType },
+              metadata: { code, jobType: job.jobType },
             });
           },
           env,
         );
       }
     }
-    return { processed, succeeded, failed };
+    return { processed, succeeded, failed, dead };
+  }
+
+  async reconcileBlobPresence(
+    tenant: TenantContext,
+    now: Date = new Date(),
+    env: Record<string, string | undefined> = process.env,
+    limit = 50,
+  ): Promise<{ checked: number; mismatches: number; orphansDeleted: number }> {
+    assertTenantContext(tenant);
+    void now;
+    let checked = 0;
+    let mismatches = 0;
+    let orphansDeleted = 0;
+    const blobs = await withTenantTransaction(
+      tenant,
+      async (tx) => evidenceRepo.listBlobs(tenant, tx, limit),
+      env,
+    );
+    for (const blob of blobs) {
+      checked += 1;
+      let exists = false;
+      try {
+        exists = await this.store(env).exists(blob.objectKey);
+      } catch {
+        this.metric({ name: 'db_object_mismatch', code: 'STORE_UNAVAILABLE' });
+        continue;
+      }
+      if (blob.bytesPresent === exists) continue;
+      mismatches += 1;
+      this.metric({ name: 'db_object_mismatch', code: 'BYTES_PRESENT_MISMATCH' });
+      if (!blob.bytesPresent && exists && orphansDeleted < 20) {
+        try {
+          await this.store(env).delete(blob.objectKey);
+          orphansDeleted += 1;
+        } catch {
+          /* bounded orphan pass */
+        }
+      }
+      if (blob.bytesPresent && !exists) {
+        await withTenantTransaction(
+          tenant,
+          async (tx) => {
+            await evidenceRepo.upsertBlob(tenant, tx, {
+              evidenceId: blob.evidenceId,
+              objectKey: blob.objectKey,
+              bytesPresent: false,
+            });
+          },
+          env,
+        );
+      }
+    }
+    return { checked, mismatches, orphansDeleted };
   }
 
   private async executeJob(
@@ -592,7 +890,7 @@ export class EvidenceService {
           }
           await evidenceRepo.markDeletePending(tenant, tx, job.evidenceId);
           if (blob) {
-            await this.store().delete(blob.objectKey);
+            await this.store(env).delete(blob.objectKey);
             await evidenceRepo.upsertBlob(tenant, tx, {
               evidenceId: job.evidenceId,
               objectKey: blob.objectKey,
@@ -609,7 +907,7 @@ export class EvidenceService {
           await evidenceRepo.enqueueJob(tenant, tx, {
             evidenceId: job.evidenceId,
             jobType: 'VERIFY_DELETION',
-            nextRunAt: now,
+            nextRunAt: new Date(now.getTime() + Math.min(DELETION_VERIFY_SLA_MS, 1)),
           });
           await evidenceRepo.finishJob(tenant, tx, job, 'SUCCEEDED', null, null);
           await audit.append(tx, {
@@ -625,7 +923,7 @@ export class EvidenceService {
           });
           return;
         }
-        const stillThere = blob ? await this.store().exists(blob.objectKey) : false;
+        const stillThere = blob ? await this.store(env).exists(blob.objectKey) : false;
         if (stillThere) {
           await evidenceRepo.markDeletionVerified(
             tenant,

@@ -54,3 +54,31 @@ export class AccessDeniedError extends Error {
     this.name = 'AccessDeniedError';
   }
 }
+
+export class RateLimitedError extends Error {
+  readonly code = 'RATE_LIMITED' as const;
+  readonly retryAfterSec: number;
+  constructor(retryAfterSec = 1, message = 'RATE_LIMITED') {
+    super(message);
+    this.name = 'RateLimitedError';
+    this.retryAfterSec = retryAfterSec;
+  }
+}
+
+export class RateLimitUnavailableError extends Error {
+  readonly code = 'RATE_LIMIT_UNAVAILABLE' as const;
+  readonly retryAfterSec: number;
+  constructor(retryAfterSec = 30, message = 'RATE_LIMIT_UNAVAILABLE') {
+    super(message);
+    this.name = 'RateLimitUnavailableError';
+    this.retryAfterSec = retryAfterSec;
+  }
+}
+
+export class ObjectStoreUnavailableError extends Error {
+  readonly code = 'OBJECT_STORE_UNAVAILABLE' as const;
+  constructor(message = 'OBJECT_STORE_UNAVAILABLE') {
+    super(message);
+    this.name = 'ObjectStoreUnavailableError';
+  }
+}

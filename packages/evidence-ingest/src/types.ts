@@ -48,6 +48,32 @@ export const MAX_EVIDENCE_BYTES = 10 * 1024 * 1024;
 export const MAX_EVIDENCE_PER_CONSULTATION = 20;
 export const MAX_SANITIZED_FILENAME_LENGTH = 120;
 export const EVIDENCE_TTL_MINUTES = 60;
+export const DELETION_VERIFY_SLA_MS = 5 * 60_000;
+export const WORKER_POLL_INTERVAL_MIN_MS = 15_000;
+export const WORKER_POLL_INTERVAL_MAX_MS = 30_000;
+export const WORKER_POLL_INTERVAL_DEFAULT_MS = 20_000;
+export const WORKER_CLAIM_BATCH = 20;
+export const MAGIC_PREFIX_MAX_BYTES = 256;
+export const STREAMING_STAGING_CLASSIFICATION = 'TEST_OR_LOCAL_STAGING_NOT_PRODUCTION' as const;
+
+export const ENCRYPTION_POSTURES = [
+  'PROVIDER_SSE',
+  'SSE_KMS_CMEK',
+  'ENVELOPE_V1',
+  'NOT_PRODUCTION',
+] as const;
+export type EncryptionPosture = (typeof ENCRYPTION_POSTURES)[number];
+
+export const FORBIDDEN_OBJECT_STORE_METHODS = [
+  'getPublicUrl',
+  'publicUrl',
+  'presign',
+  'presignedUrl',
+  'createPresignedUrl',
+  'getSignedUrl',
+  'cdnUrl',
+  'browserDownload',
+] as const;
 
 export const DETECTED_MIME = {
   pdf: 'application/pdf',
@@ -74,20 +100,73 @@ export type FileValidationSuccess = {
 
 export type FileValidationResult = FileValidationSuccess | FileValidationFailure;
 
+export type ObjectStoreHead = {
+  exists: boolean;
+  byteSize: number | null;
+  encryptionPosture: EncryptionPosture;
+};
+
+export type ObjectStoreHealth = {
+  ok: boolean;
+  productionReady: false;
+  publicUrls: false;
+  durableProduction: false;
+  encryptionPosture: EncryptionPosture;
+};
+
+export type ObjectStoreCapabilities = {
+  publicUrl: false;
+  cdn: false;
+  permanentRetention: false;
+  browserDownloadRoute: false;
+};
+
+export type PrivateObjectReference = {
+  objectKey: string;
+};
+
 export type EvidenceObjectStore = {
-  readonly provider: 'memory_fake';
+  readonly provider: 'memory_fake' | 'memory_fault' | 'unavailable';
   readonly productionReady: false;
   readonly publicUrlsForbidden: true;
+  readonly encryptionPosture: EncryptionPosture;
+  readonly capabilities: ObjectStoreCapabilities;
   put(objectKey: string, bytes: Uint8Array): Promise<void>;
-  get(objectKey: string): Promise<Uint8Array | null>;
+  putStream(objectKey: string, body: AsyncIterable<Uint8Array>): Promise<void>;
+  readForMalwareScan(objectKey: string, maxBytes?: number): Promise<Uint8Array | null>;
   delete(objectKey: string): Promise<void>;
   exists(objectKey: string): Promise<boolean>;
+  head(objectKey: string): Promise<ObjectStoreHead>;
+  abortPartial(objectKey: string): Promise<void>;
+  health(): Promise<ObjectStoreHealth>;
 };
 
 export type MalwareScanResult = 'UNAVAILABLE' | 'INFECTED' | 'CLEAN';
 
 export type MalwareScanner = {
-  scan(_objectKey: string): Promise<MalwareScanResult>;
+  readonly productionReady: false;
+  scan(ref: PrivateObjectReference, signal?: AbortSignal): Promise<MalwareScanResult>;
+};
+
+export type RateLimitDecision =
+  | { ok: true }
+  | { ok: false; code: 'RATE_LIMITED'; retryAfterSec: number }
+  | { ok: false; code: 'RATE_LIMIT_UNAVAILABLE'; retryAfterSec: number };
+
+export type DurableRateLimiter = {
+  readonly adapter: 'memory_test_or_dev' | 'unavailable';
+  readonly productionReady: false;
+  readonly distributedReady: false;
+  tryInitiate(input: {
+    actorId: string;
+    organizationId: string;
+    clinicId: string;
+    consultationId: string;
+  }): Promise<RateLimitDecision>;
+  acquireUploadLease(input: { actorId: string }): Promise<RateLimitDecision & { leaseId?: string }>;
+  releaseUploadLease(leaseId: string): Promise<void>;
+  consumeBytes(actorId: string, bytes: number): Promise<RateLimitDecision>;
+  releaseBytes(actorId: string, bytes: number): Promise<void>;
 };
 
 /** Metadata persisted after ingest — no selector / OCR / interpretation fields. */

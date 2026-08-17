@@ -70,8 +70,8 @@ jobs:
       - name: Evidence ingest selector firewall (F1)
         run: |
           set -e
-          if grep -R -E '@ehas2/rule[1-9]|tesseract|pdf-parse' packages/evidence-ingest/src/index.ts packages/evidence-ingest/src/validateFile.ts packages/evidence-ingest/src/objectStore.ts packages/evidence-ingest/src/malwareScan.ts packages/database/src/services/evidenceService.ts apps/api/src/routes/evidence.ts apps/worker/src/jobs/evidenceRetention.ts; then
-            echo 'Forbidden selector/OCR/engine coupling in F1 ingest paths' >&2
+          if grep -R -E '@ehas2/rule[1-9]|tesseract|pdf-parse' packages/evidence-ingest/src --exclude=types.ts packages/database/src/services/evidenceService.ts packages/database/src/repositories/evidence.ts apps/api/src/routes/evidence.ts apps/api/src/http/streamBody.ts apps/api/src/middleware/uploadLimits.ts apps/worker/src packages/observability/src/evidenceMetrics.ts; then
+            echo 'Forbidden selector/OCR/engine coupling in evidence ingest paths' >&2
             exit 1
           fi
       - name: Set up Python

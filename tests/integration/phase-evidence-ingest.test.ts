@@ -18,6 +18,14 @@ import {
 } from '../../packages/database/src/index.ts';
 import {
   buildEvidenceObjectKey,
+  DELETION_VERIFY_SLA_MS,
+  DeterministicMalwareScanner,
+  EVIDENCE_TTL_MINUTES,
+  FaultInjectingObjectStore,
+  MemoryFakeObjectStore,
+  MemoryRateLimiter,
+  UnavailableObjectStore,
+  UnavailableRateLimiter,
   getMemoryFakeObjectStore,
   resetMemoryFakeObjectStore,
 } from '../../packages/evidence-ingest/src/index.ts';
@@ -36,7 +44,11 @@ resetMemoryFakeObjectStore();
 const store = getMemoryFakeObjectStore();
 const patients = new PatientService();
 const consultations = new ConsultationService();
-const evidence = new EvidenceService({ store });
+const evidence = new EvidenceService({
+  store,
+  malwareScanner: new DeterministicMalwareScanner('CLEAN'),
+  rateLimiter: new MemoryRateLimiter(),
+});
 
 const PNG = Buffer.from(
   '89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000a49444154789c63000100000500010d0a2db40000000049454e44ae426082',
@@ -232,7 +244,8 @@ async function httpBytes(
 describe('F1 evidence ingest foundation', () => {
   it('registers migration 010', () => {
     expect(getOrderedMigrationIds()).toContain('010_clinical_evidence_ingestion');
-    expect(getOrderedMigrationIds()).toHaveLength(10);
+    expect(getOrderedMigrationIds()).toContain('011_f2a_malware_clean_gate');
+    expect(getOrderedMigrationIds()).toHaveLength(11);
   });
 
   it('creates patient, consultation intake, evidence metadata, and stores temp bytes', async () => {
@@ -313,9 +326,8 @@ describe('F1 evidence ingest foundation', () => {
       contentSha256: string;
       byteSize: number;
     };
-    expect(storedItem.processingStatus).toBe('MALWARE_PENDING');
-    expect(storedItem.malwareScanResult).toBe('UNAVAILABLE');
-    expect(storedItem.malwareScanResult).not.toBe('CLEAN');
+    expect(storedItem.processingStatus).toBe('STORED_TEMP');
+    expect(storedItem.malwareScanResult).toBe('CLEAN');
     expect(storedItem.contentSha256).toMatch(/^[a-f0-9]{64}$/);
     expect(JSON.stringify(stored.json)).not.toMatch(/objectKey|presigned|http:\/\//);
 
@@ -333,10 +345,13 @@ describe('F1 evidence ingest foundation', () => {
     const res = await httpJson(app, 'GET', '/ready');
     expect(res.status).toBe(503);
     expect(res.json.evidenceIngestFoundation).toBe(true);
+    expect(res.json.f2aInfrastructureFoundation).toBe(true);
     expect(res.json.ocr).toBe(false);
     expect(res.json.clinicalEngine).toBe(false);
     expect(res.json.productionObjectStore).toBe(false);
     expect(res.json.malwareScanner).toBe(false);
+    expect(res.json.distributedRateLimiter).toBe(false);
+    expect(res.json.productionWorker).toBe(false);
   });
 
   it('conceals tenant A evidence from tenant B', async () => {
@@ -727,5 +742,297 @@ describe('F1 evidence ingest foundation', () => {
     await expect(
       evidence.initiate(doctorA, { ...payload, filename: 'other.png' }, env),
     ).rejects.toMatchObject({ name: 'IdempotencyConflictError' });
+  }, 120_000);
+});
+
+describe('F2A provider-neutral infrastructure', () => {
+  it('keeps 60-minute retention and 5-minute verify SLA', () => {
+    expect(EVIDENCE_TTL_MINUTES).toBe(60);
+    expect(DELETION_VERIFY_SLA_MS).toBe(5 * 60_000);
+  });
+
+  it('rejects UNAVAILABLE malware without storing bytes', async () => {
+    requireDb();
+    const { doctorA } = await seedTenants();
+    const local = new MemoryFakeObjectStore();
+    const closed = new EvidenceService({
+      store: local,
+      malwareScanner: new DeterministicMalwareScanner('UNAVAILABLE'),
+      rateLimiter: new MemoryRateLimiter(),
+    });
+    const patient = await patients.create(
+      doctorA,
+      { displayName: 'Synthetic F2A UA Patient' },
+      {},
+      env,
+    );
+    const consultation = await consultations.create(doctorA, { patientId: patient.id }, env);
+    const item = await closed.initiate(
+      doctorA,
+      {
+        consultationId: consultation.id,
+        evidenceType: 'USG',
+        sourceType: 'DOCTOR_UPLOAD',
+        filename: 'usg.png',
+        declaredMime: 'image/png',
+      },
+      env,
+    );
+    await expect(
+      closed.receiveBytes(doctorA, consultation.id, item.id, PNG, env),
+    ).rejects.toMatchObject({ message: 'MALWARE_UNAVAILABLE' });
+    const after = await closed.get(doctorA, consultation.id, item.id, env);
+    expect(after.processingStatus).toBe('REJECTED');
+    expect(local.size()).toBe(0);
+  }, 120_000);
+
+  it('quarantines INFECTED then deletes via jobs', async () => {
+    requireDb();
+    const { doctorA } = await seedTenants();
+    const local = new MemoryFakeObjectStore();
+    const infected = new EvidenceService({
+      store: local,
+      malwareScanner: new DeterministicMalwareScanner('INFECTED'),
+      rateLimiter: new MemoryRateLimiter(),
+    });
+    const patient = await patients.create(
+      doctorA,
+      { displayName: 'Synthetic F2A Infected Patient' },
+      {},
+      env,
+    );
+    const consultation = await consultations.create(doctorA, { patientId: patient.id }, env);
+    const item = await infected.initiate(
+      doctorA,
+      {
+        consultationId: consultation.id,
+        evidenceType: 'CT',
+        sourceType: 'DOCTOR_UPLOAD',
+        filename: 'ct.png',
+        declaredMime: 'image/png',
+      },
+      env,
+    );
+    await expect(
+      infected.receiveBytes(doctorA, consultation.id, item.id, PNG, env),
+    ).rejects.toMatchObject({ message: 'MALWARE_INFECTED' });
+    expect((await infected.get(doctorA, consultation.id, item.id, env)).processingStatus).toBe(
+      'QUARANTINED',
+    );
+    await runEvidenceRetentionOnce(doctorA, 'f2a-infected', new Date(), env, infected);
+    await runEvidenceRetentionOnce(doctorA, 'f2a-infected', new Date(), env, infected);
+    expect((await infected.get(doctorA, consultation.id, item.id, env)).processingStatus).toBe(
+      'DELETION_VERIFIED',
+    );
+  }, 120_000);
+
+  it('fails closed on store unavailable and rate-limit unavailable', async () => {
+    requireDb();
+    const { doctorA } = await seedTenants();
+    const storeFail = new EvidenceService({
+      store: new UnavailableObjectStore(),
+      malwareScanner: new DeterministicMalwareScanner('CLEAN'),
+      rateLimiter: new MemoryRateLimiter(),
+    });
+    const patient = await patients.create(
+      doctorA,
+      { displayName: 'Synthetic F2A Store Patient' },
+      {},
+      env,
+    );
+    const consultation = await consultations.create(doctorA, { patientId: patient.id }, env);
+    const item = await storeFail.initiate(
+      doctorA,
+      {
+        consultationId: consultation.id,
+        evidenceType: 'MRI',
+        sourceType: 'DOCTOR_UPLOAD',
+        filename: 'mri.png',
+        declaredMime: 'image/png',
+      },
+      env,
+    );
+    await expect(
+      storeFail.receiveBytes(doctorA, consultation.id, item.id, PNG, env),
+    ).rejects.toMatchObject({ name: 'ObjectStoreUnavailableError' });
+
+    const limited = new EvidenceService({
+      store: new MemoryFakeObjectStore(),
+      malwareScanner: new DeterministicMalwareScanner('CLEAN'),
+      rateLimiter: new UnavailableRateLimiter(),
+    });
+    const app = createApp({
+      resolvePrincipal: () =>
+        createPrincipalForPolicyEvaluation({
+          subjectId: doctorA.actorId,
+          role: PlatformRole.Doctor,
+          tenantId: doctorA.organizationId,
+          isTestPrincipal: true,
+        }),
+      resolveTenantContext: () => doctorA,
+      evidence: limited,
+    });
+    const denied = await httpJson(
+      app,
+      'POST',
+      `${EHAS2_API_NAMESPACE}/consultations/${consultation.id}/evidence`,
+      {
+        evidenceType: 'USG',
+        sourceType: 'DOCTOR_UPLOAD',
+        filename: 'usg.png',
+        declaredMime: 'image/png',
+      },
+    );
+    expect(denied.status).toBe(503);
+    expect(denied.json.code).toBe('RATE_LIMIT_UNAVAILABLE');
+    expect(JSON.stringify(denied.json)).not.toMatch(/stack|SQL|objectKey/i);
+  }, 120_000);
+
+  it('reconciles bytes_present mismatch and isolates poison deletes', async () => {
+    requireDb();
+    const { doctorA } = await seedTenants();
+    const local = new MemoryFakeObjectStore();
+    const svc = new EvidenceService({
+      store: local,
+      malwareScanner: new DeterministicMalwareScanner('CLEAN'),
+      rateLimiter: new MemoryRateLimiter(),
+    });
+    const patient = await patients.create(
+      doctorA,
+      { displayName: 'Synthetic F2A Mismatch' },
+      {},
+      env,
+    );
+    const consultation = await consultations.create(doctorA, { patientId: patient.id }, env);
+    const item = await svc.initiate(
+      doctorA,
+      {
+        consultationId: consultation.id,
+        evidenceType: 'XRAY',
+        sourceType: 'DOCTOR_UPLOAD',
+        filename: 'xray.png',
+        declaredMime: 'image/png',
+      },
+      env,
+    );
+    const stored = await svc.receiveBytes(doctorA, consultation.id, item.id, PNG, env);
+    const objectKey = buildEvidenceObjectKey({
+      organizationId: doctorA.organizationId,
+      clinicId: doctorA.clinicId,
+      consultationId: consultation.id,
+      evidenceId: stored.id,
+      contentSha256: stored.contentSha256 ?? '',
+    });
+    await local.delete(objectKey);
+    const recon = await svc.reconcileBlobPresence(doctorA, new Date(), env);
+    expect(recon.mismatches).toBeGreaterThanOrEqual(1);
+
+    const inner = new MemoryFakeObjectStore();
+    const poisonStore = new FaultInjectingObjectStore(inner);
+    const poison = new EvidenceService({
+      store: poisonStore,
+      malwareScanner: new DeterministicMalwareScanner('CLEAN'),
+      rateLimiter: new MemoryRateLimiter(),
+      jitterMs: () => 0,
+    });
+    const patientP = await patients.create(
+      doctorA,
+      { displayName: 'Synthetic F2A Poison' },
+      {},
+      env,
+    );
+    const consultationP = await consultations.create(doctorA, { patientId: patientP.id }, env);
+    const itemP = await poison.initiate(
+      doctorA,
+      {
+        consultationId: consultationP.id,
+        evidenceType: 'XRAY',
+        sourceType: 'DOCTOR_UPLOAD',
+        filename: 'poison.png',
+        declaredMime: 'image/png',
+      },
+      env,
+    );
+    const storedP = await poison.receiveBytes(doctorA, consultationP.id, itemP.id, PNG, env);
+    const poisonKey = buildEvidenceObjectKey({
+      organizationId: doctorA.organizationId,
+      clinicId: doctorA.clinicId,
+      consultationId: consultationP.id,
+      evidenceId: storedP.id,
+      contentSha256: storedP.contentSha256 ?? '',
+    });
+    poisonStore.failDeletes([poisonKey]);
+    await withTenantTransaction(
+      doctorA,
+      async (tx) => {
+        await tx.query(
+          `UPDATE clinical_evidence_jobs SET max_attempts = 2, next_run_at = now() - interval '1 second'
+           WHERE evidence_id = $1 AND job_type = 'DELETE_ORIGINAL'`,
+          [storedP.id],
+        );
+      },
+      env,
+    );
+    await poison.runDueJobs(doctorA, 'poison-w1', new Date(), env);
+    await poison.runDueJobs(doctorA, 'poison-w1', new Date(), env);
+    const status = await withTenantTransaction(
+      doctorA,
+      async (tx) => {
+        const r = await tx.query(
+          `SELECT status, last_error_code FROM clinical_evidence_jobs
+           WHERE evidence_id = $1 AND job_type = 'DELETE_ORIGINAL'`,
+          [storedP.id],
+        );
+        return r.rows[0] as { status: string; last_error_code: string | null };
+      },
+      env,
+    );
+    expect(['FAILED', 'DEAD']).toContain(status.status);
+    expect(String(status.last_error_code)).not.toMatch(/stack|SELECT|patient/i);
+  }, 120_000);
+
+  it('serializes concurrent byte uploads to a single object commit', async () => {
+    requireDb();
+    const { doctorA } = await seedTenants();
+    const local = new MemoryFakeObjectStore();
+    const svc = new EvidenceService({
+      store: local,
+      malwareScanner: new DeterministicMalwareScanner('CLEAN'),
+      rateLimiter: new MemoryRateLimiter(),
+    });
+    const patient = await patients.create(
+      doctorA,
+      { displayName: 'Synthetic F2A Concurrent' },
+      {},
+      env,
+    );
+    const consultation = await consultations.create(doctorA, { patientId: patient.id }, env);
+    const item = await svc.initiate(
+      doctorA,
+      {
+        consultationId: consultation.id,
+        evidenceType: 'USG',
+        sourceType: 'DOCTOR_UPLOAD',
+        filename: 'usg.png',
+        declaredMime: 'image/png',
+      },
+      env,
+    );
+    const settled = await Promise.allSettled([
+      svc.receiveBytes(doctorA, consultation.id, item.id, PNG, env),
+      svc.receiveBytes(doctorA, consultation.id, item.id, PNG, env),
+    ]);
+    const fulfilled = settled.filter((row) => row.status === 'fulfilled');
+    const rejected = settled.filter((row) => row.status === 'rejected');
+    expect(fulfilled.length).toBeGreaterThanOrEqual(1);
+    expect(local.size()).toBe(1);
+    const after = await svc.get(doctorA, consultation.id, item.id, env);
+    expect(after.processingStatus).toBe('STORED_TEMP');
+    if (rejected.length) {
+      const err = rejected[0] as PromiseRejectedResult;
+      expect(err.reason).toMatchObject({ name: 'ConflictError' });
+      expect(String((err.reason as Error).message)).toBe('EVIDENCE_BYTES_IN_PROGRESS');
+      expect(JSON.stringify(err.reason)).not.toMatch(/stack|SQL|object_key/i);
+    }
   }, 120_000);
 });
