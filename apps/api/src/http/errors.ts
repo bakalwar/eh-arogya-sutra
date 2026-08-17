@@ -2,6 +2,7 @@ import type { Response } from 'express';
 import {
   AccessDeniedError,
   ConflictError,
+  IdempotencyConflictError,
   MembershipInactiveError,
   ResourceNotFoundError,
   TenantContextRequiredError,
@@ -21,7 +22,9 @@ export type ApiErrorCode =
   | 'VALIDATION_ERROR'
   | 'CONFLICT'
   | 'TENANT_CONTEXT_REQUIRED'
-  | 'RATE_LIMITED';
+  | 'RATE_LIMITED'
+  | 'PAYLOAD_TOO_LARGE'
+  | 'IDEMPOTENCY_CONFLICT';
 
 export type ApiErrorBody = {
   success: false;
@@ -68,6 +71,10 @@ export function sendDomainError(res: Response, err: unknown, requestId: string):
   }
   if (err instanceof ConflictError) {
     sendError(res, 409, 'CONFLICT', err.message, requestId);
+    return;
+  }
+  if (err instanceof IdempotencyConflictError) {
+    sendError(res, 409, 'IDEMPOTENCY_CONFLICT', 'Idempotency key conflict', requestId);
     return;
   }
   const code = (err as { code?: string } | null)?.code;

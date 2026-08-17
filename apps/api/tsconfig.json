@@ -10,6 +10,7 @@
     { "path": "../../packages/shared" },
     { "path": "../../packages/config" },
     { "path": "../../packages/database" },
+    { "path": "../../packages/evidence-ingest" },
     { "path": "../../packages/observability" },
     { "path": "../../packages/security" }
   ]

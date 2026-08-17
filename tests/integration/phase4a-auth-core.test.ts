@@ -785,11 +785,11 @@ describe('Phase 4A authentication core', () => {
 
   it('38-39 clean migration and latest migration down/up', async () => {
     requireDb();
-    expect(getOrderedMigrationIds()).toHaveLength(9);
+    expect(getOrderedMigrationIds()).toHaveLength(10);
     const downId = await migrateDownLastForIsolatedTest(env);
-    expect(downId).toBe('009_auth_foundation');
+    expect(downId).toBe('010_clinical_evidence_ingestion');
     const up = await migrateUp(env);
-    expect(up.applied).toContain('009_auth_foundation');
+    expect(up.applied).toContain('010_clinical_evidence_ingestion');
   }, 120_000);
 
   it('40-41 responsive login/OTP UI and zero console error patterns in source', () => {

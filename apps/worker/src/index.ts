@@ -1,6 +1,7 @@
-import { logInfo } from '@ehas2/observability';
+import { runEvidenceRetentionOnce, workerShell } from './jobs/evidenceRetention.js';
 
-/** Background worker shell — OCR/analysis jobs in Phase 7+. */
-export function workerShell(): void {
-  logInfo('EHAS2 worker shell (no jobs registered)', { phase: '1a' });
+export { runEvidenceRetentionOnce, workerShell };
+
+if (process.env.EHAS2_WORKER_LISTEN === '1') {
+  workerShell();
 }

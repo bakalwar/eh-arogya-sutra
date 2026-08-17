@@ -1,7 +1,7 @@
 {
-  "name": "@ehas2/database",
-  "version": "0.1.0-phase4a",
-  "description": "E.H. AROGYA SUTRA 2 — PostgreSQL persistence + auth core (Phase 4A)",
+  "name": "@ehas2/evidence-ingest",
+  "version": "0.1.0-f1",
+  "description": "E.H. AROGYA SUTRA 2 — PHI-safe evidence ingest validation and temporary object-store seam (F1, non-selecting)",
   "private": true,
   "type": "module",
   "main": "./dist/index.js",
@@ -17,12 +17,5 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint src"
   },
-  "dependencies": {
-    "@ehas2/evidence-ingest": "*",
-    "@ehas2/security": "*",
-    "pg": "^8.16.3"
-  },
-  "devDependencies": {
-    "@types/pg": "^8.15.4"
-  }
+  "dependencies": {}
 }

@@ -98,6 +98,22 @@ export { PgIdempotencyRepository } from './repositories/idempotency.js';
 export { PatientService, patientService } from './services/patientService.js';
 export { ConsultationService, consultationService } from './services/consultationService.js';
 export {
+  ConsultationIntakeService,
+  consultationIntakeService,
+} from './services/consultationIntakeService.js';
+export type { ConsultationIntakePatch } from './services/consultationIntakeService.js';
+export { EvidenceService, evidenceService } from './services/evidenceService.js';
+export type { EvidenceServiceDeps } from './services/evidenceService.js';
+export { PgEvidenceRepository } from './repositories/evidence.js';
+export type { EvidenceItemRecord, EvidenceJobRecord } from './repositories/evidence.js';
+export { PgConsultationIntakeRepository } from './repositories/consultationIntake.js';
+export type {
+  ConsultationIntakeBundle,
+  VitalsIntake,
+  SymptomIntake,
+  ClinicalContextIntake,
+} from './repositories/consultationIntake.js';
+export {
   DoctorProfileService,
   ClinicProfileService,
   MembershipQueryService,
