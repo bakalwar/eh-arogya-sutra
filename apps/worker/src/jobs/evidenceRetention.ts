@@ -1,5 +1,10 @@
 import { logInfo } from '@ehas2/observability';
-import { assertBackgroundJobTenant, evidenceService, type TenantContext } from '@ehas2/database';
+import {
+  assertBackgroundJobTenant,
+  evidenceService,
+  type EvidenceService,
+  type TenantContext,
+} from '@ehas2/database';
 
 /** Background worker shell — OCR/analysis jobs remain unregistered. */
 export function workerShell(): void {
@@ -15,7 +20,8 @@ export async function runEvidenceRetentionOnce(
   workerId = 'ehas2-worker-f1',
   now: Date = new Date(),
   env: Record<string, string | undefined> = process.env,
+  service: EvidenceService = evidenceService,
 ): Promise<{ processed: number; succeeded: number; failed: number }> {
   assertBackgroundJobTenant(tenant);
-  return evidenceService.runDueJobs(tenant, workerId, now, env);
+  return service.runDueJobs(tenant, workerId, now, env);
 }

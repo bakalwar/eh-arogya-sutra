@@ -447,12 +447,14 @@ describe('F1 evidence ingest foundation', () => {
       'syn-worker-1',
       new Date(Date.parse(stored.expiresAt) + 1000),
       env,
+      evidence,
     );
     await runEvidenceRetentionOnce(
       doctorA,
       'syn-worker-1',
       new Date(Date.parse(stored.expiresAt) + 2000),
       env,
+      evidence,
     );
     const after = await evidence.get(doctorA, stored.id, env);
     expect(after.processingStatus).toBe('DELETION_VERIFIED');
