@@ -397,7 +397,7 @@ export class EvidenceService {
         contentSha256: file.contentSha256,
       });
       try {
-        await this.store().putStream(objectKey, staged.chunks());
+        await this.store().put(objectKey, raw);
         putObjectKey = objectKey;
       } catch (err) {
         try {

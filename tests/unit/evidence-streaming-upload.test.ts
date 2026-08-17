@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto';
 import {
   MAX_EVIDENCE_BYTES,
   STREAMING_STAGING_CLASSIFICATION,
+  UnavailableObjectStore,
   bytesAsStream,
   disposeAllStagingForTests,
   stageBoundedStream,
@@ -93,5 +94,16 @@ describe('F2A streaming ingest', () => {
     expect(validated.ok).toBe(true);
     if (validated.ok) expect(validated.contentSha256).toBe(expected);
     await staged.dispose();
+  });
+
+  it('does not auto-open a staging file when putStream throws without consuming', async () => {
+    const staged = await stageBoundedStream({ body: bytesAsStream(PNG) });
+    const store = new UnavailableObjectStore();
+    await expect(store.putStream('ehas2/unconsumed', staged.chunks())).rejects.toMatchObject({
+      code: 'STORE_UNAVAILABLE',
+    });
+    await staged.dispose();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(stagingOpenCount()).toBe(0);
   });
 });

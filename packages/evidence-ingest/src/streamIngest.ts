@@ -1,5 +1,4 @@
 import { createHash, randomBytes } from 'node:crypto';
-import { createReadStream } from 'node:fs';
 import { chmod, mkdir, open, readFile, unlink } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -175,8 +174,18 @@ export async function stageBoundedStream(input: {
       async readAll() {
         return readFile(filePath);
       },
-      chunks() {
-        return createReadStream(filePath);
+      async *chunks() {
+        const reader = await open(filePath, 'r');
+        try {
+          const buf = Buffer.alloc(64 * 1024);
+          for (;;) {
+            const { bytesRead } = await reader.read(buf, 0, buf.length, null);
+            if (bytesRead === 0) break;
+            yield Buffer.from(buf.subarray(0, bytesRead));
+          }
+        } finally {
+          await reader.close();
+        }
       },
       dispose,
     };
