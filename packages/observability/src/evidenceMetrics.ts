@@ -10,7 +10,9 @@ export type EvidenceSafeMetricName =
   | 'dead_count'
   | 'db_object_mismatch'
   | 'rate_limit_denial'
-  | 'cross_tenant_denial';
+  | 'cross_tenant_denial'
+  | 'extract_result'
+  | 'extract_latency_ms';
 
 export type EvidenceSafeMetric = {
   name: EvidenceSafeMetricName;
@@ -36,6 +38,8 @@ function emptyTotals(): Totals {
     db_object_mismatch: 0,
     rate_limit_denial: 0,
     cross_tenant_denial: 0,
+    extract_result: 0,
+    extract_latency_ms: 0,
   };
 }
 
@@ -44,7 +48,7 @@ const malwareCounts = { CLEAN: 0, INFECTED: 0, UNAVAILABLE: 0 };
 const rejectedByCode = new Map<string, number>();
 
 const FORBIDDEN_LOG_KEYS =
-  /filename|objectKey|object_key|presign|patientName|displayName|token|secret|stack|SQL/i;
+  /filename|objectKey|object_key|presign|patientName|displayName|token|secret|stack|SQL|raw_text|extracted_text|extractedText|ocrText|ocr_text|candidate_text/i;
 
 export function assertEvidenceMetricSafe(metric: EvidenceSafeMetric): void {
   const blob = JSON.stringify(metric);

@@ -1,10 +1,11 @@
-import type { TenantContext, TransactionContext } from '../tenantContext.js';
+import type { EvidenceJobType } from '@ehas2/evidence-extract';
 import type {
   EvidenceProcessingStatus,
   EvidenceSourceType,
   EvidenceType,
   MalwareScanResult,
 } from '@ehas2/evidence-ingest';
+import type { TenantContext, TransactionContext } from '../tenantContext.js';
 
 export type EvidenceItemRecord = {
   id: string;
@@ -50,7 +51,7 @@ export type EvidenceJobRecord = {
   evidenceId: string;
   organizationId: string;
   clinicId: string;
-  jobType: 'DELETE_ORIGINAL' | 'VERIFY_DELETION';
+  jobType: EvidenceJobType;
   status: 'PENDING' | 'LEASED' | 'SUCCEEDED' | 'FAILED' | 'DEAD';
   attempt: number;
   maxAttempts: number;
@@ -491,7 +492,7 @@ export class PgEvidenceRepository {
     tx: TransactionContext,
     input: {
       evidenceId: string;
-      jobType: 'DELETE_ORIGINAL' | 'VERIFY_DELETION';
+      jobType: EvidenceJobType;
       nextRunAt: Date;
     },
   ): Promise<EvidenceJobRecord> {
@@ -518,6 +519,7 @@ export class PgEvidenceRepository {
     now: Date,
     leaseMs: number,
     batchSize = 20,
+    jobTypes: readonly EvidenceJobType[] = ['DELETE_ORIGINAL', 'VERIFY_DELETION'],
   ): Promise<EvidenceJobRecord[]> {
     const limit = Math.min(20, Math.max(1, batchSize));
     const r = await tx.query(
@@ -538,6 +540,7 @@ export class PgEvidenceRepository {
                AND lease_expires_at <= $3::timestamptz
              )
            )
+           AND job_type = ANY($7::text[])
          ORDER BY next_run_at ASC
          FOR UPDATE SKIP LOCKED
          LIMIT $6
@@ -550,6 +553,7 @@ export class PgEvidenceRepository {
         workerId,
         new Date(now.getTime() + leaseMs).toISOString(),
         limit,
+        [...jobTypes],
       ],
     );
     return (r.rows as Record<string, unknown>[]).map(mapJob);

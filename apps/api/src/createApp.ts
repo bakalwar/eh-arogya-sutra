@@ -22,6 +22,11 @@ import {
   EVIDENCE_PRODUCTION_WORKER,
   F2A_INFRASTRUCTURE_FOUNDATION,
 } from '@ehas2/evidence-ingest';
+import {
+  EVIDENCE_EXTRACT_PRODUCTION,
+  EVIDENCE_OCR_ADAPTER_CONNECTED,
+  F3A_EXTRACTION_CANDIDATE_FOUNDATION,
+} from '@ehas2/evidence-extract';
 import { logInfo } from '@ehas2/observability';
 import { requirePermission, type AuthedRequest } from './middleware/authorization.js';
 import { sendError } from './http/errors.js';
@@ -154,7 +159,10 @@ export function createApp(deps: CreateAppDeps = {}) {
       profileUploads: false,
       evidenceIngestFoundation: EVIDENCE_INGEST_FOUNDATION,
       f2aInfrastructureFoundation: F2A_INFRASTRUCTURE_FOUNDATION,
+      f3aExtractionCandidateFoundation: F3A_EXTRACTION_CANDIDATE_FOUNDATION,
       ocr: EVIDENCE_OCR_CONNECTED,
+      ocrAdapter: EVIDENCE_OCR_ADAPTER_CONNECTED,
+      extractProduction: EVIDENCE_EXTRACT_PRODUCTION,
       productionObjectStore: EVIDENCE_PRODUCTION_OBJECT_STORE,
       malwareScanner: EVIDENCE_MALWARE_SCANNER_CONNECTED,
       distributedRateLimiter: EVIDENCE_DISTRIBUTED_RATE_LIMITER,
@@ -194,7 +202,10 @@ export function createApp(deps: CreateAppDeps = {}) {
         profileUploads: false,
         evidenceIngestFoundation: EVIDENCE_INGEST_FOUNDATION,
         f2aInfrastructureFoundation: F2A_INFRASTRUCTURE_FOUNDATION,
+        f3aExtractionCandidateFoundation: F3A_EXTRACTION_CANDIDATE_FOUNDATION,
         ocr: EVIDENCE_OCR_CONNECTED,
+        ocrAdapter: EVIDENCE_OCR_ADAPTER_CONNECTED,
+        extractProduction: EVIDENCE_EXTRACT_PRODUCTION,
         clinicalEngine: EVIDENCE_CLINICAL_ENGINE_CONNECTED,
         productionObjectStore: EVIDENCE_PRODUCTION_OBJECT_STORE,
         malwareScanner: EVIDENCE_MALWARE_SCANNER_CONNECTED,

@@ -116,6 +116,8 @@ export { EvidenceService, evidenceService } from './services/evidenceService.js'
 export type { EvidenceServiceDeps } from './services/evidenceService.js';
 export { PgEvidenceRepository } from './repositories/evidence.js';
 export type { EvidenceItemRecord, EvidenceJobRecord } from './repositories/evidence.js';
+export { PgExtractionRepository } from './repositories/extraction.js';
+export type { ExtractionRunRecord } from './repositories/extraction.js';
 export { PgConsultationIntakeRepository } from './repositories/consultationIntake.js';
 export type {
   ConsultationIntakeBundle,

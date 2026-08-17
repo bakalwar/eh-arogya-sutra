@@ -3,6 +3,7 @@ import {
   EVIDENCE_SOURCE_TYPES,
   EVIDENCE_TTL_MINUTES,
   EVIDENCE_TYPES,
+  MAX_EVIDENCE_BYTES,
   MAX_EVIDENCE_PER_CONSULTATION,
   WORKER_CLAIM_BATCH,
   assertMalwareGateSatisfied,
@@ -25,6 +26,19 @@ import {
   type RateLimitDecision,
   type StagedEvidenceBytes,
 } from '@ehas2/evidence-ingest';
+import {
+  EXTRACT_TIMEOUT_MS,
+  MAGIC_PREFIX_MAX,
+  assertNoStorageInLocator,
+  claimableEvidenceJobTypes,
+  defaultDeterministicExtractor,
+  extractJobsEnabled,
+  extractorFingerprint,
+  type ExtractionCandidateDto,
+  type ExtractionProvider,
+  type ExtractionResult,
+  type LimitationCode,
+} from '@ehas2/evidence-extract';
 import { assertTenantContext, type TenantContext } from '../tenantContext.js';
 import { runInSavepoint, withTenantTransaction } from '../pool.js';
 import { PgAuditEventRepository, PgConsultationRepository } from '../repositories/postgres.js';
@@ -34,6 +48,7 @@ import {
   type EvidenceItemRecord,
   type EvidenceJobRecord,
 } from '../repositories/evidence.js';
+import { PgExtractionRepository } from '../repositories/extraction.js';
 import {
   ConflictError,
   IdempotencyConflictError,
@@ -46,6 +61,7 @@ import {
 import { assertOptionalIsoDate, assertUuid, hashPayload } from '../validation.js';
 
 const evidenceRepo = new PgEvidenceRepository();
+const extractionRepo = new PgExtractionRepository();
 const consultations = new PgConsultationRepository();
 const audit = new PgAuditEventRepository();
 const idempotency = new PgIdempotencyRepository();
@@ -104,10 +120,40 @@ function safeJobErrorCode(err: unknown): string {
   return 'JOB_FAILED';
 }
 
+function extractorFingerprintOf(extractor: ExtractionProvider): string {
+  return extractorFingerprint({
+    name: extractor.name,
+    version: extractor.version,
+    modelOrLangpackVersion: extractor.modelOrLangpackVersion,
+    method: extractor.method,
+  });
+}
+
+async function raceExtract(
+  pending: Promise<ExtractionResult>,
+  abort: AbortController,
+): Promise<ExtractionResult> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => {
+      abort.abort();
+      const err = new Error('EXTRACTION_TIMEOUT');
+      (err as Error & { code: string }).code = 'EXTRACTION_TIMEOUT';
+      reject(err);
+    }, EXTRACT_TIMEOUT_MS);
+  });
+  try {
+    return await Promise.race([pending, timeout]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
 export type EvidenceServiceDeps = {
   store?: EvidenceObjectStore;
   malwareScanner?: MalwareScanner;
   rateLimiter?: DurableRateLimiter;
+  extractor?: ExtractionProvider;
   onSafeMetric?: EvidenceSafeMetricSink;
   jitterMs?: () => number;
 };
@@ -121,6 +167,10 @@ export class EvidenceService {
 
   private scanner(): MalwareScanner {
     return this.deps.malwareScanner ?? defaultMalwareScanner;
+  }
+
+  private extractor(): ExtractionProvider {
+    return this.deps.extractor ?? defaultDeterministicExtractor();
   }
 
   private limiter(): DurableRateLimiter {
@@ -748,7 +798,15 @@ export class EvidenceService {
         const queue = await evidenceRepo.countOpenJobs(tenant, tx, now);
         this.metric({ name: 'queue_depth', count: queue.depth });
         this.metric({ name: 'queue_oldest_age_ms', ms: queue.oldestAgeMs, count: 0 });
-        return evidenceRepo.claimDueJobs(tenant, tx, workerId, now, 30_000, WORKER_CLAIM_BATCH);
+        return evidenceRepo.claimDueJobs(
+          tenant,
+          tx,
+          workerId,
+          now,
+          30_000,
+          WORKER_CLAIM_BATCH,
+          claimableEvidenceJobTypes(env),
+        );
       },
       env,
     );
@@ -764,6 +822,8 @@ export class EvidenceService {
           this.metric({ name: 'delete_latency_ms', ms, count: 0 });
         if (job.jobType === 'VERIFY_DELETION')
           this.metric({ name: 'verify_latency_ms', ms, count: 0 });
+        if (job.jobType === 'EXTRACT_CANDIDATES')
+          this.metric({ name: 'extract_latency_ms', ms, count: 0 });
       } catch (err) {
         failed += 1;
         const code = safeJobErrorCode(err);
@@ -857,12 +917,76 @@ export class EvidenceService {
     return { checked, mismatches, orphansDeleted };
   }
 
+  async enqueueExtractCandidates(
+    tenant: TenantContext,
+    evidenceId: string,
+    now: Date = new Date(),
+    env: Record<string, string | undefined> = process.env,
+  ): Promise<EvidenceJobRecord> {
+    assertTenantContext(tenant);
+    assertUuid(evidenceId, 'evidenceId');
+    if (!extractJobsEnabled(env)) {
+      throw new ValidationError('EXTRACTION_NOT_CONNECTED');
+    }
+    return withTenantTransaction(
+      tenant,
+      async (tx) => {
+        const item = await evidenceRepo.findById(tenant, tx, evidenceId);
+        if (!item) throw new ResourceNotFoundError();
+        try {
+          return await evidenceRepo.enqueueJob(tenant, tx, {
+            evidenceId,
+            jobType: 'EXTRACT_CANDIDATES',
+            nextRunAt: now,
+          });
+        } catch (err) {
+          if (isUniqueViolation(err)) {
+            throw new ConflictError('EXTRACT_JOB_OPEN');
+          }
+          throw err;
+        }
+      },
+      env,
+    );
+  }
+
+  async listExtractionCandidates(
+    tenant: TenantContext,
+    evidenceId: string,
+    env: Record<string, string | undefined> = process.env,
+  ): Promise<ExtractionCandidateDto[]> {
+    assertTenantContext(tenant);
+    assertUuid(evidenceId, 'evidenceId');
+    return withTenantTransaction(
+      tenant,
+      async (tx) => extractionRepo.listCandidatesForEvidence(tenant, tx, evidenceId),
+      env,
+    );
+  }
+
+  async countStructuredFindingsForEvidence(
+    tenant: TenantContext,
+    evidenceId: string,
+    env: Record<string, string | undefined> = process.env,
+  ): Promise<number> {
+    assertTenantContext(tenant);
+    return withTenantTransaction(
+      tenant,
+      async (tx) => extractionRepo.countFindingsForEvidence(tenant, tx, evidenceId),
+      env,
+    );
+  }
+
   private async executeJob(
     tenant: TenantContext,
     job: EvidenceJobRecord,
     now: Date,
     env: Record<string, string | undefined>,
   ): Promise<void> {
+    if (job.jobType === 'EXTRACT_CANDIDATES') {
+      await this.executeExtractCandidates(tenant, job, env);
+      return;
+    }
     await withTenantTransaction(
       tenant,
       async (tx) => {
@@ -957,6 +1081,250 @@ export class EvidenceService {
           resourceId: job.evidenceId,
           outcome: 'SUCCESS',
           metadata: { code: 'VERIFIED' },
+        });
+      },
+      env,
+    );
+  }
+
+  private async executeExtractCandidates(
+    tenant: TenantContext,
+    job: EvidenceJobRecord,
+    env: Record<string, string | undefined>,
+  ): Promise<void> {
+    if (!extractJobsEnabled(env)) {
+      await withTenantTransaction(
+        tenant,
+        async (tx) => {
+          await evidenceRepo.finishJob(
+            tenant,
+            tx,
+            job,
+            'FAILED',
+            'EXTRACTION_NOT_CONNECTED',
+            new Date(),
+          );
+        },
+        env,
+      );
+      this.metric({ name: 'extract_result', code: 'EXTRACTION_NOT_CONNECTED' });
+      return;
+    }
+
+    const loaded = await withTenantTransaction(
+      tenant,
+      async (tx) => {
+        const item = await evidenceRepo.findById(tenant, tx, job.evidenceId);
+        const blob = item ? await evidenceRepo.findBlob(tenant, tx, job.evidenceId) : null;
+        return { item, blob };
+      },
+      env,
+    );
+    if (!loaded.item) {
+      await withTenantTransaction(
+        tenant,
+        async (tx) => evidenceRepo.finishJob(tenant, tx, job, 'SUCCEEDED', null, null),
+        env,
+      );
+      return;
+    }
+    const item = loaded.item;
+    const blob = loaded.blob;
+    const extractor = this.extractor();
+    const fingerprint = extractorFingerprintOf(extractor);
+
+    const existing = await withTenantTransaction(
+      tenant,
+      async (tx) => extractionRepo.findActiveRun(tenant, tx, item.id, fingerprint),
+      env,
+    );
+    if (existing) {
+      await withTenantTransaction(
+        tenant,
+        async (tx) => {
+          await evidenceRepo.finishJob(tenant, tx, job, 'SUCCEEDED', 'DUPLICATE_RUN', null);
+          await audit.append(tx, {
+            organizationId: tenant.organizationId,
+            clinicId: tenant.clinicId,
+            actorId: tenant.actorId,
+            actorRole: tenant.actorRole,
+            eventType: 'evidence_extract_idempotent',
+            resourceType: 'evidence',
+            resourceId: item.id,
+            outcome: 'SUCCESS',
+            metadata: { code: 'DUPLICATE_RUN', candidateCount: existing.candidateCount },
+          });
+        },
+        env,
+      );
+      this.metric({ name: 'extract_result', code: 'DUPLICATE_RUN' });
+      return;
+    }
+
+    if (item.malwareScanResult !== 'CLEAN' || !assertMalwareGateSatisfied(item.malwareScanResult)) {
+      await this.persistExtractOutcome(
+        tenant,
+        job,
+        item,
+        {
+          status: 'REJECTED',
+          limitationCodes: ['SCANNER_NOT_CLEAN', 'NOT_AUTHORITATIVE'],
+          candidates: [],
+          extractor,
+          fingerprint,
+          inputSha: item.contentSha256,
+        },
+        env,
+      );
+      this.metric({ name: 'extract_result', code: 'SCANNER_NOT_CLEAN' });
+      return;
+    }
+
+    if (!blob?.bytesPresent) {
+      await this.persistExtractOutcome(
+        tenant,
+        job,
+        item,
+        {
+          status: 'REJECTED',
+          limitationCodes: ['ORIGINAL_UNAVAILABLE', 'NOT_AUTHORITATIVE'],
+          candidates: [],
+          extractor,
+          fingerprint,
+          inputSha: item.contentSha256,
+        },
+        env,
+      );
+      this.metric({ name: 'extract_result', code: 'ORIGINAL_UNAVAILABLE' });
+      return;
+    }
+
+    const bytes = await this.store(env).readForMalwareScan(blob.objectKey, MAX_EVIDENCE_BYTES);
+    if (!bytes || bytes.byteLength === 0) {
+      await this.persistExtractOutcome(
+        tenant,
+        job,
+        item,
+        {
+          status: 'REJECTED',
+          limitationCodes: ['ORIGINAL_UNAVAILABLE', 'MALFORMED_DOCUMENT', 'NOT_AUTHORITATIVE'],
+          candidates: [],
+          extractor,
+          fingerprint,
+          inputSha: item.contentSha256,
+        },
+        env,
+      );
+      this.metric({ name: 'extract_result', code: 'ORIGINAL_UNAVAILABLE' });
+      return;
+    }
+
+    const abort = new AbortController();
+    const result = await raceExtract(
+      extractor.extract({
+        organizationId: item.organizationId,
+        clinicId: item.clinicId,
+        patientId: item.patientId,
+        consultationId: item.consultationId,
+        evidenceItemId: item.id,
+        evidenceType: item.evidenceType,
+        declaredMime: item.declaredMime,
+        detectedMime: item.detectedMime,
+        byteSize: item.byteSize ?? bytes.byteLength,
+        contentSha256: item.contentSha256,
+        magicPrefix: bytes.subarray(0, MAGIC_PREFIX_MAX),
+        abortSignal: abort.signal,
+      }),
+      abort,
+    );
+
+    for (const candidate of result.ok ? result.candidates : []) {
+      assertNoStorageInLocator(candidate.sourceLocator);
+    }
+
+    const status = result.ok ? 'EXTRACTED_UNVERIFIED' : 'REJECTED';
+    await this.persistExtractOutcome(
+      tenant,
+      job,
+      item,
+      {
+        status,
+        limitationCodes: result.limitationCodes,
+        candidates: result.ok ? result.candidates : [],
+        extractor,
+        fingerprint: result.extractorFingerprint,
+        inputSha: item.contentSha256,
+      },
+      env,
+    );
+    this.metric({
+      name: 'extract_result',
+      code: result.ok ? 'EXTRACTED_UNVERIFIED' : result.code,
+    });
+  }
+
+  private async persistExtractOutcome(
+    tenant: TenantContext,
+    job: EvidenceJobRecord,
+    item: EvidenceItemRecord,
+    input: {
+      status: 'EXTRACTED_UNVERIFIED' | 'REJECTED';
+      limitationCodes: readonly LimitationCode[];
+      candidates: readonly ExtractionCandidateDto[];
+      extractor: ExtractionProvider;
+      fingerprint: string;
+      inputSha: string | null;
+    },
+    env: Record<string, string | undefined>,
+  ): Promise<void> {
+    await withTenantTransaction(
+      tenant,
+      async (tx) => {
+        const stillThere = await extractionRepo.findActiveRun(
+          tenant,
+          tx,
+          item.id,
+          input.fingerprint,
+        );
+        if (stillThere) {
+          await evidenceRepo.finishJob(tenant, tx, job, 'SUCCEEDED', 'DUPLICATE_RUN', null);
+          return;
+        }
+        const run = await extractionRepo.insertRun(tenant, tx, {
+          patientId: item.patientId,
+          consultationId: item.consultationId,
+          evidenceItemId: item.id,
+          jobId: job.id,
+          extractorName: input.extractor.name,
+          extractorVersion: input.extractor.version,
+          modelOrLangpackVersion: input.extractor.modelOrLangpackVersion,
+          method: input.extractor.method,
+          extractorFingerprint: input.fingerprint,
+          inputContentSha256: input.inputSha,
+          status: input.status,
+          limitationCodes: input.limitationCodes,
+          candidateCount: input.candidates.length,
+        });
+        if (input.status === 'EXTRACTED_UNVERIFIED' && input.candidates.length > 0) {
+          await extractionRepo.insertCandidates(tenant, tx, run.id, input.candidates);
+        }
+        await extractionRepo.supersedeRuns(tenant, tx, item.id, input.fingerprint, run.id);
+        await evidenceRepo.finishJob(tenant, tx, job, 'SUCCEEDED', null, null);
+        await audit.append(tx, {
+          organizationId: tenant.organizationId,
+          clinicId: tenant.clinicId,
+          actorId: tenant.actorId,
+          actorRole: tenant.actorRole,
+          eventType: 'evidence_extract_candidates',
+          resourceType: 'evidence',
+          resourceId: item.id,
+          outcome: 'SUCCESS',
+          metadata: {
+            code: input.status,
+            candidateCount: input.candidates.length,
+            limitationCount: input.limitationCodes.length,
+            extractorVersion: input.extractor.version,
+          },
         });
       },
       env,
