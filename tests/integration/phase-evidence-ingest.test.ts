@@ -17,8 +17,9 @@ import {
   type TenantContext,
 } from '../../packages/database/src/index.ts';
 import {
-  MemoryFakeObjectStore,
   buildEvidenceObjectKey,
+  getMemoryFakeObjectStore,
+  resetMemoryFakeObjectStore,
 } from '../../packages/evidence-ingest/src/index.ts';
 import {
   PlatformRole,
@@ -31,7 +32,8 @@ import { runEvidenceRetentionOnce } from '../../apps/worker/src/jobs/evidenceRet
 
 const env = isolatedPostgresTestEnv('ehas2_phase_evidence_test');
 let dbReady = false;
-const store = new MemoryFakeObjectStore();
+resetMemoryFakeObjectStore();
+const store = getMemoryFakeObjectStore();
 const patients = new PatientService();
 const consultations = new ConsultationService();
 const evidence = new EvidenceService({ store });

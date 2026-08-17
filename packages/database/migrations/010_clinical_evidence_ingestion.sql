@@ -20,8 +20,8 @@ CREATE TABLE clinical_evidence_items (
   source_type text NOT NULL
     CHECK (source_type IN ('DOCTOR_UPLOAD', 'PATIENT_SUPPLIED', 'CLINIC_SCAN')),
   filename_sanitized text NOT NULL,
-  original_filename_retained boolean NOT NULL DEFAULT false
-    CHECK (original_filename_retained = false),
+  unsanitized_name_discarded boolean NOT NULL DEFAULT true
+    CHECK (unsanitized_name_discarded = true),
   declared_mime text NOT NULL,
   detected_mime text NULL,
   byte_size bigint NULL
