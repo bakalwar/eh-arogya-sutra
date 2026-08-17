@@ -20,6 +20,7 @@
   "dependencies": {
     "@ehas2/evidence-ingest": "*",
     "@ehas2/evidence-extract": "*",
+    "@ehas2/evidence-extract-adapters": "*",
     "@ehas2/security": "*",
     "pg": "^8.16.3"
   },

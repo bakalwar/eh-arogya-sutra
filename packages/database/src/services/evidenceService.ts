@@ -28,17 +28,25 @@ import {
 } from '@ehas2/evidence-ingest';
 import {
   EXTRACT_TIMEOUT_MS,
+  EXTRACT_JOB_TIMEOUT_MS,
   MAGIC_PREFIX_MAX,
   assertNoStorageInLocator,
   claimableEvidenceJobTypes,
   defaultDeterministicExtractor,
   extractJobsEnabled,
+  extractOcrJobsEnabled,
   extractorFingerprint,
+  type ContentIntent,
   type ExtractionCandidateDto,
   type ExtractionProvider,
   type ExtractionResult,
   type LimitationCode,
 } from '@ehas2/evidence-extract';
+import {
+  TwoStageOpenSourceExtractor,
+  defaultOcrPipelineFingerprint,
+} from '@ehas2/evidence-extract-adapters';
+import { isProductionRuntime } from '@ehas2/evidence-ingest';
 import { assertTenantContext, type TenantContext } from '../tenantContext.js';
 import { runInSavepoint, withTenantTransaction } from '../pool.js';
 import { PgAuditEventRepository, PgConsultationRepository } from '../repositories/postgres.js';
@@ -48,7 +56,7 @@ import {
   type EvidenceItemRecord,
   type EvidenceJobRecord,
 } from '../repositories/evidence.js';
-import { PgExtractionRepository } from '../repositories/extraction.js';
+import { PgExtractionRepository, insertRunWithIdempotency } from '../repositories/extraction.js';
 import {
   ConflictError,
   IdempotencyConflictError,
@@ -132,6 +140,7 @@ function extractorFingerprintOf(extractor: ExtractionProvider): string {
 async function raceExtract(
   pending: Promise<ExtractionResult>,
   abort: AbortController,
+  timeoutMs: number = EXTRACT_TIMEOUT_MS,
 ): Promise<ExtractionResult> {
   let timer: ReturnType<typeof setTimeout> | undefined;
   const timeout = new Promise<never>((_, reject) => {
@@ -140,7 +149,7 @@ async function raceExtract(
       const err = new Error('EXTRACTION_TIMEOUT');
       (err as Error & { code: string }).code = 'EXTRACTION_TIMEOUT';
       reject(err);
-    }, EXTRACT_TIMEOUT_MS);
+    }, timeoutMs);
   });
   try {
     return await Promise.race([pending, timeout]);
@@ -169,8 +178,27 @@ export class EvidenceService {
     return this.deps.malwareScanner ?? defaultMalwareScanner;
   }
 
-  private extractor(): ExtractionProvider {
-    return this.deps.extractor ?? defaultDeterministicExtractor();
+  private extractor(env: Record<string, string | undefined> = process.env): ExtractionProvider {
+    if (this.deps.extractor) return this.deps.extractor;
+    if (extractOcrJobsEnabled(env)) {
+      return new TwoStageOpenSourceExtractor();
+    }
+    return defaultDeterministicExtractor();
+  }
+
+  private resolveExtractorFingerprint(
+    extractor: ExtractionProvider,
+    item: EvidenceItemRecord,
+    env: Record<string, string | undefined>,
+  ): string {
+    if (extractOcrJobsEnabled(env)) {
+      return defaultOcrPipelineFingerprint({
+        evidenceItemId: item.id,
+        inputContentSha256: item.contentSha256,
+        method: extractor.method,
+      });
+    }
+    return extractorFingerprintOf(extractor);
   }
 
   private limiter(): DurableRateLimiter {
@@ -977,6 +1005,29 @@ export class EvidenceService {
     );
   }
 
+  /** Test-only: set written-report content intent without client filename inference. */
+  async setEvidenceContentIntentForTest(
+    tenant: TenantContext,
+    evidenceId: string,
+    contentIntent: ContentIntent,
+    env: Record<string, string | undefined> = process.env,
+  ): Promise<void> {
+    assertTenantContext(tenant);
+    assertUuid(evidenceId, 'evidenceId');
+    if (isProductionRuntime(env)) {
+      throw new ValidationError('CONTENT_INTENT_TEST_ONLY');
+    }
+    await withTenantTransaction(
+      tenant,
+      async (tx) => {
+        const item = await evidenceRepo.findById(tenant, tx, evidenceId);
+        if (!item) throw new ResourceNotFoundError();
+        await evidenceRepo.setContentIntent(tenant, tx, evidenceId, contentIntent);
+      },
+      env,
+    );
+  }
+
   private async executeJob(
     tenant: TenantContext,
     job: EvidenceJobRecord,
@@ -1130,8 +1181,9 @@ export class EvidenceService {
     }
     const item = loaded.item;
     const blob = loaded.blob;
-    const extractor = this.extractor();
-    const fingerprint = extractorFingerprintOf(extractor);
+    const ocrEnabled = extractOcrJobsEnabled(env);
+    const extractor = this.extractor(env);
+    const fingerprint = this.resolveExtractorFingerprint(extractor, item, env);
 
     const existing = await withTenantTransaction(
       tenant,
@@ -1220,23 +1272,49 @@ export class EvidenceService {
     }
 
     const abort = new AbortController();
-    const result = await raceExtract(
-      extractor.extract({
-        organizationId: item.organizationId,
-        clinicId: item.clinicId,
-        patientId: item.patientId,
-        consultationId: item.consultationId,
-        evidenceItemId: item.id,
-        evidenceType: item.evidenceType,
-        declaredMime: item.declaredMime,
-        detectedMime: item.detectedMime,
-        byteSize: item.byteSize ?? bytes.byteLength,
-        contentSha256: item.contentSha256,
-        magicPrefix: bytes.subarray(0, MAGIC_PREFIX_MAX),
-        abortSignal: abort.signal,
-      }),
-      abort,
-    );
+    let result: ExtractionResult;
+    try {
+      result = await raceExtract(
+        extractor.extract({
+          organizationId: item.organizationId,
+          clinicId: item.clinicId,
+          patientId: item.patientId,
+          consultationId: item.consultationId,
+          evidenceItemId: item.id,
+          evidenceType: item.evidenceType,
+          declaredMime: item.declaredMime,
+          detectedMime: item.detectedMime,
+          byteSize: item.byteSize ?? bytes.byteLength,
+          contentSha256: item.contentSha256,
+          magicPrefix: bytes.subarray(0, MAGIC_PREFIX_MAX),
+          contentIntent: item.contentIntent,
+          bytes,
+          abortSignal: abort.signal,
+        }),
+        abort,
+        ocrEnabled ? EXTRACT_JOB_TIMEOUT_MS : EXTRACT_TIMEOUT_MS,
+      );
+    } catch (err) {
+      if ((err as { code?: string }).code === 'EXTRACTION_TIMEOUT') {
+        await this.persistExtractOutcome(
+          tenant,
+          job,
+          item,
+          {
+            status: 'REJECTED',
+            limitationCodes: ['TIMEOUT', 'NOT_AUTHORITATIVE'],
+            candidates: [],
+            extractor,
+            fingerprint,
+            inputSha: item.contentSha256,
+          },
+          env,
+        );
+        this.metric({ name: 'extract_result', code: 'TIMEOUT' });
+        return;
+      }
+      throw err;
+    }
 
     for (const candidate of result.ok ? result.candidates : []) {
       assertNoStorageInLocator(candidate.sourceLocator);
@@ -1290,7 +1368,7 @@ export class EvidenceService {
           await evidenceRepo.finishJob(tenant, tx, job, 'SUCCEEDED', 'DUPLICATE_RUN', null);
           return;
         }
-        const run = await extractionRepo.insertRun(tenant, tx, {
+        const { run, inserted } = await insertRunWithIdempotency(extractionRepo, tenant, tx, {
           patientId: item.patientId,
           consultationId: item.consultationId,
           evidenceItemId: item.id,
@@ -1305,9 +1383,14 @@ export class EvidenceService {
           limitationCodes: input.limitationCodes,
           candidateCount: input.candidates.length,
         });
+        if (!inserted) {
+          await evidenceRepo.finishJob(tenant, tx, job, 'SUCCEEDED', 'DUPLICATE_RUN', null);
+          return;
+        }
         if (input.status === 'EXTRACTED_UNVERIFIED' && input.candidates.length > 0) {
           await extractionRepo.insertCandidates(tenant, tx, run.id, input.candidates);
         }
+        await extractionRepo.pruneCandidateRetention(tenant, tx, item.id);
         await extractionRepo.supersedeRuns(tenant, tx, item.id, input.fingerprint, run.id);
         await evidenceRepo.finishJob(tenant, tx, job, 'SUCCEEDED', null, null);
         await audit.append(tx, {

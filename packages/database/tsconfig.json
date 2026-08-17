@@ -7,9 +7,14 @@
     "baseUrl": ".",
     "paths": {
       "@ehas2/evidence-ingest": ["../evidence-ingest/src/index.ts"],
-      "@ehas2/evidence-extract": ["../evidence-extract/src/index.ts"]
+      "@ehas2/evidence-extract": ["../evidence-extract/src/index.ts"],
+      "@ehas2/evidence-extract-adapters": ["../evidence-extract-adapters/src/index.ts"]
     }
   },
   "include": ["src/**/*"],
-  "references": [{ "path": "../evidence-ingest" }, { "path": "../evidence-extract" }]
+  "references": [
+    { "path": "../evidence-ingest" },
+    { "path": "../evidence-extract" },
+    { "path": "../evidence-extract-adapters" }
+  ]
 }
