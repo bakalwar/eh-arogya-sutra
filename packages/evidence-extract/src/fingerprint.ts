@@ -61,6 +61,32 @@ export function candidateContentFingerprint(
   );
 }
 
+export function contentAwareExtractorFingerprint(input: {
+  evidenceItemId: string;
+  inputContentSha256: string | null;
+  extractorName: string;
+  version: string;
+  method: ExtractionMethod;
+  textLayerLibraryVersion?: string;
+  ocrSidecarVersion?: string;
+  langpackHashes?: Readonly<Record<string, string>>;
+  pipelineConfigVersion?: string;
+}): string {
+  return sha256Hex(
+    JSON.stringify({
+      evidenceItemId: input.evidenceItemId,
+      inputContentSha256: input.inputContentSha256,
+      extractorName: input.extractorName,
+      version: input.version,
+      method: input.method,
+      textLayerLibraryVersion: input.textLayerLibraryVersion ?? null,
+      ocrSidecarVersion: input.ocrSidecarVersion ?? null,
+      langpackHashes: input.langpackHashes ?? null,
+      pipelineConfigVersion: input.pipelineConfigVersion ?? null,
+    }),
+  );
+}
+
 export function assertNoStorageInLocator(locator: unknown): void {
   const blob = JSON.stringify(locator);
   if (/object_key|objectKey|object_url|presigned|public_url|"path"|storage|bucket/i.test(blob)) {

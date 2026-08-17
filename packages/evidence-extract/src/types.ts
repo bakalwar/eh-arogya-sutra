@@ -7,8 +7,18 @@
 import type { EvidenceType } from '@ehas2/evidence-ingest';
 
 export const F3A_EXTRACTION_CANDIDATE_FOUNDATION = true as const;
+export const F3B_OPEN_SOURCE_OCR_ADAPTER_FOUNDATION = true as const;
 export const EVIDENCE_EXTRACT_PRODUCTION = false as const;
 export const EVIDENCE_OCR_ADAPTER_CONNECTED = false as const;
+
+export const CONTENT_INTENTS = [
+  'WRITTEN_REPORT_DOCUMENT',
+  'WRITTEN_REPORT_PAGE_IMAGE',
+  'DIAGNOSTIC_IMAGE',
+  'PATIENT_PHOTO',
+  'UNCLASSIFIED',
+] as const;
+export type ContentIntent = (typeof CONTENT_INTENTS)[number];
 
 export const CANDIDATE_TYPES = [
   'DOCUMENT_METADATA',
@@ -31,7 +41,12 @@ export type CandidateStatus = (typeof CANDIDATE_STATUSES)[number];
 
 export const VERIFICATION_POSTURE_F3A = 'UNVERIFIED' as const;
 
-export const EXTRACTION_METHODS = ['DETERMINISTIC_FIXTURE'] as const;
+export const EXTRACTION_METHODS = [
+  'DETERMINISTIC_FIXTURE',
+  'PDF_TEXT_LAYER',
+  'TESSERACT_OCR',
+  'TWO_STAGE_PIPELINE',
+] as const;
 export type ExtractionMethod = (typeof EXTRACTION_METHODS)[number];
 
 export const LIMITATION_CODES = [
@@ -54,6 +69,8 @@ export const LIMITATION_CODES = [
   'NOT_AUTHORITATIVE',
   'NO_TRANSLATION',
   'UNSUPPORTED_LANGUAGE',
+  'DOCUMENT_INTENT_REQUIRED',
+  'CANDIDATE_RETENTION_PRUNED',
 ] as const;
 
 export type LimitationCode = (typeof LIMITATION_CODES)[number];
@@ -69,6 +86,9 @@ export const MAX_UNIT_CHARS = 32;
 export const MAX_RANGE_CHARS = 120;
 export const MAX_HEADING_CHARS = 200;
 export const EXTRACT_TIMEOUT_MS = 5_000;
+export const EXTRACT_JOB_TIMEOUT_MS = 120_000;
+export const EXTRACT_PAGE_OCR_TIMEOUT_MS = 30_000;
+export const MAX_CANDIDATES_PER_EVIDENCE = 240;
 export const MAGIC_PREFIX_MAX = 16;
 
 export const RETENTION_JOB_TYPES = ['DELETE_ORIGINAL', 'VERIFY_DELETION'] as const;
@@ -140,6 +160,8 @@ export type ExtractionRequest = {
   byteSize: number;
   contentSha256: string | null;
   magicPrefix: Uint8Array;
+  contentIntent?: ContentIntent;
+  bytes?: Uint8Array;
   abortSignal?: AbortSignal;
 };
 
