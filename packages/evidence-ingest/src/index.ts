@@ -55,6 +55,8 @@ export {
   UnavailableObjectStore,
   getMemoryFakeObjectStore,
   resetMemoryFakeObjectStore,
+  unavailableEvidenceObjectStore,
+  resolveEvidenceObjectStore,
   assertNoPublicObjectStoreApi,
 } from './objectStore.js';
 export {
@@ -77,6 +79,16 @@ export {
   bytesAsStream,
   stagingOpenCount,
   disposeAllStagingForTests,
+  exclusiveCreateStagingFile,
+  sweepStaleStaging,
+  resolveStagingRoot,
+  resetStagingRootForTests,
+  stagingPartName,
+  touchStagingFileForTests,
+  STAGING_DIR_NAME,
+  STAGING_PART_RE,
+  STAGING_SWEEP_LIMIT,
+  STAGING_SWEEP_MAX_AGE_MS,
 } from './streamIngest.js';
 export type { StagedEvidenceBytes } from './streamIngest.js';
 export {

@@ -1,4 +1,5 @@
 import { TEST_ADAPTER_ENCRYPTION, assertEncryptionPosture } from './encryption.js';
+import { isProductionRuntime } from './rateLimit.js';
 import {
   FORBIDDEN_OBJECT_STORE_METHODS,
   MAX_EVIDENCE_BYTES,
@@ -288,4 +289,19 @@ export function getMemoryFakeObjectStore(): MemoryFakeObjectStore {
 
 export function resetMemoryFakeObjectStore(): void {
   defaultStore = new MemoryFakeObjectStore();
+}
+
+export const unavailableEvidenceObjectStore = new UnavailableObjectStore();
+
+/**
+ * Production without an explicit store is fail-closed. No silent memory_fake fallback.
+ * Test/dev may use the in-process fake. Request/env cannot select a fake production adapter.
+ */
+export function resolveEvidenceObjectStore(
+  configured: EvidenceObjectStore | undefined,
+  env: Record<string, string | undefined> = process.env,
+): EvidenceObjectStore {
+  if (configured) return configured;
+  if (isProductionRuntime(env)) return unavailableEvidenceObjectStore;
+  return getMemoryFakeObjectStore();
 }

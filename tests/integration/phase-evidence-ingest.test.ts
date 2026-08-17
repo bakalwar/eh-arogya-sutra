@@ -990,4 +990,49 @@ describe('F2A provider-neutral infrastructure', () => {
     expect(['FAILED', 'DEAD']).toContain(status.status);
     expect(String(status.last_error_code)).not.toMatch(/stack|SELECT|patient/i);
   }, 120_000);
+
+  it('serializes concurrent byte uploads to a single object commit', async () => {
+    requireDb();
+    const { doctorA } = await seedTenants();
+    const local = new MemoryFakeObjectStore();
+    const svc = new EvidenceService({
+      store: local,
+      malwareScanner: new DeterministicMalwareScanner('CLEAN'),
+      rateLimiter: new MemoryRateLimiter(),
+    });
+    const patient = await patients.create(
+      doctorA,
+      { displayName: 'Synthetic F2A Concurrent' },
+      {},
+      env,
+    );
+    const consultation = await consultations.create(doctorA, { patientId: patient.id }, env);
+    const item = await svc.initiate(
+      doctorA,
+      {
+        consultationId: consultation.id,
+        evidenceType: 'USG',
+        sourceType: 'DOCTOR_UPLOAD',
+        filename: 'usg.png',
+        declaredMime: 'image/png',
+      },
+      env,
+    );
+    const settled = await Promise.allSettled([
+      svc.receiveBytes(doctorA, consultation.id, item.id, PNG, env),
+      svc.receiveBytes(doctorA, consultation.id, item.id, PNG, env),
+    ]);
+    const fulfilled = settled.filter((row) => row.status === 'fulfilled');
+    const rejected = settled.filter((row) => row.status === 'rejected');
+    expect(fulfilled.length).toBeGreaterThanOrEqual(1);
+    expect(local.size()).toBe(1);
+    const after = await svc.get(doctorA, consultation.id, item.id, env);
+    expect(after.processingStatus).toBe('STORED_TEMP');
+    if (rejected.length) {
+      const err = rejected[0] as PromiseRejectedResult;
+      expect(err.reason).toMatchObject({ name: 'ConflictError' });
+      expect(String((err.reason as Error).message)).toBe('EVIDENCE_BYTES_IN_PROGRESS');
+      expect(JSON.stringify(err.reason)).not.toMatch(/stack|SQL|object_key/i);
+    }
+  }, 120_000);
 });

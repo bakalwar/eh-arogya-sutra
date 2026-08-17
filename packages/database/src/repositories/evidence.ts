@@ -146,6 +146,40 @@ export class PgEvidenceRepository {
     return mapEvidence(r.rows[0] as Record<string, unknown>);
   }
 
+  async claimBytesValidating(
+    tenant: TenantContext,
+    tx: TransactionContext,
+    evidenceId: string,
+  ): Promise<EvidenceItemRecord | null> {
+    const r = await tx.query(
+      `UPDATE clinical_evidence_items SET
+         processing_status = 'VALIDATING',
+         updated_at = now(),
+         updated_by_actor_id = $4
+       WHERE id = $1 AND organization_id = $2 AND clinic_id = $3
+         AND processing_status = 'INTAKE_CREATED'
+       RETURNING *`,
+      [evidenceId, tenant.organizationId, tenant.clinicId, tenant.actorId],
+    );
+    return r.rows[0] ? mapEvidence(r.rows[0] as Record<string, unknown>) : null;
+  }
+
+  async revertValidatingToIntake(
+    tenant: TenantContext,
+    tx: TransactionContext,
+    evidenceId: string,
+  ): Promise<void> {
+    await tx.query(
+      `UPDATE clinical_evidence_items SET
+         processing_status = 'INTAKE_CREATED',
+         updated_at = now(),
+         updated_by_actor_id = $4
+       WHERE id = $1 AND organization_id = $2 AND clinic_id = $3
+         AND processing_status = 'VALIDATING'`,
+      [evidenceId, tenant.organizationId, tenant.clinicId, tenant.actorId],
+    );
+  }
+
   async findById(
     tenant: TenantContext,
     tx: TransactionContext,
@@ -261,6 +295,7 @@ export class PgEvidenceRepository {
          updated_at = now(),
          updated_by_actor_id = $9
        WHERE id = $1 AND organization_id = $2 AND clinic_id = $3
+         AND processing_status = 'VALIDATING'
        RETURNING *`,
       [
         evidenceId,
@@ -341,7 +376,7 @@ export class PgEvidenceRepository {
          rejection_reason_safe = 'INTAKE_EXPIRED',
          updated_at = now()
        WHERE id = $1 AND organization_id = $2 AND clinic_id = $3
-         AND processing_status = 'INTAKE_CREATED'`,
+         AND processing_status IN ('INTAKE_CREATED', 'VALIDATING')`,
       [evidenceId, tenant.organizationId, tenant.clinicId],
     );
   }

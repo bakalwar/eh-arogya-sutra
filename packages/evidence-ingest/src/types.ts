@@ -145,7 +145,7 @@ export type MalwareScanResult = 'UNAVAILABLE' | 'INFECTED' | 'CLEAN';
 
 export type MalwareScanner = {
   readonly productionReady: false;
-  scan(ref: PrivateObjectReference): Promise<MalwareScanResult>;
+  scan(ref: PrivateObjectReference, signal?: AbortSignal): Promise<MalwareScanResult>;
 };
 
 export type RateLimitDecision =
