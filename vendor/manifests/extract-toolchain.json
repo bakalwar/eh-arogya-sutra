@@ -27,19 +27,19 @@
   },
   "tessdataFast": {
     "repository": "https://github.com/tesseract-ocr/tessdata_fast",
-    "commit": "0524a178a2846d890906375d0988c4d844b1e124",
+    "commit": "87416418657359cb625c412a48b6e1d6d41c29bd",
     "license": "Apache-2.0",
     "licenseUrl": "https://raw.githubusercontent.com/tesseract-ocr/tessdata/main/LICENSE",
     "languages": {
       "eng": {
         "file": "eng.traineddata",
-        "downloadUrl": "https://github.com/tesseract-ocr/tessdata_fast/raw/0524a178a2846d890906375d0988c4d844b1e124/eng.traineddata",
-        "sha256": "f05f14b01d3f85883cb0a35bf26bad973d8ce32641d5efb218cd522a69fa2343"
+        "downloadUrl": "https://raw.githubusercontent.com/tesseract-ocr/tessdata_fast/87416418657359cb625c412a48b6e1d6d41c29bd/eng.traineddata",
+        "sha256": "7d4322bd2a7749724879683fc3912cb542f19906c83bcc1a52132556427170b2"
       },
       "hin": {
         "file": "hin.traineddata",
-        "downloadUrl": "https://github.com/tesseract-ocr/tessdata_fast/raw/0524a178a2846d890906375d0988c4d844b1e124/hin.traineddata",
-        "sha256": "579e006fcfbeaf498bd315e9ac260fc79b127b1be6082fda904ad9d390c45c14"
+        "downloadUrl": "https://raw.githubusercontent.com/tesseract-ocr/tessdata_fast/87416418657359cb625c412a48b6e1d6d41c29bd/hin.traineddata",
+        "sha256": "4c73ffc59d497c186b19d1e90f5d721d678ea6b2e277b719bee4e2af12271825"
       }
     }
   }
