@@ -47,5 +47,8 @@ describe('F2A readiness truthfulness', () => {
     expect(res.json.productionWorker).toBe(false);
     expect(res.json.ocr).toBe(false);
     expect(res.json.clinicalEngine).toBe(false);
+    expect(res.json.f3aExtractionCandidateFoundation).toBe(true);
+    expect(res.json.ocrAdapter).toBe(false);
+    expect(res.json.extractProduction).toBe(false);
   });
 });

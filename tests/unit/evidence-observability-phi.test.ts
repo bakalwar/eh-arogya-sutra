@@ -13,11 +13,12 @@ describe('F2A PHI-safe evidence metrics', () => {
     recordEvidenceEvent({ name: 'ingest_rejected', code: 'SIZE_REJECTED' });
     recordEvidenceEvent({ name: 'malware_result', malware: 'UNAVAILABLE' });
     recordEvidenceEvent({ name: 'rate_limit_denial', code: 'RATE_LIMIT_UNAVAILABLE' });
-    recordEvidenceEvent({ name: 'cross_tenant_denial', code: 'NOT_FOUND' });
+    recordEvidenceEvent({ name: 'extract_result', code: 'EXTRACTED_UNVERIFIED' });
     const snap = snapshotEvidenceMetrics();
     expect(snap.totals.ingest_created).toBe(1);
     expect(snap.totals.ingest_rejected).toBe(1);
     expect(snap.malware.UNAVAILABLE).toBe(1);
+    expect(snap.totals.extract_result).toBe(1);
     expect(JSON.stringify(snap)).not.toMatch(/patient|filename|\.png|ehas2\/[0-9a-f-]{36}/i);
   });
 

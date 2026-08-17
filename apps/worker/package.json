@@ -12,6 +12,7 @@
   "dependencies": {
     "@ehas2/database": "*",
     "@ehas2/evidence-ingest": "*",
+    "@ehas2/evidence-extract": "*",
     "@ehas2/observability": "*"
   }
 }

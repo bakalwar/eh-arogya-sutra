@@ -11,7 +11,7 @@ This document describes **safe** local and CI setup for PostgreSQL integration t
 | Host | `127.0.0.1` or `localhost` only |
 | Port | **`55432`** only (default app port **5432 is rejected**) |
 | User | `ehas2` |
-| Databases (exact allowlist) | `ehas2_phase3a_test`, `ehas2_phase3b_test`, `ehas2_phase3c_test`, `ehas2_phase3d_test`, `ehas2_phase4a_preflight` |
+| Databases (exact allowlist) | `ehas2_phase3a_test`, `ehas2_phase3b_test`, `ehas2_phase3c_test`, `ehas2_phase3d_test`, `ehas2_phase4a_preflight`, `ehas2_phase_evidence_test`, `ehas2_phase_extract_test` |
 | SSL | `EHAS2_DATABASE_SSL_MODE=disable` |
 | Node env | `EHAS2_NODE_ENV=test` (or `NODE_ENV=test`) |
 

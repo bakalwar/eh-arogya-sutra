@@ -6,9 +6,10 @@
     "composite": true,
     "baseUrl": ".",
     "paths": {
-      "@ehas2/evidence-ingest": ["../evidence-ingest/src/index.ts"]
+      "@ehas2/evidence-ingest": ["../evidence-ingest/src/index.ts"],
+      "@ehas2/evidence-extract": ["../evidence-extract/src/index.ts"]
     }
   },
   "include": ["src/**/*"],
-  "references": [{ "path": "../evidence-ingest" }]
+  "references": [{ "path": "../evidence-ingest" }, { "path": "../evidence-extract" }]
 }

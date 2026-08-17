@@ -9,10 +9,11 @@ import {
 /** Background worker shell — OCR/analysis jobs remain unregistered. */
 export function workerShell(): void {
   logInfo('EHAS2 worker shell (evidence retention jobs only; no OCR)', {
-    phase: 'f2a',
+    phase: 'f3a',
     ocr: false,
     clinicalEngine: false,
     productionWorker: false,
+    extractJobsConnected: false,
   });
 }
 

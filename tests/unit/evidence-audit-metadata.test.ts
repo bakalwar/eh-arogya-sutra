@@ -56,6 +56,18 @@ describe('audit metadata recursive forbidden keys', () => {
     ).not.toThrow();
   });
 
+  it('rejects F3A candidate text keys in audit metadata', () => {
+    expect(() => assertAuditMetadataSafe({ raw_text: 'Hemoglobin 13.2' })).toThrow(
+      /forbids sensitive key/i,
+    );
+    expect(() => assertAuditMetadataSafe({ extracted_text: 'x' })).toThrow(
+      /forbids sensitive key/i,
+    );
+    expect(() =>
+      assertAuditMetadataSafe({ code: 'EXTRACTED_UNVERIFIED', candidateCount: 3 }),
+    ).not.toThrow();
+  });
+
   it('documents that SQL CHECK is top-level only', () => {
     // Contract note for reviewers: migration 004/010 CHECK uses `metadata ? key`
     // which inspects top-level JSON keys only. Recursive protection is application-side.

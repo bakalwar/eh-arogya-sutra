@@ -7,6 +7,7 @@
     "baseUrl": ".",
     "paths": {
       "@ehas2/evidence-ingest": ["../../packages/evidence-ingest/src/index.ts"],
+      "@ehas2/evidence-extract": ["../../packages/evidence-extract/src/index.ts"],
       "@ehas2/database": ["../../packages/database/src/index.ts"],
       "@ehas2/observability": ["../../packages/observability/src/index.ts"]
     }
@@ -14,6 +15,7 @@
   "references": [
     { "path": "../../packages/observability" },
     { "path": "../../packages/database" },
-    { "path": "../../packages/evidence-ingest" }
+    { "path": "../../packages/evidence-ingest" },
+    { "path": "../../packages/evidence-extract" }
   ]
 }

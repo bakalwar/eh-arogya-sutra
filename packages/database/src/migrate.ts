@@ -17,6 +17,7 @@ const MIGRATION_IDS = [
   '009_auth_foundation',
   '010_clinical_evidence_ingestion',
   '011_f2a_malware_clean_gate',
+  '012_f3a_extraction_candidates',
 ] as const;
 
 export type MigrationId = (typeof MIGRATION_IDS)[number];
