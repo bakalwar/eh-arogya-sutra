@@ -294,11 +294,33 @@ export class PgEvidenceRepository {
     tenant: TenantContext,
     tx: TransactionContext,
     evidenceId: string,
+    rejectionCode: string | null = null,
   ): Promise<void> {
     await tx.query(
       `UPDATE clinical_evidence_items SET
-         processing_status = 'DELETED', deleted_at = now(), updated_at = now()
+         processing_status = 'DELETED',
+         rejection_code = COALESCE($4, rejection_code),
+         rejection_reason_safe = COALESCE($4, rejection_reason_safe),
+         deleted_at = now(),
+         updated_at = now()
        WHERE id = $1 AND organization_id = $2 AND clinic_id = $3`,
+      [evidenceId, tenant.organizationId, tenant.clinicId, rejectionCode],
+    );
+  }
+
+  async markExpiredIntake(
+    tenant: TenantContext,
+    tx: TransactionContext,
+    evidenceId: string,
+  ): Promise<void> {
+    await tx.query(
+      `UPDATE clinical_evidence_items SET
+         processing_status = 'EXPIRED',
+         rejection_code = 'INTAKE_EXPIRED',
+         rejection_reason_safe = 'INTAKE_EXPIRED',
+         updated_at = now()
+       WHERE id = $1 AND organization_id = $2 AND clinic_id = $3
+         AND processing_status = 'INTAKE_CREATED'`,
       [evidenceId, tenant.organizationId, tenant.clinicId],
     );
   }
@@ -413,8 +435,14 @@ export class PgEvidenceRepository {
        WHERE id IN (
          SELECT id FROM clinical_evidence_jobs
          WHERE organization_id = $1 AND clinic_id = $2
-           AND status IN ('PENDING', 'FAILED')
-           AND next_run_at <= $3::timestamptz
+           AND (
+             (status IN ('PENDING', 'FAILED') AND next_run_at <= $3::timestamptz)
+             OR (
+               status = 'LEASED'
+               AND lease_expires_at IS NOT NULL
+               AND lease_expires_at <= $3::timestamptz
+             )
+           )
          ORDER BY next_run_at ASC
          FOR UPDATE SKIP LOCKED
          LIMIT 20

@@ -87,6 +87,7 @@ export {
   PgSummarySnapshotRepository,
   PgReportFindingRepository,
   PgAuditEventRepository,
+  assertAuditMetadataSafe,
   UNSCOPED_PATIENT_METHODS_FORBIDDEN,
 } from './repositories/postgres.js';
 export {

@@ -10,6 +10,7 @@ import {
   type TenantContextResolver,
 } from '../middleware/tenantBridge.js';
 import { sendDomainError, sendSuccess } from '../http/errors.js';
+import { assertExactJsonKeys } from '../http/exactJsonBody.js';
 
 export type PatientRouteDeps = {
   resolveTenantContext: TenantContextResolver;
@@ -53,6 +54,13 @@ export function registerPatientRoutes(app: Express, deps: PatientRouteDeps): voi
     privateNoStore(res);
     try {
       const body = bodyObject(req);
+      assertExactJsonKeys(body, [
+        'displayName',
+        'dateOfBirth',
+        'sexAtBirth',
+        'phoneMasked',
+        'emailMasked',
+      ]);
       const data = await patients.create(
         req.tenantContext!,
         {

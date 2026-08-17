@@ -978,6 +978,36 @@ const FORBIDDEN_AUDIT_KEYS = new Set([
   'email',
 ]);
 
+const AUDIT_METADATA_MAX_DEPTH = 8;
+const AUDIT_METADATA_MAX_NODES = 200;
+
+/**
+ * Application recursive forbidden-key guard for audit metadata.
+ * PostgreSQL CHECK on audit_events.metadata remains top-level-only (`metadata ? key`);
+ * it does not recurse into nested objects/arrays. Do not treat the SQL CHECK as recursive.
+ */
+export function assertAuditMetadataSafe(value: unknown, depth = 0, state = { nodes: 0 }): void {
+  state.nodes += 1;
+  if (state.nodes > AUDIT_METADATA_MAX_NODES) {
+    throw new Error('Audit metadata exceeds node limit');
+  }
+  if (depth > AUDIT_METADATA_MAX_DEPTH) {
+    throw new Error('Audit metadata exceeds depth limit');
+  }
+  if (value == null) return;
+  if (Array.isArray(value)) {
+    for (const entry of value) assertAuditMetadataSafe(entry, depth + 1, state);
+    return;
+  }
+  if (typeof value !== 'object') return;
+  for (const [key, nested] of Object.entries(value as Record<string, unknown>)) {
+    if (FORBIDDEN_AUDIT_KEYS.has(key.toLowerCase())) {
+      throw new Error(`Audit metadata forbids sensitive key: ${key}`);
+    }
+    assertAuditMetadataSafe(nested, depth + 1, state);
+  }
+}
+
 export class PgAuditEventRepository implements AuditEventRepository {
   async append(
     tx: TransactionContext,
@@ -994,11 +1024,7 @@ export class PgAuditEventRepository implements AuditEventRepository {
     },
   ): Promise<AuditEventRecord> {
     const metadata = { ...(input.metadata ?? {}) };
-    for (const key of Object.keys(metadata)) {
-      if (FORBIDDEN_AUDIT_KEYS.has(key.toLowerCase())) {
-        throw new Error(`Audit metadata forbids sensitive key: ${key}`);
-      }
-    }
+    assertAuditMetadataSafe(metadata);
     const r = await tx.query(
       `INSERT INTO audit_events (
          organization_id, clinic_id, actor_id, actor_role, event_type,

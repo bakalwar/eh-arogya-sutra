@@ -2,6 +2,7 @@ import type { Express, Response } from 'express';
 import { EHAS2_API_NAMESPACE } from '@ehas2/shared';
 import { Permission } from '@ehas2/security';
 import {
+  ValidationError,
   consultationIntakeService,
   consultationService,
   type ConsultationIntakeService,
@@ -15,12 +16,49 @@ import {
   type TenantContextResolver,
 } from '../middleware/tenantBridge.js';
 import { sendDomainError, sendSuccess } from '../http/errors.js';
+import { assertExactJsonKeys, assertExactNestedKeys } from '../http/exactJsonBody.js';
 
 export type ConsultationRouteDeps = {
   resolveTenantContext: TenantContextResolver;
   consultations?: ConsultationService;
   intake?: ConsultationIntakeService;
 };
+
+const VITALS_KEYS = [
+  'bloodPressureSystolic',
+  'bloodPressureDiastolic',
+  'pulseBpm',
+  'temperatureC',
+  'spo2Percent',
+  'weightKg',
+  'heightCm',
+  'notes',
+] as const;
+
+const SYMPTOM_KEYS = ['label', 'severity', 'duration', 'phase', 'notes'] as const;
+
+const INTAKE_BODY_KEYS = [
+  'patientId',
+  'chiefComplaintText',
+  'chiefComplaintOnset',
+  'chiefComplaintDuration',
+  'vitals',
+  'symptoms',
+  'historyNotes',
+  'doctorObservations',
+  'lifestyleEvidence',
+] as const;
+
+const PATCH_BODY_KEYS = [
+  'chiefComplaintText',
+  'chiefComplaintOnset',
+  'chiefComplaintDuration',
+  'vitals',
+  'symptoms',
+  'historyNotes',
+  'doctorObservations',
+  'lifestyleEvidence',
+] as const;
 
 function privateNoStore(res: Response): void {
   res.setHeader('Cache-Control', 'no-store, private');
@@ -47,6 +85,14 @@ function caseResource(req: TenantAuthedRequest) {
     : null;
 }
 
+function assertSymptoms(value: unknown): void {
+  if (value == null) return;
+  if (!Array.isArray(value)) throw new ValidationError('Invalid symptoms');
+  for (const row of value) {
+    assertExactNestedKeys(row, SYMPTOM_KEYS, 'symptoms');
+  }
+}
+
 export function registerConsultationRoutes(app: Express, deps: ConsultationRouteDeps): void {
   const consultations = deps.consultations ?? consultationService;
   const intake = deps.intake ?? consultationIntakeService;
@@ -60,6 +106,9 @@ export function registerConsultationRoutes(app: Express, deps: ConsultationRoute
     privateNoStore(res);
     try {
       const body = bodyObject(req);
+      assertExactJsonKeys(body, INTAKE_BODY_KEYS);
+      assertExactNestedKeys(body.vitals, VITALS_KEYS, 'vitals');
+      assertSymptoms(body.symptoms);
       const created = await consultations.create(req.tenantContext!, {
         patientId: String(body.patientId ?? ''),
         chiefComplaintText: (body.chiefComplaintText as string | null | undefined) ?? null,
@@ -71,7 +120,8 @@ export function registerConsultationRoutes(app: Express, deps: ConsultationRoute
         body.vitals != null ||
         body.symptoms != null ||
         body.historyNotes != null ||
-        body.doctorObservations != null;
+        body.doctorObservations != null ||
+        body.lifestyleEvidence != null;
       const bundle = hasIntake
         ? await intake.patch(req.tenantContext!, created.id, {
             chiefComplaintOnset:
@@ -112,6 +162,9 @@ export function registerConsultationRoutes(app: Express, deps: ConsultationRoute
       privateNoStore(res);
       try {
         const body = bodyObject(req);
+        assertExactJsonKeys(body, PATCH_BODY_KEYS);
+        assertExactNestedKeys(body.vitals, VITALS_KEYS, 'vitals');
+        assertSymptoms(body.symptoms);
         const bundle = await intake.patch(req.tenantContext!, String(req.params.consultationId), {
           chiefComplaintText: Object.prototype.hasOwnProperty.call(body, 'chiefComplaintText')
             ? (body.chiefComplaintText as string | null)

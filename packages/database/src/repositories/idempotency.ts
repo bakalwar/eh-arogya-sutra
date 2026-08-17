@@ -59,12 +59,14 @@ export class PgIdempotencyRepository {
       );
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
-      if (/unique|duplicate/i.test(msg)) {
+      const code = (err as { code?: string } | null)?.code;
+      if (code === '23505' || /unique|duplicate/i.test(msg)) {
         const existing = await this.find(tenant, tx, input.operation, input.key);
-        if (existing && existing.requestHash !== input.requestHash) {
+        if (!existing) throw new IdempotencyConflictError();
+        if (existing.requestHash !== input.requestHash) {
           throw new IdempotencyConflictError();
         }
-        throw err;
+        return;
       }
       throw err;
     }

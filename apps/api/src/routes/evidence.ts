@@ -10,6 +10,7 @@ import {
   type TenantContextResolver,
 } from '../middleware/tenantBridge.js';
 import { sendDomainError, sendError, sendSuccess } from '../http/errors.js';
+import { assertExactJsonKeys } from '../http/exactJsonBody.js';
 import { ingestRateLimit } from '../middleware/uploadLimits.js';
 
 export type EvidenceRouteDeps = {
@@ -70,6 +71,13 @@ export function registerEvidenceRoutes(app: Express, deps: EvidenceRouteDeps): v
       privateNoStore(res);
       try {
         const body = bodyObject(req);
+        assertExactJsonKeys(body, [
+          'evidenceType',
+          'sourceType',
+          'filename',
+          'declaredMime',
+          'capturedOrIssuedOn',
+        ]);
         const data = await evidence.initiate(req.tenantContext!, {
           consultationId: String(req.params.consultationId),
           evidenceType: String(body.evidenceType ?? ''),
@@ -113,6 +121,7 @@ export function registerEvidenceRoutes(app: Express, deps: EvidenceRouteDeps): v
         }
         const data = await evidence.receiveBytes(
           req.tenantContext!,
+          String(req.params.consultationId),
           String(req.params.evidenceId),
           buf,
         );
@@ -146,11 +155,11 @@ export function registerEvidenceRoutes(app: Express, deps: EvidenceRouteDeps): v
     async (req: TenantAuthedRequest, res) => {
       privateNoStore(res);
       try {
-        const data = await evidence.get(req.tenantContext!, String(req.params.evidenceId));
-        if (data.consultationId !== String(req.params.consultationId)) {
-          sendError(res, 404, 'NOT_FOUND', 'Resource not found', req.requestId ?? 'unknown');
-          return;
-        }
+        const data = await evidence.get(
+          req.tenantContext!,
+          String(req.params.consultationId),
+          String(req.params.evidenceId),
+        );
         sendSuccess(res, metadataOnly(data), req.requestId ?? 'unknown');
       } catch (err) {
         sendDomainError(res, err, req.requestId ?? 'unknown');
@@ -164,7 +173,11 @@ export function registerEvidenceRoutes(app: Express, deps: EvidenceRouteDeps): v
     async (req: TenantAuthedRequest, res) => {
       privateNoStore(res);
       try {
-        const data = await evidence.abort(req.tenantContext!, String(req.params.evidenceId));
+        const data = await evidence.abort(
+          req.tenantContext!,
+          String(req.params.consultationId),
+          String(req.params.evidenceId),
+        );
         sendSuccess(res, metadataOnly(data), req.requestId ?? 'unknown');
       } catch (err) {
         sendDomainError(res, err, req.requestId ?? 'unknown');

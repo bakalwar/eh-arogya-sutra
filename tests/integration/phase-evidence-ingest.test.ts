@@ -360,7 +360,7 @@ describe('F1 evidence ingest foundation', () => {
       },
       env,
     );
-    await evidence.receiveBytes(doctorA, item.id, PNG, env);
+    await evidence.receiveBytes(doctorA, consultation.id, item.id, PNG, env);
     const hidden = await httpJson(
       appFor(doctorB),
       'GET',
@@ -433,7 +433,7 @@ describe('F1 evidence ingest foundation', () => {
       },
       env,
     );
-    const stored = await evidence.receiveBytes(doctorA, item.id, PNG, env);
+    const stored = await evidence.receiveBytes(doctorA, consultation.id, item.id, PNG, env);
     const objectKey = buildEvidenceObjectKey({
       organizationId: doctorA.organizationId,
       clinicId: doctorA.clinicId,
@@ -456,10 +456,248 @@ describe('F1 evidence ingest foundation', () => {
       env,
       evidence,
     );
-    const after = await evidence.get(doctorA, stored.id, env);
+    const after = await evidence.get(doctorA, consultation.id, stored.id, env);
     expect(after.processingStatus).toBe('DELETION_VERIFIED');
     expect(after.deletionVerificationStatus).toBe('VERIFIED');
     expect(await store.exists(objectKey)).toBe(false);
     expect(after.clinicalAuthority).toBe('NOT_AUTHORITATIVE');
+  }, 120_000);
+
+  it('returns 404 when bytes/abort consultation path does not match evidence', async () => {
+    requireDb();
+    const { doctorA } = await seedTenants();
+    const app = appFor(doctorA);
+    const patient = await patients.create(
+      doctorA,
+      { displayName: 'Synthetic Bind Patient' },
+      {},
+      env,
+    );
+    const c1 = await consultations.create(doctorA, { patientId: patient.id }, env);
+    const c2 = await consultations.create(doctorA, { patientId: patient.id }, env);
+    const item = await evidence.initiate(
+      doctorA,
+      {
+        consultationId: c1.id,
+        evidenceType: 'XRAY',
+        sourceType: 'DOCTOR_UPLOAD',
+        filename: 'xray.png',
+        declaredMime: 'image/png',
+      },
+      env,
+    );
+    const mismatched = await httpBytes(
+      app,
+      `${EHAS2_API_NAMESPACE}/consultations/${c2.id}/evidence/${item.id}/bytes`,
+      PNG,
+      'image/png',
+    );
+    expect(mismatched.status).toBe(404);
+    const abortMismatch = await httpJson(
+      app,
+      'POST',
+      `${EHAS2_API_NAMESPACE}/consultations/${c2.id}/evidence/${item.id}/abort`,
+    );
+    expect(abortMismatch.status).toBe(404);
+  }, 120_000);
+
+  it('aborts with delete then verify terminal state', async () => {
+    requireDb();
+    const { doctorA } = await seedTenants();
+    const patient = await patients.create(
+      doctorA,
+      { displayName: 'Synthetic Abort Patient' },
+      {},
+      env,
+    );
+    const consultation = await consultations.create(doctorA, { patientId: patient.id }, env);
+    const item = await evidence.initiate(
+      doctorA,
+      {
+        consultationId: consultation.id,
+        evidenceType: 'MRI',
+        sourceType: 'DOCTOR_UPLOAD',
+        filename: 'mri.png',
+        declaredMime: 'image/png',
+      },
+      env,
+    );
+    const stored = await evidence.receiveBytes(doctorA, consultation.id, item.id, PNG, env);
+    const objectKey = buildEvidenceObjectKey({
+      organizationId: doctorA.organizationId,
+      clinicId: doctorA.clinicId,
+      consultationId: consultation.id,
+      evidenceId: stored.id,
+      contentSha256: stored.contentSha256 ?? '',
+    });
+    const aborted = await evidence.abort(doctorA, consultation.id, stored.id, env);
+    expect(aborted.processingStatus).toBe('DELETED');
+    expect(aborted.rejectionCode).toBe('ABORTED');
+    expect(await store.exists(objectKey)).toBe(false);
+    await runEvidenceRetentionOnce(doctorA, 'syn-worker-abort', new Date(), env, evidence);
+    const verified = await evidence.get(doctorA, consultation.id, stored.id, env);
+    expect(verified.processingStatus).toBe('DELETION_VERIFIED');
+    expect(verified.deletionVerificationStatus).toBe('VERIFIED');
+  }, 120_000);
+
+  it('expires intake without bytes via retention jobs', async () => {
+    requireDb();
+    const { doctorA } = await seedTenants();
+    const patient = await patients.create(
+      doctorA,
+      { displayName: 'Synthetic Orphan Patient' },
+      {},
+      env,
+    );
+    const consultation = await consultations.create(doctorA, { patientId: patient.id }, env);
+    const item = await evidence.initiate(
+      doctorA,
+      {
+        consultationId: consultation.id,
+        evidenceType: 'USG',
+        sourceType: 'DOCTOR_UPLOAD',
+        filename: 'usg.png',
+        declaredMime: 'image/png',
+      },
+      env,
+    );
+    expect(item.processingStatus).toBe('INTAKE_CREATED');
+    await runEvidenceRetentionOnce(
+      doctorA,
+      'syn-worker-orphan',
+      new Date(Date.parse(item.expiresAt) + 1000),
+      env,
+      evidence,
+    );
+    await runEvidenceRetentionOnce(
+      doctorA,
+      'syn-worker-orphan',
+      new Date(Date.parse(item.expiresAt) + 2000),
+      env,
+      evidence,
+    );
+    const after = await evidence.get(doctorA, consultation.id, item.id, env);
+    expect(after.processingStatus).toBe('DELETION_VERIFIED');
+  }, 120_000);
+
+  it('reclaims expired leases under two-worker contention', async () => {
+    requireDb();
+    const { doctorA } = await seedTenants();
+    const patient = await patients.create(
+      doctorA,
+      { displayName: 'Synthetic Lease Patient' },
+      {},
+      env,
+    );
+    const consultation = await consultations.create(doctorA, { patientId: patient.id }, env);
+    const item = await evidence.initiate(
+      doctorA,
+      {
+        consultationId: consultation.id,
+        evidenceType: 'CT',
+        sourceType: 'DOCTOR_UPLOAD',
+        filename: 'lease.png',
+        declaredMime: 'image/png',
+      },
+      env,
+    );
+    await withTenantTransaction(
+      doctorA,
+      async (tx) => {
+        await tx.query(
+          `UPDATE clinical_evidence_jobs
+           SET status = 'LEASED',
+               locked_by = 'stale-worker',
+               lease_expires_at = now() - interval '1 minute',
+               next_run_at = now() - interval '1 minute'
+           WHERE evidence_id = $1 AND job_type = 'DELETE_ORIGINAL'`,
+          [item.id],
+        );
+      },
+      env,
+    );
+    const [a, b] = await Promise.all([
+      runEvidenceRetentionOnce(doctorA, 'worker-a', new Date(), env, evidence),
+      runEvidenceRetentionOnce(doctorA, 'worker-b', new Date(), env, evidence),
+    ]);
+    expect(a.processed + b.processed).toBeGreaterThanOrEqual(1);
+    await runEvidenceRetentionOnce(doctorA, 'worker-a', new Date(), env, evidence);
+    const after = await evidence.get(doctorA, consultation.id, item.id, env);
+    expect(after.processingStatus).toBe('DELETION_VERIFIED');
+  }, 120_000);
+
+  it('rejects unknown DTO keys and nested forbidden audit keys', async () => {
+    requireDb();
+    const { doctorA } = await seedTenants();
+    const app = appFor(doctorA);
+    const badPatient = await httpJson(app, 'POST', `${EHAS2_API_NAMESPACE}/patients`, {
+      displayName: 'Synthetic',
+      suspectedDiagnosis: 'should-fail',
+    });
+    expect(badPatient.status).toBe(400);
+    expect(String(badPatient.json.message ?? '')).not.toMatch(/suspectedDiagnosis|SQL|stack/i);
+
+    await withTenantTransaction(
+      doctorA,
+      async (tx) => {
+        let blocked = false;
+        try {
+          const { PgAuditEventRepository } = await import('../../packages/database/src/index.ts');
+          const auditRepo = new PgAuditEventRepository();
+          await auditRepo.append(tx, {
+            organizationId: doctorA.organizationId,
+            clinicId: doctorA.clinicId,
+            actorId: doctorA.actorId,
+            actorRole: doctorA.actorRole,
+            eventType: 'synthetic_nested_forbidden',
+            outcome: 'SUCCESS',
+            metadata: { nest: { token: 'nope' } },
+          });
+        } catch {
+          blocked = true;
+        }
+        expect(blocked).toBe(true);
+      },
+      env,
+    );
+  }, 120_000);
+
+  it('normalizes concurrent duplicate SHA to one surviving evidence id', async () => {
+    requireDb();
+    const { doctorA } = await seedTenants();
+    const patient = await patients.create(
+      doctorA,
+      { displayName: 'Synthetic Race Patient' },
+      {},
+      env,
+    );
+    const consultation = await consultations.create(doctorA, { patientId: patient.id }, env);
+    const a = await evidence.initiate(
+      doctorA,
+      {
+        consultationId: consultation.id,
+        evidenceType: 'BLOOD_REPORT',
+        sourceType: 'DOCTOR_UPLOAD',
+        filename: 'a.png',
+        declaredMime: 'image/png',
+      },
+      env,
+    );
+    const b = await evidence.initiate(
+      doctorA,
+      {
+        consultationId: consultation.id,
+        evidenceType: 'BLOOD_REPORT',
+        sourceType: 'DOCTOR_UPLOAD',
+        filename: 'b.png',
+        declaredMime: 'image/png',
+      },
+      env,
+    );
+    const [ra, rb] = await Promise.all([
+      evidence.receiveBytes(doctorA, consultation.id, a.id, PNG, env),
+      evidence.receiveBytes(doctorA, consultation.id, b.id, PNG, env),
+    ]);
+    expect(new Set([ra.id, rb.id]).size).toBe(1);
   }, 120_000);
 });
