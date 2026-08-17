@@ -123,16 +123,17 @@ async function seedTenantPair(): Promise<{
 }
 
 describe('Phase 3B patient and consultation persistence services', () => {
-  it('full migration rollback gap audit (001-012)', async () => {
+  it('full migration rollback gap audit (001-013)', async () => {
     requireDb();
-    expect(getOrderedMigrationIds()).toHaveLength(12);
+    expect(getOrderedMigrationIds()).toHaveLength(13);
     const reversed: string[] = [];
-    for (let i = 0; i < 12; i++) {
+    for (let i = 0; i < 13; i++) {
       const id = await migrateDownLastForIsolatedTest(env);
       if (!id) break;
       reversed.push(id);
     }
     expect(reversed).toEqual([
+      '013_f3b_open_source_ocr',
       '012_f3a_extraction_candidates',
       '011_f2a_malware_clean_gate',
       '010_clinical_evidence_ingestion',
@@ -156,7 +157,7 @@ describe('Phase 3B patient and consultation persistence services', () => {
     }, env);
     expect(tables).toBe(0);
     const reup = await migrateUp(env);
-    expect(reup.applied).toHaveLength(12);
+    expect(reup.applied).toHaveLength(13);
   }, 180_000);
 
   it('patient create/get/list/update/archive with tenant isolation', async () => {

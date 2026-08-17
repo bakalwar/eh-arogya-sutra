@@ -187,8 +187,8 @@ async function storedEvidence(
 
 describe('F3A source-linked extraction candidates', () => {
   it('registers migration 012 without expanding production extraction_status', () => {
-    expect(getOrderedMigrationIds()).toContain('012_f3a_extraction_candidates');
-    expect(getOrderedMigrationIds()).toHaveLength(12);
+    expect(getOrderedMigrationIds()).toContain('013_f3b_open_source_ocr');
+    expect(getOrderedMigrationIds()).toHaveLength(13);
     expect(extractJobsEnabled(env)).toBe(false);
   });
 

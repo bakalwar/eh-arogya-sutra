@@ -172,7 +172,7 @@ async function seedTwoClinics(): Promise<{
 describe('Phase 3A PostgreSQL persistence integration', () => {
   it('1-7 schema migration gates', async () => {
     requireDb();
-    expect(getOrderedMigrationIds()).toHaveLength(12);
+    expect(getOrderedMigrationIds()).toHaveLength(13);
     expect(listMigrationFiles('up').every((f) => f.checksum.length === 64)).toBe(true);
 
     const version = await withAdminClient(async (query) => {
@@ -214,12 +214,12 @@ describe('Phase 3A PostgreSQL persistence integration', () => {
 
     const second = await migrateUp(env);
     expect(second.applied).toEqual([]);
-    expect(second.skipped.length).toBe(12);
+    expect(second.skipped.length).toBe(13);
 
     const downId = await migrateDownLastForIsolatedTest(env);
-    expect(downId).toBe('012_f3a_extraction_candidates');
+    expect(downId).toBe('013_f3b_open_source_ocr');
     const reup = await migrateUp(env);
-    expect(reup.applied).toEqual(['012_f3a_extraction_candidates']);
+    expect(reup.applied).toEqual(['013_f3b_open_source_ocr']);
   }, 120_000);
 
   it('8-14 tenant isolation gates', async () => {
@@ -500,7 +500,13 @@ describe('Phase 3A PostgreSQL persistence integration', () => {
       fs.readFileSync(path.join(root, 'packages/database/package.json'), 'utf8'),
     ) as { dependencies: Record<string, string> };
     expect(Object.keys(pkg.dependencies).sort()).toEqual(
-      ['@ehas2/evidence-extract', '@ehas2/evidence-ingest', '@ehas2/security', 'pg'].sort(),
+      [
+        '@ehas2/evidence-extract',
+        '@ehas2/evidence-extract-adapters',
+        '@ehas2/evidence-ingest',
+        '@ehas2/security',
+        'pg',
+      ].sort(),
     );
     expect(fs.existsSync(path.join(root, '.env'))).toBe(false);
 

@@ -1,0 +1,28 @@
+{
+  "name": "@ehas2/evidence-extract-adapters",
+  "version": "0.1.0-f3b",
+  "description": "E.H. AROGYA SUTRA 2 — open-source PDF text layer + Tesseract OCR extraction adapters (F3B, non-production)",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint src"
+  },
+  "dependencies": {
+    "@ehas2/evidence-extract": "*",
+    "@ehas2/evidence-ingest": "*",
+    "pdfjs-dist": "4.10.38"
+  },
+  "optionalDependencies": {
+    "@napi-rs/canvas": "0.1.80"
+  }
+}
