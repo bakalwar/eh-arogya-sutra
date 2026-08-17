@@ -39,7 +39,13 @@ export {
   assertProfileAccessContext,
   assertClinicAdminRole,
 } from './tenantContext.js';
-export { getPool, closePool, withTenantTransaction, withAdminClient } from './pool.js';
+export {
+  getPool,
+  closePool,
+  withTenantTransaction,
+  withAdminClient,
+  runInSavepoint,
+} from './pool.js';
 export {
   migrateUp,
   migrateDownLast,

@@ -15,7 +15,7 @@ import {
   type MalwareScanner,
 } from '@ehas2/evidence-ingest';
 import { assertTenantContext, type TenantContext } from '../tenantContext.js';
-import { withTenantTransaction } from '../pool.js';
+import { runInSavepoint, withTenantTransaction } from '../pool.js';
 import { PgAuditEventRepository, PgConsultationRepository } from '../repositories/postgres.js';
 import { PgIdempotencyRepository } from '../repositories/idempotency.js';
 import {
@@ -327,40 +327,42 @@ export class EvidenceService {
             throw new ValidationError('MALWARE_INFECTED');
           }
           try {
-            await evidenceRepo.upsertBlob(tenant, tx, {
-              evidenceId: item.id,
-              objectKey,
-              bytesPresent: true,
-            });
-            const stored = await evidenceRepo.markStoredTemp(tenant, tx, item.id, {
-              detectedMime: validated.detectedMime,
-              byteSize: validated.byteSize,
-              contentSha256: validated.contentSha256,
-              malwareScanResult: scan,
-              auditEventId: null,
-            });
-            await evidenceRepo.enqueueJob(tenant, tx, {
-              evidenceId: item.id,
-              jobType: 'DELETE_ORIGINAL',
-              nextRunAt: new Date(stored.expiresAt),
-            });
-            await audit.append(tx, {
-              organizationId: tenant.organizationId,
-              clinicId: tenant.clinicId,
-              actorId: tenant.actorId,
-              actorRole: tenant.actorRole,
-              eventType: 'evidence_stored_temp',
-              resourceType: 'evidence',
-              resourceId: item.id,
-              outcome: 'SUCCESS',
-              metadata: {
-                status: stored.processingStatus,
+            return await runInSavepoint(tx, 'evidence_sha_store', async () => {
+              await evidenceRepo.upsertBlob(tenant, tx, {
+                evidenceId: item.id,
+                objectKey,
+                bytesPresent: true,
+              });
+              const stored = await evidenceRepo.markStoredTemp(tenant, tx, item.id, {
+                detectedMime: validated.detectedMime,
                 byteSize: validated.byteSize,
-                malware: scan,
-              },
+                contentSha256: validated.contentSha256,
+                malwareScanResult: scan,
+                auditEventId: null,
+              });
+              await evidenceRepo.enqueueJob(tenant, tx, {
+                evidenceId: item.id,
+                jobType: 'DELETE_ORIGINAL',
+                nextRunAt: new Date(stored.expiresAt),
+              });
+              await audit.append(tx, {
+                organizationId: tenant.organizationId,
+                clinicId: tenant.clinicId,
+                actorId: tenant.actorId,
+                actorRole: tenant.actorRole,
+                eventType: 'evidence_stored_temp',
+                resourceType: 'evidence',
+                resourceId: item.id,
+                outcome: 'SUCCESS',
+                metadata: {
+                  status: stored.processingStatus,
+                  byteSize: validated.byteSize,
+                  malware: scan,
+                },
+              });
+              putObjectKey = null;
+              return stored;
             });
-            putObjectKey = null;
-            return stored;
           } catch (err) {
             if (isUniqueViolation(err)) {
               await this.store().delete(objectKey);

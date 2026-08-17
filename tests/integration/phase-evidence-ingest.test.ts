@@ -700,4 +700,32 @@ describe('F1 evidence ingest foundation', () => {
     ]);
     expect(new Set([ra.id, rb.id]).size).toBe(1);
   }, 120_000);
+
+  it('replays concurrent same idempotency key and conflicts on different request hash', async () => {
+    requireDb();
+    const { doctorA } = await seedTenants();
+    const patient = await patients.create(
+      doctorA,
+      { displayName: 'Synthetic Idempotency Patient' },
+      {},
+      env,
+    );
+    const consultation = await consultations.create(doctorA, { patientId: patient.id }, env);
+    const payload = {
+      consultationId: consultation.id,
+      evidenceType: 'BLOOD_REPORT' as const,
+      sourceType: 'DOCTOR_UPLOAD' as const,
+      filename: 'same.png',
+      declaredMime: 'image/png',
+      idempotencyKey: 'evidence-race-key',
+    };
+    const [first, second] = await Promise.all([
+      evidence.initiate(doctorA, payload, env),
+      evidence.initiate(doctorA, payload, env),
+    ]);
+    expect(first.id).toBe(second.id);
+    await expect(
+      evidence.initiate(doctorA, { ...payload, filename: 'other.png' }, env),
+    ).rejects.toMatchObject({ name: 'IdempotencyConflictError' });
+  }, 120_000);
 });

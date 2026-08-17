@@ -1,5 +1,6 @@
 import type { TenantContext, TransactionContext } from '../tenantContext.js';
 import { IdempotencyConflictError } from '../domainErrors.js';
+import { runInSavepoint } from '../pool.js';
 
 export type IdempotencyRecord = {
   resourceType: string;
@@ -41,22 +42,24 @@ export class PgIdempotencyRepository {
     },
   ): Promise<void> {
     try {
-      await tx.query(
-        `INSERT INTO idempotency_keys (
-           organization_id, clinic_id, actor_id, operation, idempotency_key,
-           request_hash, resource_type, resource_id
-         ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
-        [
-          tenant.organizationId,
-          tenant.clinicId,
-          tenant.actorId,
-          input.operation,
-          input.key,
-          input.requestHash,
-          input.resourceType,
-          input.resourceId,
-        ],
-      );
+      await runInSavepoint(tx, 'idempotency_insert', async () => {
+        await tx.query(
+          `INSERT INTO idempotency_keys (
+             organization_id, clinic_id, actor_id, operation, idempotency_key,
+             request_hash, resource_type, resource_id
+           ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+          [
+            tenant.organizationId,
+            tenant.clinicId,
+            tenant.actorId,
+            input.operation,
+            input.key,
+            input.requestHash,
+            input.resourceType,
+            input.resourceId,
+          ],
+        );
+      });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       const code = (err as { code?: string } | null)?.code;
