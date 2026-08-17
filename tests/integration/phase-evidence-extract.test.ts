@@ -270,11 +270,21 @@ describe('F3A source-linked extraction candidates', () => {
   it('refuses extraction without CLEAN and for patient photographs', async () => {
     requireDb();
     const { doctorA } = await seedTenants();
-    const infected = evidenceService('UNAVAILABLE');
-    const { itemId } = await storedEvidence(doctorA, infected, 'BLOOD_REPORT');
-    await infected.enqueueExtractCandidates(doctorA, itemId, new Date(), extractEnv);
-    await infected.runDueJobs(doctorA, 'ehas2-f3a-unclean', new Date(), extractEnv);
-    expect(await infected.listExtractionCandidates(doctorA, itemId, extractEnv)).toEqual([]);
+    const clean = evidenceService('CLEAN');
+    const { itemId } = await storedEvidence(doctorA, clean, 'BLOOD_REPORT');
+    await withTenantTransaction(
+      doctorA,
+      async (tx) => {
+        await tx.query(
+          `UPDATE clinical_evidence_items SET malware_scan_result = 'UNAVAILABLE' WHERE id = $1`,
+          [itemId],
+        );
+      },
+      env,
+    );
+    await clean.enqueueExtractCandidates(doctorA, itemId, new Date(), extractEnv);
+    await clean.runDueJobs(doctorA, 'ehas2-f3a-unclean', new Date(), extractEnv);
+    expect(await clean.listExtractionCandidates(doctorA, itemId, extractEnv)).toEqual([]);
 
     const photos = evidenceService('CLEAN');
     const photo = await storedEvidence(doctorA, photos, 'PATIENT_PHOTO');

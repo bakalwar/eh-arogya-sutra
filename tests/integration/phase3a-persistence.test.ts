@@ -500,7 +500,7 @@ describe('Phase 3A PostgreSQL persistence integration', () => {
       fs.readFileSync(path.join(root, 'packages/database/package.json'), 'utf8'),
     ) as { dependencies: Record<string, string> };
     expect(Object.keys(pkg.dependencies).sort()).toEqual(
-      ['@ehas2/evidence-ingest', '@ehas2/security', 'pg'].sort(),
+      ['@ehas2/evidence-extract', '@ehas2/evidence-ingest', '@ehas2/security', 'pg'].sort(),
     );
     expect(fs.existsSync(path.join(root, '.env'))).toBe(false);
 
