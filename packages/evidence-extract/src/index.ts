@@ -56,6 +56,31 @@ export type {
   EvidenceJobType,
 } from './types.js';
 export {
+  F3D_FACT_CANDIDATE_FOUNDATION,
+  FACT_CANDIDATE_CHANNELS,
+  FACT_CANDIDATE_CATEGORIES,
+  FACT_CANDIDATE_SOURCE_FIELDS,
+  FACT_CANDIDATE_AUTHORITY_STATUSES,
+  FACT_CANDIDATE_F3D1_AUTHORITY,
+  FACT_CANDIDATE_DECISION_STATUSES,
+  FACT_UNIT_POSTURES,
+  FACT_NORMALIZATION_METHOD_F3D1,
+  FACT_NORMALIZATION_VERSION_F3D1,
+  FACT_NORMALIZATION_FINGERPRINT_F3D1,
+  FACT_LIMITATION_CODES,
+  FACT_SELECTOR_FORBIDDEN_FIELD_NAMES,
+} from './factCandidateTypes.js';
+export type {
+  FactCandidateChannel,
+  FactCandidateCategory,
+  FactCandidateSourceField,
+  FactCandidateAuthorityStatus,
+  FactCandidateDecisionStatus,
+  FactUnitPosture,
+  FactLimitationCode,
+  FactCandidateDto,
+} from './factCandidateTypes.js';
+export {
   sha256Hex,
   extractorFingerprint,
   contentAwareExtractorFingerprint,
@@ -74,6 +99,7 @@ export {
   extractOcrJobsEnabled,
   claimableEvidenceJobTypes,
   candidateReviewEnabled,
+  factCandidatesEnabled,
 } from './flags.js';
 export { presentSourceLocator, bboxToCssPercent } from './reviewPresentation.js';
 export {

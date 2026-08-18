@@ -57,6 +57,7 @@ import {
   RateLimitUnavailableError,
   ObjectStoreUnavailableError,
   ReviewConflictError,
+  FactConflictError,
 } from './domainErrors.js';
 
 /** Hide connection details from API/clients. */
@@ -102,6 +103,9 @@ export function sanitizeDatabaseError(err: unknown): { code: string; message: st
   }
   if (err instanceof ReviewConflictError) {
     return { code: err.code, message: 'REVIEW_CONFLICT' };
+  }
+  if (err instanceof FactConflictError) {
+    return { code: err.code, message: 'FACT_CONFLICT' };
   }
   return { code: 'DATABASE_ERROR', message: 'Database operation failed' };
 }

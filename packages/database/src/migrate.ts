@@ -20,6 +20,7 @@ const MIGRATION_IDS = [
   '012_f3a_extraction_candidates',
   '013_f3b_open_source_ocr',
   '014_f3c_candidate_review',
+  '015_f3d1_fact_candidates',
 ] as const;
 
 export type MigrationId = (typeof MIGRATION_IDS)[number];

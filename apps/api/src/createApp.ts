@@ -28,6 +28,7 @@ import {
   F3A_EXTRACTION_CANDIDATE_FOUNDATION,
   F3B_OPEN_SOURCE_OCR_ADAPTER_FOUNDATION,
   F3C_CANDIDATE_REVIEW_FOUNDATION,
+  F3D_FACT_CANDIDATE_FOUNDATION,
 } from '@ehas2/evidence-extract';
 import { logInfo } from '@ehas2/observability';
 import { requirePermission, type AuthedRequest } from './middleware/authorization.js';
@@ -37,6 +38,10 @@ import { registerAuthRoutes, type AuthRouteDeps } from './routes/auth.js';
 import { registerPatientRoutes, type PatientRouteDeps } from './routes/patients.js';
 import { registerConsultationRoutes, type ConsultationRouteDeps } from './routes/consultations.js';
 import { registerEvidenceRoutes, type EvidenceRouteDeps } from './routes/evidence.js';
+import {
+  registerFactCandidateRoutes,
+  type FactCandidateRouteDeps,
+} from './routes/factCandidates.js';
 import type { TenantContextResolver } from './middleware/tenantBridge.js';
 
 export type CreateAppDeps = {
@@ -57,6 +62,7 @@ export type CreateAppDeps = {
   consultations?: ConsultationRouteDeps['consultations'];
   intake?: ConsultationRouteDeps['intake'];
   evidence?: EvidenceRouteDeps['evidence'];
+  factCandidates?: FactCandidateRouteDeps['factCandidates'];
   auth?: AuthRouteDeps['auth'];
   allowedOrigins?: string[];
 };
@@ -164,6 +170,7 @@ export function createApp(deps: CreateAppDeps = {}) {
       f3aExtractionCandidateFoundation: F3A_EXTRACTION_CANDIDATE_FOUNDATION,
       f3bOpenSourceOcrAdapterFoundation: F3B_OPEN_SOURCE_OCR_ADAPTER_FOUNDATION,
       f3cCandidateReviewFoundation: F3C_CANDIDATE_REVIEW_FOUNDATION,
+      f3dFactCandidateFoundation: F3D_FACT_CANDIDATE_FOUNDATION,
       ocr: EVIDENCE_OCR_CONNECTED,
       ocrAdapter: EVIDENCE_OCR_ADAPTER_CONNECTED,
       extractProduction: EVIDENCE_EXTRACT_PRODUCTION,
@@ -209,6 +216,7 @@ export function createApp(deps: CreateAppDeps = {}) {
         f3aExtractionCandidateFoundation: F3A_EXTRACTION_CANDIDATE_FOUNDATION,
         f3bOpenSourceOcrAdapterFoundation: F3B_OPEN_SOURCE_OCR_ADAPTER_FOUNDATION,
         f3cCandidateReviewFoundation: F3C_CANDIDATE_REVIEW_FOUNDATION,
+        f3dFactCandidateFoundation: F3D_FACT_CANDIDATE_FOUNDATION,
         ocr: EVIDENCE_OCR_CONNECTED,
         ocrAdapter: EVIDENCE_OCR_ADAPTER_CONNECTED,
         extractProduction: EVIDENCE_EXTRACT_PRODUCTION,
@@ -251,6 +259,10 @@ export function createApp(deps: CreateAppDeps = {}) {
   registerEvidenceRoutes(app, {
     resolveTenantContext: resolveTenant,
     evidence: deps.evidence,
+  });
+  registerFactCandidateRoutes(app, {
+    resolveTenantContext: resolveTenant,
+    factCandidates: deps.factCandidates,
   });
 
   app.use(`${EHAS2_API_NAMESPACE}/analysis`, (req: RequestWithId, res) => {
