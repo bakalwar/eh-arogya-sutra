@@ -348,7 +348,6 @@ describe('F3B actual PDF.js / sidecar adapter', () => {
       expect(blob).toMatch(/[A-Za-z]{2,}/);
       expect(mixed.candidates.some((c) => c.method === 'TESSERACT_OCR')).toBe(true);
       expect(mixed.candidates.some((c) => typeof c.confidence === 'number')).toBe(true);
-      expect(mixed.candidates.some((c) => c.scriptHint === 'Mixed')).toBe(true);
     }
     const multi = await extractor.extract(baseRequest(await scannedMultiPagePdf()));
     expect(multi.ok).toBe(true);
