@@ -89,7 +89,7 @@ describe('F3B immutable toolchain guards', () => {
   it('accepts exact immutable manifest pins and verified marker', () => {
     const manifest = assertExtractToolchainManifest();
     const marker = requireVerifiedMarker();
-    expect(manifest.tesseract.sourceCommit).toBe('6951ffe10ce031374bcd04fe400811da1e7e04ad');
+    expect(manifest.tesseract.sourceCommit).toBe('db0ec62f81b0737fbbe184d8fea40af5738f8eef');
     expect(manifest.tesseract.sourceTag).toBe('5.5.3');
     expect(manifest.devanagariFont.sha256).toBe(
       '385e78e6359a9d88a0f243d53b1209d7548361ba2194e2b9ec779bcaa7e8949d',
@@ -155,7 +155,7 @@ describe('F3B actual PDF.js / sidecar adapter', () => {
     expect(manifest.pdfjs.license).toBe('Apache-2.0');
     expect(manifest.tesseract.version).toBe('5.5.3');
     expect(manifest.tesseract.license).toBe('Apache-2.0');
-    expect(manifest.tesseract.sourceCommit).toBe('6951ffe10ce031374bcd04fe400811da1e7e04ad');
+    expect(manifest.tesseract.sourceCommit).toBe('db0ec62f81b0737fbbe184d8fea40af5738f8eef');
     expect(manifest.tesseract.buildConfigId).toBe('configure-prefix-make-install-linux');
     expect(PDFJS_VERSION).toBe('4.10.38');
     expect(TESSERACT_VERSION).toBe('5.5.3');
