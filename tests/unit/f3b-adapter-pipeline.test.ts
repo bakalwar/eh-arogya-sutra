@@ -188,7 +188,9 @@ describe('F3B actual PDF.js / sidecar adapter', () => {
     const extractor = new TwoStageOpenSourceExtractor();
     const pdf = await scannedEnglishReportPdf();
     const result = await extractor.extract(baseRequest(pdf));
-    expect(result.ok).toBe(true);
+    expect(result.ok, result.ok ? 'ok' : `${result.code}:${result.limitationCodes.join(',')}`).toBe(
+      true,
+    );
     if (!result.ok) return;
     const blob = result.candidates.map((c) => c.rawText).join(' ');
     expect(blob).toMatch(/Hemoglobin|g\/dL|Laboratory/);
@@ -200,7 +202,9 @@ describe('F3B actual PDF.js / sidecar adapter', () => {
     const extractor = new TwoStageOpenSourceExtractor();
     const pdf = await scannedHindiReportPdf();
     const result = await extractor.extract(baseRequest(pdf));
-    expect(result.ok).toBe(true);
+    expect(result.ok, result.ok ? 'ok' : `${result.code}:${result.limitationCodes.join(',')}`).toBe(
+      true,
+    );
     if (!result.ok) return;
     const blob = result.candidates.map((c) => c.rawText).join(' ');
     expect(blob).toMatch(/हीमोग्लोबिन|g\/dL|13\.2/);
@@ -210,7 +214,9 @@ describe('F3B actual PDF.js / sidecar adapter', () => {
     requirePinnedTesseract();
     const extractor = new TwoStageOpenSourceExtractor();
     const mixed = await extractor.extract(baseRequest(await scannedMixedReportPdf()));
-    expect(mixed.ok).toBe(true);
+    expect(mixed.ok, mixed.ok ? 'ok' : `${mixed.code}:${mixed.limitationCodes.join(',')}`).toBe(
+      true,
+    );
     if (mixed.ok) {
       const blob = mixed.candidates.map((c) => c.rawText).join(' ');
       expect(blob).toMatch(/Hemoglobin|हीमोग्लोबिन|g\/dL|13\.2/);
@@ -259,10 +265,16 @@ describe('F3B sidecar security', () => {
   });
 
   it('never puts user filenames in argv and never uses a shell', () => {
-    const argv = tesseractArgv('/tmp/ehas2-generated.png', '/tmp/ehas2-generated-out');
+    const argv = tesseractArgv(
+      '/tmp/ehas2-generated.png',
+      '/tmp/ehas2-generated-out',
+      '/tmp/ehas2-tessdata',
+    );
     expect(argv).toEqual([
       '/tmp/ehas2-generated.png',
       '/tmp/ehas2-generated-out',
+      '--tessdata-dir',
+      '/tmp/ehas2-tessdata',
       '-l',
       'eng+hin',
       'tsv',

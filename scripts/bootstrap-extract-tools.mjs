@@ -161,6 +161,17 @@ function verifyTesseractVersion(manifest) {
     );
   }
   console.log(`Verified tesseract: ${combined.trim().split('\n')[0]}`);
+  const langs = spawnSync(bin, ['--list-langs', '--tessdata-dir', TESSDATA_DIR], {
+    encoding: 'utf8',
+    env: { ...process.env, TESSDATA_PREFIX: path.dirname(TESSDATA_DIR) },
+  });
+  const langOut = `${langs.stdout ?? ''}${langs.stderr ?? ''}`;
+  if (!/\beng\b/.test(langOut) || !/\bhin\b/.test(langOut)) {
+    fail(
+      'OCR_TOOLCHAIN_REPRODUCIBILITY_BLOCKED',
+      `tesseract --list-langs must include eng and hin; got: ${langOut.trim()}`,
+    );
+  }
   return combined.trim().split('\n')[0];
 }
 

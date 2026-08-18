@@ -30,7 +30,11 @@ export function resolveTesseractBinary(): string | null {
 
 export function resolveTessdataPrefix(): string | null {
   const fromEnv = process.env.TESSDATA_PREFIX?.trim();
-  if (fromEnv) return fromEnv;
+  if (fromEnv) {
+    if (fs.existsSync(path.join(fromEnv, 'eng.traineddata'))) return fromEnv;
+    const nested = path.join(fromEnv, 'tessdata');
+    if (fs.existsSync(path.join(nested, 'eng.traineddata'))) return nested;
+  }
   return path.join(PACKAGE_ROOT, '.extract-tools', 'tessdata');
 }
 
@@ -69,8 +73,12 @@ export function assertPinnedTesseractVersion(
   return { ok: true, versionLine: combined.trim().split('\n')[0] ?? '' };
 }
 
-export function tesseractArgv(inputPath: string, outputBase: string): string[] {
-  return [inputPath, outputBase, '-l', TESSERACT_LANGUAGES, 'tsv'];
+export function tesseractArgv(
+  inputPath: string,
+  outputBase: string,
+  tessdataDir: string,
+): string[] {
+  return [inputPath, outputBase, '--tessdata-dir', tessdataDir, '-l', TESSERACT_LANGUAGES, 'tsv'];
 }
 
 function killProcessGroup(child: ReturnType<typeof spawn>): void {
@@ -128,9 +136,11 @@ export class TesseractSidecar {
     const inputPath = path.join(input.workDir, `page-${Date.now()}.png`);
     const outputBase = path.join(input.workDir, `ocr-${Date.now()}`);
     await writePrivateFile(inputPath, input.png);
-    const argv = tesseractArgv(inputPath, outputBase);
+    const argv = tesseractArgv(inputPath, outputBase, tessdataPrefix);
     const spawnBin = testNodeScript ? process.execPath : binary!;
     const spawnArgv = testNodeScript ? [testNodeScript, ...argv] : argv;
+    const libDir = binary ? path.join(path.dirname(path.dirname(binary)), 'lib') : '';
+    const ldPath = [libDir, process.env.LD_LIBRARY_PATH].filter(Boolean).join(path.delimiter);
 
     return new Promise<TesseractOcrResult>((resolve) => {
       let settled = false;
@@ -139,7 +149,11 @@ export class TesseractSidecar {
       const child = spawn(spawnBin, spawnArgv, {
         shell: false,
         stdio: ['ignore', 'pipe', 'pipe'],
-        env: { ...process.env, TESSDATA_PREFIX: tessdataPrefix },
+        env: {
+          ...process.env,
+          TESSDATA_PREFIX: path.dirname(tessdataPrefix),
+          ...(ldPath ? { LD_LIBRARY_PATH: ldPath } : {}),
+        },
         detached: process.platform !== 'win32',
       });
 

@@ -67,7 +67,7 @@ jobs:
       - name: Export pinned Tesseract paths
         run: |
           echo "EHAS2_TESSERACT_BIN=${GITHUB_WORKSPACE}/packages/evidence-extract-adapters/.extract-tools/tesseract/bin/tesseract" >> "$GITHUB_ENV"
-          echo "TESSDATA_PREFIX=${GITHUB_WORKSPACE}/packages/evidence-extract-adapters/.extract-tools/tessdata" >> "$GITHUB_ENV"
+          echo "TESSDATA_PREFIX=${GITHUB_WORKSPACE}/packages/evidence-extract-adapters/.extract-tools" >> "$GITHUB_ENV"
       - name: Bootstrap clinical extract tools
         run: npm run bootstrap:clinical-extract
       - name: Boundary verification
