@@ -1,8 +1,11 @@
 export {
   F3A_EXTRACTION_CANDIDATE_FOUNDATION,
   F3B_OPEN_SOURCE_OCR_ADAPTER_FOUNDATION,
+  F3C_CANDIDATE_REVIEW_FOUNDATION,
   EVIDENCE_EXTRACT_PRODUCTION,
   EVIDENCE_OCR_ADAPTER_CONNECTED,
+  SOURCE_TEXT_AUTHORITY_SCOPE,
+  SOURCE_TEXT_REVIEW_DOES_NOT_AUTHORIZE,
   CONTENT_INTENTS,
   CANDIDATE_TYPES,
   CANDIDATE_STATUSES,
@@ -26,6 +29,10 @@ export {
   RETENTION_JOB_TYPES,
   EXTRACT_JOB_TYPE,
   CANDIDATE_SELECTOR_FORBIDDEN_FIELD_NAMES,
+  CANDIDATE_REVIEW_ACTIONS,
+  CANDIDATE_REVIEW_REASON_CODES,
+  CANDIDATE_REVIEW_DECISION_STATUSES,
+  CANDIDATE_REVIEW_REASON_BY_ACTION,
 } from './types.js';
 export type {
   CandidateType,
@@ -36,6 +43,11 @@ export type {
   ScriptHint,
   SourceLocator,
   ExtractionCandidateDto,
+  CandidateReviewAction,
+  CandidateReviewReasonCode,
+  CandidateReviewDecisionStatus,
+  CandidateReviewEventDto,
+  SourceLinkedCandidateView,
   ExtractionRequest,
   ExtractionResult,
   ExtractionSuccess,
@@ -57,7 +69,13 @@ export {
   boundUnit,
   boundRange,
 } from './normalize.js';
-export { extractJobsEnabled, extractOcrJobsEnabled, claimableEvidenceJobTypes } from './flags.js';
+export {
+  extractJobsEnabled,
+  extractOcrJobsEnabled,
+  claimableEvidenceJobTypes,
+  candidateReviewEnabled,
+} from './flags.js';
+export { presentSourceLocator, bboxToCssPercent } from './reviewPresentation.js';
 export {
   DeterministicFakeExtractor,
   NeverSettlingExtractor,

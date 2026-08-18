@@ -12,7 +12,10 @@ import {
   EVIDENCE_PRODUCTION_WORKER,
   F2A_INFRASTRUCTURE_FOUNDATION,
 } from '../../packages/evidence-ingest/src/index.ts';
-import { F3B_OPEN_SOURCE_OCR_ADAPTER_FOUNDATION } from '../../packages/evidence-extract/src/index.ts';
+import {
+  F3B_OPEN_SOURCE_OCR_ADAPTER_FOUNDATION,
+  F3C_CANDIDATE_REVIEW_FOUNDATION,
+} from '../../packages/evidence-extract/src/index.ts';
 
 async function getReady(): Promise<{ status: number; json: Record<string, unknown> }> {
   const app = createApp();
@@ -50,6 +53,7 @@ describe('F2A readiness truthfulness', () => {
     expect(res.json.clinicalEngine).toBe(false);
     expect(res.json.f3aExtractionCandidateFoundation).toBe(true);
     expect(res.json.f3bOpenSourceOcrAdapterFoundation).toBe(F3B_OPEN_SOURCE_OCR_ADAPTER_FOUNDATION);
+    expect(res.json.f3cCandidateReviewFoundation).toBe(F3C_CANDIDATE_REVIEW_FOUNDATION);
     expect(res.json.ocrAdapter).toBe(false);
     expect(res.json.extractProduction).toBe(false);
     expect(res.json.ocr).toBe(false);

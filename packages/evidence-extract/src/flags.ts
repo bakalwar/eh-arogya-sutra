@@ -1,6 +1,14 @@
 import { isProductionRuntime } from '@ehas2/evidence-ingest';
 import { RETENTION_JOB_TYPES, type EvidenceJobType } from './types.js';
 
+/** Non-production F3C source-linked candidate review API. Production always false. */
+export function candidateReviewEnabled(
+  env: Record<string, string | undefined> = process.env,
+): boolean {
+  if (isProductionRuntime(env)) return false;
+  return env.EHAS2_F3C_CANDIDATE_REVIEW === '1';
+}
+
 /** Production and default-off: EXTRACT_CANDIDATES jobs are not claimed. */
 export function extractJobsEnabled(env: Record<string, string | undefined> = process.env): boolean {
   if (isProductionRuntime(env)) return false;

@@ -30,17 +30,29 @@ import {
   EXTRACT_TIMEOUT_MS,
   EXTRACT_JOB_TIMEOUT_MS,
   MAGIC_PREFIX_MAX,
+  SOURCE_TEXT_AUTHORITY_SCOPE,
+  SOURCE_TEXT_REVIEW_DOES_NOT_AUTHORIZE,
   assertNoStorageInLocator,
+  boundRawText,
+  candidateReviewEnabled,
   claimableEvidenceJobTypes,
+  CANDIDATE_REVIEW_ACTIONS,
+  CANDIDATE_REVIEW_REASON_BY_ACTION,
   defaultDeterministicExtractor,
   extractJobsEnabled,
   extractOcrJobsEnabled,
   extractorFingerprint,
+  normalizeCandidateText,
+  presentSourceLocator,
+  type CandidateReviewAction,
+  type CandidateReviewEventDto,
+  type CandidateReviewReasonCode,
   type ContentIntent,
   type ExtractionCandidateDto,
   type ExtractionProvider,
   type ExtractionResult,
   type LimitationCode,
+  type SourceLinkedCandidateView,
 } from '@ehas2/evidence-extract';
 import {
   TwoStageOpenSourceExtractor,
@@ -61,6 +73,7 @@ import {
   insertRunWithIdempotency,
   type ExtractionRunRecord,
 } from '../repositories/extraction.js';
+import { PgCandidateReviewRepository } from '../repositories/candidateReview.js';
 import {
   ConflictError,
   IdempotencyConflictError,
@@ -68,12 +81,14 @@ import {
   RateLimitedError,
   RateLimitUnavailableError,
   ResourceNotFoundError,
+  ReviewConflictError,
   ValidationError,
 } from '../domainErrors.js';
 import { assertOptionalIsoDate, assertUuid, hashPayload } from '../validation.js';
 
 const evidenceRepo = new PgEvidenceRepository();
 const extractionRepo = new PgExtractionRepository();
+const candidateReviewRepo = new PgCandidateReviewRepository();
 const consultations = new PgConsultationRepository();
 const audit = new PgAuditEventRepository();
 const idempotency = new PgIdempotencyRepository();
@@ -106,6 +121,63 @@ function isUniqueViolation(err: unknown): boolean {
   const msg = err instanceof Error ? err.message : String(err);
   return /unique|duplicate/i.test(msg);
 }
+
+function assertCandidateReviewEnabled(env: Record<string, string | undefined>): void {
+  if (!candidateReviewEnabled(env)) {
+    throw new ValidationError('CANDIDATE_REVIEW_NOT_CONNECTED');
+  }
+}
+
+function assertReviewerRole(tenant: TenantContext): void {
+  if (tenant.actorRole !== 'Doctor' && tenant.actorRole !== 'ClinicAdmin') {
+    throw new ResourceNotFoundError();
+  }
+}
+
+function isReviewAction(value: string): value is CandidateReviewAction {
+  return (CANDIDATE_REVIEW_ACTIONS as readonly string[]).includes(value);
+}
+
+function toSourceLinkedView(
+  candidate: ExtractionCandidateDto,
+  activeReview: CandidateReviewEventDto | null,
+): SourceLinkedCandidateView {
+  if (!candidate.id || !candidate.extractionRunId) {
+    throw new ResourceNotFoundError();
+  }
+  const locator = presentSourceLocator(candidate.sourceLocator);
+  return {
+    candidateId: candidate.id,
+    organizationId: candidate.organizationId,
+    clinicId: candidate.clinicId,
+    patientId: candidate.patientId,
+    consultationId: candidate.consultationId,
+    evidenceItemId: candidate.evidenceItemId,
+    extractionRunId: candidate.extractionRunId,
+    pageNumber: candidate.pageNumber,
+    sourceLocator: locator,
+    candidateType: candidate.candidateType,
+    rawText: candidate.rawText,
+    normalizedText: candidate.normalizedText,
+    method: candidate.method,
+    extractorName: candidate.extractorName,
+    extractorVersion: candidate.extractorVersion,
+    modelOrLangpackVersion: candidate.modelOrLangpackVersion,
+    confidence: candidate.confidence,
+    limitationCodes: candidate.limitationCodes,
+    contentFingerprint: candidate.contentFingerprint,
+    verificationPosture: 'UNVERIFIED',
+    clinicalAuthority: 'NOT_AUTHORITATIVE',
+    extractionStatus: 'NOT_AUTHORIZED',
+    ocrAuthoritative: false,
+    sourceTextAuthorityScope: SOURCE_TEXT_AUTHORITY_SCOPE,
+    sourceTextReviewDoesNotAuthorize: SOURCE_TEXT_REVIEW_DOES_NOT_AUTHORIZE,
+    scriptHint: candidate.scriptHint,
+    activeReview,
+  };
+}
+
+const CANDIDATE_REVIEW_OPERATION = 'evidence.candidate_review';
 
 function assertConsultationBinding(itemConsultationId: string, pathConsultationId: string): void {
   if (itemConsultationId !== pathConsultationId) {
@@ -1006,6 +1078,249 @@ export class EvidenceService {
     return withTenantTransaction(
       tenant,
       async (tx) => extractionRepo.listRunsForEvidence(tenant, tx, evidenceId),
+      env,
+    );
+  }
+
+  async listSourceLinkedCandidates(
+    tenant: TenantContext,
+    consultationId: string,
+    evidenceId: string,
+    env: Record<string, string | undefined> = process.env,
+  ): Promise<SourceLinkedCandidateView[]> {
+    assertTenantContext(tenant);
+    assertCandidateReviewEnabled(env);
+    assertUuid(consultationId, 'consultationId');
+    assertUuid(evidenceId, 'evidenceId');
+    return withTenantTransaction(
+      tenant,
+      async (tx) => {
+        const item = await evidenceRepo.findById(tenant, tx, evidenceId);
+        if (!item) return [];
+        assertConsultationBinding(item.consultationId, consultationId);
+        assertCaseOwner(tenant, item.submittedByActorId);
+        const [candidates, activeReviews] = await Promise.all([
+          extractionRepo.listCandidatesForEvidence(tenant, tx, evidenceId),
+          candidateReviewRepo.listActiveByEvidence(tenant, tx, evidenceId),
+        ]);
+        const activeByCandidate = new Map(activeReviews.map((r) => [r.candidateId, r]));
+        return candidates.map((c) =>
+          toSourceLinkedView(c, c.id ? (activeByCandidate.get(c.id) ?? null) : null),
+        );
+      },
+      env,
+    );
+  }
+
+  async getSourceLinkedCandidate(
+    tenant: TenantContext,
+    consultationId: string,
+    evidenceId: string,
+    candidateId: string,
+    env: Record<string, string | undefined> = process.env,
+  ): Promise<SourceLinkedCandidateView> {
+    assertTenantContext(tenant);
+    assertCandidateReviewEnabled(env);
+    assertUuid(consultationId, 'consultationId');
+    assertUuid(evidenceId, 'evidenceId');
+    assertUuid(candidateId, 'candidateId');
+    return withTenantTransaction(
+      tenant,
+      async (tx) => {
+        const item = await evidenceRepo.findById(tenant, tx, evidenceId);
+        if (!item) throw new ResourceNotFoundError();
+        assertConsultationBinding(item.consultationId, consultationId);
+        assertCaseOwner(tenant, item.submittedByActorId);
+        const candidate = await extractionRepo.findCandidateById(tenant, tx, candidateId);
+        if (!candidate || candidate.evidenceItemId !== evidenceId) {
+          throw new ResourceNotFoundError();
+        }
+        const active = await candidateReviewRepo.findActiveForCandidate(tenant, tx, candidateId);
+        return toSourceLinkedView(candidate, active);
+      },
+      env,
+    );
+  }
+
+  async listCandidateReviews(
+    tenant: TenantContext,
+    consultationId: string,
+    evidenceId: string,
+    candidateId: string,
+    env: Record<string, string | undefined> = process.env,
+  ): Promise<CandidateReviewEventDto[]> {
+    assertTenantContext(tenant);
+    assertCandidateReviewEnabled(env);
+    assertUuid(consultationId, 'consultationId');
+    assertUuid(evidenceId, 'evidenceId');
+    assertUuid(candidateId, 'candidateId');
+    return withTenantTransaction(
+      tenant,
+      async (tx) => {
+        const item = await evidenceRepo.findById(tenant, tx, evidenceId);
+        if (!item) throw new ResourceNotFoundError();
+        assertConsultationBinding(item.consultationId, consultationId);
+        assertCaseOwner(tenant, item.submittedByActorId);
+        const candidate = await extractionRepo.findCandidateById(tenant, tx, candidateId);
+        if (!candidate || candidate.evidenceItemId !== evidenceId) {
+          throw new ResourceNotFoundError();
+        }
+        return candidateReviewRepo.listForCandidate(tenant, tx, candidateId);
+      },
+      env,
+    );
+  }
+
+  async submitCandidateReview(
+    tenant: TenantContext,
+    consultationId: string,
+    evidenceId: string,
+    candidateId: string,
+    input: {
+      action: string;
+      reasonCode: string;
+      correctedRawText?: string | null;
+      supersedesReviewId?: string | null;
+      idempotencyKey: string;
+    },
+    env: Record<string, string | undefined> = process.env,
+  ): Promise<CandidateReviewEventDto> {
+    assertTenantContext(tenant);
+    assertCandidateReviewEnabled(env);
+    assertReviewerRole(tenant);
+    assertUuid(consultationId, 'consultationId');
+    assertUuid(evidenceId, 'evidenceId');
+    assertUuid(candidateId, 'candidateId');
+    if (
+      !input.idempotencyKey ||
+      input.idempotencyKey.length < 8 ||
+      input.idempotencyKey.length > 128
+    ) {
+      throw new ValidationError('IDEMPOTENCY_KEY_REQUIRED');
+    }
+    if (!isReviewAction(input.action)) {
+      throw new ValidationError('INVALID_REVIEW_ACTION');
+    }
+    const action = input.action;
+    const allowedReasons = CANDIDATE_REVIEW_REASON_BY_ACTION[action];
+    if (!(allowedReasons as readonly string[]).includes(input.reasonCode)) {
+      throw new ValidationError('INVALID_REVIEW_REASON');
+    }
+    const reasonCode = input.reasonCode as CandidateReviewReasonCode;
+    let correctedRawText: string | null = null;
+    let correctedNormalizedText: string | null = null;
+    if (action === 'CORRECT_SOURCE_TEXT') {
+      if (input.correctedRawText == null || String(input.correctedRawText).trim() === '') {
+        throw new ValidationError('CORRECTED_TEXT_REQUIRED');
+      }
+      try {
+        correctedRawText = boundRawText(String(input.correctedRawText), 'PAGE_BLOCK_TEXT');
+      } catch {
+        throw new ValidationError('TEXT_LIMIT');
+      }
+      correctedNormalizedText = normalizeCandidateText(correctedRawText);
+    } else if (input.correctedRawText != null && String(input.correctedRawText) !== '') {
+      throw new ValidationError('CORRECTED_TEXT_NOT_ALLOWED');
+    }
+    if (input.supersedesReviewId) {
+      assertUuid(input.supersedesReviewId, 'supersedesReviewId');
+    }
+
+    const requestHash = hashPayload({
+      action,
+      reasonCode,
+      correctedRawText,
+      supersedesReviewId: input.supersedesReviewId ?? null,
+      candidateId,
+      evidenceId,
+      consultationId,
+    });
+
+    return withTenantTransaction(
+      tenant,
+      async (tx) => {
+        await candidateReviewRepo.lockCandidate(tx, candidateId);
+        const existingKey = await idempotency.resolveOrThrow(
+          tenant,
+          tx,
+          CANDIDATE_REVIEW_OPERATION,
+          input.idempotencyKey,
+          requestHash,
+        );
+        if (existingKey) {
+          const replay = await candidateReviewRepo.findById(tenant, tx, existingKey.resourceId);
+          if (!replay) throw new ResourceNotFoundError();
+          return replay;
+        }
+
+        const item = await evidenceRepo.findById(tenant, tx, evidenceId);
+        if (!item) throw new ResourceNotFoundError();
+        assertConsultationBinding(item.consultationId, consultationId);
+        assertCaseOwner(tenant, item.submittedByActorId);
+        const candidate = await extractionRepo.findCandidateById(tenant, tx, candidateId);
+        if (!candidate || candidate.evidenceItemId !== evidenceId || !candidate.id) {
+          throw new ResourceNotFoundError();
+        }
+        if (!candidate.extractionRunId) throw new ResourceNotFoundError();
+        assertNoStorageInLocator(candidate.sourceLocator);
+
+        if (action === 'CORRECT_SOURCE_TEXT' && correctedRawText === candidate.rawText) {
+          throw new ValidationError('CORRECTED_TEXT_UNCHANGED');
+        }
+
+        const active = await candidateReviewRepo.findActiveForCandidate(tenant, tx, candidateId);
+        if (active) {
+          if (!input.supersedesReviewId || input.supersedesReviewId !== active.id) {
+            throw new ReviewConflictError();
+          }
+          await candidateReviewRepo.supersedeActive(tenant, tx, active.id);
+        } else if (input.supersedesReviewId) {
+          throw new ReviewConflictError();
+        }
+
+        const review = await candidateReviewRepo.insert(tenant, tx, {
+          patientId: candidate.patientId,
+          consultationId: candidate.consultationId,
+          evidenceItemId: candidate.evidenceItemId,
+          extractionRunId: candidate.extractionRunId,
+          candidateId: candidate.id,
+          action,
+          reasonCode,
+          originalRawText: candidate.rawText,
+          originalNormalizedText: candidate.normalizedText,
+          correctedRawText,
+          correctedNormalizedText,
+          sourceLocator: presentSourceLocator(candidate.sourceLocator),
+          supersedesReviewId: active?.id ?? null,
+        });
+
+        await idempotency.insert(tenant, tx, {
+          operation: CANDIDATE_REVIEW_OPERATION,
+          key: input.idempotencyKey,
+          requestHash,
+          resourceType: 'candidate_review',
+          resourceId: review.id,
+        });
+
+        await audit.append(tx, {
+          organizationId: tenant.organizationId,
+          clinicId: tenant.clinicId,
+          actorId: tenant.actorId,
+          actorRole: tenant.actorRole,
+          eventType: 'evidence_candidate_review',
+          resourceType: 'candidate_review',
+          resourceId: review.id,
+          outcome: 'SUCCESS',
+          metadata: {
+            code: action,
+            candidateId,
+            decisionStatus: review.decisionStatus,
+            authorityScope: SOURCE_TEXT_AUTHORITY_SCOPE,
+          },
+        });
+        this.metric({ name: 'candidate_review_result', code: action });
+        return review;
+      },
       env,
     );
   }

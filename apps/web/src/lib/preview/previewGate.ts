@@ -68,6 +68,10 @@ export function previewMayUploadReports(): false {
   return false;
 }
 
+export function previewMayCallCandidateReviewApi(): false {
+  return false;
+}
+
 export function previewMayCallPayment(): false {
   return false;
 }

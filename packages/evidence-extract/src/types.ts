@@ -8,8 +8,17 @@ import type { EvidenceType } from '@ehas2/evidence-ingest';
 
 export const F3A_EXTRACTION_CANDIDATE_FOUNDATION = true as const;
 export const F3B_OPEN_SOURCE_OCR_ADAPTER_FOUNDATION = true as const;
+export const F3C_CANDIDATE_REVIEW_FOUNDATION = true as const;
 export const EVIDENCE_EXTRACT_PRODUCTION = false as const;
 export const EVIDENCE_OCR_ADAPTER_CONNECTED = false as const;
+export const SOURCE_TEXT_AUTHORITY_SCOPE = 'SOURCE_TEXT_TRANSCRIPTION_ONLY' as const;
+export const SOURCE_TEXT_REVIEW_DOES_NOT_AUTHORIZE = [
+  'DIAGNOSIS_CONFIRMED',
+  'CLINICAL_FINDING_VERIFIED',
+  'MEDICINE_SELECTED',
+  'SEVERITY_APPROVED',
+  'TREATMENT_AUTHORIZED',
+] as const;
 
 export const CONTENT_INTENTS = [
   'WRITTEN_REPORT_DOCUMENT',
@@ -120,6 +129,104 @@ export const CANDIDATE_SELECTOR_FORBIDDEN_FIELD_NAMES = [
   'extractedText',
   'analyzeComplete',
 ] as const;
+
+export const CANDIDATE_REVIEW_ACTIONS = [
+  'ACCEPT_AS_SOURCE_TEXT',
+  'CORRECT_SOURCE_TEXT',
+  'REJECT_SOURCE_TEXT',
+  'MARK_UNRESOLVED',
+] as const;
+export type CandidateReviewAction = (typeof CANDIDATE_REVIEW_ACTIONS)[number];
+
+export const CANDIDATE_REVIEW_REASON_CODES = [
+  'SOURCE_TEXT_MATCHES_PAGE',
+  'SOURCE_TEXT_MISREAD',
+  'SOURCE_TEXT_NOT_PRESENT',
+  'SOURCE_TEXT_UNCERTAIN',
+  'OCR_ARTIFACT',
+  'PARTIAL_PAGE',
+  'LOW_CONFIDENCE_VISIBLE',
+  'SYNTHETIC_FIXTURE_REVIEW',
+] as const;
+export type CandidateReviewReasonCode = (typeof CANDIDATE_REVIEW_REASON_CODES)[number];
+
+export const CANDIDATE_REVIEW_DECISION_STATUSES = ['ACTIVE', 'SUPERSEDED'] as const;
+export type CandidateReviewDecisionStatus = (typeof CANDIDATE_REVIEW_DECISION_STATUSES)[number];
+
+export const CANDIDATE_REVIEW_REASON_BY_ACTION: Record<
+  CandidateReviewAction,
+  readonly CandidateReviewReasonCode[]
+> = {
+  ACCEPT_AS_SOURCE_TEXT: ['SOURCE_TEXT_MATCHES_PAGE', 'SYNTHETIC_FIXTURE_REVIEW'],
+  CORRECT_SOURCE_TEXT: [
+    'SOURCE_TEXT_MISREAD',
+    'OCR_ARTIFACT',
+    'PARTIAL_PAGE',
+    'SYNTHETIC_FIXTURE_REVIEW',
+  ],
+  REJECT_SOURCE_TEXT: ['SOURCE_TEXT_NOT_PRESENT', 'OCR_ARTIFACT', 'SYNTHETIC_FIXTURE_REVIEW'],
+  MARK_UNRESOLVED: [
+    'SOURCE_TEXT_UNCERTAIN',
+    'LOW_CONFIDENCE_VISIBLE',
+    'PARTIAL_PAGE',
+    'SYNTHETIC_FIXTURE_REVIEW',
+  ],
+};
+
+export type CandidateReviewEventDto = {
+  id: string;
+  organizationId: string;
+  clinicId: string;
+  patientId: string;
+  consultationId: string;
+  evidenceItemId: string;
+  extractionRunId: string;
+  candidateId: string;
+  action: CandidateReviewAction;
+  actorId: string;
+  actorRole: 'Doctor' | 'ClinicAdmin';
+  reasonCode: CandidateReviewReasonCode;
+  originalRawText: string;
+  originalNormalizedText: string | null;
+  correctedRawText: string | null;
+  correctedNormalizedText: string | null;
+  sourceLocator: SourceLocator;
+  supersedesReviewId: string | null;
+  decisionStatus: CandidateReviewDecisionStatus;
+  authorityScope: typeof SOURCE_TEXT_AUTHORITY_SCOPE;
+  clinicallyUsed: false;
+  createdAt: string;
+};
+
+export type SourceLinkedCandidateView = {
+  candidateId: string;
+  organizationId: string;
+  clinicId: string;
+  patientId: string;
+  consultationId: string;
+  evidenceItemId: string;
+  extractionRunId: string;
+  pageNumber: number;
+  sourceLocator: SourceLocator;
+  candidateType: CandidateType;
+  rawText: string;
+  normalizedText: string | null;
+  method: ExtractionMethod;
+  extractorName: string;
+  extractorVersion: string;
+  modelOrLangpackVersion: string;
+  confidence: number | null;
+  limitationCodes: readonly LimitationCode[];
+  contentFingerprint: string;
+  verificationPosture: typeof VERIFICATION_POSTURE_F3A;
+  clinicalAuthority: 'NOT_AUTHORITATIVE';
+  extractionStatus: 'NOT_AUTHORIZED';
+  ocrAuthoritative: false;
+  sourceTextAuthorityScope: typeof SOURCE_TEXT_AUTHORITY_SCOPE;
+  sourceTextReviewDoesNotAuthorize: typeof SOURCE_TEXT_REVIEW_DOES_NOT_AUTHORIZE;
+  scriptHint: ScriptHint;
+  activeReview: CandidateReviewEventDto | null;
+};
 
 /** Persisted/API candidate DTO — IDs, bounded text, source locator. No original bytes. */
 export type ExtractionCandidateDto = {

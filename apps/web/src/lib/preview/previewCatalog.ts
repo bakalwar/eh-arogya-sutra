@@ -317,6 +317,14 @@ export const PREVIEW_CATALOG: readonly PreviewCatalogItem[] = [
     group: 'audit',
     shell: 'audit',
   },
+  {
+    id: 'candidate-review',
+    title: 'Source-linked candidate review (F3C)',
+    description: 'Synthetic extraction-candidate review — transcription only, not clinical',
+    href: '/preview/candidate-review',
+    group: 'audit',
+    shell: 'audit',
+  },
 ] as const;
 
 export const PREVIEW_GROUPS = [

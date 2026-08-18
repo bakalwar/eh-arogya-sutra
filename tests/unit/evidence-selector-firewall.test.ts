@@ -85,4 +85,12 @@ describe('evidence selector firewall', () => {
     expect(extractSrc).not.toMatch(/evaluateRule[1-9]/);
     expect(extractSrc).not.toMatch(/\baffectsClinicalSelection\s*:\s*true\b/);
   });
+
+  it('F3C review paths stay selector-firewalled and candidate-immutable', () => {
+    const review = read('packages/database/src/repositories/candidateReview.ts');
+    expect(review).not.toMatch(/UPDATE clinical_evidence_extraction_candidates/i);
+    expect(review).not.toMatch(/@ehas2\/rule[1-9]/);
+    expect(review).toMatch(/clinically_used',\s*$|clinically_used/i);
+    expect(review).toMatch(/false/);
+  });
 });
