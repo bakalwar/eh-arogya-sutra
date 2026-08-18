@@ -989,6 +989,17 @@ const FORBIDDEN_AUDIT_KEYS = new Set([
   'extracted_text',
   'ocr_text',
   'candidate_text',
+  'asserted_text',
+  'asserted_value',
+  'original_source_span',
+  'source_span',
+  'source_text',
+  'corrected_text',
+  'fact_text',
+  'unit_text',
+  'locator_text',
+  'complaint',
+  'lab_value',
 ]);
 
 const AUDIT_METADATA_MAX_DEPTH = 8;

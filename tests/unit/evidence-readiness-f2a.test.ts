@@ -15,6 +15,7 @@ import {
 import {
   F3B_OPEN_SOURCE_OCR_ADAPTER_FOUNDATION,
   F3C_CANDIDATE_REVIEW_FOUNDATION,
+  F3D_FACT_CANDIDATE_FOUNDATION,
 } from '../../packages/evidence-extract/src/index.ts';
 
 async function getReady(): Promise<{ status: number; json: Record<string, unknown> }> {
@@ -54,6 +55,7 @@ describe('F2A readiness truthfulness', () => {
     expect(res.json.f3aExtractionCandidateFoundation).toBe(true);
     expect(res.json.f3bOpenSourceOcrAdapterFoundation).toBe(F3B_OPEN_SOURCE_OCR_ADAPTER_FOUNDATION);
     expect(res.json.f3cCandidateReviewFoundation).toBe(F3C_CANDIDATE_REVIEW_FOUNDATION);
+    expect(res.json.f3dFactCandidateFoundation).toBe(F3D_FACT_CANDIDATE_FOUNDATION);
     expect(res.json.ocrAdapter).toBe(false);
     expect(res.json.extractProduction).toBe(false);
     expect(res.json.ocr).toBe(false);

@@ -66,6 +66,13 @@ describe('audit metadata recursive forbidden keys', () => {
     expect(() =>
       assertAuditMetadataSafe({ code: 'EXTRACTED_UNVERIFIED', candidateCount: 3 }),
     ).not.toThrow();
+    expect(() => assertAuditMetadataSafe({ asserted_text: 'x' })).toThrow(/forbids sensitive key/i);
+    expect(() => assertAuditMetadataSafe({ original_source_span: 'x' })).toThrow(
+      /forbids sensitive key/i,
+    );
+    expect(() =>
+      assertAuditMetadataSafe({ code: 'MATERIALIZED', sourceChannel: 'DOCTOR_DECLARED' }),
+    ).not.toThrow();
   });
 
   it('documents that SQL CHECK is top-level only', () => {

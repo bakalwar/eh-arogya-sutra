@@ -8,6 +8,7 @@ import {
   EXTRACT_JOB_TYPE,
   F3A_EXTRACTION_CANDIDATE_FOUNDATION,
   F3C_CANDIDATE_REVIEW_FOUNDATION,
+  F3D_FACT_CANDIDATE_FOUNDATION,
   NeverSettlingExtractor,
   RETENTION_JOB_TYPES,
   VERIFICATION_POSTURE_F3A,
@@ -15,6 +16,7 @@ import {
   boundRawText,
   candidateContentFingerprint,
   candidateReviewEnabled,
+  factCandidatesEnabled,
   claimableEvidenceJobTypes,
   detectScriptHint,
   extractJobsEnabled,
@@ -34,6 +36,7 @@ describe('F3A extraction contracts', () => {
   it('keeps foundation on and production OCR/extract off', () => {
     expect(F3A_EXTRACTION_CANDIDATE_FOUNDATION).toBe(true);
     expect(F3C_CANDIDATE_REVIEW_FOUNDATION).toBe(true);
+    expect(F3D_FACT_CANDIDATE_FOUNDATION).toBe(true);
     expect(EVIDENCE_OCR_ADAPTER_CONNECTED).toBe(false);
     expect(EVIDENCE_EXTRACT_PRODUCTION).toBe(false);
     expect(VERIFICATION_POSTURE_F3A).toBe('UNVERIFIED');
@@ -59,6 +62,14 @@ describe('F3A extraction contracts', () => {
     expect(
       candidateReviewEnabled({ EHAS2_F3C_CANDIDATE_REVIEW: '1', NODE_ENV: 'production' }),
     ).toBe(false);
+  });
+
+  it('enables fact candidates only with explicit non-production flag', () => {
+    expect(factCandidatesEnabled({})).toBe(false);
+    expect(factCandidatesEnabled({ EHAS2_F3D_FACT_CANDIDATES: '1' })).toBe(true);
+    expect(factCandidatesEnabled({ EHAS2_F3D_FACT_CANDIDATES: '1', NODE_ENV: 'production' })).toBe(
+      false,
+    );
   });
 
   it('fingerprints extractor version and candidate payload deterministically', () => {

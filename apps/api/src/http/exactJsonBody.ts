@@ -17,6 +17,16 @@ const SELECTOR_LIKE_KEYS = new Set([
   'ocrtext',
   'extractedtext',
   'analyzecomplete',
+  'verified',
+  'clinicallyused',
+  'clinically_used',
+  'polarity',
+  'temperament',
+  'constitution',
+  'severity',
+  'prescription',
+  'rx',
+  'structuredreportfindings',
 ]);
 
 export function assertExactJsonKeys(

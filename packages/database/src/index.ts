@@ -34,6 +34,7 @@ export {
   RateLimitUnavailableError,
   ObjectStoreUnavailableError,
   ReviewConflictError,
+  FactConflictError,
 } from './domainErrors.js';
 export {
   type TenantContext,
@@ -120,6 +121,12 @@ export type { EvidenceItemRecord, EvidenceJobRecord } from './repositories/evide
 export { PgExtractionRepository } from './repositories/extraction.js';
 export type { ExtractionRunRecord } from './repositories/extraction.js';
 export { PgCandidateReviewRepository } from './repositories/candidateReview.js';
+export { PgFactCandidateRepository } from './repositories/factCandidate.js';
+export { FactCandidateService, factCandidateService } from './services/factCandidateService.js';
+export type {
+  FactCandidateServiceDeps,
+  MaterializeFactCandidateInput,
+} from './services/factCandidateService.js';
 export { PgConsultationIntakeRepository } from './repositories/consultationIntake.js';
 export type {
   ConsultationIntakeBundle,

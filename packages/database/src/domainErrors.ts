@@ -83,6 +83,14 @@ export class ReviewConflictError extends Error {
   }
 }
 
+export class FactConflictError extends Error {
+  readonly code = 'FACT_CONFLICT' as const;
+  constructor(message = 'FACT_CONFLICT') {
+    super(message);
+    this.name = 'FactConflictError';
+  }
+}
+
 export class ObjectStoreUnavailableError extends Error {
   readonly code = 'OBJECT_STORE_UNAVAILABLE' as const;
   constructor(message = 'OBJECT_STORE_UNAVAILABLE') {

@@ -9,6 +9,7 @@ import {
   RateLimitUnavailableError,
   ResourceNotFoundError,
   ReviewConflictError,
+  FactConflictError,
   TenantContextRequiredError,
   ValidationError,
 } from '@ehas2/database';
@@ -31,7 +32,8 @@ export type ApiErrorCode =
   | 'OBJECT_STORE_UNAVAILABLE'
   | 'PAYLOAD_TOO_LARGE'
   | 'IDEMPOTENCY_CONFLICT'
-  | 'REVIEW_CONFLICT';
+  | 'REVIEW_CONFLICT'
+  | 'FACT_CONFLICT';
 
 export type ApiErrorBody = {
   success: false;
@@ -86,6 +88,10 @@ export function sendDomainError(res: Response, err: unknown, requestId: string):
   }
   if (err instanceof ReviewConflictError) {
     sendError(res, 409, 'REVIEW_CONFLICT', 'REVIEW_CONFLICT', requestId);
+    return;
+  }
+  if (err instanceof FactConflictError) {
+    sendError(res, 409, 'FACT_CONFLICT', 'FACT_CONFLICT', requestId);
     return;
   }
   if (err instanceof RateLimitedError) {

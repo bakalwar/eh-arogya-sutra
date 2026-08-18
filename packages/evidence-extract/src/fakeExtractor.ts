@@ -185,6 +185,18 @@ function bloodReportRows(): FixtureRow[] {
       blockIndex: 9,
       limitationCodes: ['SYNTHETIC_FIXTURE_ONLY', 'NOT_AUTHORITATIVE'],
     },
+    {
+      candidateType: 'WRITTEN_IMPRESSION_TEXT',
+      rawText: 'Impression: synthetic source-stated finding only; not a confirmed diagnosis.',
+      blockIndex: 10,
+      limitationCodes: ['NOT_AUTHORITATIVE', 'NO_TRANSLATION'],
+    },
+    {
+      candidateType: 'WRITTEN_IMPRESSION_TEXT',
+      rawText: 'निष्कर्ष: केवल सिंथेटिक स्रोत कथन, पुष्ट निदान नहीं।',
+      blockIndex: 11,
+      limitationCodes: ['NOT_AUTHORITATIVE', 'NO_TRANSLATION'],
+    },
   ];
 }
 

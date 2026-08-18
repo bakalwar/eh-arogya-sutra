@@ -49,7 +49,7 @@ jobs:
           PGPASSWORD: ehas2_isolated_test_only
         run: |
           set -e
-          for db in ehas2_phase3a_test ehas2_phase3b_test ehas2_phase3c_test ehas2_phase3d_test ehas2_phase4a_preflight ehas2_phase_evidence_test ehas2_phase_extract_test ehas2_phase_ocr_test ehas2_phase_f3c_test; do
+          for db in ehas2_phase3a_test ehas2_phase3b_test ehas2_phase3c_test ehas2_phase3d_test ehas2_phase4a_preflight ehas2_phase_evidence_test ehas2_phase_extract_test ehas2_phase_ocr_test ehas2_phase_f3c_test ehas2_phase_f3d_test; do
             psql -h 127.0.0.1 -p 55432 -U ehas2 -d postgres -tc "SELECT 1 FROM pg_database WHERE datname = '${db}'" | grep -q 1 \
               || psql -h 127.0.0.1 -p 55432 -U ehas2 -d postgres -c "CREATE DATABASE ${db} OWNER ehas2;"
           done
@@ -99,7 +99,7 @@ jobs:
         run: |
           set -e
           if grep -R -E '@ehas2/rule[1-9]|tesseract|pdf-parse|pdfjs|analyzeComplete|LibreTranslate' \
-            packages/evidence-extract/src --exclude=types.ts \
+            packages/evidence-extract/src --exclude=types.ts --exclude=factCandidateTypes.ts \
             packages/database/src/repositories/extraction.ts \
             apps/worker/src/jobs/extractCandidates.ts; then
             echo 'Forbidden OCR/engine coupling in F3A extraction paths' >&2
@@ -127,6 +127,31 @@ jobs:
             apps/web/src/components/preview/CandidateReviewLocalBoard.tsx \
             apps/web/src/lib/preview/candidateReviewFixtures.ts; then
             echo 'Forbidden selector/engine coupling in F3C candidate review paths' >&2
+            exit 1
+          fi
+      - name: F3D fact-candidate selector firewall
+        run: |
+          set -e
+          F3D_PATHS="packages/database/src/repositories/factCandidate.ts packages/database/src/services/factCandidateService.ts packages/evidence-extract/src/factCandidateTypes.ts packages/evidence-extract/src/flags.ts apps/api/src/routes/factCandidates.ts"
+          # Coupling: imports, invocations, writes. Do not match deny-list field-name literals.
+          if grep -R -E '@ehas2/rule[1-9]|@ehas2/medicine-registry|@ehas2/engine-adapter|evaluateRule[1-9]|tesseract\.js|pdf-parse|LibreTranslate|addStructuredFindings|CORRECTED_BY_DOCTOR|clinically_used[[:space:]]*=[[:space:]]*true|clinically_used[[:space:]]*:[[:space:]]*true' \
+            $F3D_PATHS; then
+            echo 'Forbidden selector/engine coupling in F3D fact-candidate paths' >&2
+            exit 1
+          fi
+          if grep -R -E -i 'import[[:space:]].*analyzeComplete|import[[:space:]]*\([^)]*analyzeComplete|require[[:space:]]*\([^)]*analyzeComplete|from[[:space:]].*analyzeComplete|analyzeComplete[[:space:]]*\(' \
+            $F3D_PATHS; then
+            echo 'Forbidden AnalyzeComplete import/invocation in F3D fact-candidate paths' >&2
+            exit 1
+          fi
+          if ! grep -A30 'export const FACT_SELECTOR_FORBIDDEN_FIELD_NAMES' packages/evidence-extract/src/factCandidateTypes.ts | grep -F "'analyzeComplete'"; then
+            echo 'F3D deny-list must keep analyzeComplete as a forbidden field name' >&2
+            exit 1
+          fi
+          if grep -E 'structured_report_findings|addStructuredFindings' \
+            packages/database/src/repositories/factCandidate.ts \
+            packages/database/src/services/factCandidateService.ts; then
+            echo 'F3D-1 must not write structured_report_findings' >&2
             exit 1
           fi
       - name: Set up Python

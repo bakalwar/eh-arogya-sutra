@@ -9,6 +9,14 @@ export function candidateReviewEnabled(
   return env.EHAS2_F3C_CANDIDATE_REVIEW === '1';
 }
 
+/** Non-production F3D-1 fact-candidate materialize API. Production always false. */
+export function factCandidatesEnabled(
+  env: Record<string, string | undefined> = process.env,
+): boolean {
+  if (isProductionRuntime(env)) return false;
+  return env.EHAS2_F3D_FACT_CANDIDATES === '1';
+}
+
 /** Production and default-off: EXTRACT_CANDIDATES jobs are not claimed. */
 export function extractJobsEnabled(env: Record<string, string | undefined> = process.env): boolean {
   if (isProductionRuntime(env)) return false;
