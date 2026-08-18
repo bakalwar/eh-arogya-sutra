@@ -16,6 +16,8 @@ const ADAPTERS_PKG = path.join(ROOT, 'packages', 'evidence-extract-adapters');
 const TOOLS_ROOT = path.join(ADAPTERS_PKG, '.extract-tools');
 const TESSERACT_PREFIX = path.join(TOOLS_ROOT, 'tesseract');
 const TESSDATA_DIR = path.join(TOOLS_ROOT, 'tessdata');
+const FONT_DIR = path.join(TOOLS_ROOT, 'fonts');
+const DEVANAGARI_FONT_PATH = path.join(FONT_DIR, 'NotoSansDevanagari-Regular.ttf');
 const MANIFEST_PATH = path.join(ROOT, 'vendor', 'manifests', 'extract-toolchain.json');
 const VERIFIED_PATH = path.join(TOOLS_ROOT, 'toolchain.verified.json');
 const BUILD_DIR = path.join(TOOLS_ROOT, 'build', 'tesseract-src');
@@ -42,6 +44,13 @@ function readManifest() {
 }
 
 function assertManifestHashes(manifest) {
+  const sourceCommit = String(manifest.tesseract?.sourceCommit ?? '');
+  if (!/^[0-9a-f]{40}$/.test(sourceCommit)) {
+    fail(
+      'OCR_TOOLCHAIN_REPRODUCIBILITY_BLOCKED',
+      'Manifest tesseract.sourceCommit must be exact 40-char lowercase hex',
+    );
+  }
   for (const [lang, spec] of Object.entries(manifest.tessdataFast.languages)) {
     const sha = String(spec.sha256 ?? '');
     if (!sha || sha.length !== 64 || /placeholder|bootstrap/i.test(sha)) {
@@ -51,27 +60,77 @@ function assertManifestHashes(manifest) {
       );
     }
   }
+  const fontCommit = String(manifest.devanagariFont?.commit ?? '');
+  const fontSha = String(manifest.devanagariFont?.sha256 ?? '');
+  if (!/^[0-9a-f]{40}$/.test(fontCommit)) {
+    fail(
+      'OCR_TOOLCHAIN_REPRODUCIBILITY_BLOCKED',
+      'Manifest Devanagari font commit must be exact 40-char lowercase hex',
+    );
+  }
+  if (!/^[0-9a-f]{64}$/.test(fontSha) || /placeholder|bootstrap/i.test(fontSha)) {
+    fail(
+      'OCR_TOOLCHAIN_REPRODUCIBILITY_BLOCKED',
+      'Manifest Devanagari font sha256 must be exact 64-char lowercase hex',
+    );
+  }
 }
 
-function computeToolchainFingerprint(manifest, tessdataHashes, tesseractVersionLine) {
-  const payload = JSON.stringify({
-    schemaVersion: manifest.schemaVersion,
-    pipelineConfigVersion: manifest.pipelineConfigVersion,
-    pdfjsVersion: manifest.pdfjs.version,
-    pdfjsLicense: manifest.pdfjs.license,
-    tesseractVersion: manifest.tesseract.version,
-    tesseractSourceTag: manifest.tesseract.sourceTag,
-    tessdataCommit: manifest.tessdataFast.commit,
-    tessdataLicense: manifest.tessdataFast.license,
-    tessdataHashes,
-    tesseractVersionLine: tesseractVersionLine.trim(),
-  });
-  return sha256Text(payload);
+function computeToolchainFingerprint({
+  manifest,
+  tessdataHashes,
+  tesseractVersionLine,
+  binarySha256,
+  fontSha256,
+}) {
+  return sha256Text(
+    JSON.stringify({
+      schemaVersion: manifest.schemaVersion,
+      pipelineConfigVersion: manifest.pipelineConfigVersion,
+      pdfjsVersion: manifest.pdfjs.version,
+      pdfjsLicense: manifest.pdfjs.license,
+      tesseractVersion: manifest.tesseract.version,
+      tesseractSourceTag: manifest.tesseract.sourceTag,
+      tesseractSourceCommit: manifest.tesseract.sourceCommit,
+      tesseractBuildConfigId: manifest.tesseract.buildConfigId,
+      tessdataCommit: manifest.tessdataFast.commit,
+      tessdataLicense: manifest.tessdataFast.license,
+      tessdataHashes,
+      tesseractVersionLine: tesseractVersionLine.trim(),
+      binarySha256,
+      devanagariFontCommit: manifest.devanagariFont.commit,
+      devanagariFontSha256: fontSha256,
+      devanagariFontFilePath: manifest.devanagariFont.filePath,
+      devanagariFontLicense: manifest.devanagariFont.license,
+    }),
+  );
+}
+
+function validateVerifiedToolchainMarker(marker, manifest) {
+  if (!/^[0-9a-f]{64}$/.test(String(marker?.toolchainFingerprint ?? ''))) {
+    return { ok: false };
+  }
+  if (marker?.tesseract?.sourceCommit !== manifest.tesseract.sourceCommit) return { ok: false };
+  if (marker?.tesseract?.sourceTag !== manifest.tesseract.sourceTag) return { ok: false };
+  if (marker?.tesseract?.buildConfigId !== manifest.tesseract.buildConfigId) return { ok: false };
+  if (marker?.tesseract?.version !== manifest.tesseract.version) return { ok: false };
+  if (marker?.devanagariFont?.commit !== manifest.devanagariFont.commit) return { ok: false };
+  if (marker?.devanagariFont?.sha256 !== manifest.devanagariFont.sha256) return { ok: false };
+  if (marker?.tessdataFast?.commit !== manifest.tessdataFast.commit) return { ok: false };
+  if (marker?.tessdataFast?.languages?.eng?.sha256 !== manifest.tessdataFast.languages.eng.sha256)
+    return { ok: false };
+  if (marker?.tessdataFast?.languages?.hin?.sha256 !== manifest.tessdataFast.languages.hin.sha256)
+    return { ok: false };
+  return { ok: true };
 }
 
 function tesseractBin() {
   const ext = process.platform === 'win32' ? '.exe' : '';
   return path.join(TESSERACT_PREFIX, 'bin', `tesseract${ext}`);
+}
+
+function gitOutput(args, cwd) {
+  return execFileSync('git', args, { cwd, encoding: 'utf8' }).trim();
 }
 
 function run(cmd, args, opts = {}) {
@@ -108,30 +167,69 @@ function ensureTessdata(manifest) {
   return verifiedHashes;
 }
 
+function ensureDevanagariFont(manifest) {
+  fs.mkdirSync(FONT_DIR, { recursive: true, mode: 0o700 });
+  if (!fs.existsSync(DEVANAGARI_FONT_PATH)) {
+    console.log('Downloading verified Devanagari font');
+    execFileSync(
+      'curl',
+      ['-fsSL', manifest.devanagariFont.downloadUrl, '-o', DEVANAGARI_FONT_PATH],
+      {
+        stdio: 'inherit',
+      },
+    );
+  }
+  fs.chmodSync(DEVANAGARI_FONT_PATH, 0o600);
+  const computed = sha256File(DEVANAGARI_FONT_PATH);
+  if (computed !== manifest.devanagariFont.sha256) {
+    fail(
+      'OCR_TOOLCHAIN_REPRODUCIBILITY_BLOCKED',
+      `Devanagari font sha256 mismatch: expected ${manifest.devanagariFont.sha256}, got ${computed}`,
+    );
+  }
+  return computed;
+}
+
 function buildTesseractLinux(manifest) {
   const tag = manifest.tesseract.sourceTag;
+  const expectedCommit = manifest.tesseract.sourceCommit;
   const bin = tesseractBin();
-  if (fs.existsSync(bin)) {
-    const versionOut = spawnSync(bin, ['--version'], { encoding: 'utf8' });
-    const combined = `${versionOut.stdout ?? ''}${versionOut.stderr ?? ''}`;
-    if (versionOut.status === 0 && combined.includes(manifest.tesseract.versionOutputMustContain)) {
-      console.log(`Tesseract ${tag} already installed`);
-      return combined.trim().split('\n')[0];
-    }
-  }
 
   fs.mkdirSync(BUILD_DIR, { recursive: true });
   const srcDir = path.join(BUILD_DIR, 'tesseract');
   if (!fs.existsSync(path.join(srcDir, '.git'))) {
+    fs.rmSync(srcDir, { recursive: true, force: true });
     run('git', [
       'clone',
       '--depth',
       '1',
       '--branch',
       tag,
-      'https://github.com/tesseract-ocr/tesseract.git',
+      manifest.tesseract.sourceRepositoryUrl,
       srcDir,
     ]);
+  }
+  const actualTagHead = gitOutput(['rev-parse', 'HEAD'], srcDir).toLowerCase();
+  if (actualTagHead !== expectedCommit) {
+    fail(
+      'OCR_TOOLCHAIN_REPRODUCIBILITY_BLOCKED',
+      `Tesseract tag ${tag} resolved to ${actualTagHead}, expected ${expectedCommit}`,
+    );
+  }
+  run('git', ['checkout', '--detach', expectedCommit], { cwd: srcDir });
+  const actualCommit = gitOutput(['rev-parse', 'HEAD'], srcDir).toLowerCase();
+  if (actualCommit !== expectedCommit) {
+    fail(
+      'OCR_TOOLCHAIN_REPRODUCIBILITY_BLOCKED',
+      `Detached tesseract source commit mismatch: expected ${expectedCommit}, got ${actualCommit}`,
+    );
+  }
+  const dirty = gitOutput(['status', '--porcelain'], srcDir);
+  if (dirty) {
+    fail(
+      'OCR_TOOLCHAIN_REPRODUCIBILITY_BLOCKED',
+      'Tesseract source tree must be clean before build',
+    );
   }
 
   const autogen = path.join(srcDir, 'autogen.sh');
@@ -144,7 +242,10 @@ function buildTesseractLinux(manifest) {
   run('make', ['install'], { cwd: srcDir });
 
   const out = spawnSync(bin, ['--version'], { encoding: 'utf8' });
-  return `${out.stdout ?? ''}${out.stderr ?? ''}`.trim().split('\n')[0];
+  return {
+    versionLine: `${out.stdout ?? ''}${out.stderr ?? ''}`.trim().split('\n')[0],
+    sourceCommit: actualCommit,
+  };
 }
 
 function verifyTesseractVersion(manifest) {
@@ -160,7 +261,8 @@ function verifyTesseractVersion(manifest) {
       `tesseract --version must contain ${manifest.tesseract.versionOutputMustContain}; got: ${combined.trim()}`,
     );
   }
-  console.log(`Verified tesseract: ${combined.trim().split('\n')[0]}`);
+  const versionLine = combined.trim().split('\n')[0];
+  console.log(`Verified tesseract: ${versionLine}`);
   const langs = spawnSync(bin, ['--list-langs', '--tessdata-dir', TESSDATA_DIR], {
     encoding: 'utf8',
     env: { ...process.env, TESSDATA_PREFIX: path.dirname(TESSDATA_DIR) },
@@ -200,19 +302,28 @@ function verifyTesseractVersion(manifest) {
       `tesseract smoke PNM TSV OCR failed: ${(smokeOcr.stderr ?? smokeOcr.stdout ?? '').trim()}`,
     );
   }
-  return combined.trim().split('\n')[0];
+  return versionLine;
 }
 
-function writeVerifiedMarker(manifest, tessdataHashes, tesseractVersionLine) {
-  const toolchainFingerprint = computeToolchainFingerprint(
+function writeVerifiedMarker(
+  manifest,
+  tessdataHashes,
+  tesseractVersionLine,
+  binarySha256,
+  fontSha256,
+) {
+  const toolchainFingerprint = computeToolchainFingerprint({
     manifest,
     tessdataHashes,
     tesseractVersionLine,
-  );
+    binarySha256,
+    fontSha256,
+  });
   let prior = null;
   if (fs.existsSync(VERIFIED_PATH)) {
     prior = JSON.parse(fs.readFileSync(VERIFIED_PATH, 'utf8'));
-    if (prior.toolchainFingerprint && prior.toolchainFingerprint !== toolchainFingerprint) {
+    const priorValidation = validateVerifiedToolchainMarker(prior, manifest);
+    if (!priorValidation.ok || prior.toolchainFingerprint !== toolchainFingerprint) {
       console.log('Stale toolchain marker detected — re-verifying pinned artifacts');
     }
   }
@@ -223,9 +334,13 @@ function writeVerifiedMarker(manifest, tessdataHashes, tesseractVersionLine) {
     tesseract: {
       version: manifest.tesseract.version,
       sourceTag: manifest.tesseract.sourceTag,
+      sourceCommit: manifest.tesseract.sourceCommit,
       sourceUrl: manifest.tesseract.sourceUrl,
       license: manifest.tesseract.license,
       versionLine: tesseractVersionLine,
+      binaryPath: tesseractBin(),
+      binarySha256,
+      buildConfigId: manifest.tesseract.buildConfigId,
     },
     tessdataFast: {
       commit: manifest.tessdataFast.commit,
@@ -236,6 +351,14 @@ function writeVerifiedMarker(manifest, tessdataHashes, tesseractVersionLine) {
           { file: spec.file, sha256: tessdataHashes[lang], downloadUrl: spec.downloadUrl },
         ]),
       ),
+    },
+    devanagariFont: {
+      name: manifest.devanagariFont.name,
+      commit: manifest.devanagariFont.commit,
+      filePath: DEVANAGARI_FONT_PATH,
+      sha256: fontSha256,
+      license: manifest.devanagariFont.license,
+      licenseUrl: manifest.devanagariFont.licenseUrl,
     },
     pdfjs: {
       version: manifest.pdfjs.version,
@@ -254,10 +377,14 @@ assertManifestHashes(manifest);
 fs.mkdirSync(TOOLS_ROOT, { recursive: true, mode: 0o700 });
 
 const tessdataHashes = ensureTessdata(manifest);
+const fontSha256 = ensureDevanagariFont(manifest);
 let tesseractVersionLine = '';
+let sourceCommit = manifest.tesseract.sourceCommit;
 
 if (process.platform === 'linux') {
-  tesseractVersionLine = buildTesseractLinux(manifest);
+  const build = buildTesseractLinux(manifest);
+  tesseractVersionLine = build.versionLine;
+  sourceCommit = build.sourceCommit;
   tesseractVersionLine = verifyTesseractVersion(manifest);
 } else if (process.env.CI) {
   fail(
@@ -271,5 +398,26 @@ if (process.platform === 'linux') {
   tesseractVersionLine = `skipped-non-linux:${manifest.tesseract.version}`;
 }
 
-const fingerprint = writeVerifiedMarker(manifest, tessdataHashes, tesseractVersionLine);
+const binarySha256 =
+  process.platform === 'linux' ? sha256File(tesseractBin()) : sha256Text('non-linux-skip');
+if (process.platform === 'linux' && sourceCommit !== manifest.tesseract.sourceCommit) {
+  fail(
+    'OCR_TOOLCHAIN_REPRODUCIBILITY_BLOCKED',
+    `Actual built tesseract commit ${sourceCommit} did not match manifest ${manifest.tesseract.sourceCommit}`,
+  );
+}
+const fingerprint = writeVerifiedMarker(
+  manifest,
+  tessdataHashes,
+  tesseractVersionLine,
+  binarySha256,
+  fontSha256,
+);
+console.log(`Expected tesseract source commit: ${manifest.tesseract.sourceCommit}`);
+console.log(`Actual verified tesseract source commit: ${sourceCommit}`);
+console.log(`Tesseract binary sha256: ${binarySha256}`);
+console.log(`eng.traineddata sha256: ${tessdataHashes.eng}`);
+console.log(`hin.traineddata sha256: ${tessdataHashes.hin}`);
+console.log(`Devanagari font sha256: ${fontSha256}`);
+console.log(`Toolchain fingerprint: ${fingerprint}`);
 console.log(`EHAS2 extract tools bootstrap complete (fingerprint ${fingerprint.slice(0, 16)}…).`);

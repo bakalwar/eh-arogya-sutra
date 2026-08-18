@@ -47,10 +47,23 @@ export {
   resolveTessdataPrefix,
   verifyPinnedTessdata,
   assertPinnedTesseractVersion,
+  verifyPinnedTesseractRuntime,
   tesseractArgv,
   type TesseractOcrResult,
 } from './ocr/tesseractSidecar.js';
-export { pinnedLangpackHashes, readExtractToolchainManifest } from './toolchainManifest.js';
+export {
+  assertExtractToolchainManifest,
+  pinnedLangpackHashes,
+  readExtractToolchainManifest,
+} from './toolchainManifest.js';
+export {
+  computeToolchainFingerprint,
+  readVerifiedToolchainMarker,
+  sha256File,
+  validateVerifiedToolchainMarker,
+  verifiedToolchainMarkerPath,
+  type VerifiedToolchainMarker,
+} from './toolchainTrust.js';
 export { parseTsv, type TsvWordBlock } from './ocr/tsvParser.js';
 
 export {

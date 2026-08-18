@@ -4,18 +4,25 @@ import path from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   TwoStageOpenSourceExtractor,
+  assertExtractToolchainManifest,
   extractPdfTextLayer,
   tesseractArgv,
   verifyPinnedTessdata,
   assertPinnedTesseractVersion,
+  verifyPinnedTesseractRuntime,
   TesseractSidecar,
   createJobTempDir,
   PDFJS_VERSION,
   TESSERACT_VERSION,
+  computeToolchainFingerprint,
   pinnedLangpackHashes,
   readExtractToolchainManifest,
+  readVerifiedToolchainMarker,
   resolveTesseractBinary,
+  resolveTessdataPrefix,
   pdfjsOfflineDocumentOptions,
+  validateVerifiedToolchainMarker,
+  verifiedToolchainMarkerPath,
 } from '../../packages/evidence-extract-adapters/src/index.ts';
 import {
   bornDigitalEnglishPdf,
@@ -31,6 +38,7 @@ import {
   scannedHindiReportPdf,
   scannedMixedReportPdf,
   scannedMultiPagePdf,
+  resolveVerifiedDevanagariFont,
 } from '../../tools/extract-fixtures/synthetic/bornDigitalPdf.js';
 
 function requirePinnedTesseract(): string {
@@ -39,6 +47,14 @@ function requirePinnedTesseract(): string {
     throw new Error('BLOCKED: pinned Tesseract 5.5.3 missing; CI must run bootstrap:extract-tools');
   }
   return bin;
+}
+
+function requireVerifiedMarker() {
+  const markerPath = verifiedToolchainMarkerPath();
+  if (!fs.existsSync(markerPath)) {
+    throw new Error('BLOCKED: verified toolchain marker missing; run bootstrap:extract-tools');
+  }
+  return readVerifiedToolchainMarker();
 }
 
 function baseRequest(bytes: Uint8Array, extra: Record<string, unknown> = {}) {
@@ -60,13 +76,87 @@ function baseRequest(bytes: Uint8Array, extra: Record<string, unknown> = {}) {
   };
 }
 
+describe('F3B immutable toolchain guards', () => {
+  const markerPath = verifiedToolchainMarkerPath();
+  const markerBackup = fs.existsSync(markerPath) ? fs.readFileSync(markerPath, 'utf8') : null;
+
+  afterEach(() => {
+    if (markerBackup !== null) {
+      fs.writeFileSync(markerPath, markerBackup);
+    }
+  });
+
+  it('accepts exact immutable manifest pins and verified marker', () => {
+    const manifest = assertExtractToolchainManifest();
+    const marker = requireVerifiedMarker();
+    expect(manifest.tesseract.sourceCommit).toBe('6951ffe10ce031374bcd04fe400811da1e7e04ad');
+    expect(manifest.tesseract.sourceTag).toBe('5.5.3');
+    expect(manifest.devanagariFont.sha256).toBe(
+      '385e78e6359a9d88a0f243d53b1209d7548361ba2194e2b9ec779bcaa7e8949d',
+    );
+    expect(validateVerifiedToolchainMarker(marker, manifest).ok).toBe(true);
+  });
+
+  it('rejects malformed or placeholder tesseract source commits in manifest', () => {
+    const manifest = readExtractToolchainManifest();
+    expect(() =>
+      assertExtractToolchainManifest({
+        ...manifest,
+        tesseract: { ...manifest.tesseract, sourceCommit: 'placeholder' },
+      }),
+    ).toThrow(/source commit/i);
+  });
+
+  it('rejects moved-tag or wrong-commit markers and invalidates stale markers without commit', () => {
+    const manifest = readExtractToolchainManifest();
+    const marker = requireVerifiedMarker();
+    expect(
+      validateVerifiedToolchainMarker(
+        {
+          ...marker,
+          tesseract: {
+            ...marker.tesseract,
+            sourceCommit: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+          },
+        },
+        manifest,
+      ).ok,
+    ).toBe(false);
+    expect(
+      validateVerifiedToolchainMarker(
+        {
+          ...marker,
+          tesseract: { ...marker.tesseract, sourceCommit: '' },
+        },
+        manifest,
+      ).ok,
+    ).toBe(false);
+  });
+
+  it('binds binary hash, font hash, source commit, and pipeline config into the fingerprint', () => {
+    const manifest = readExtractToolchainManifest();
+    const marker = requireVerifiedMarker();
+    const hashes = pinnedLangpackHashes(manifest);
+    const computed = computeToolchainFingerprint({
+      manifest,
+      tessdataHashes: hashes,
+      tesseractVersionLine: marker.tesseract.versionLine,
+      binarySha256: marker.tesseract.binarySha256,
+      fontSha256: marker.devanagariFont.sha256,
+    });
+    expect(computed).toBe(marker.toolchainFingerprint);
+  });
+});
+
 describe('F3B actual PDF.js / sidecar adapter', () => {
   it('pins pdfjs-dist 4.10.38 Apache-2.0 and Tesseract 5.5.3 with exact langpack hashes', () => {
-    const manifest = readExtractToolchainManifest();
+    const manifest = assertExtractToolchainManifest();
     expect(manifest.pdfjs.version).toBe('4.10.38');
     expect(manifest.pdfjs.license).toBe('Apache-2.0');
     expect(manifest.tesseract.version).toBe('5.5.3');
     expect(manifest.tesseract.license).toBe('Apache-2.0');
+    expect(manifest.tesseract.sourceCommit).toBe('6951ffe10ce031374bcd04fe400811da1e7e04ad');
+    expect(manifest.tesseract.buildConfigId).toBe('configure-prefix-make-install-linux');
     expect(PDFJS_VERSION).toBe('4.10.38');
     expect(TESSERACT_VERSION).toBe('5.5.3');
     const hashes = pinnedLangpackHashes();
@@ -93,6 +183,8 @@ describe('F3B actual PDF.js / sidecar adapter', () => {
     expect(distPkg.version).toBe('4.10.38');
     expect(String(distPkg.license)).toMatch(/Apache-2\.0/i);
     expect(String(distPkg.engines?.node ?? '')).toMatch(/20/);
+    expect(manifest.devanagariFont.license).toBe('OFL-1.1');
+    expect(manifest.devanagariFont.commit).toBe('ffebf8c1ee449e544955a7e813c54f9b73848eac');
   });
 
   it('extracts born-digital English text layer without invoking Tesseract', async () => {
@@ -220,6 +312,8 @@ describe('F3B actual PDF.js / sidecar adapter', () => {
 
   it('OCRs a scanned Hindi written-report page with pinned Tesseract', async () => {
     requirePinnedTesseract();
+    const font = resolveVerifiedDevanagariFont();
+    expect(font.sha256).toBe('385e78e6359a9d88a0f243d53b1209d7548361ba2194e2b9ec779bcaa7e8949d');
     const extractor = new TwoStageOpenSourceExtractor();
     const pdf = await scannedHindiReportPdf();
     const result = await extractor.extract(baseRequest(pdf));
@@ -228,7 +322,17 @@ describe('F3B actual PDF.js / sidecar adapter', () => {
     );
     if (!result.ok) return;
     const blob = result.candidates.map((c) => c.rawText).join(' ');
-    expect(blob).toMatch(/हीमोग्लोबिन|g\/dL|13\.2/);
+    expect(blob).toMatch(/हीमोग्लोबिन|प्रयोगशाला|संदर्भ/);
+    expect(blob).not.toMatch(/^\s*(13\.2|g\/dL)\s*$/);
+    expect(result.candidates.some((c) => c.method === 'TESSERACT_OCR')).toBe(true);
+    expect(result.candidates.some((c) => c.scriptHint === 'Deva' || c.scriptHint === 'Mixed')).toBe(
+      true,
+    );
+    expect(
+      result.candidates.some((c) => c.sourceLocator.page === 1 && !!c.sourceLocator.bbox),
+    ).toBe(true);
+    expect(result.candidates.some((c) => typeof c.confidence === 'number')).toBe(true);
+    expect(result.limitationCodes).toContain('NOT_AUTHORITATIVE');
   }, 120_000);
 
   it('OCRs mixed Hindi/English scanned page and multi-page scanned PDF', async () => {
@@ -240,9 +344,11 @@ describe('F3B actual PDF.js / sidecar adapter', () => {
     );
     if (mixed.ok) {
       const blob = mixed.candidates.map((c) => c.rawText).join(' ');
-      expect(blob).toMatch(/Hemoglobin|हीमोग्लोबिन|g\/dL|13\.2/);
+      expect(blob).toMatch(/हीमोग्लोबिन|प्रयोगशाला|संदर्भ/);
+      expect(blob).toMatch(/Hemoglobin|Reference|g\/dL/);
       expect(mixed.candidates.some((c) => c.method === 'TESSERACT_OCR')).toBe(true);
       expect(mixed.candidates.some((c) => typeof c.confidence === 'number')).toBe(true);
+      expect(mixed.candidates.some((c) => c.scriptHint === 'Mixed')).toBe(true);
     }
     const multi = await extractor.extract(baseRequest(await scannedMultiPagePdf()));
     expect(multi.ok).toBe(true);
@@ -324,6 +430,64 @@ describe('F3B sidecar security', () => {
   it('fails closed when tesseract --version is not 5.5.3', () => {
     const result = assertPinnedTesseractVersion(process.execPath);
     expect(result.ok).toBe(false);
+  });
+
+  it('fails closed when the verified runtime marker binary hash does not match', () => {
+    const bin = requirePinnedTesseract();
+    const marker = requireVerifiedMarker();
+    const markerPath = verifiedToolchainMarkerPath();
+    fs.writeFileSync(
+      markerPath,
+      JSON.stringify(
+        {
+          ...marker,
+          tesseract: {
+            ...marker.tesseract,
+            binarySha256: '0'.repeat(64),
+          },
+        },
+        null,
+        2,
+      ),
+    );
+    expect(verifyPinnedTesseractRuntime(bin).ok).toBe(false);
+  });
+
+  it('fails closed when the verified Devanagari font is missing or hash-mismatched', () => {
+    const marker = requireVerifiedMarker();
+    const markerPath = verifiedToolchainMarkerPath();
+    const fontPath = marker.devanagariFont.filePath;
+    const fontBytes = fs.readFileSync(fontPath);
+    try {
+      fs.rmSync(fontPath);
+      expect(() => resolveVerifiedDevanagariFont()).toThrow(/font missing/i);
+      fs.writeFileSync(fontPath, fontBytes);
+      fs.writeFileSync(
+        markerPath,
+        JSON.stringify(
+          {
+            ...marker,
+            devanagariFont: { ...marker.devanagariFont, sha256: '1'.repeat(64) },
+          },
+          null,
+          2,
+        ),
+      );
+      expect(() => resolveVerifiedDevanagariFont()).toThrow(/font hash mismatch/i);
+    } finally {
+      fs.writeFileSync(fontPath, fontBytes);
+      fs.writeFileSync(markerPath, JSON.stringify(marker, null, 2));
+    }
+  });
+
+  it('fails closed when Hindi langpack is missing or wrong', () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ehas2-tess-ok-'));
+    const eng = path.join(resolveTessdataPrefix()!, 'eng.traineddata');
+    fs.copyFileSync(eng, path.join(dir, 'eng.traineddata'));
+    expect(verifyPinnedTessdata(dir).ok).toBe(false);
+    fs.writeFileSync(path.join(dir, 'hin.traineddata'), 'wrong-hin');
+    expect(verifyPinnedTessdata(dir).ok).toBe(false);
+    fs.rmSync(dir, { recursive: true, force: true });
   });
 
   it('times out and kills the process group', async () => {

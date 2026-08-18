@@ -1,5 +1,4 @@
 import { spawn, spawnSync } from 'node:child_process';
-import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -10,10 +9,15 @@ import {
   TESSERACT_LANGUAGES,
   TESSERACT_VERSION,
 } from '../constants.js';
-import { pinnedLangpackHashes } from '../toolchainManifest.js';
+import { readExtractToolchainManifest, pinnedLangpackHashes } from '../toolchainManifest.js';
 import { isProductionRuntime } from '@ehas2/evidence-ingest';
 import { writePrivateFile } from './jobTempDir.js';
 import { parseTsv, type TsvWordBlock } from './tsvParser.js';
+import {
+  readVerifiedToolchainMarker,
+  sha256File,
+  validateVerifiedToolchainMarker,
+} from '../toolchainTrust.js';
 
 const PACKAGE_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 
@@ -36,10 +40,6 @@ export function resolveTessdataPrefix(): string | null {
     if (fs.existsSync(path.join(nested, 'eng.traineddata'))) return nested;
   }
   return path.join(PACKAGE_ROOT, '.extract-tools', 'tessdata');
-}
-
-function sha256File(filePath: string): string {
-  return createHash('sha256').update(fs.readFileSync(filePath)).digest('hex');
 }
 
 export function verifyPinnedTessdata(
@@ -71,6 +71,34 @@ export function assertPinnedTesseractVersion(
     return { ok: false, code: 'HASH_MISMATCH' };
   }
   return { ok: true, versionLine: combined.trim().split('\n')[0] ?? '' };
+}
+
+export function verifyPinnedTesseractRuntime(
+  binary: string,
+): { ok: true } | { ok: false; code: 'HASH_MISMATCH' } {
+  if (!fs.existsSync(binary) || !fs.statSync(binary).isFile()) {
+    return { ok: false, code: 'HASH_MISMATCH' };
+  }
+  const manifest = readExtractToolchainManifest();
+  const marker = readVerifiedToolchainMarker();
+  const markerGate = validateVerifiedToolchainMarker(marker, manifest);
+  if (!markerGate.ok) {
+    return { ok: false, code: 'HASH_MISMATCH' };
+  }
+  if (path.resolve(binary) !== path.resolve(marker.tesseract.binaryPath)) {
+    return { ok: false, code: 'HASH_MISMATCH' };
+  }
+  if (sha256File(binary) !== marker.tesseract.binarySha256) {
+    return { ok: false, code: 'HASH_MISMATCH' };
+  }
+  const versionGate = assertPinnedTesseractVersion(binary);
+  if (!versionGate.ok) {
+    return versionGate;
+  }
+  if (versionGate.versionLine !== marker.tesseract.versionLine) {
+    return { ok: false, code: 'HASH_MISMATCH' };
+  }
+  return { ok: true };
 }
 
 export function tesseractArgv(
@@ -137,9 +165,9 @@ export class TesseractSidecar {
       if (!hashGate.ok) {
         return { ok: false, code: 'HASH_MISMATCH' };
       }
-      const versionGate = assertPinnedTesseractVersion(binary);
-      if (!versionGate.ok) {
-        return { ok: false, code: 'HASH_MISMATCH' };
+      const runtimeGate = verifyPinnedTesseractRuntime(binary);
+      if (!runtimeGate.ok) {
+        return runtimeGate;
       }
     }
     const pageTimeoutMs = input.pageTimeoutMs ?? EXTRACT_PAGE_OCR_TIMEOUT_MS;

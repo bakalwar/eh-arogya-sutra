@@ -4,6 +4,51 @@
  * plus a Type3 ToUnicode mapping so extraction is Unicode without a proprietary font.
  * Scanned pages are image-only (no text layer) for Tesseract fallback tests.
  */
+import { createHash } from 'node:crypto';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
+const MANIFEST_PATH = path.join(REPO_ROOT, 'vendor', 'manifests', 'extract-toolchain.json');
+const MARKER_PATH = path.join(
+  REPO_ROOT,
+  'packages',
+  'evidence-extract-adapters',
+  '.extract-tools',
+  'toolchain.verified.json',
+);
+
+function sha256File(filePath) {
+  return createHash('sha256').update(fs.readFileSync(filePath)).digest('hex');
+}
+
+function readToolchainFiles() {
+  return {
+    manifest: JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf8')),
+    marker: JSON.parse(fs.readFileSync(MARKER_PATH, 'utf8')),
+  };
+}
+
+export function resolveVerifiedDevanagariFont() {
+  const { manifest, marker } = readToolchainFiles();
+  const fontPath = marker?.devanagariFont?.filePath;
+  if (!fontPath || !fs.existsSync(fontPath) || !fs.statSync(fontPath).isFile()) {
+    throw new Error('OCR_TOOLCHAIN_REPRODUCIBILITY_BLOCKED: verified Devanagari font missing');
+  }
+  const sha = sha256File(fontPath);
+  if (sha !== manifest.devanagariFont.sha256 || sha !== marker.devanagariFont.sha256) {
+    throw new Error(
+      'OCR_TOOLCHAIN_REPRODUCIBILITY_BLOCKED: verified Devanagari font hash mismatch',
+    );
+  }
+  if (marker.devanagariFont.commit !== manifest.devanagariFont.commit) {
+    throw new Error(
+      'OCR_TOOLCHAIN_REPRODUCIBILITY_BLOCKED: verified Devanagari font commit mismatch',
+    );
+  }
+  return { path: fontPath, family: 'NotoSansDevanagari', sha256: sha };
+}
 
 function pdfActualTextHex(unicode) {
   let hex = 'FEFF';
@@ -215,20 +260,15 @@ export async function renderCanvasRgb(width, height, draw) {
   return { width, height, rgb };
 }
 
-function tryRegisterDevanagari(GlobalFonts) {
-  const candidates = [
-    '/usr/share/fonts/truetype/noto/NotoSansDevanagari-Regular.ttf',
-    '/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf',
-  ];
-  for (const file of candidates) {
-    try {
-      GlobalFonts.registerFromPath(file, 'NotoSansDevanagari');
-      return 'NotoSansDevanagari';
-    } catch {
-      /* next */
-    }
+function requireRegisteredDevanagari(GlobalFonts) {
+  const font = resolveVerifiedDevanagariFont();
+  const ok = GlobalFonts.registerFromPath(font.path, font.family);
+  if (!ok) {
+    throw new Error(
+      'OCR_TOOLCHAIN_REPRODUCIBILITY_BLOCKED: unable to register verified Devanagari font',
+    );
   }
-  return 'sans-serif';
+  return font.family;
 }
 
 export async function scannedEnglishReportPdf() {
@@ -253,8 +293,8 @@ export async function scannedEnglishReportPnm() {
 
 export async function scannedHindiReportPdf() {
   const page = await renderCanvasRgb(800, 360, (ctx, canvasMod) => {
-    const family = tryRegisterDevanagari(canvasMod.GlobalFonts);
-    ctx.font = `28px ${family}, sans-serif`;
+    const family = requireRegisteredDevanagari(canvasMod.GlobalFonts);
+    ctx.font = `28px ${family}`;
     ctx.fillText('प्रयोगशाला रिपोर्ट', 40, 60);
     ctx.fillText('हीमोग्लोबिन 13.2 g/dL', 40, 110);
     ctx.fillText('संदर्भ सीमा 12.0 - 16.0 g/dL', 40, 160);
@@ -264,8 +304,8 @@ export async function scannedHindiReportPdf() {
 
 export async function scannedMixedReportPdf() {
   const page = await renderCanvasRgb(800, 360, (ctx, canvasMod) => {
-    const family = tryRegisterDevanagari(canvasMod.GlobalFonts);
-    ctx.font = `26px ${family}, sans-serif`;
+    const family = requireRegisteredDevanagari(canvasMod.GlobalFonts);
+    ctx.font = `26px ${family}`;
     ctx.fillText('Hemoglobin / हीमोग्लोबिन 13.2 g/dL', 40, 80);
     ctx.fillText('Reference Range 12.0 - 16.0 g/dL', 40, 140);
   });

@@ -9,13 +9,26 @@ export type ExtractToolchainManifest = {
   tesseract: {
     version: string;
     license: string;
+    sourceRepositoryUrl: string;
     sourceTag: string;
+    sourceCommit: string;
     versionOutputMustContain: string;
+    buildConfigId: string;
   };
   tessdataFast: {
     commit: string;
     license: string;
     languages: Record<string, { file: string; downloadUrl: string; sha256: string }>;
+  };
+  devanagariFont: {
+    name: string;
+    repository: string;
+    commit: string;
+    filePath: string;
+    downloadUrl: string;
+    sha256: string;
+    license: string;
+    licenseUrl: string;
   };
 };
 
@@ -28,6 +41,35 @@ export function manifestPath(): string {
 export function readExtractToolchainManifest(): ExtractToolchainManifest {
   const raw = fs.readFileSync(manifestPath(), 'utf8');
   return JSON.parse(raw) as ExtractToolchainManifest;
+}
+
+function isLowerHex(value: string, length: number): boolean {
+  return new RegExp(`^[0-9a-f]{${length}}$`).test(value);
+}
+
+export function assertExtractToolchainManifest(
+  manifest: ExtractToolchainManifest = readExtractToolchainManifest(),
+): ExtractToolchainManifest {
+  const tesseractCommit = String(manifest.tesseract.sourceCommit ?? '');
+  if (!isLowerHex(tesseractCommit, 40)) {
+    throw new Error(
+      'OCR_TOOLCHAIN_REPRODUCIBILITY_BLOCKED: manifest tesseract source commit must be exact 40-char lowercase hex',
+    );
+  }
+  const fontCommit = String(manifest.devanagariFont?.commit ?? '');
+  if (!isLowerHex(fontCommit, 40)) {
+    throw new Error(
+      'OCR_TOOLCHAIN_REPRODUCIBILITY_BLOCKED: manifest Devanagari font commit must be exact 40-char lowercase hex',
+    );
+  }
+  const fontSha = String(manifest.devanagariFont?.sha256 ?? '');
+  if (!isLowerHex(fontSha, 64) || /placeholder|bootstrap/i.test(fontSha)) {
+    throw new Error(
+      'OCR_TOOLCHAIN_REPRODUCIBILITY_BLOCKED: manifest Devanagari font sha256 must be exact 64-char lowercase hex',
+    );
+  }
+  void pinnedLangpackHashes(manifest);
+  return manifest;
 }
 
 export function pinnedLangpackHashes(
