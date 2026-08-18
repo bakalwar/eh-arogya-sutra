@@ -1355,9 +1355,10 @@ export class EvidenceService {
             inputSha: item.contentSha256,
           },
           env,
+          { completeJob: false },
         );
         this.metric({ name: 'extract_result', code: 'TIMEOUT' });
-        return;
+        throw err;
       }
       throw err;
     }
@@ -1400,7 +1401,9 @@ export class EvidenceService {
       inputSha: string | null;
     },
     env: Record<string, string | undefined>,
+    options: { completeJob?: boolean } = {},
   ): Promise<void> {
+    const completeJob = options.completeJob !== false;
     await withTenantTransaction(
       tenant,
       async (tx) => {
@@ -1411,11 +1414,22 @@ export class EvidenceService {
           input.fingerprint,
         );
         if (stillThere) {
-          await evidenceRepo.finishJob(tenant, tx, job, 'SUCCEEDED', 'DUPLICATE_RUN', null);
+          if (completeJob) {
+            await evidenceRepo.finishJob(tenant, tx, job, 'SUCCEEDED', 'DUPLICATE_RUN', null);
+          }
           return;
         }
         if (await extractionRepo.isRetentionCapReached(tenant, tx, item.id)) {
-          await evidenceRepo.finishJob(tenant, tx, job, 'SUCCEEDED', 'RETENTION_CAP_REACHED', null);
+          if (completeJob) {
+            await evidenceRepo.finishJob(
+              tenant,
+              tx,
+              job,
+              'SUCCEEDED',
+              'RETENTION_CAP_REACHED',
+              null,
+            );
+          }
           return;
         }
         const { run, inserted } = await insertRunWithIdempotency(extractionRepo, tenant, tx, {
@@ -1434,14 +1448,18 @@ export class EvidenceService {
           candidateCount: input.candidates.length,
         });
         if (!inserted) {
-          await evidenceRepo.finishJob(tenant, tx, job, 'SUCCEEDED', 'DUPLICATE_RUN', null);
+          if (completeJob) {
+            await evidenceRepo.finishJob(tenant, tx, job, 'SUCCEEDED', 'DUPLICATE_RUN', null);
+          }
           return;
         }
         if (input.status === 'EXTRACTED_UNVERIFIED' && input.candidates.length > 0) {
           await extractionRepo.insertCandidates(tenant, tx, run.id, input.candidates);
         }
         await extractionRepo.supersedeRuns(tenant, tx, item.id, input.fingerprint, run.id);
-        await evidenceRepo.finishJob(tenant, tx, job, 'SUCCEEDED', null, null);
+        if (completeJob) {
+          await evidenceRepo.finishJob(tenant, tx, job, 'SUCCEEDED', null, null);
+        }
         await audit.append(tx, {
           organizationId: tenant.organizationId,
           clinicId: tenant.clinicId,

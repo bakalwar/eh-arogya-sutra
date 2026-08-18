@@ -30,6 +30,26 @@ export function pdfjsData(bytes: Uint8Array): Uint8Array {
   return copy;
 }
 
+/** Fail-closed PDF.js load options: no CMap/font/wasm/network fetch. */
+export function pdfjsOfflineDocumentOptions(bytes: Uint8Array) {
+  return {
+    data: pdfjsData(bytes),
+    disableAutoFetch: true,
+    disableStream: true,
+    disableRange: true,
+    disableFontFace: true,
+    enableXfa: false,
+    isEvalSupported: false,
+    isOffscreenCanvasSupported: false,
+    useSystemFonts: false,
+    useWorkerFetch: false,
+    verbosity: 0,
+    cMapUrl: undefined,
+    standardFontDataUrl: undefined,
+    wasmUrl: undefined,
+  };
+}
+
 function throwIfAborted(signal?: AbortSignal): void {
   if (signal?.aborted) {
     throw Object.assign(new Error('TIMEOUT'), { code: 'TIMEOUT' });
@@ -100,17 +120,7 @@ export async function extractPdfTextLayer(
   }
   let pdf: PDFDocumentProxy | undefined;
   try {
-    const loadingTask = getDocument({
-      data: pdfjsData(bytes),
-      disableAutoFetch: true,
-      disableStream: true,
-      disableRange: true,
-      isEvalSupported: false,
-      isOffscreenCanvasSupported: false,
-      useSystemFonts: false,
-      useWorkerFetch: false,
-      verbosity: 0,
-    });
+    const loadingTask = getDocument(pdfjsOfflineDocumentOptions(bytes));
     if (signal) {
       signal.addEventListener(
         'abort',

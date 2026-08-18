@@ -1,4 +1,4 @@
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -15,7 +15,7 @@ import { isProductionRuntime } from '@ehas2/evidence-ingest';
 import { writePrivateFile } from './jobTempDir.js';
 import { parseTsv, type TsvWordBlock } from './tsvParser.js';
 
-const PACKAGE_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
+const PACKAGE_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 
 export type TesseractOcrResult =
   | { ok: true; words: TsvWordBlock[] }
@@ -52,6 +52,21 @@ export function verifyPinnedTessdata(
     }
   }
   return { ok: true };
+}
+
+export function assertPinnedTesseractVersion(
+  binary: string,
+): { ok: true; versionLine: string } | { ok: false; code: 'HASH_MISMATCH' } {
+  const out = spawnSync(binary, ['--version'], {
+    encoding: 'utf8',
+    shell: false,
+    timeout: 5_000,
+  });
+  const combined = `${out.stdout ?? ''}${out.stderr ?? ''}`;
+  if (out.error || out.status !== 0 || !combined.includes(TESSERACT_VERSION)) {
+    return { ok: false, code: 'HASH_MISMATCH' };
+  }
+  return { ok: true, versionLine: combined.trim().split('\n')[0] ?? '' };
 }
 
 export function tesseractArgv(inputPath: string, outputBase: string): string[] {
@@ -95,12 +110,16 @@ export class TesseractSidecar {
     const binary = resolveTesseractBinary();
     const tessdataPrefix =
       resolveTessdataPrefix() ?? path.join(PACKAGE_ROOT, '.extract-tools', 'tessdata');
-    if (!testNodeScript && (!binary || !fs.existsSync(binary))) {
-      return { ok: false, code: 'BINARY_UNAVAILABLE' };
-    }
     if (!testNodeScript) {
+      if (!binary || !fs.existsSync(binary)) {
+        return { ok: false, code: 'BINARY_UNAVAILABLE' };
+      }
       const hashGate = verifyPinnedTessdata(tessdataPrefix);
       if (!hashGate.ok) {
+        return { ok: false, code: 'HASH_MISMATCH' };
+      }
+      const versionGate = assertPinnedTesseractVersion(binary);
+      if (!versionGate.ok) {
         return { ok: false, code: 'HASH_MISMATCH' };
       }
     }

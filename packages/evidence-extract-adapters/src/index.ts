@@ -23,6 +23,8 @@ export { pipelineFingerprint, defaultOcrPipelineFingerprint } from './fingerprin
 
 export {
   extractPdfTextLayer,
+  pdfjsData,
+  pdfjsOfflineDocumentOptions,
   type PdfTextItem,
   type PdfPageTextLayer,
   type PdfTextLayerResult,
@@ -44,6 +46,7 @@ export {
   resolveTesseractBinary,
   resolveTessdataPrefix,
   verifyPinnedTessdata,
+  assertPinnedTesseractVersion,
   tesseractArgv,
   type TesseractOcrResult,
 } from './ocr/tesseractSidecar.js';

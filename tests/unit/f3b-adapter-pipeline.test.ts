@@ -7,6 +7,7 @@ import {
   extractPdfTextLayer,
   tesseractArgv,
   verifyPinnedTessdata,
+  assertPinnedTesseractVersion,
   TesseractSidecar,
   createJobTempDir,
   PDFJS_VERSION,
@@ -14,17 +15,21 @@ import {
   pinnedLangpackHashes,
   readExtractToolchainManifest,
   resolveTesseractBinary,
+  pdfjsOfflineDocumentOptions,
 } from '../../packages/evidence-extract-adapters/src/index.ts';
 import {
   bornDigitalEnglishPdf,
   bornDigitalHindiPdf,
   bornDigitalMixedPdf,
+  blankLowQualityPdf,
   malformedPdf,
   mixedTextAndScannedPdf,
   multiPageProvenancePdf,
   passwordProtectedPdf,
   scannedEnglishReportPdf,
   scannedHindiReportPdf,
+  scannedMixedReportPdf,
+  scannedMultiPagePdf,
 } from '../../tools/extract-fixtures/synthetic/bornDigitalPdf.js';
 
 function requirePinnedTesseract(): string {
@@ -129,6 +134,10 @@ describe('F3B actual PDF.js / sidecar adapter', () => {
     expect(
       result.candidates.every((c) => c.sourceLocator.page >= 1 && c.sourceLocator.page <= 2),
     ).toBe(true);
+    expect(
+      result.candidates.every((c) => c.sourceLocator.bbox || c.sourceLocator.blockIndex >= 0),
+    ).toBe(true);
+    expect(result.limitationCodes).toContain('NOT_AUTHORITATIVE');
   });
 
   it('OCRs only insufficient pages of a mixed document', async () => {
@@ -196,6 +205,52 @@ describe('F3B actual PDF.js / sidecar adapter', () => {
     const blob = result.candidates.map((c) => c.rawText).join(' ');
     expect(blob).toMatch(/हीमोग्लोबिन|g\/dL|13\.2/);
   }, 120_000);
+
+  it('OCRs mixed Hindi/English scanned page and multi-page scanned PDF', async () => {
+    requirePinnedTesseract();
+    const extractor = new TwoStageOpenSourceExtractor();
+    const mixed = await extractor.extract(baseRequest(await scannedMixedReportPdf()));
+    expect(mixed.ok).toBe(true);
+    if (mixed.ok) {
+      const blob = mixed.candidates.map((c) => c.rawText).join(' ');
+      expect(blob).toMatch(/Hemoglobin|हीमोग्लोबिन|g\/dL|13\.2/);
+      expect(mixed.candidates.some((c) => c.method === 'TESSERACT_OCR')).toBe(true);
+      expect(mixed.candidates.some((c) => typeof c.confidence === 'number')).toBe(true);
+    }
+    const multi = await extractor.extract(baseRequest(await scannedMultiPagePdf()));
+    expect(multi.ok).toBe(true);
+    if (!multi.ok) return;
+    expect(multi.candidates.some((c) => c.pageNumber === 1)).toBe(true);
+    expect(multi.candidates.some((c) => c.pageNumber === 2)).toBe(true);
+    expect(multi.candidates.map((c) => c.rawText).join(' ')).toMatch(/Hemoglobin|Glucose/);
+  }, 180_000);
+
+  it('refuses blank or low-quality scanned pages fail-closed', async () => {
+    requirePinnedTesseract();
+    const extractor = new TwoStageOpenSourceExtractor();
+    const result = await extractor.extract(baseRequest(blankLowQualityPdf()));
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(['PARTIAL_EXTRACTION', 'LOW_CONFIDENCE']).toContain(result.code);
+    }
+  }, 120_000);
+
+  it('does not fetch network, fonts, or CMaps during extraction', async () => {
+    const extractor = new TwoStageOpenSourceExtractor();
+    const fetchSpy = vi.spyOn(globalThis, 'fetch');
+    const opts = pdfjsOfflineDocumentOptions(bornDigitalEnglishPdf());
+    expect(opts.disableAutoFetch).toBe(true);
+    expect(opts.useWorkerFetch).toBe(false);
+    expect(opts.cMapUrl).toBeUndefined();
+    expect(opts.standardFontDataUrl).toBeUndefined();
+    expect(opts.wasmUrl).toBeUndefined();
+    try {
+      await extractor.extract(baseRequest(bornDigitalEnglishPdf()));
+      expect(fetchSpy).not.toHaveBeenCalled();
+    } finally {
+      fetchSpy.mockRestore();
+    }
+  });
 });
 
 describe('F3B sidecar security', () => {
@@ -227,6 +282,11 @@ describe('F3B sidecar security', () => {
     fs.writeFileSync(path.join(dir, 'hin.traineddata'), 'not-the-model');
     expect(verifyPinnedTessdata(dir).ok).toBe(false);
     fs.rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('fails closed when tesseract --version is not 5.5.3', () => {
+    const result = assertPinnedTesseractVersion(process.execPath);
+    expect(result.ok).toBe(false);
   });
 
   it('times out and kills the process group', async () => {

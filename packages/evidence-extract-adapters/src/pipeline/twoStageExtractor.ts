@@ -22,7 +22,7 @@ import { createJobTempDir } from '../ocr/jobTempDir.js';
 import { TesseractSidecar } from '../ocr/tesseractSidecar.js';
 import { renderPageToPng } from '../pdf/pageRenderer.js';
 import { isTextLayerInsufficient, pageTextMetrics } from '../pdf/sufficiency.js';
-import { extractPdfTextLayer, pdfjsData } from '../pdf/textLayerExtractor.js';
+import { extractPdfTextLayer, pdfjsOfflineDocumentOptions } from '../pdf/textLayerExtractor.js';
 import { segmentPageTextToCandidates, textItemsToBlocks } from '../segment/textToCandidates.js';
 
 const METHOD = 'TWO_STAGE_PIPELINE' as const;
@@ -135,17 +135,7 @@ export class TwoStageOpenSourceExtractor implements ExtractionProvider {
         if (ocrPages.length > 0) {
           tempDir = await createJobTempDir();
           const { getDocument } = await import('pdfjs-dist/legacy/build/pdf.mjs');
-          const loadingTask = getDocument({
-            data: pdfjsData(input.bytes),
-            disableAutoFetch: true,
-            disableStream: true,
-            disableRange: true,
-            isEvalSupported: false,
-            isOffscreenCanvasSupported: false,
-            useSystemFonts: false,
-            useWorkerFetch: false,
-            verbosity: 0,
-          });
+          const loadingTask = getDocument(pdfjsOfflineDocumentOptions(input.bytes));
           const pdf = await loadingTask.promise;
           try {
             for (const pageNumber of ocrPages) {
@@ -168,6 +158,9 @@ export class TwoStageOpenSourceExtractor implements ExtractionProvider {
               if (!ocr.ok) {
                 if (ocr.code === 'HASH_MISMATCH') {
                   return refuse(fingerprint, 'TOOLCHAIN_HASH_MISMATCH');
+                }
+                if (ocr.code === 'BINARY_UNAVAILABLE') {
+                  return refuse(fingerprint, 'EXTRACTION_NOT_CONNECTED');
                 }
                 limitationCodes.push('PARTIAL_EXTRACTION', 'LOW_CONFIDENCE');
                 if (ocr.code === 'TIMEOUT') {
@@ -206,6 +199,9 @@ export class TwoStageOpenSourceExtractor implements ExtractionProvider {
           }
           if (ocr.code === 'HASH_MISMATCH') {
             return refuse(fingerprint, 'TOOLCHAIN_HASH_MISMATCH');
+          }
+          if (ocr.code === 'BINARY_UNAVAILABLE') {
+            return refuse(fingerprint, 'EXTRACTION_NOT_CONNECTED');
           }
           return refuse(fingerprint, 'PARTIAL_EXTRACTION', ['LOW_CONFIDENCE']);
         }

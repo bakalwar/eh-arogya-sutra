@@ -261,9 +261,21 @@ describe('F3B open-source OCR extraction (non-production)', () => {
       service.runDueJobs(tenant, 'ehas2-f3b-c2', new Date(), ocrEnv),
     ]);
     expect(a.failed + b.failed).toBe(0);
+    expect(JSON.stringify({ a, b })).not.toMatch(/23505|unique violation/i);
     const runs = await service.listExtractionRuns(tenant, stored.itemId, ocrEnv);
     const active = runs.filter((r) => r.status !== 'SUPERSEDED');
     expect(active.length).toBe(1);
+    const replay = await service.runDueJobs(tenant, 'ehas2-f3b-replay', new Date(), ocrEnv);
+    expect(replay.failed).toBe(0);
+    const replayRuns = await service.listExtractionRuns(tenant, stored.itemId, ocrEnv);
+    expect(replayRuns.filter((r) => r.status !== 'SUPERSEDED').length).toBe(1);
+
+    const other = await storedPdf(tenant, bornDigitalHindiPdf());
+    await service.enqueueExtractCandidates(tenant, other.itemId, new Date(), ocrEnv);
+    await service.runDueJobs(tenant, 'ehas2-f3b-other', new Date(), ocrEnv);
+    const otherRuns = await service.listExtractionRuns(tenant, other.itemId, ocrEnv);
+    expect(otherRuns.length).toBeGreaterThanOrEqual(1);
+    expect(otherRuns[0]?.evidenceItemId ?? other.itemId).toBe(other.itemId);
     const beforeCap = runs.length;
     const repo = new PgExtractionRepository();
     await withTenantTransaction(
