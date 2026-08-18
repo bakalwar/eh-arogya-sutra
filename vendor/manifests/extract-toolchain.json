@@ -1,0 +1,60 @@
+{
+  "schemaVersion": "f3b-1",
+  "pipelineConfigVersion": "f3b-pipeline-1.0.0",
+  "pdfjs": {
+    "name": "pdfjs-dist",
+    "version": "4.10.38",
+    "license": "Apache-2.0",
+    "licenseUrl": "https://raw.githubusercontent.com/mozilla/pdf.js/master/LICENSE",
+    "registryUrl": "https://registry.npmjs.org/pdfjs-dist/4.10.38",
+    "nodeEngines": ">=20"
+  },
+  "canvas": {
+    "name": "@napi-rs/canvas",
+    "version": "0.1.80",
+    "license": "MIT",
+    "licenseUrl": "https://www.npmjs.com/package/@napi-rs/canvas/v/0.1.80",
+    "registryUrl": "https://registry.npmjs.org/@napi-rs/canvas/0.1.80",
+    "optional": true,
+    "purpose": "Bounded PDF page rasterization for OCR fallback only"
+  },
+  "tesseract": {
+    "version": "5.5.3",
+    "license": "Apache-2.0",
+    "licenseUrl": "https://raw.githubusercontent.com/tesseract-ocr/tesseract/main/LICENSE",
+    "sourceRepositoryUrl": "https://github.com/tesseract-ocr/tesseract.git",
+    "sourceTag": "5.5.3",
+    "sourceCommit": "db0ec62f81b0737fbbe184d8fea40af5738f8eef",
+    "sourceUrl": "https://github.com/tesseract-ocr/tesseract/releases/tag/5.5.3",
+    "versionOutputMustContain": "5.5.3",
+    "buildConfigId": "configure-prefix-make-install-linux"
+  },
+  "tessdataFast": {
+    "repository": "https://github.com/tesseract-ocr/tessdata_fast",
+    "commit": "87416418657359cb625c412a48b6e1d6d41c29bd",
+    "license": "Apache-2.0",
+    "licenseUrl": "https://raw.githubusercontent.com/tesseract-ocr/tessdata/main/LICENSE",
+    "languages": {
+      "eng": {
+        "file": "eng.traineddata",
+        "downloadUrl": "https://raw.githubusercontent.com/tesseract-ocr/tessdata_fast/87416418657359cb625c412a48b6e1d6d41c29bd/eng.traineddata",
+        "sha256": "7d4322bd2a7749724879683fc3912cb542f19906c83bcc1a52132556427170b2"
+      },
+      "hin": {
+        "file": "hin.traineddata",
+        "downloadUrl": "https://raw.githubusercontent.com/tesseract-ocr/tessdata_fast/87416418657359cb625c412a48b6e1d6d41c29bd/hin.traineddata",
+        "sha256": "4c73ffc59d497c186b19d1e90f5d721d678ea6b2e277b719bee4e2af12271825"
+      }
+    }
+  },
+  "devanagariFont": {
+    "name": "Noto Sans Devanagari Regular",
+    "repository": "https://github.com/googlefonts/noto-fonts.git",
+    "commit": "ffebf8c1ee449e544955a7e813c54f9b73848eac",
+    "filePath": "hinted/ttf/NotoSansDevanagari/NotoSansDevanagari-Regular.ttf",
+    "downloadUrl": "https://raw.githubusercontent.com/googlefonts/noto-fonts/ffebf8c1ee449e544955a7e813c54f9b73848eac/hinted/ttf/NotoSansDevanagari/NotoSansDevanagari-Regular.ttf",
+    "sha256": "385e78e6359a9d88a0f243d53b1209d7548361ba2194e2b9ec779bcaa7e8949d",
+    "license": "OFL-1.1",
+    "licenseUrl": "https://raw.githubusercontent.com/googlefonts/noto-fonts/ffebf8c1ee449e544955a7e813c54f9b73848eac/LICENSE"
+  }
+}

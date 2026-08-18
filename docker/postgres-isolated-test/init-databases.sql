@@ -6,3 +6,4 @@ CREATE DATABASE ehas2_phase3d_test OWNER ehas2;
 CREATE DATABASE ehas2_phase4a_preflight OWNER ehas2;
 CREATE DATABASE ehas2_phase_evidence_test OWNER ehas2;
 CREATE DATABASE ehas2_phase_extract_test OWNER ehas2;
+CREATE DATABASE ehas2_phase_ocr_test OWNER ehas2;

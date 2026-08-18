@@ -296,11 +296,11 @@ describe('Phase 3D profile API authz (no insecure bypass)', () => {
 describe('Phase 3D profile/clinic services + API (synthetic)', () => {
   it('migration clean + latest down/up', async () => {
     requireDb();
-    expect(getOrderedMigrationIds()).toHaveLength(12);
+    expect(getOrderedMigrationIds()).toHaveLength(13);
     const downId = await migrateDownLastForIsolatedTest(env);
-    expect(downId).toBe('012_f3a_extraction_candidates');
+    expect(downId).toBe('013_f3b_open_source_ocr');
     const reup = await migrateUp(env);
-    expect(reup.applied).toEqual(['012_f3a_extraction_candidates']);
+    expect(reup.applied).toEqual(['013_f3b_open_source_ocr']);
   }, 120_000);
 
   it('covers doctor/clinic profile API contract gates 1-29', async () => {

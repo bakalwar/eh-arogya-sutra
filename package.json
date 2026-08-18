@@ -17,6 +17,7 @@
     "test:browser": "playwright test -c playwright.config.mjs",
     "test:clinical-engine": "node scripts/run-clinical-engine-tests.mjs",
     "bootstrap:clinical-extract": "node scripts/bootstrap-clinical-extract.mjs",
+    "bootstrap:extract-tools": "node scripts/bootstrap-extract-tools.mjs",
     "extract:diseases": "node tools/clinical-extract/extract-diseases.mjs",
     "extract:medicines": "node tools/clinical-extract/extract-medicines.mjs",
     "verify:boundary": "node scripts/verify-boundary.mjs",

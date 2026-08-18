@@ -26,6 +26,7 @@ import {
   EVIDENCE_EXTRACT_PRODUCTION,
   EVIDENCE_OCR_ADAPTER_CONNECTED,
   F3A_EXTRACTION_CANDIDATE_FOUNDATION,
+  F3B_OPEN_SOURCE_OCR_ADAPTER_FOUNDATION,
 } from '@ehas2/evidence-extract';
 import { logInfo } from '@ehas2/observability';
 import { requirePermission, type AuthedRequest } from './middleware/authorization.js';
@@ -160,6 +161,7 @@ export function createApp(deps: CreateAppDeps = {}) {
       evidenceIngestFoundation: EVIDENCE_INGEST_FOUNDATION,
       f2aInfrastructureFoundation: F2A_INFRASTRUCTURE_FOUNDATION,
       f3aExtractionCandidateFoundation: F3A_EXTRACTION_CANDIDATE_FOUNDATION,
+      f3bOpenSourceOcrAdapterFoundation: F3B_OPEN_SOURCE_OCR_ADAPTER_FOUNDATION,
       ocr: EVIDENCE_OCR_CONNECTED,
       ocrAdapter: EVIDENCE_OCR_ADAPTER_CONNECTED,
       extractProduction: EVIDENCE_EXTRACT_PRODUCTION,
@@ -203,6 +205,7 @@ export function createApp(deps: CreateAppDeps = {}) {
         evidenceIngestFoundation: EVIDENCE_INGEST_FOUNDATION,
         f2aInfrastructureFoundation: F2A_INFRASTRUCTURE_FOUNDATION,
         f3aExtractionCandidateFoundation: F3A_EXTRACTION_CANDIDATE_FOUNDATION,
+        f3bOpenSourceOcrAdapterFoundation: F3B_OPEN_SOURCE_OCR_ADAPTER_FOUNDATION,
         ocr: EVIDENCE_OCR_CONNECTED,
         ocrAdapter: EVIDENCE_OCR_ADAPTER_CONNECTED,
         extractProduction: EVIDENCE_EXTRACT_PRODUCTION,

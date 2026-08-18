@@ -1,6 +1,9 @@
 import type { TenantContext, TransactionContext } from '../tenantContext.js';
+import { validateAndCanonicalizeLocator } from '@ehas2/evidence-extract-adapters';
 import {
   assertNoStorageInLocator,
+  MAX_CANDIDATES_PER_EVIDENCE,
+  MAX_EXTRACTION_RUNS_PER_EVIDENCE,
   type CandidateStatus,
   type CandidateType,
   type ExtractionCandidateDto,
@@ -30,6 +33,55 @@ export type ExtractionRunRecord = {
   supersededByRunId: string | null;
   createdAt: string;
 };
+
+function isUniqueViolation(err: unknown): boolean {
+  const code = (err as { code?: string } | null)?.code;
+  if (code === '23505') return true;
+  const msg = err instanceof Error ? err.message : String(err);
+  return /unique|duplicate/i.test(msg);
+}
+
+export type InsertRunInput = {
+  patientId: string;
+  consultationId: string;
+  evidenceItemId: string;
+  jobId: string | null;
+  extractorName: string;
+  extractorVersion: string;
+  modelOrLangpackVersion: string;
+  method: ExtractionMethod;
+  extractorFingerprint: string;
+  inputContentSha256: string | null;
+  status: CandidateStatus;
+  limitationCodes: readonly LimitationCode[];
+  candidateCount: number;
+};
+
+/**
+ * Idempotent run insert: concurrent workers racing the same fingerprint get the existing run
+ * instead of failing on clinical_evidence_extraction_runs_idempotent (evidence_item_id + fingerprint).
+ */
+export async function insertRunWithIdempotency(
+  repo: PgExtractionRepository,
+  tenant: TenantContext,
+  tx: TransactionContext,
+  input: InsertRunInput,
+): Promise<{ run: ExtractionRunRecord; inserted: boolean }> {
+  try {
+    const run = await repo.insertRun(tenant, tx, input);
+    return { run, inserted: true };
+  } catch (err) {
+    if (!isUniqueViolation(err)) throw err;
+    const existing = await repo.findActiveRun(
+      tenant,
+      tx,
+      input.evidenceItemId,
+      input.extractorFingerprint,
+    );
+    if (!existing) throw err;
+    return { run: existing, inserted: false };
+  }
+}
 
 function mapTs(value: unknown): string {
   return new Date(String(value)).toISOString();
@@ -129,21 +181,7 @@ export class PgExtractionRepository {
   async insertRun(
     tenant: TenantContext,
     tx: TransactionContext,
-    input: {
-      patientId: string;
-      consultationId: string;
-      evidenceItemId: string;
-      jobId: string | null;
-      extractorName: string;
-      extractorVersion: string;
-      modelOrLangpackVersion: string;
-      method: ExtractionMethod;
-      extractorFingerprint: string;
-      inputContentSha256: string | null;
-      status: CandidateStatus;
-      limitationCodes: readonly LimitationCode[];
-      candidateCount: number;
-    },
+    input: InsertRunInput,
   ): Promise<ExtractionRunRecord> {
     const r = await tx.query(
       `INSERT INTO clinical_evidence_extraction_runs (
@@ -211,11 +249,7 @@ export class PgExtractionRepository {
     const out: ExtractionCandidateDto[] = [];
     for (const c of candidates) {
       assertNoStorageInLocator(c.sourceLocator);
-      const locator: SourceLocator = {
-        page: c.sourceLocator.page,
-        ...(c.sourceLocator.blockIndex == null ? {} : { blockIndex: c.sourceLocator.blockIndex }),
-        ...(c.sourceLocator.bbox ? { bbox: c.sourceLocator.bbox } : {}),
-      };
+      const locator = validateAndCanonicalizeLocator(c.sourceLocator);
       const r = await tx.query(
         `INSERT INTO clinical_evidence_extraction_candidates (
            extraction_run_id, organization_id, clinic_id, patient_id, consultation_id,
@@ -281,5 +315,62 @@ export class PgExtractionRepository {
       [tenant.organizationId, tenant.clinicId, evidenceItemId],
     );
     return Number((r.rows[0] as { n: number }).n);
+  }
+
+  async countCandidatesForEvidence(
+    tenant: TenantContext,
+    tx: TransactionContext,
+    evidenceItemId: string,
+  ): Promise<number> {
+    const r = await tx.query(
+      `SELECT count(*)::int AS n FROM clinical_evidence_extraction_candidates
+       WHERE organization_id = $1 AND clinic_id = $2 AND evidence_item_id = $3`,
+      [tenant.organizationId, tenant.clinicId, evidenceItemId],
+    );
+    return Number((r.rows[0] as { n: number }).n);
+  }
+
+  async countRunsForEvidence(
+    tenant: TenantContext,
+    tx: TransactionContext,
+    evidenceItemId: string,
+  ): Promise<number> {
+    const r = await tx.query(
+      `SELECT count(*)::int AS n FROM clinical_evidence_extraction_runs
+       WHERE organization_id = $1 AND clinic_id = $2 AND evidence_item_id = $3`,
+      [tenant.organizationId, tenant.clinicId, evidenceItemId],
+    );
+    return Number((r.rows[0] as { n: number }).n);
+  }
+
+  /**
+   * Fail-closed retention gate: append-only history — never delete candidates/runs in F3B.
+   * Returns false when a new extraction must be rejected with RETENTION_CAP_REACHED.
+   */
+  async isRetentionCapReached(
+    tenant: TenantContext,
+    tx: TransactionContext,
+    evidenceItemId: string,
+    maxCandidates = MAX_CANDIDATES_PER_EVIDENCE,
+    maxRuns = MAX_EXTRACTION_RUNS_PER_EVIDENCE,
+  ): Promise<boolean> {
+    const candidates = await this.countCandidatesForEvidence(tenant, tx, evidenceItemId);
+    if (candidates >= maxCandidates) return true;
+    const runs = await this.countRunsForEvidence(tenant, tx, evidenceItemId);
+    return runs >= maxRuns;
+  }
+
+  async listRunsForEvidence(
+    tenant: TenantContext,
+    tx: TransactionContext,
+    evidenceItemId: string,
+  ): Promise<ExtractionRunRecord[]> {
+    const r = await tx.query(
+      `SELECT * FROM clinical_evidence_extraction_runs
+       WHERE organization_id = $1 AND clinic_id = $2 AND evidence_item_id = $3
+       ORDER BY created_at ASC`,
+      [tenant.organizationId, tenant.clinicId, evidenceItemId],
+    );
+    return (r.rows as Record<string, unknown>[]).map(mapRun);
   }
 }

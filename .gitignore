@@ -55,6 +55,7 @@ apps/web/.next-phase5c-g-br/
 apps/web/.next-phase5c-g-br2/
 
 tools/clinical-extract/node_modules/
+packages/evidence-extract-adapters/.extract-tools/
 
 apps/clinical-engine/.venv/
 

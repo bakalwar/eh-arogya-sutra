@@ -15,3 +15,12 @@ export function claimableEvidenceJobTypes(
   }
   return RETENTION_JOB_TYPES;
 }
+
+/** Non-production OCR adapter jobs: requires extract jobs plus EHAS2_F3B_OCR_EXTRACT_JOBS=1. */
+export function extractOcrJobsEnabled(
+  env: Record<string, string | undefined> = process.env,
+): boolean {
+  if (isProductionRuntime(env)) return false;
+  if (!extractJobsEnabled(env)) return false;
+  return env.EHAS2_F3B_OCR_EXTRACT_JOBS === '1';
+}

@@ -1,7 +1,9 @@
 export {
   F3A_EXTRACTION_CANDIDATE_FOUNDATION,
+  F3B_OPEN_SOURCE_OCR_ADAPTER_FOUNDATION,
   EVIDENCE_EXTRACT_PRODUCTION,
   EVIDENCE_OCR_ADAPTER_CONNECTED,
+  CONTENT_INTENTS,
   CANDIDATE_TYPES,
   CANDIDATE_STATUSES,
   VERIFICATION_POSTURE_F3A,
@@ -16,6 +18,10 @@ export {
   MAX_RANGE_CHARS,
   MAX_HEADING_CHARS,
   EXTRACT_TIMEOUT_MS,
+  EXTRACT_JOB_TIMEOUT_MS,
+  EXTRACT_PAGE_OCR_TIMEOUT_MS,
+  MAX_CANDIDATES_PER_EVIDENCE,
+  MAX_EXTRACTION_RUNS_PER_EVIDENCE,
   MAGIC_PREFIX_MAX,
   RETENTION_JOB_TYPES,
   EXTRACT_JOB_TYPE,
@@ -26,6 +32,7 @@ export type {
   CandidateStatus,
   ExtractionMethod,
   LimitationCode,
+  ContentIntent,
   ScriptHint,
   SourceLocator,
   ExtractionCandidateDto,
@@ -39,6 +46,7 @@ export type {
 export {
   sha256Hex,
   extractorFingerprint,
+  contentAwareExtractorFingerprint,
   candidateContentFingerprint,
   assertNoStorageInLocator,
 } from './fingerprint.js';
@@ -49,7 +57,7 @@ export {
   boundUnit,
   boundRange,
 } from './normalize.js';
-export { extractJobsEnabled, claimableEvidenceJobTypes } from './flags.js';
+export { extractJobsEnabled, extractOcrJobsEnabled, claimableEvidenceJobTypes } from './flags.js';
 export {
   DeterministicFakeExtractor,
   NeverSettlingExtractor,

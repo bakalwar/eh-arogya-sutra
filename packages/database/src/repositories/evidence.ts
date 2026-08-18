@@ -1,4 +1,4 @@
-import type { EvidenceJobType } from '@ehas2/evidence-extract';
+import type { ContentIntent, EvidenceJobType } from '@ehas2/evidence-extract';
 import type {
   EvidenceProcessingStatus,
   EvidenceSourceType,
@@ -37,6 +37,7 @@ export type EvidenceItemRecord = {
   deletedAt: string | null;
   deletionVerificationStatus: string;
   malwareScanResult: MalwareScanResult;
+  contentIntent: ContentIntent;
 };
 
 export type EvidenceBlobRecord = {
@@ -102,6 +103,7 @@ function mapEvidence(row: Record<string, unknown>): EvidenceItemRecord {
     deletedAt: row.deleted_at == null ? null : mapTs(row.deleted_at),
     deletionVerificationStatus: String(row.deletion_verification_status),
     malwareScanResult: String(row.malware_scan_result) as MalwareScanResult,
+    contentIntent: String(row.content_intent ?? 'UNCLASSIFIED') as ContentIntent,
   };
 }
 
@@ -465,6 +467,23 @@ export class PgEvidenceRepository {
     );
     const row = r.rows[0] as { n: number; oldest_ms: number };
     return { depth: Number(row.n), oldestAgeMs: Math.max(0, Number(row.oldest_ms)) };
+  }
+
+  /** Test setup only — never call from client-facing routes. */
+  async setContentIntent(
+    tenant: TenantContext,
+    tx: TransactionContext,
+    evidenceId: string,
+    contentIntent: ContentIntent,
+  ): Promise<void> {
+    await tx.query(
+      `UPDATE clinical_evidence_items SET
+         content_intent = $4,
+         updated_at = now(),
+         updated_by_actor_id = $5
+       WHERE id = $1 AND organization_id = $2 AND clinic_id = $3`,
+      [evidenceId, tenant.organizationId, tenant.clinicId, contentIntent, tenant.actorId],
+    );
   }
 
   async findBlob(

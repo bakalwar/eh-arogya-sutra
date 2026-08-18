@@ -9,6 +9,10 @@ export default defineConfig({
     alias: {
       '@ehas2/evidence-ingest': path.join(root, 'packages/evidence-ingest/src/index.ts'),
       '@ehas2/evidence-extract': path.join(root, 'packages/evidence-extract/src/index.ts'),
+      '@ehas2/evidence-extract-adapters': path.join(
+        root,
+        'packages/evidence-extract-adapters/src/index.ts',
+      ),
       '@ehas2/database': path.join(root, 'packages/database/src/index.ts'),
       '@ehas2/observability': path.join(root, 'packages/observability/src/index.ts'),
     },
