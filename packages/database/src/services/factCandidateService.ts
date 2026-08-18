@@ -319,6 +319,16 @@ export class FactCandidateService {
         );
         await facts.lockIdentity(tx, draft.sourceIdentityFingerprint);
 
+        const lockedConsultation = await consultations.findById(tenant, tx, consultationId);
+        if (!lockedConsultation) throw new ResourceNotFoundError();
+        assertCaseOwner(tenant, lockedConsultation.doctorUserId);
+        if (
+          lockedConsultation.patientId !== draft.patientId ||
+          lockedConsultation.patientId !== consultation.patientId
+        ) {
+          throw new ResourceNotFoundError();
+        }
+
         const existingKey = await idempotency.resolveOrThrow(
           tenant,
           tx,
@@ -339,7 +349,26 @@ export class FactCandidateService {
           draft.sourceIdentityFingerprint,
         );
         if (active) {
-          if (active.contentFingerprint === draft.contentFingerprint) {
+          if (
+            active.decisionStatus !== 'ACTIVE' ||
+            active.patientId !== lockedConsultation.patientId ||
+            active.consultationId !== consultationId ||
+            active.organizationId !== tenant.organizationId ||
+            active.clinicId !== tenant.clinicId ||
+            active.sourceIdentityFingerprint !== draft.sourceIdentityFingerprint
+          ) {
+            throw new ResourceNotFoundError();
+          }
+          if (input.supersedesFactId) {
+            if (input.supersedesFactId !== active.id) {
+              throw new FactConflictError();
+            }
+            const superseded = await facts.supersedeActive(tenant, tx, input.supersedesFactId);
+            if (superseded.id !== active.id) {
+              throw new FactConflictError();
+            }
+            draft.supersedesFactId = active.id;
+          } else if (active.contentFingerprint === draft.contentFingerprint) {
             await idempotency.insert(tenant, tx, {
               operation: FACT_OPERATION,
               key: input.idempotencyKey,
@@ -349,12 +378,9 @@ export class FactCandidateService {
             });
             this.metric('IDENTITY_REPLAY');
             return active;
-          }
-          if (!input.supersedesFactId || input.supersedesFactId !== active.id) {
+          } else {
             throw new FactConflictError();
           }
-          await facts.supersedeActive(tenant, tx, active.id);
-          draft.supersedesFactId = active.id;
         } else if (input.supersedesFactId) {
           throw new FactConflictError();
         }

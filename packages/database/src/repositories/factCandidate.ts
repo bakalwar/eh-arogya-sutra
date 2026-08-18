@@ -165,7 +165,7 @@ export class PgFactCandidateRepository {
     tenant: TenantContext,
     tx: TransactionContext,
     factId: string,
-  ): Promise<void> {
+  ): Promise<{ id: string }> {
     try {
       const r = await tx.query(
         `UPDATE clinical_fact_candidates
@@ -175,9 +175,10 @@ export class PgFactCandidateRepository {
          RETURNING id`,
         [tenant.organizationId, tenant.clinicId, factId],
       );
-      if (!r.rows[0]) {
+      if (r.rowCount !== 1 || !r.rows[0]) {
         throw new FactConflictError();
       }
+      return { id: String((r.rows[0] as { id: string }).id) };
     } catch (err) {
       if (err instanceof FactConflictError) throw err;
       if (isImmutableFact(err)) throw new FactConflictError();

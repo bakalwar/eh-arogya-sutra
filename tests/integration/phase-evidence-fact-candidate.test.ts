@@ -11,6 +11,7 @@ import {
   FactCandidateService,
   FactConflictError,
   PatientService,
+  PgFactCandidateRepository,
   PgMembershipRepository,
   PgOrganizationRepository,
   PgUserRepository,
@@ -23,6 +24,8 @@ import {
   withTenantTransaction,
   type TenantContext,
 } from '../../packages/database/src/index.ts';
+import type { InsertFactCandidateInput } from '../../packages/database/src/repositories/factCandidate.ts';
+import type { FactCandidateDto } from '../../packages/evidence-extract/src/index.ts';
 import {
   DeterministicMalwareScanner,
   MemoryFakeObjectStore,
@@ -319,6 +322,35 @@ async function httpJson(
   }
 }
 
+function insertFrom(fact: FactCandidateDto): InsertFactCandidateInput {
+  return {
+    patientId: fact.patientId,
+    consultationId: fact.consultationId,
+    sourceChannel: fact.sourceChannel,
+    factCategory: fact.factCategory,
+    sourceField: fact.sourceField,
+    intakeSymptomId: fact.intakeSymptomId,
+    evidenceItemId: fact.evidenceItemId,
+    extractionRunId: fact.extractionRunId,
+    extractionCandidateId: fact.extractionCandidateId,
+    reviewEventId: fact.reviewEventId,
+    originalSourceSpan: fact.originalSourceSpan,
+    assertedText: fact.assertedText,
+    assertedValue: fact.assertedValue,
+    unitText: fact.unitText,
+    unitPosture: fact.unitPosture,
+    negated: fact.negated,
+    durationText: fact.durationText,
+    onsetText: fact.onsetText,
+    sourceLocator: fact.sourceLocator,
+    sourceIdentityFingerprint: fact.sourceIdentityFingerprint,
+    contentFingerprint: fact.contentFingerprint,
+    limitationCodes: [...fact.limitationCodes],
+    confidence: fact.confidence,
+    supersedesFactId: fact.supersedesFactId,
+  };
+}
+
 describe('F3D-1 source-linked fact-candidate persistence', () => {
   it('registers migration 015, RLS, and keeps /ready 503', async () => {
     expect(getOrderedMigrationIds()).toContain('015_f3d1_fact_candidates');
@@ -565,6 +597,7 @@ describe('F3D-1 source-linked fact-candidate persistence', () => {
       env,
     );
     expect(findings).toBe(0);
+    expect(snapshotEvidenceMetrics().totals.candidate_review_result).toBeGreaterThan(0);
     expect(JSON.stringify(snapshotEvidenceMetrics())).not.toMatch(
       /synthetic headache|सिरदर्द|Hemoglobin|lab\.png/,
     );
@@ -952,6 +985,205 @@ describe('F3D-1 source-linked fact-candidate persistence', () => {
     expect(conflictHttp.json.code).toBe('FACT_CONFLICT');
     expect(JSON.stringify(conflictHttp.json)).not.toMatch(/at |\bSQL\b|relation |stack/i);
     expect(JSON.stringify(conflictHttp.json)).not.toMatch(/synthetic headache|सिरदर्द/);
+  }, 180_000);
+
+  it('serializes concurrent supersession, replay, insert rollback, and concealed mismatch', async () => {
+    requireDb();
+    const { doctorA, doctorB } = await seedTenants();
+    const facts = factService();
+    const repo = new PgFactCandidateRepository();
+    const SUPERSESSION_RACE_ROUNDS = 12;
+
+    async function raceSupersession(round: number): Promise<void> {
+      const { consultationId } = await openConsultation(doctorA);
+      const first = await facts.materialize(
+        doctorA,
+        consultationId,
+        {
+          sourceChannel: 'DOCTOR_DECLARED',
+          sourceField: 'CHIEF_COMPLAINT',
+          idempotencyKey: `fact-super-round-${round}-seed`,
+        },
+        factEnv,
+      );
+      await intake.patch(
+        doctorA,
+        consultationId,
+        { chiefComplaintText: `synthetic race correction ${round}` },
+        env,
+      );
+      const raced = await Promise.allSettled([
+        facts.materialize(
+          doctorA,
+          consultationId,
+          {
+            sourceChannel: 'DOCTOR_DECLARED',
+            sourceField: 'CHIEF_COMPLAINT',
+            supersedesFactId: first.id,
+            idempotencyKey: `fact-super-round-${round}-a`,
+          },
+          factEnv,
+        ),
+        facts.materialize(
+          doctorA,
+          consultationId,
+          {
+            sourceChannel: 'DOCTOR_DECLARED',
+            sourceField: 'CHIEF_COMPLAINT',
+            supersedesFactId: first.id,
+            idempotencyKey: `fact-super-round-${round}-b`,
+          },
+          factEnv,
+        ),
+      ]);
+      expect(raced.filter((r) => r.status === 'fulfilled')).toHaveLength(1);
+      expect(raced.filter((r) => r.status === 'rejected')).toHaveLength(1);
+      const rejected = raced.find((r) => r.status === 'rejected') as PromiseRejectedResult;
+      expect(rejected.reason).toBeInstanceOf(FactConflictError);
+      const listed = await facts.list(doctorA, consultationId, factEnv);
+      const cc = listed.filter((f) => f.sourceField === 'CHIEF_COMPLAINT');
+      expect(cc.filter((f) => f.decisionStatus === 'ACTIVE')).toHaveLength(1);
+      expect(cc.filter((f) => f.decisionStatus === 'SUPERSEDED')).toHaveLength(1);
+      expect(cc.filter((f) => f.id === first.id && f.decisionStatus === 'SUPERSEDED')).toHaveLength(
+        1,
+      );
+    }
+
+    for (let round = 0; round < SUPERSESSION_RACE_ROUNDS; round += 1) {
+      await raceSupersession(round);
+    }
+
+    const { consultationId: replayConsultation } = await openConsultation(doctorA);
+    const seed = await facts.materialize(
+      doctorA,
+      replayConsultation,
+      {
+        sourceChannel: 'DOCTOR_DECLARED',
+        sourceField: 'CHIEF_COMPLAINT',
+        idempotencyKey: 'fact-super-replay-seed',
+      },
+      factEnv,
+    );
+    await intake.patch(
+      doctorA,
+      replayConsultation,
+      { chiefComplaintText: 'synthetic supersession replay' },
+      env,
+    );
+    const created = await facts.materialize(
+      doctorA,
+      replayConsultation,
+      {
+        sourceChannel: 'DOCTOR_DECLARED',
+        sourceField: 'CHIEF_COMPLAINT',
+        supersedesFactId: seed.id,
+        idempotencyKey: 'fact-super-replay-same',
+      },
+      factEnv,
+    );
+    const replayed = await facts.materialize(
+      doctorA,
+      replayConsultation,
+      {
+        sourceChannel: 'DOCTOR_DECLARED',
+        sourceField: 'CHIEF_COMPLAINT',
+        supersedesFactId: seed.id,
+        idempotencyKey: 'fact-super-replay-same',
+      },
+      factEnv,
+    );
+    expect(replayed.id).toBe(created.id);
+    await expect(
+      facts.materialize(
+        doctorA,
+        replayConsultation,
+        {
+          sourceChannel: 'STRUCTURED_INTAKE',
+          sourceField: 'VITAL_PULSE',
+          idempotencyKey: 'fact-super-replay-same',
+        },
+        factEnv,
+      ),
+    ).rejects.toMatchObject({ code: 'IDEMPOTENCY_CONFLICT' });
+
+    const { consultationId: insertFailConsultation } = await openConsultation(doctorA);
+    const beforeInsert = await facts.materialize(
+      doctorA,
+      insertFailConsultation,
+      {
+        sourceChannel: 'DOCTOR_DECLARED',
+        sourceField: 'CHIEF_COMPLAINT',
+        idempotencyKey: 'fact-insert-fail-seed',
+      },
+      factEnv,
+    );
+    await intake.patch(
+      doctorA,
+      insertFailConsultation,
+      { chiefComplaintText: 'synthetic insert rollback' },
+      env,
+    );
+    await expect(
+      withTenantTransaction(
+        doctorA,
+        async (tx) => {
+          await repo.lockIdentity(tx, beforeInsert.sourceIdentityFingerprint);
+          const active = await repo.findActiveByIdentity(
+            doctorA,
+            tx,
+            beforeInsert.sourceIdentityFingerprint,
+          );
+          if (!active) throw new Error('BLOCKED: expected active candidate before insert failure');
+          await repo.supersedeActive(doctorA, tx, active.id);
+          const invalid: InsertFactCandidateInput = {
+            ...insertFrom(beforeInsert),
+            factCategory: 'PROCEDURE' as InsertFactCandidateInput['factCategory'],
+            originalSourceSpan: 'synthetic insert rollback',
+            assertedText: 'synthetic insert rollback',
+            supersedesFactId: active.id,
+            contentFingerprint: 'a'.repeat(64),
+          };
+          await repo.insert(doctorA, tx, invalid);
+        },
+        env,
+      ),
+    ).rejects.toMatchObject({ message: 'INVALID_FACT_CANDIDATE' });
+    const afterInsertFail = await facts.list(doctorA, insertFailConsultation, factEnv);
+    expect(afterInsertFail).toHaveLength(1);
+    expect(afterInsertFail[0]?.id).toBe(beforeInsert.id);
+    expect(afterInsertFail[0]?.decisionStatus).toBe('ACTIVE');
+    expect(afterInsertFail.filter((f) => f.decisionStatus === 'SUPERSEDED')).toHaveLength(0);
+
+    const mismatch = await facts
+      .materialize(
+        doctorB,
+        insertFailConsultation,
+        {
+          sourceChannel: 'DOCTOR_DECLARED',
+          sourceField: 'CHIEF_COMPLAINT',
+          supersedesFactId: beforeInsert.id,
+          idempotencyKey: 'fact-tenant-mismatch',
+        },
+        factEnv,
+      )
+      .catch((err: unknown) => err);
+    expect(mismatch).toBeInstanceOf(ResourceNotFoundError);
+    const app = appFor(doctorB, evidenceService(), facts);
+    const concealed = await httpJson(
+      app,
+      'POST',
+      `${EHAS2_API_NAMESPACE}/consultations/${insertFailConsultation}/fact-candidates/materialize`,
+      {
+        sourceChannel: 'DOCTOR_DECLARED',
+        sourceField: 'CHIEF_COMPLAINT',
+        supersedesFactId: beforeInsert.id,
+      },
+      { 'Idempotency-Key': 'fact-tenant-mismatch-http' },
+    );
+    expect(concealed.status).toBe(404);
+    expect(concealed.json.code).toBe('NOT_FOUND');
+    expect(JSON.stringify(concealed.json)).not.toMatch(/at |\bSQL\b|relation |stack/i);
+    expect(JSON.stringify(concealed.json)).not.toMatch(/synthetic insert rollback|सिरदर्द/);
   }, 180_000);
 
   it('stays disconnected without the non-production flag and in production', async () => {
