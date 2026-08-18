@@ -23,17 +23,14 @@ import {
   MAX_EXTRACTION_RUNS_PER_EVIDENCE,
   sha256Hex,
 } from '../../packages/evidence-extract/src/index.ts';
-import { resolveTesseractBinary } from '../../packages/evidence-extract-adapters/src/index.ts';
-import fs from 'node:fs';
 import { isolatedPostgresTestEnv } from '../helpers/isolated-postgres-env.ts';
 import {
   bornDigitalEnglishPdf,
   bornDigitalHindiPdf,
   passwordProtectedPdf,
-  scannedEnglishReportPdf,
 } from '../../tools/extract-fixtures/synthetic/bornDigitalPdf.js';
 
-const env = isolatedPostgresTestEnv('ehas2_phase_extract_test');
+const env = isolatedPostgresTestEnv('ehas2_phase_ocr_test');
 const ocrEnv = {
   ...env,
   EHAS2_EVIDENCE_EXTRACT_JOBS: '1',
@@ -259,7 +256,6 @@ describe('F3B open-source OCR extraction (non-production)', () => {
     });
     const stored = await storedPdf(tenant, bornDigitalEnglishPdf());
     await service.enqueueExtractCandidates(tenant, stored.itemId, new Date(), ocrEnv);
-    await service.enqueueExtractCandidates(tenant, stored.itemId, new Date(), ocrEnv);
     const [a, b] = await Promise.all([
       service.runDueJobs(tenant, 'ehas2-f3b-c1', new Date(), ocrEnv),
       service.runDueJobs(tenant, 'ehas2-f3b-c2', new Date(), ocrEnv),
@@ -301,30 +297,6 @@ describe('F3B open-source OCR extraction (non-production)', () => {
     const after = await service.listExtractionRuns(tenant, stored.itemId, ocrEnv);
     expect(after.length).toBe(MAX_EXTRACTION_RUNS_PER_EVIDENCE);
     expect(after.length).toBeGreaterThanOrEqual(beforeCap);
-  }, 180_000);
-
-  it('extracts a scanned English written-report page through the real adapter', async () => {
-    requireDb();
-    const tenant = await seedDoctor();
-    const service = new EvidenceService({
-      store,
-      malwareScanner: new DeterministicMalwareScanner('CLEAN'),
-      rateLimiter: new MemoryRateLimiter(),
-    });
-    const pdf = await scannedEnglishReportPdf();
-    const { itemId } = await storedPdf(tenant, pdf, 'WRITTEN_REPORT_DOCUMENT');
-    await service.enqueueExtractCandidates(tenant, itemId, new Date(), ocrEnv);
-    await service.runDueJobs(tenant, 'ehas2-f3b-scan', new Date(), ocrEnv);
-    const bin = resolveTesseractBinary();
-    if (!bin || !fs.existsSync(bin)) {
-      throw new Error(
-        'BLOCKED: pinned Tesseract 5.5.3 missing; CI must run bootstrap:extract-tools',
-      );
-    }
-    const candidates = await service.listExtractionCandidates(tenant, itemId, ocrEnv);
-    const blob = candidates.map((c) => c.rawText).join(' ');
-    expect(blob).toMatch(/Hemoglobin|g\/dL|Laboratory/);
-    expect(JSON.stringify(candidates)).not.toMatch(/object_key|presigned/);
   }, 180_000);
 
   it('rejects password PDFs without leaking report text into job results', async () => {

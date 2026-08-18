@@ -13,6 +13,7 @@ import {
   TESSERACT_VERSION,
   pinnedLangpackHashes,
   readExtractToolchainManifest,
+  resolveTesseractBinary,
 } from '../../packages/evidence-extract-adapters/src/index.ts';
 import {
   bornDigitalEnglishPdf,
@@ -22,7 +23,17 @@ import {
   mixedTextAndScannedPdf,
   multiPageProvenancePdf,
   passwordProtectedPdf,
+  scannedEnglishReportPdf,
+  scannedHindiReportPdf,
 } from '../../tools/extract-fixtures/synthetic/bornDigitalPdf.js';
+
+function requirePinnedTesseract(): string {
+  const bin = resolveTesseractBinary();
+  if (!bin || !fs.existsSync(bin)) {
+    throw new Error('BLOCKED: pinned Tesseract 5.5.3 missing; CI must run bootstrap:extract-tools');
+  }
+  return bin;
+}
 
 function baseRequest(bytes: Uint8Array, extra: Record<string, unknown> = {}) {
   return {
@@ -31,7 +42,7 @@ function baseRequest(bytes: Uint8Array, extra: Record<string, unknown> = {}) {
     patientId: '00000000-0000-4000-8000-000000000003',
     consultationId: '00000000-0000-4000-8000-000000000004',
     evidenceItemId: '00000000-0000-4000-8000-0000000000aa',
-    evidenceType: 'LAB_REPORT',
+    evidenceType: 'BLOOD_REPORT',
     declaredMime: 'application/pdf',
     detectedMime: 'application/pdf',
     byteSize: bytes.byteLength,
@@ -162,6 +173,29 @@ describe('F3B actual PDF.js / sidecar adapter', () => {
     expect(unclassified.ok).toBe(false);
     if (!unclassified.ok) expect(unclassified.code).toBe('DOCUMENT_INTENT_REQUIRED');
   });
+
+  it('OCRs a scanned English written-report page with pinned Tesseract', async () => {
+    requirePinnedTesseract();
+    const extractor = new TwoStageOpenSourceExtractor();
+    const pdf = await scannedEnglishReportPdf();
+    const result = await extractor.extract(baseRequest(pdf));
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    const blob = result.candidates.map((c) => c.rawText).join(' ');
+    expect(blob).toMatch(/Hemoglobin|g\/dL|Laboratory/);
+    expect(result.candidates.some((c) => c.method === 'TESSERACT_OCR')).toBe(true);
+  }, 120_000);
+
+  it('OCRs a scanned Hindi written-report page with pinned Tesseract', async () => {
+    requirePinnedTesseract();
+    const extractor = new TwoStageOpenSourceExtractor();
+    const pdf = await scannedHindiReportPdf();
+    const result = await extractor.extract(baseRequest(pdf));
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    const blob = result.candidates.map((c) => c.rawText).join(' ');
+    expect(blob).toMatch(/हीमोग्लोबिन|g\/dL|13\.2/);
+  }, 120_000);
 });
 
 describe('F3B sidecar security', () => {
