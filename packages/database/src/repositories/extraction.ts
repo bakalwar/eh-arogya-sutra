@@ -360,6 +360,20 @@ export class PgExtractionRepository {
     return runs >= maxRuns;
   }
 
+  async findCandidateById(
+    tenant: TenantContext,
+    tx: TransactionContext,
+    candidateId: string,
+  ): Promise<ExtractionCandidateDto | null> {
+    const r = await tx.query(
+      `SELECT * FROM clinical_evidence_extraction_candidates
+       WHERE organization_id = $1 AND clinic_id = $2 AND id = $3
+       LIMIT 1`,
+      [tenant.organizationId, tenant.clinicId, candidateId],
+    );
+    return r.rows[0] ? mapCandidate(r.rows[0] as Record<string, unknown>) : null;
+  }
+
   async listRunsForEvidence(
     tenant: TenantContext,
     tx: TransactionContext,

@@ -33,6 +33,7 @@ export {
   RateLimitedError,
   RateLimitUnavailableError,
   ObjectStoreUnavailableError,
+  ReviewConflictError,
 } from './domainErrors.js';
 export {
   type TenantContext,
@@ -118,6 +119,7 @@ export { PgEvidenceRepository } from './repositories/evidence.js';
 export type { EvidenceItemRecord, EvidenceJobRecord } from './repositories/evidence.js';
 export { PgExtractionRepository } from './repositories/extraction.js';
 export type { ExtractionRunRecord } from './repositories/extraction.js';
+export { PgCandidateReviewRepository } from './repositories/candidateReview.js';
 export { PgConsultationIntakeRepository } from './repositories/consultationIntake.js';
 export type {
   ConsultationIntakeBundle,

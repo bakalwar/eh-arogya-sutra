@@ -8,6 +8,7 @@ import {
   RateLimitedError,
   RateLimitUnavailableError,
   ResourceNotFoundError,
+  ReviewConflictError,
   TenantContextRequiredError,
   ValidationError,
 } from '@ehas2/database';
@@ -29,7 +30,8 @@ export type ApiErrorCode =
   | 'RATE_LIMIT_UNAVAILABLE'
   | 'OBJECT_STORE_UNAVAILABLE'
   | 'PAYLOAD_TOO_LARGE'
-  | 'IDEMPOTENCY_CONFLICT';
+  | 'IDEMPOTENCY_CONFLICT'
+  | 'REVIEW_CONFLICT';
 
 export type ApiErrorBody = {
   success: false;
@@ -80,6 +82,10 @@ export function sendDomainError(res: Response, err: unknown, requestId: string):
   }
   if (err instanceof IdempotencyConflictError) {
     sendError(res, 409, 'IDEMPOTENCY_CONFLICT', 'Idempotency key conflict', requestId);
+    return;
+  }
+  if (err instanceof ReviewConflictError) {
+    sendError(res, 409, 'REVIEW_CONFLICT', 'REVIEW_CONFLICT', requestId);
     return;
   }
   if (err instanceof RateLimitedError) {

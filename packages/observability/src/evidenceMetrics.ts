@@ -12,7 +12,8 @@ export type EvidenceSafeMetricName =
   | 'rate_limit_denial'
   | 'cross_tenant_denial'
   | 'extract_result'
-  | 'extract_latency_ms';
+  | 'extract_latency_ms'
+  | 'candidate_review_result';
 
 export type EvidenceSafeMetric = {
   name: EvidenceSafeMetricName;
@@ -40,6 +41,7 @@ function emptyTotals(): Totals {
     cross_tenant_denial: 0,
     extract_result: 0,
     extract_latency_ms: 0,
+    candidate_review_result: 0,
   };
 }
 

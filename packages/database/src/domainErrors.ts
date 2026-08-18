@@ -75,6 +75,14 @@ export class RateLimitUnavailableError extends Error {
   }
 }
 
+export class ReviewConflictError extends Error {
+  readonly code = 'REVIEW_CONFLICT' as const;
+  constructor(message = 'REVIEW_CONFLICT') {
+    super(message);
+    this.name = 'ReviewConflictError';
+  }
+}
+
 export class ObjectStoreUnavailableError extends Error {
   readonly code = 'OBJECT_STORE_UNAVAILABLE' as const;
   constructor(message = 'OBJECT_STORE_UNAVAILABLE') {

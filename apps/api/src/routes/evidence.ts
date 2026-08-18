@@ -1,7 +1,7 @@
 import { type Express, type Response } from 'express';
 import { EHAS2_API_NAMESPACE } from '@ehas2/shared';
 import { Permission } from '@ehas2/security';
-import { evidenceService, type EvidenceService } from '@ehas2/database';
+import { evidenceService, type EvidenceService, ValidationError } from '@ehas2/database';
 import { requestBodyChunks, parseContentLengthHeader } from '../http/streamBody.js';
 import { requirePermission } from '../middleware/authorization.js';
 import {
@@ -170,6 +170,112 @@ export function registerEvidenceRoutes(app: Express, deps: EvidenceRouteDeps): v
           String(req.params.evidenceId),
         );
         sendSuccess(res, metadataOnly(data), req.requestId ?? 'unknown');
+      } catch (err) {
+        sendDomainError(res, err, req.requestId ?? 'unknown');
+      }
+    },
+  );
+
+  const reviewRead = [...read];
+  const reviewWrite = [
+    requirePermission(Permission.ClinicalCaseWrite, caseResource),
+    requirePermission(Permission.EvidenceIngest, caseResource),
+    tenant,
+  ];
+
+  app.get(
+    `${ns}/consultations/:consultationId/evidence/:evidenceId/candidates`,
+    ...reviewRead,
+    async (req: TenantAuthedRequest, res) => {
+      privateNoStore(res);
+      try {
+        const data = await evidence.listSourceLinkedCandidates(
+          req.tenantContext!,
+          String(req.params.consultationId),
+          String(req.params.evidenceId),
+        );
+        sendSuccess(res, data, req.requestId ?? 'unknown');
+      } catch (err) {
+        sendDomainError(res, err, req.requestId ?? 'unknown');
+      }
+    },
+  );
+
+  app.get(
+    `${ns}/consultations/:consultationId/evidence/:evidenceId/candidates/:candidateId`,
+    ...reviewRead,
+    async (req: TenantAuthedRequest, res) => {
+      privateNoStore(res);
+      try {
+        const data = await evidence.getSourceLinkedCandidate(
+          req.tenantContext!,
+          String(req.params.consultationId),
+          String(req.params.evidenceId),
+          String(req.params.candidateId),
+        );
+        sendSuccess(res, data, req.requestId ?? 'unknown');
+      } catch (err) {
+        sendDomainError(res, err, req.requestId ?? 'unknown');
+      }
+    },
+  );
+
+  app.get(
+    `${ns}/consultations/:consultationId/evidence/:evidenceId/candidates/:candidateId/reviews`,
+    ...reviewRead,
+    async (req: TenantAuthedRequest, res) => {
+      privateNoStore(res);
+      try {
+        const data = await evidence.listCandidateReviews(
+          req.tenantContext!,
+          String(req.params.consultationId),
+          String(req.params.evidenceId),
+          String(req.params.candidateId),
+        );
+        sendSuccess(res, data, req.requestId ?? 'unknown');
+      } catch (err) {
+        sendDomainError(res, err, req.requestId ?? 'unknown');
+      }
+    },
+  );
+
+  app.post(
+    `${ns}/consultations/:consultationId/evidence/:evidenceId/candidates/:candidateId/reviews`,
+    ...reviewWrite,
+    async (req: TenantAuthedRequest, res) => {
+      privateNoStore(res);
+      try {
+        const body = bodyObject(req);
+        assertExactJsonKeys(body, [
+          'action',
+          'reasonCode',
+          'correctedRawText',
+          'supersedesReviewId',
+        ]);
+        const key = idempotencyKey(req);
+        if (!key) {
+          throw new ValidationError('IDEMPOTENCY_KEY_REQUIRED');
+        }
+        const data = await evidence.submitCandidateReview(
+          req.tenantContext!,
+          String(req.params.consultationId),
+          String(req.params.evidenceId),
+          String(req.params.candidateId),
+          {
+            action: String(body.action ?? ''),
+            reasonCode: String(body.reasonCode ?? ''),
+            correctedRawText:
+              body.correctedRawText === undefined || body.correctedRawText === null
+                ? null
+                : String(body.correctedRawText),
+            supersedesReviewId:
+              body.supersedesReviewId === undefined || body.supersedesReviewId === null
+                ? null
+                : String(body.supersedesReviewId),
+            idempotencyKey: key,
+          },
+        );
+        sendSuccess(res, data, req.requestId ?? 'unknown', 201);
       } catch (err) {
         sendDomainError(res, err, req.requestId ?? 'unknown');
       }

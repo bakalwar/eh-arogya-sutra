@@ -785,11 +785,11 @@ describe('Phase 4A authentication core', () => {
 
   it('38-39 clean migration and latest migration down/up', async () => {
     requireDb();
-    expect(getOrderedMigrationIds()).toHaveLength(13);
+    expect(getOrderedMigrationIds()).toHaveLength(14);
     const downId = await migrateDownLastForIsolatedTest(env);
-    expect(downId).toBe('013_f3b_open_source_ocr');
+    expect(downId).toBe('014_f3c_candidate_review');
     const up = await migrateUp(env);
-    expect(up.applied).toContain('013_f3b_open_source_ocr');
+    expect(up.applied).toContain('014_f3c_candidate_review');
   }, 120_000);
 
   it('40-41 responsive login/OTP UI and zero console error patterns in source', () => {

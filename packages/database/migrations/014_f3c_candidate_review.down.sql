@@ -1,0 +1,4 @@
+DROP TRIGGER IF EXISTS clinical_evidence_extraction_candidate_reviews_append_only
+  ON clinical_evidence_extraction_candidate_reviews;
+DROP FUNCTION IF EXISTS ehas2_candidate_review_append_only();
+DROP TABLE IF EXISTS clinical_evidence_extraction_candidate_reviews;

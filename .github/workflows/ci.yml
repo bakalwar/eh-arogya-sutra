@@ -49,7 +49,7 @@ jobs:
           PGPASSWORD: ehas2_isolated_test_only
         run: |
           set -e
-          for db in ehas2_phase3a_test ehas2_phase3b_test ehas2_phase3c_test ehas2_phase3d_test ehas2_phase4a_preflight ehas2_phase_evidence_test ehas2_phase_extract_test ehas2_phase_ocr_test; do
+          for db in ehas2_phase3a_test ehas2_phase3b_test ehas2_phase3c_test ehas2_phase3d_test ehas2_phase4a_preflight ehas2_phase_evidence_test ehas2_phase_extract_test ehas2_phase_ocr_test ehas2_phase_f3c_test; do
             psql -h 127.0.0.1 -p 55432 -U ehas2 -d postgres -tc "SELECT 1 FROM pg_database WHERE datname = '${db}'" | grep -q 1 \
               || psql -h 127.0.0.1 -p 55432 -U ehas2 -d postgres -c "CREATE DATABASE ${db} OWNER ehas2;"
           done
@@ -111,6 +111,22 @@ jobs:
           if grep -R -E '@ehas2/rule[1-9]|tesseract\.js|pdf-parse|analyzeComplete|LibreTranslate|evaluateRule[1-9]' \
             packages/evidence-extract-adapters/src; then
             echo 'Forbidden selector/engine coupling in F3B adapters package' >&2
+            exit 1
+          fi
+      - name: F3C candidate review selector firewall
+        run: |
+          set -e
+          if grep -R -E '@ehas2/rule[1-9]|tesseract\.js|pdf-parse|analyzeComplete|LibreTranslate|evaluateRule[1-9]|clinically_used\s*=\s*true' \
+            packages/database/src/repositories/candidateReview.ts \
+            packages/database/src/services/evidenceService.ts \
+            packages/evidence-extract/src/reviewPresentation.ts \
+            packages/evidence-extract/src/flags.ts \
+            apps/api/src/routes/evidence.ts \
+            apps/web/src/app/preview/candidate-review \
+            apps/web/src/components/preview/CandidateSourceLocatorView.tsx \
+            apps/web/src/components/preview/CandidateReviewLocalBoard.tsx \
+            apps/web/src/lib/preview/candidateReviewFixtures.ts; then
+            echo 'Forbidden selector/engine coupling in F3C candidate review paths' >&2
             exit 1
           fi
       - name: Set up Python
