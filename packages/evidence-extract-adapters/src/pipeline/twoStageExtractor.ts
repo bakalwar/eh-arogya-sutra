@@ -224,7 +224,7 @@ export class TwoStageOpenSourceExtractor implements ExtractionProvider {
         return refuse(fingerprint, 'UNSUPPORTED_TYPE');
       }
 
-      let candidates = segmentPageTextToCandidates({
+      const candidates = segmentPageTextToCandidates({
         request: input,
         blocks,
         extractorName: this.name,

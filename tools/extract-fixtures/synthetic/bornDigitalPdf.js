@@ -22,7 +22,12 @@ function textContentStream(textLines, useActualText) {
   return textLines
     .map((line, i) => {
       const y = 700 - i * 18;
-      const asciiPlaceholder = line.replace(/[^\x09\x0A\x0D\x20-\x7E]/g, ' ');
+      const asciiPlaceholder = [...line]
+        .map((ch) => {
+          const code = ch.codePointAt(0) ?? 0;
+          return code >= 32 && code <= 126 ? ch : ' ';
+        })
+        .join('');
       const escaped = escapePdfString(asciiPlaceholder);
       if (!useActualText) {
         return `BT /F1 12 Tf 72 ${y} Td (${escaped}) Tj ET`;
@@ -119,27 +124,6 @@ function mixRgb(width, height, paint) {
   const rgb = Buffer.alloc(width * height * 3, 255);
   paint(rgb, width, height);
   return { width, height, rgb };
-}
-
-function drawTextApprox(rgb, width, height, text, originX, originY) {
-  let x = originX;
-  for (let i = 0; i < text.length; i++) {
-    const code = text.charCodeAt(i);
-    for (let dy = 0; dy < 10; dy++) {
-      for (let dx = 0; dx < 6; dx++) {
-        const on = (code + dx + dy) % 5 !== 0;
-        if (!on) continue;
-        const px = x + dx;
-        const py = originY + dy;
-        if (px < 0 || py < 0 || px >= width || py >= height) continue;
-        const idx = (py * width + px) * 3;
-        rgb[idx] = 0;
-        rgb[idx + 1] = 0;
-        rgb[idx + 2] = 0;
-      }
-    }
-    x += 7;
-  }
 }
 
 export function bornDigitalEnglishPdf() {
