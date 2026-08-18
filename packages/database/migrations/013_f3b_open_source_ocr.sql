@@ -94,7 +94,8 @@ ALTER TABLE clinical_evidence_extraction_runs
       'NOT_AUTHORITATIVE',
       'NO_TRANSLATION',
       'UNSUPPORTED_LANGUAGE',
-      'CANDIDATE_RETENTION_PRUNED'
+      'RETENTION_CAP_REACHED',
+      'TOOLCHAIN_HASH_MISMATCH'
     ]::text[]
   );
 
@@ -124,7 +125,8 @@ ALTER TABLE clinical_evidence_extraction_candidates
       'NOT_AUTHORITATIVE',
       'NO_TRANSLATION',
       'UNSUPPORTED_LANGUAGE',
-      'CANDIDATE_RETENTION_PRUNED'
+      'RETENTION_CAP_REACHED',
+      'TOOLCHAIN_HASH_MISMATCH'
     ]::text[]
   );
 

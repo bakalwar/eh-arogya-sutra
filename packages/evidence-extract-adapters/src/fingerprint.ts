@@ -1,4 +1,5 @@
 import { contentAwareExtractorFingerprint, type ExtractionMethod } from '@ehas2/evidence-extract';
+import { pinnedLangpackHashes } from './toolchainManifest.js';
 import {
   EXTRACTOR_NAME,
   EXTRACTOR_VERSION,
@@ -6,6 +7,10 @@ import {
   PIPELINE_CONFIG_VERSION,
   TESSERACT_VERSION,
 } from './constants.js';
+
+function langpackHashes(): Readonly<Record<string, string>> {
+  return pinnedLangpackHashes();
+}
 
 export function pipelineFingerprint(input: {
   evidenceItemId: string;
@@ -45,7 +50,7 @@ export function defaultOcrPipelineFingerprint(input: {
     method: input.method,
     textLayerLibraryVersion: PDFJS_VERSION,
     ocrSidecarVersion: TESSERACT_VERSION,
-    langpackHashes: { eng: 'bootstrap', hin: 'bootstrap' },
+    langpackHashes: langpackHashes(),
     pipelineConfigVersion: PIPELINE_CONFIG_VERSION,
   });
 }

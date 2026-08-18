@@ -1,5 +1,5 @@
 import {
-  MAX_CANDIDATES_PER_EVIDENCE,
+  MAX_EXTRACT_CANDIDATES,
   type ExtractionProvider,
   type ExtractionRefusal,
   type ExtractionRequest,
@@ -16,12 +16,13 @@ import {
   PIPELINE_CONFIG_VERSION,
   TESSERACT_VERSION,
 } from '../constants.js';
+import { pinnedLangpackHashes } from '../toolchainManifest.js';
 import { pipelineFingerprint } from '../fingerprint.js';
 import { createJobTempDir } from '../ocr/jobTempDir.js';
 import { TesseractSidecar } from '../ocr/tesseractSidecar.js';
 import { renderPageToPng } from '../pdf/pageRenderer.js';
 import { isTextLayerInsufficient, pageTextMetrics } from '../pdf/sufficiency.js';
-import { extractPdfTextLayer } from '../pdf/textLayerExtractor.js';
+import { extractPdfTextLayer, pdfjsData } from '../pdf/textLayerExtractor.js';
 import { segmentPageTextToCandidates, textItemsToBlocks } from '../segment/textToCandidates.js';
 
 const METHOD = 'TWO_STAGE_PIPELINE' as const;
@@ -66,7 +67,7 @@ function baseFingerprint(input: ExtractionRequest): string {
     method: METHOD,
     textLayerLibraryVersion: PDFJS_VERSION,
     ocrSidecarVersion: TESSERACT_VERSION,
-    langpackHashes: { eng: 'bootstrap', hin: 'bootstrap' },
+    langpackHashes: pinnedLangpackHashes(),
     pipelineConfigVersion: PIPELINE_CONFIG_VERSION,
   });
 }
@@ -135,10 +136,15 @@ export class TwoStageOpenSourceExtractor implements ExtractionProvider {
           tempDir = await createJobTempDir();
           const { getDocument } = await import('pdfjs-dist/legacy/build/pdf.mjs');
           const loadingTask = getDocument({
-            data: input.bytes,
+            data: pdfjsData(input.bytes),
             disableAutoFetch: true,
+            disableStream: true,
+            disableRange: true,
             isEvalSupported: false,
-            useSystemFonts: true,
+            isOffscreenCanvasSupported: false,
+            useSystemFonts: false,
+            useWorkerFetch: false,
+            verbosity: 0,
           });
           const pdf = await loadingTask.promise;
           try {
@@ -160,6 +166,9 @@ export class TwoStageOpenSourceExtractor implements ExtractionProvider {
                 abortSignal: input.abortSignal,
               });
               if (!ocr.ok) {
+                if (ocr.code === 'HASH_MISMATCH') {
+                  return refuse(fingerprint, 'TOOLCHAIN_HASH_MISMATCH');
+                }
                 limitationCodes.push('PARTIAL_EXTRACTION', 'LOW_CONFIDENCE');
                 if (ocr.code === 'TIMEOUT') {
                   return refuse(fingerprint, 'TIMEOUT', limitationCodes);
@@ -195,6 +204,9 @@ export class TwoStageOpenSourceExtractor implements ExtractionProvider {
           if (ocr.code === 'TIMEOUT') {
             return refuse(fingerprint, 'TIMEOUT');
           }
+          if (ocr.code === 'HASH_MISMATCH') {
+            return refuse(fingerprint, 'TOOLCHAIN_HASH_MISMATCH');
+          }
           return refuse(fingerprint, 'PARTIAL_EXTRACTION', ['LOW_CONFIDENCE']);
         }
         blocks.push(
@@ -221,9 +233,8 @@ export class TwoStageOpenSourceExtractor implements ExtractionProvider {
         extraLimitationCodes: limitationCodes,
       });
 
-      if (candidates.length > MAX_CANDIDATES_PER_EVIDENCE) {
-        candidates = candidates.slice(0, MAX_CANDIDATES_PER_EVIDENCE);
-        limitationCodes.push('CANDIDATE_RETENTION_PRUNED');
+      if (candidates.length > MAX_EXTRACT_CANDIDATES) {
+        return refuse(fingerprint, 'TEXT_LIMIT', limitationCodes);
       }
 
       if (candidates.length === 0) {

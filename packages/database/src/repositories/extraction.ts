@@ -3,6 +3,7 @@ import { validateAndCanonicalizeLocator } from '@ehas2/evidence-extract-adapters
 import {
   assertNoStorageInLocator,
   MAX_CANDIDATES_PER_EVIDENCE,
+  MAX_EXTRACTION_RUNS_PER_EVIDENCE,
   type CandidateStatus,
   type CandidateType,
   type ExtractionCandidateDto,
@@ -316,32 +317,60 @@ export class PgExtractionRepository {
     return Number((r.rows[0] as { n: number }).n);
   }
 
-  /** Delete oldest SUPERSEDED candidates when total count exceeds maxCandidates. */
-  async pruneCandidateRetention(
+  async countCandidatesForEvidence(
     tenant: TenantContext,
     tx: TransactionContext,
     evidenceItemId: string,
-    maxCandidates = MAX_CANDIDATES_PER_EVIDENCE,
   ): Promise<number> {
-    const countR = await tx.query(
+    const r = await tx.query(
       `SELECT count(*)::int AS n FROM clinical_evidence_extraction_candidates
        WHERE organization_id = $1 AND clinic_id = $2 AND evidence_item_id = $3`,
       [tenant.organizationId, tenant.clinicId, evidenceItemId],
     );
-    const total = Number((countR.rows[0] as { n: number }).n);
-    if (total <= maxCandidates) return 0;
-    const excess = total - maxCandidates;
-    const del = await tx.query(
-      `DELETE FROM clinical_evidence_extraction_candidates
-       WHERE id IN (
-         SELECT id FROM clinical_evidence_extraction_candidates
-         WHERE organization_id = $1 AND clinic_id = $2 AND evidence_item_id = $3
-           AND status = 'SUPERSEDED'
-         ORDER BY created_at ASC
-         LIMIT $4
-       )`,
-      [tenant.organizationId, tenant.clinicId, evidenceItemId, excess],
+    return Number((r.rows[0] as { n: number }).n);
+  }
+
+  async countRunsForEvidence(
+    tenant: TenantContext,
+    tx: TransactionContext,
+    evidenceItemId: string,
+  ): Promise<number> {
+    const r = await tx.query(
+      `SELECT count(*)::int AS n FROM clinical_evidence_extraction_runs
+       WHERE organization_id = $1 AND clinic_id = $2 AND evidence_item_id = $3`,
+      [tenant.organizationId, tenant.clinicId, evidenceItemId],
     );
-    return del.rowCount ?? 0;
+    return Number((r.rows[0] as { n: number }).n);
+  }
+
+  /**
+   * Fail-closed retention gate: append-only history — never delete candidates/runs in F3B.
+   * Returns false when a new extraction must be rejected with RETENTION_CAP_REACHED.
+   */
+  async isRetentionCapReached(
+    tenant: TenantContext,
+    tx: TransactionContext,
+    evidenceItemId: string,
+    maxCandidates = MAX_CANDIDATES_PER_EVIDENCE,
+    maxRuns = MAX_EXTRACTION_RUNS_PER_EVIDENCE,
+  ): Promise<boolean> {
+    const candidates = await this.countCandidatesForEvidence(tenant, tx, evidenceItemId);
+    if (candidates >= maxCandidates) return true;
+    const runs = await this.countRunsForEvidence(tenant, tx, evidenceItemId);
+    return runs >= maxRuns;
+  }
+
+  async listRunsForEvidence(
+    tenant: TenantContext,
+    tx: TransactionContext,
+    evidenceItemId: string,
+  ): Promise<ExtractionRunRecord[]> {
+    const r = await tx.query(
+      `SELECT * FROM clinical_evidence_extraction_runs
+       WHERE organization_id = $1 AND clinic_id = $2 AND evidence_item_id = $3
+       ORDER BY created_at ASC`,
+      [tenant.organizationId, tenant.clinicId, evidenceItemId],
+    );
+    return (r.rows as Record<string, unknown>[]).map(mapRun);
   }
 }

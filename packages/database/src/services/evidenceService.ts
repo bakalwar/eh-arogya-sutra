@@ -56,7 +56,11 @@ import {
   type EvidenceItemRecord,
   type EvidenceJobRecord,
 } from '../repositories/evidence.js';
-import { PgExtractionRepository, insertRunWithIdempotency } from '../repositories/extraction.js';
+import {
+  PgExtractionRepository,
+  insertRunWithIdempotency,
+  type ExtractionRunRecord,
+} from '../repositories/extraction.js';
 import {
   ConflictError,
   IdempotencyConflictError,
@@ -992,6 +996,20 @@ export class EvidenceService {
     );
   }
 
+  async listExtractionRuns(
+    tenant: TenantContext,
+    evidenceId: string,
+    env: Record<string, string | undefined> = process.env,
+  ): Promise<ExtractionRunRecord[]> {
+    assertTenantContext(tenant);
+    assertUuid(evidenceId, 'evidenceId');
+    return withTenantTransaction(
+      tenant,
+      async (tx) => extractionRepo.listRunsForEvidence(tenant, tx, evidenceId),
+      env,
+    );
+  }
+
   async countStructuredFindingsForEvidence(
     tenant: TenantContext,
     evidenceId: string,
@@ -1213,6 +1231,34 @@ export class EvidenceService {
       return;
     }
 
+    const retentionBlocked = await withTenantTransaction(
+      tenant,
+      async (tx) => extractionRepo.isRetentionCapReached(tenant, tx, item.id),
+      env,
+    );
+    if (retentionBlocked) {
+      await withTenantTransaction(
+        tenant,
+        async (tx) => {
+          await evidenceRepo.finishJob(tenant, tx, job, 'SUCCEEDED', 'RETENTION_CAP_REACHED', null);
+          await audit.append(tx, {
+            organizationId: tenant.organizationId,
+            clinicId: tenant.clinicId,
+            actorId: tenant.actorId,
+            actorRole: tenant.actorRole,
+            eventType: 'evidence_extract_retention_cap',
+            resourceType: 'evidence',
+            resourceId: item.id,
+            outcome: 'DENIED',
+            metadata: { code: 'RETENTION_CAP_REACHED' },
+          });
+        },
+        env,
+      );
+      this.metric({ name: 'extract_result', code: 'RETENTION_CAP_REACHED' });
+      return;
+    }
+
     if (item.malwareScanResult !== 'CLEAN' || !assertMalwareGateSatisfied(item.malwareScanResult)) {
       await this.persistExtractOutcome(
         tenant,
@@ -1368,6 +1414,10 @@ export class EvidenceService {
           await evidenceRepo.finishJob(tenant, tx, job, 'SUCCEEDED', 'DUPLICATE_RUN', null);
           return;
         }
+        if (await extractionRepo.isRetentionCapReached(tenant, tx, item.id)) {
+          await evidenceRepo.finishJob(tenant, tx, job, 'SUCCEEDED', 'RETENTION_CAP_REACHED', null);
+          return;
+        }
         const { run, inserted } = await insertRunWithIdempotency(extractionRepo, tenant, tx, {
           patientId: item.patientId,
           consultationId: item.consultationId,
@@ -1390,7 +1440,6 @@ export class EvidenceService {
         if (input.status === 'EXTRACTED_UNVERIFIED' && input.candidates.length > 0) {
           await extractionRepo.insertCandidates(tenant, tx, run.id, input.candidates);
         }
-        await extractionRepo.pruneCandidateRetention(tenant, tx, item.id);
         await extractionRepo.supersedeRuns(tenant, tx, item.id, input.fingerprint, run.id);
         await evidenceRepo.finishJob(tenant, tx, job, 'SUCCEEDED', null, null);
         await audit.append(tx, {

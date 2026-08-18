@@ -13,6 +13,7 @@
     "name": "@napi-rs/canvas",
     "version": "0.1.80",
     "license": "MIT",
+    "licenseUrl": "https://www.npmjs.com/package/@napi-rs/canvas/v/0.1.80",
     "registryUrl": "https://registry.npmjs.org/@napi-rs/canvas/0.1.80",
     "optional": true,
     "purpose": "Bounded PDF page rasterization for OCR fallback only"

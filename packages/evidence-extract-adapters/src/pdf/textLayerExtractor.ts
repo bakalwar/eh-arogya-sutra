@@ -24,6 +24,12 @@ export type ExtractPdfTextLayerOptions = {
   maxBytes?: number;
 };
 
+export function pdfjsData(bytes: Uint8Array): Uint8Array {
+  const copy = new Uint8Array(bytes.byteLength);
+  copy.set(bytes);
+  return copy;
+}
+
 function throwIfAborted(signal?: AbortSignal): void {
   if (signal?.aborted) {
     throw Object.assign(new Error('TIMEOUT'), { code: 'TIMEOUT' });
@@ -34,13 +40,14 @@ function bboxFromTransform(
   transform: number[],
   pageWidth: number,
   pageHeight: number,
+  widthPt?: number,
 ): { x: number; y: number; w: number; h: number } {
   const scaleX = Math.abs(transform[0] ?? 0);
   const scaleY = Math.abs(transform[3] ?? 0);
   const fontSize = Math.max(scaleX, scaleY, 1);
   const xPt = transform[4] ?? 0;
   const yPt = transform[5] ?? 0;
-  const wPt = Math.max(fontSize * 0.55, 1);
+  const wPt = Math.max(widthPt && widthPt > 0 ? widthPt : fontSize * Math.max(1, 0.55), 1);
   const hPt = Math.max(fontSize, 1);
   const x = Math.min(1, Math.max(0, xPt / pageWidth));
   const yTop = pageHeight - yPt;
@@ -57,7 +64,7 @@ async function pageTextLayer(
 ): Promise<PdfPageTextLayer> {
   throwIfAborted(signal);
   const viewport = page.getViewport({ scale: 1 });
-  const textContent = await page.getTextContent();
+  const textContent = await page.getTextContent({ includeMarkedContent: true });
   throwIfAborted(signal);
   const items: PdfTextItem[] = [];
   for (const raw of textContent.items) {
@@ -66,9 +73,10 @@ async function pageTextLayer(
     if (!text) continue;
     const transform = raw.transform;
     if (!Array.isArray(transform) || transform.length < 6) continue;
+    const widthPt = 'width' in raw && typeof raw.width === 'number' ? raw.width : undefined;
     items.push({
       text,
-      bbox: bboxFromTransform(transform, viewport.width, viewport.height),
+      bbox: bboxFromTransform(transform, viewport.width, viewport.height, widthPt),
     });
   }
   return {
@@ -93,10 +101,15 @@ export async function extractPdfTextLayer(
   let pdf: PDFDocumentProxy | undefined;
   try {
     const loadingTask = getDocument({
-      data: bytes,
+      data: pdfjsData(bytes),
       disableAutoFetch: true,
+      disableStream: true,
+      disableRange: true,
       isEvalSupported: false,
-      useSystemFonts: true,
+      isOffscreenCanvasSupported: false,
+      useSystemFonts: false,
+      useWorkerFetch: false,
+      verbosity: 0,
     });
     if (signal) {
       signal.addEventListener(

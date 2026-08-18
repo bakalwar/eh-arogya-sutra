@@ -1,4 +1,6 @@
 import { spawn } from 'node:child_process';
+import { createHash } from 'node:crypto';
+import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
@@ -8,6 +10,8 @@ import {
   TESSERACT_LANGUAGES,
   TESSERACT_VERSION,
 } from '../constants.js';
+import { pinnedLangpackHashes } from '../toolchainManifest.js';
+import { isProductionRuntime } from '@ehas2/evidence-ingest';
 import { writePrivateFile } from './jobTempDir.js';
 import { parseTsv, type TsvWordBlock } from './tsvParser.js';
 
@@ -15,7 +19,7 @@ const PACKAGE_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), 
 
 export type TesseractOcrResult =
   | { ok: true; words: TsvWordBlock[] }
-  | { ok: false; code: 'TIMEOUT' | 'BINARY_UNAVAILABLE' | 'OCR_FAILED' };
+  | { ok: false; code: 'TIMEOUT' | 'BINARY_UNAVAILABLE' | 'OCR_FAILED' | 'HASH_MISMATCH' };
 
 export function resolveTesseractBinary(): string | null {
   const fromEnv = process.env.EHAS2_TESSERACT_BIN?.trim();
@@ -28,6 +32,30 @@ export function resolveTessdataPrefix(): string | null {
   const fromEnv = process.env.TESSDATA_PREFIX?.trim();
   if (fromEnv) return fromEnv;
   return path.join(PACKAGE_ROOT, '.extract-tools', 'tessdata');
+}
+
+function sha256File(filePath: string): string {
+  return createHash('sha256').update(fs.readFileSync(filePath)).digest('hex');
+}
+
+export function verifyPinnedTessdata(
+  tessdataPrefix: string,
+): { ok: true } | { ok: false; code: 'HASH_MISMATCH' } {
+  const expected = pinnedLangpackHashes();
+  for (const lang of ['eng', 'hin'] as const) {
+    const filePath = path.join(tessdataPrefix, `${lang}.traineddata`);
+    if (!fs.existsSync(filePath)) {
+      return { ok: false, code: 'HASH_MISMATCH' };
+    }
+    if (sha256File(filePath) !== expected[lang]) {
+      return { ok: false, code: 'HASH_MISMATCH' };
+    }
+  }
+  return { ok: true };
+}
+
+export function tesseractArgv(inputPath: string, outputBase: string): string[] {
+  return [inputPath, outputBase, '-l', TESSERACT_LANGUAGES, 'tsv'];
 }
 
 function killProcessGroup(child: ReturnType<typeof spawn>): void {
@@ -60,22 +88,36 @@ export class TesseractSidecar {
     jobTimeoutMs?: number;
     abortSignal?: AbortSignal;
   }): Promise<TesseractOcrResult> {
+    const testNodeScript =
+      !isProductionRuntime() && process.env.EHAS2_TESSERACT_NODE_SCRIPT
+        ? process.env.EHAS2_TESSERACT_NODE_SCRIPT.trim()
+        : '';
     const binary = resolveTesseractBinary();
-    const tessdataPrefix = resolveTessdataPrefix();
-    if (!binary || !tessdataPrefix) {
+    const tessdataPrefix =
+      resolveTessdataPrefix() ?? path.join(PACKAGE_ROOT, '.extract-tools', 'tessdata');
+    if (!testNodeScript && (!binary || !fs.existsSync(binary))) {
       return { ok: false, code: 'BINARY_UNAVAILABLE' };
+    }
+    if (!testNodeScript) {
+      const hashGate = verifyPinnedTessdata(tessdataPrefix);
+      if (!hashGate.ok) {
+        return { ok: false, code: 'HASH_MISMATCH' };
+      }
     }
     const pageTimeoutMs = input.pageTimeoutMs ?? EXTRACT_PAGE_OCR_TIMEOUT_MS;
     const jobTimeoutMs = input.jobTimeoutMs ?? EXTRACT_JOB_TIMEOUT_MS;
     const inputPath = path.join(input.workDir, `page-${Date.now()}.png`);
     const outputBase = path.join(input.workDir, `ocr-${Date.now()}`);
     await writePrivateFile(inputPath, input.png);
+    const argv = tesseractArgv(inputPath, outputBase);
+    const spawnBin = testNodeScript ? process.execPath : binary!;
+    const spawnArgv = testNodeScript ? [testNodeScript, ...argv] : argv;
 
     return new Promise<TesseractOcrResult>((resolve) => {
       let settled = false;
       let stdoutBytes = 0;
       let stderrBytes = 0;
-      const child = spawn(binary, [inputPath, outputBase, '-l', TESSERACT_LANGUAGES, 'tsv'], {
+      const child = spawn(spawnBin, spawnArgv, {
         shell: false,
         stdio: ['ignore', 'pipe', 'pipe'],
         env: { ...process.env, TESSDATA_PREFIX: tessdataPrefix },

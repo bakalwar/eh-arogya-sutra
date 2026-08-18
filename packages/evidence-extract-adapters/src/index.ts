@@ -43,8 +43,11 @@ export {
   TesseractSidecar,
   resolveTesseractBinary,
   resolveTessdataPrefix,
+  verifyPinnedTessdata,
+  tesseractArgv,
   type TesseractOcrResult,
 } from './ocr/tesseractSidecar.js';
+export { pinnedLangpackHashes, readExtractToolchainManifest } from './toolchainManifest.js';
 export { parseTsv, type TsvWordBlock } from './ocr/tsvParser.js';
 
 export {

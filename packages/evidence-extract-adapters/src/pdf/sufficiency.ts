@@ -36,6 +36,6 @@ export function isTextLayerInsufficient(metrics: PageTextMetrics): boolean {
   if (metrics.whitespaceOnly) return true;
   if (metrics.glyphCount < MIN_GLYPHS) return true;
   if (metrics.charCount < MIN_PAGE_CHARS) return true;
-  if (metrics.textAreaRatio < MIN_TEXT_AREA_RATIO) return true;
+  if (metrics.textAreaRatio <= 0) return true;
   return false;
 }
