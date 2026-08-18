@@ -1,0 +1,17 @@
+{
+  "schemaVersion": "ehas2-terminology-pack-v1",
+  "packId": "ehas2-default-terminology",
+  "packVersion": "0.0.0-empty",
+  "status": "EMPTY_AWAITING_OWNER_FREEZE",
+  "ownerApprovalToken": "NO_ENTRIES_OWNER_FREEZE_PENDING",
+  "createdAt": "2026-08-18T00:00:00.000Z",
+  "provenance": {
+    "source": "EHAS2_F3D2A_EMPTY_FOUNDATION",
+    "note": "No clinical terminology entries. Owner freeze pending."
+  },
+  "licenseClassification": "OWNER_INTERNAL_EMPTY",
+  "entries": [],
+  "canonicalizationVersion": "ehas2-terminology-canonical-v1",
+  "checksumAlgorithm": "sha256",
+  "contentChecksum": "3bd6d37db4a65952b9386106138ebd67ac4d78d34da21446dbb910761541771e"
+}

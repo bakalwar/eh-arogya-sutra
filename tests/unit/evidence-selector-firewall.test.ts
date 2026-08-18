@@ -77,7 +77,13 @@ describe('evidence selector firewall', () => {
     }
     const extractSrc = fs
       .readdirSync(path.join(root, 'packages/evidence-extract/src'))
-      .filter((f) => f.endsWith('.ts') && f !== 'types.ts' && f !== 'factCandidateTypes.ts')
+      .filter(
+        (f) =>
+          f.endsWith('.ts') &&
+          f !== 'types.ts' &&
+          f !== 'factCandidateTypes.ts' &&
+          f !== 'terminology',
+      )
       .map((f) => read(`packages/evidence-extract/src/${f}`))
       .join('\n');
     expect(extractSrc).not.toMatch(/@ehas2\/rule[1-9]/);

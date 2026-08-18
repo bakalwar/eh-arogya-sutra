@@ -107,3 +107,29 @@ export {
   NeverSettlingExtractor,
   defaultDeterministicExtractor,
 } from './fakeExtractor.js';
+export {
+  F3D2_TERMINOLOGY_PACK_FOUNDATION,
+  TERMINOLOGY_PRODUCTION_ENTRY_COUNT,
+  OWNER_TERMINOLOGY_FREEZE_PENDING,
+  NORMALIZATION_PARSER_AVAILABLE,
+  TERMINOLOGY_SCHEMA_VERSION,
+  EMPTY_PACK_STATUS,
+  EMPTY_PACK_APPROVAL_POSTURE,
+  TERMINOLOGY_PACK_SELECTOR_FORBIDDEN_KEYS,
+  TERMINOLOGY_SELECTOR_FORBIDDEN_FIELD_NAMES,
+  TerminologyPackError,
+  computeContentChecksum,
+  loadDefaultProductionPack,
+  loadTerminologyPackFromFile,
+  loadTerminologyPackFromObject,
+  defaultProductionPackPath,
+  syntheticFixturePackPath,
+  bindOwnerApprovalToken,
+  bindSyntheticTestToken,
+  parseAndValidatePack,
+} from './terminology/index.js';
+export type {
+  TerminologyPack,
+  LoadedTerminologyPack,
+  TerminologyLookupResult,
+} from './terminology/index.js';

@@ -29,6 +29,10 @@ import {
   F3B_OPEN_SOURCE_OCR_ADAPTER_FOUNDATION,
   F3C_CANDIDATE_REVIEW_FOUNDATION,
   F3D_FACT_CANDIDATE_FOUNDATION,
+  F3D2_TERMINOLOGY_PACK_FOUNDATION,
+  NORMALIZATION_PARSER_AVAILABLE,
+  OWNER_TERMINOLOGY_FREEZE_PENDING,
+  TERMINOLOGY_PRODUCTION_ENTRY_COUNT,
 } from '@ehas2/evidence-extract';
 import { logInfo } from '@ehas2/observability';
 import { requirePermission, type AuthedRequest } from './middleware/authorization.js';
@@ -171,6 +175,10 @@ export function createApp(deps: CreateAppDeps = {}) {
       f3bOpenSourceOcrAdapterFoundation: F3B_OPEN_SOURCE_OCR_ADAPTER_FOUNDATION,
       f3cCandidateReviewFoundation: F3C_CANDIDATE_REVIEW_FOUNDATION,
       f3dFactCandidateFoundation: F3D_FACT_CANDIDATE_FOUNDATION,
+      f3d2TerminologyPackFoundation: F3D2_TERMINOLOGY_PACK_FOUNDATION,
+      terminologyProductionEntryCount: TERMINOLOGY_PRODUCTION_ENTRY_COUNT,
+      ownerTerminologyFreezePending: OWNER_TERMINOLOGY_FREEZE_PENDING,
+      normalizationParserAvailable: NORMALIZATION_PARSER_AVAILABLE,
       ocr: EVIDENCE_OCR_CONNECTED,
       ocrAdapter: EVIDENCE_OCR_ADAPTER_CONNECTED,
       extractProduction: EVIDENCE_EXTRACT_PRODUCTION,
@@ -217,6 +225,10 @@ export function createApp(deps: CreateAppDeps = {}) {
         f3bOpenSourceOcrAdapterFoundation: F3B_OPEN_SOURCE_OCR_ADAPTER_FOUNDATION,
         f3cCandidateReviewFoundation: F3C_CANDIDATE_REVIEW_FOUNDATION,
         f3dFactCandidateFoundation: F3D_FACT_CANDIDATE_FOUNDATION,
+        f3d2TerminologyPackFoundation: F3D2_TERMINOLOGY_PACK_FOUNDATION,
+        terminologyProductionEntryCount: TERMINOLOGY_PRODUCTION_ENTRY_COUNT,
+        ownerTerminologyFreezePending: OWNER_TERMINOLOGY_FREEZE_PENDING,
+        normalizationParserAvailable: NORMALIZATION_PARSER_AVAILABLE,
         ocr: EVIDENCE_OCR_CONNECTED,
         ocrAdapter: EVIDENCE_OCR_ADAPTER_CONNECTED,
         extractProduction: EVIDENCE_EXTRACT_PRODUCTION,

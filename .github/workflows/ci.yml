@@ -99,7 +99,7 @@ jobs:
         run: |
           set -e
           if grep -R -E '@ehas2/rule[1-9]|tesseract|pdf-parse|pdfjs|analyzeComplete|LibreTranslate' \
-            packages/evidence-extract/src --exclude=types.ts --exclude=factCandidateTypes.ts \
+            packages/evidence-extract/src --exclude=types.ts --exclude=factCandidateTypes.ts --exclude-dir=terminology \
             packages/database/src/repositories/extraction.ts \
             apps/worker/src/jobs/extractCandidates.ts; then
             echo 'Forbidden OCR/engine coupling in F3A extraction paths' >&2
@@ -152,6 +152,33 @@ jobs:
             packages/database/src/repositories/factCandidate.ts \
             packages/database/src/services/factCandidateService.ts; then
             echo 'F3D-1 must not write structured_report_findings' >&2
+            exit 1
+          fi
+      - name: F3D-2 terminology-pack selector firewall
+        run: |
+          set -e
+          F3D2_PATHS="packages/evidence-extract/src/terminology packages/evidence-extract/packs tests/fixtures/terminology-packs"
+          if grep -R -E '@ehas2/rule[1-9]|@ehas2/medicine-registry|@ehas2/engine-adapter|@ehas2/clinical-engine|@ehas2/clinical-data-manifest|evaluateRule[1-9]|LibreTranslate|addStructuredFindings|CORRECTED_BY_DOCTOR|clinically_used[[:space:]]*=[[:space:]]*true|clinically_used[[:space:]]*:[[:space:]]*true|ConfirmPrescription|prescriptionDraft' \
+            $F3D2_PATHS; then
+            echo 'Forbidden selector/engine coupling in F3D-2 terminology-pack paths' >&2
+            exit 1
+          fi
+          if grep -R -E -i 'import[[:space:]].*analyzeComplete|import[[:space:]]*\([^)]*analyzeComplete|require[[:space:]]*\([^)]*analyzeComplete|from[[:space:]].*analyzeComplete|analyzeComplete[[:space:]]*\(' \
+            packages/evidence-extract/src/terminology; then
+            echo 'Forbidden AnalyzeComplete import/invocation in F3D-2 terminology paths' >&2
+            exit 1
+          fi
+          if grep -R -E 'tesseract(\.js)?|from ['\''"]tesseract|require\(['\''"]tesseract|@napi-rs/canvas|pdf-parse|pdfjs' \
+            packages/evidence-extract/src/terminology; then
+            echo 'Forbidden OCR coupling in F3D-2 terminology paths' >&2
+            exit 1
+          fi
+          if grep -R -E 'structured_report_findings|016_f3d' packages/evidence-extract/src/terminology packages/database/src/migrate.ts; then
+            echo 'F3D-2A must not add migration 016 or findings writes' >&2
+            exit 1
+          fi
+          if [ -e packages/database/migrations/016_f3d2_fact_normalizations.sql ] || [ -e packages/database/migrations/016_f3d2_fact_normalizations.down.sql ]; then
+            echo 'F3D-2A must not add migration 016' >&2
             exit 1
           fi
       - name: Set up Python

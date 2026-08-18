@@ -1,0 +1,63 @@
+{
+  "schemaVersion": "ehas2-terminology-pack-v1",
+  "packId": "ehas2-synthetic-terminology-test",
+  "packVersion": "0.0.0-test",
+  "status": "SYNTHETIC_TEST_ONLY",
+  "ownerApprovalToken": "EHAS2_F3D2_PACK_TEST:ehas2-synthetic-terminology-test:0.0.0-test:8ee00005b06acd08c53329f4046b91367bf17ebf0d59a190277c42206db1e101",
+  "createdAt": "2026-08-18T00:00:00.000Z",
+  "provenance": {
+    "source": "EHAS2_F3D2A_SYNTHETIC_TEST",
+    "note": "Invented non-clinical tokens for loader tests only."
+  },
+  "licenseClassification": "SYNTHETIC_TEST_ONLY",
+  "entries": [
+    {
+      "language": "en",
+      "script": "Latn",
+      "ambiguityClassification": "UNAMBIGUOUS",
+      "provenanceReference": "SYNTHETIC_TEST_FIXTURE",
+      "licenseClassification": "SYNTHETIC_TEST_ONLY",
+      "negationInteraction": "NOT_APPLICABLE",
+      "contextRequirements": "NONE",
+      "decisionStatus": "ACTIVE",
+      "selectorProhibition": "SELECTOR_FORBIDDEN",
+      "id": "syn-lang-001",
+      "entryType": "LANGUAGE_EQUIVALENCE",
+      "aliasText": "zxq-alias-alpha",
+      "canonicalLabel": "zxq-label-alpha"
+    },
+    {
+      "language": "en",
+      "script": "Latn",
+      "ambiguityClassification": "UNAMBIGUOUS",
+      "provenanceReference": "SYNTHETIC_TEST_FIXTURE",
+      "licenseClassification": "SYNTHETIC_TEST_ONLY",
+      "negationInteraction": "PRE_CUE",
+      "contextRequirements": "NONE",
+      "decisionStatus": "ACTIVE",
+      "selectorProhibition": "SELECTOR_FORBIDDEN",
+      "id": "syn-neg-001",
+      "entryType": "NEGATION_CUE",
+      "aliasText": "zxq-not-a-clinical-term",
+      "canonicalLabel": "synthetic-negation-cue"
+    },
+    {
+      "language": "en",
+      "script": "Latn",
+      "ambiguityClassification": "UNAMBIGUOUS",
+      "provenanceReference": "SYNTHETIC_TEST_FIXTURE",
+      "licenseClassification": "SYNTHETIC_TEST_ONLY",
+      "negationInteraction": "NOT_APPLICABLE",
+      "contextRequirements": "NONE",
+      "decisionStatus": "ACTIVE",
+      "selectorProhibition": "SELECTOR_FORBIDDEN",
+      "id": "syn-unit-001",
+      "entryType": "UNIT_ALIAS",
+      "aliasText": "zxq-units",
+      "canonicalLabel": "synthetic-unit"
+    }
+  ],
+  "canonicalizationVersion": "ehas2-terminology-canonical-v1",
+  "checksumAlgorithm": "sha256",
+  "contentChecksum": "8ee00005b06acd08c53329f4046b91367bf17ebf0d59a190277c42206db1e101"
+}
