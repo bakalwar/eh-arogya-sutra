@@ -26,6 +26,24 @@ function boundedScale(pageWidth: number, pageHeight: number, maxPixels: number):
   return Math.sqrt(maxPixels / area);
 }
 
+function canvasToPnm(
+  context: {
+    getImageData: (x: number, y: number, w: number, h: number) => { data: Uint8ClampedArray };
+  },
+  width: number,
+  height: number,
+): Uint8Array {
+  const imageData = context.getImageData(0, 0, width, height);
+  const header = Buffer.from(`P6\n${width} ${height}\n255\n`);
+  const rgb = Buffer.alloc(width * height * 3);
+  for (let i = 0, p = 0; i < imageData.data.length; i += 4, p += 3) {
+    rgb[p] = imageData.data[i] ?? 255;
+    rgb[p + 1] = imageData.data[i + 1] ?? 255;
+    rgb[p + 2] = imageData.data[i + 2] ?? 255;
+  }
+  return new Uint8Array(Buffer.concat([header, rgb]));
+}
+
 export async function renderPageToPng(
   page: PDFPageProxy,
   maxPixels: number,
@@ -42,11 +60,13 @@ export async function renderPageToPng(
     const height = Math.max(1, Math.floor(viewport.height));
     const surface = canvas.createCanvas(width, height);
     const context = surface.getContext('2d');
+    context.fillStyle = '#ffffff';
+    context.fillRect(0, 0, width, height);
     await page.render({
       canvasContext: context as never,
       viewport,
     }).promise;
-    const png = new Uint8Array(surface.toBuffer('image/png'));
+    const png = canvasToPnm(context, width, height);
     return { ok: true, png, width, height };
   } catch {
     return { ok: false, code: 'RENDER_FAILED' };

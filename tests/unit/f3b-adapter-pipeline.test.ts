@@ -27,6 +27,7 @@ import {
   multiPageProvenancePdf,
   passwordProtectedPdf,
   scannedEnglishReportPdf,
+  scannedEnglishReportPnm,
   scannedHindiReportPdf,
   scannedMixedReportPdf,
   scannedMultiPagePdf,
@@ -197,6 +198,26 @@ describe('F3B actual PDF.js / sidecar adapter', () => {
     expect(result.candidates.some((c) => c.method === 'TESSERACT_OCR')).toBe(true);
   }, 120_000);
 
+  it('OCRs a written-report page image raster with pinned Tesseract', async () => {
+    requirePinnedTesseract();
+    const extractor = new TwoStageOpenSourceExtractor();
+    const pnm = await scannedEnglishReportPnm();
+    const result = await extractor.extract(
+      baseRequest(pnm, {
+        contentIntent: 'WRITTEN_REPORT_PAGE_IMAGE',
+        declaredMime: 'image/x-portable-pixmap',
+        detectedMime: 'image/x-portable-pixmap',
+      }),
+    );
+    expect(result.ok, result.ok ? 'ok' : `${result.code}:${result.limitationCodes.join(',')}`).toBe(
+      true,
+    );
+    if (!result.ok) return;
+    expect(result.candidates.map((c) => c.rawText).join(' ')).toMatch(
+      /Hemoglobin|g\/dL|Laboratory/,
+    );
+  }, 120_000);
+
   it('OCRs a scanned Hindi written-report page with pinned Tesseract', async () => {
     requirePinnedTesseract();
     const extractor = new TwoStageOpenSourceExtractor();
@@ -277,6 +298,8 @@ describe('F3B sidecar security', () => {
       '/tmp/ehas2-tessdata',
       '-l',
       'eng+hin',
+      '--psm',
+      '6',
       'tsv',
     ]);
     expect(argv.join(' ')).not.toMatch(/;|&&|\||\$\(/);

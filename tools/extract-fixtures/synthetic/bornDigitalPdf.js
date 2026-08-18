@@ -4,7 +4,6 @@
  * plus a Type3 ToUnicode mapping so extraction is Unicode without a proprietary font.
  * Scanned pages are image-only (no text layer) for Tesseract fallback tests.
  */
-import { deflateSync } from 'node:zlib';
 
 function pdfActualTextHex(unicode) {
   let hex = 'FEFF';
@@ -100,10 +99,10 @@ function buildImagePagePdf(rgbPages) {
     const imageId = nextId++;
     const contentsId = nextId++;
     const pageId = nextId++;
-    const compressed = deflateSync(Buffer.from(page.rgb));
+    const imageBytes = Buffer.from(page.rgb);
     objects[imageId] =
-      `<</Type/XObject/Subtype/Image/Width ${page.width}/Height ${page.height}/ColorSpace/DeviceRGB/BitsPerComponent 8/Filter/FlateDecode/Length ${compressed.length}>>stream\n` +
-      compressed.toString('latin1') +
+      `<</Type/XObject/Subtype/Image/Width ${page.width}/Height ${page.height}/ColorSpace/DeviceRGB/BitsPerComponent 8/Length ${imageBytes.length}>>stream\n` +
+      imageBytes.toString('latin1') +
       '\nendstream';
     const content = `q ${page.width} 0 0 ${page.height} 0 0 cm /Im1 Do Q\n`;
     objects[contentsId] =
@@ -233,14 +232,23 @@ function tryRegisterDevanagari(GlobalFonts) {
 }
 
 export async function scannedEnglishReportPdf() {
-  const page = await renderCanvasRgb(800, 360, (ctx) => {
-    ctx.font = '28px sans-serif';
-    ctx.fillText('Laboratory Report', 40, 60);
-    ctx.fillText('Hemoglobin 13.2 g/dL', 40, 110);
-    ctx.fillText('Reference Range 12.0 - 16.0 g/dL', 40, 160);
-    ctx.fillText('WBC Count 7200 /uL', 40, 210);
+  const page = await renderCanvasRgb(1000, 420, (ctx) => {
+    ctx.font = '36px sans-serif';
+    ctx.fillText('Laboratory Report', 40, 70);
+    ctx.fillText('Hemoglobin 13.2 g/dL', 40, 130);
+    ctx.fillText('Reference Range 12.0 - 16.0 g/dL', 40, 190);
+    ctx.fillText('WBC Count 7200 /uL', 40, 250);
   });
   return buildImagePagePdf([page]);
+}
+
+export async function scannedEnglishReportPnm() {
+  const page = await renderCanvasRgb(1000, 220, (ctx) => {
+    ctx.font = '36px sans-serif';
+    ctx.fillText('Laboratory Report Hemoglobin 13.2 g/dL', 20, 80);
+  });
+  const header = Buffer.from(`P6\n${page.width} ${page.height}\n255\n`);
+  return new Uint8Array(Buffer.concat([header, Buffer.from(page.rgb)]));
 }
 
 export async function scannedHindiReportPdf() {

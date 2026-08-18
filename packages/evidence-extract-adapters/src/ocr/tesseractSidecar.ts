@@ -78,7 +78,17 @@ export function tesseractArgv(
   outputBase: string,
   tessdataDir: string,
 ): string[] {
-  return [inputPath, outputBase, '--tessdata-dir', tessdataDir, '-l', TESSERACT_LANGUAGES, 'tsv'];
+  return [
+    inputPath,
+    outputBase,
+    '--tessdata-dir',
+    tessdataDir,
+    '-l',
+    TESSERACT_LANGUAGES,
+    '--psm',
+    '6',
+    'tsv',
+  ];
 }
 
 function killProcessGroup(child: ReturnType<typeof spawn>): void {
@@ -133,7 +143,8 @@ export class TesseractSidecar {
     }
     const pageTimeoutMs = input.pageTimeoutMs ?? EXTRACT_PAGE_OCR_TIMEOUT_MS;
     const jobTimeoutMs = input.jobTimeoutMs ?? EXTRACT_JOB_TIMEOUT_MS;
-    const inputPath = path.join(input.workDir, `page-${Date.now()}.png`);
+    const rasterExt = input.png[0] === 0x50 && input.png[1] === 0x36 ? 'pnm' : 'png';
+    const inputPath = path.join(input.workDir, `page-${Date.now()}.${rasterExt}`);
     const outputBase = path.join(input.workDir, `ocr-${Date.now()}`);
     await writePrivateFile(inputPath, input.png);
     const argv = tesseractArgv(inputPath, outputBase, tessdataPrefix);

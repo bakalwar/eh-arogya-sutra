@@ -172,6 +172,23 @@ function verifyTesseractVersion(manifest) {
       `tesseract --list-langs must include eng and hin; got: ${langOut.trim()}`,
     );
   }
+  const smokePath = path.join(TOOLS_ROOT, 'smoke.pnm');
+  const smoke = Buffer.concat([Buffer.from('P6\n8 8\n255\n'), Buffer.alloc(8 * 8 * 3, 255)]);
+  fs.writeFileSync(smokePath, smoke, { mode: 0o600 });
+  const smokeOcr = spawnSync(
+    bin,
+    [smokePath, 'stdout', '--tessdata-dir', TESSDATA_DIR, '-l', 'eng', '--psm', '6'],
+    {
+      encoding: 'utf8',
+      env: { ...process.env, TESSDATA_PREFIX: path.dirname(TESSDATA_DIR) },
+    },
+  );
+  if (smokeOcr.status !== 0) {
+    fail(
+      'OCR_TOOLCHAIN_REPRODUCIBILITY_BLOCKED',
+      `tesseract smoke PNM OCR failed: ${(smokeOcr.stderr ?? smokeOcr.stdout ?? '').trim()}`,
+    );
+  }
   return combined.trim().split('\n')[0];
 }
 
