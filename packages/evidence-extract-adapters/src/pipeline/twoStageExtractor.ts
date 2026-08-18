@@ -28,6 +28,14 @@ import { segmentPageTextToCandidates, textItemsToBlocks } from '../segment/textT
 const METHOD = 'TWO_STAGE_PIPELINE' as const;
 const LANGPACK_MODEL = `${TESSERACT_VERSION}:eng+hin`;
 
+function pnmRasterSize(bytes: Uint8Array): { width: number; height: number } {
+  if (bytes[0] !== 0x50 || bytes[1] !== 0x36) return { width: 1, height: 1 };
+  const header = Buffer.from(bytes.subarray(0, 96)).toString('latin1');
+  const match = /^P6\s+(\d+)\s+(\d+)\s+255\s/.exec(header);
+  if (!match) return { width: 1, height: 1 };
+  return { width: Number(match[1]), height: Number(match[2]) };
+}
+
 function looksLikePdf(bytes: Uint8Array): boolean {
   return Buffer.from(bytes.subarray(0, 5)).toString('latin1') === '%PDF-';
 }
@@ -186,10 +194,11 @@ export class TwoStageOpenSourceExtractor implements ExtractionProvider {
         }
       } else if (intent === 'WRITTEN_REPORT_PAGE_IMAGE') {
         tempDir = await createJobTempDir();
+        const rasterSize = pnmRasterSize(input.bytes);
         const ocr = await this.tesseract.recognizePng({
           png: input.bytes,
-          pageWidth: 1,
-          pageHeight: 1,
+          pageWidth: rasterSize.width,
+          pageHeight: rasterSize.height,
           workDir: tempDir.path,
           abortSignal: input.abortSignal,
         });

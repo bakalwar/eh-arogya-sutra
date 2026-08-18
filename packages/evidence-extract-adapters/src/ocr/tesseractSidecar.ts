@@ -87,7 +87,8 @@ export function tesseractArgv(
     TESSERACT_LANGUAGES,
     '--psm',
     '6',
-    'tsv',
+    '-c',
+    'tessedit_create_tsv=1',
   ];
 }
 
@@ -152,6 +153,9 @@ export class TesseractSidecar {
     const spawnArgv = testNodeScript ? [testNodeScript, ...argv] : argv;
     const libDir = binary ? path.join(path.dirname(path.dirname(binary)), 'lib') : '';
     const ldPath = [libDir, process.env.LD_LIBRARY_PATH].filter(Boolean).join(path.delimiter);
+    const spawnEnv: NodeJS.ProcessEnv = { ...process.env };
+    delete spawnEnv.TESSDATA_PREFIX;
+    if (ldPath) spawnEnv.LD_LIBRARY_PATH = ldPath;
 
     return new Promise<TesseractOcrResult>((resolve) => {
       let settled = false;
@@ -160,11 +164,7 @@ export class TesseractSidecar {
       const child = spawn(spawnBin, spawnArgv, {
         shell: false,
         stdio: ['ignore', 'pipe', 'pipe'],
-        env: {
-          ...process.env,
-          TESSDATA_PREFIX: path.dirname(tessdataPrefix),
-          ...(ldPath ? { LD_LIBRARY_PATH: ldPath } : {}),
-        },
+        env: spawnEnv,
         detached: process.platform !== 'win32',
       });
 

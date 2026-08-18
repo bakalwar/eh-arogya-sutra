@@ -300,9 +300,11 @@ describe('F3B sidecar security', () => {
       'eng+hin',
       '--psm',
       '6',
-      'tsv',
+      '-c',
+      'tessedit_create_tsv=1',
     ]);
     expect(argv.join(' ')).not.toMatch(/;|&&|\||\$\(/);
+    expect(argv).not.toContain('tsv');
     const src = fs.readFileSync(
       path.join(process.cwd(), 'packages/evidence-extract-adapters/src/ocr/tesseractSidecar.ts'),
       'utf8',
