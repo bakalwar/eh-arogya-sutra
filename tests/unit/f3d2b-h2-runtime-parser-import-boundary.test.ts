@@ -20,8 +20,22 @@ const RUNTIME_TREES = [
   'packages/evidence-extract-adapters',
 ];
 
+function findingsAreBounded(findings: { path: string; rule: string }[]): void {
+  const blob = JSON.stringify(findings);
+  expect(blob).not.toMatch(/input,\s*pack/);
+  expect(blob).not.toMatch(/b3abc204|checksum|owner-approval|Bearer |password/i);
+  expect(blob).not.toMatch(/stack|EHAS2_TEST_PG_PASSWORD/);
+  for (const f of findings) {
+    expect(Object.keys(f).sort()).toEqual(['path', 'rule']);
+    expect(f.rule).toMatch(/^H2_[A-Z0-9_]+$/);
+    expect(f.path).not.toMatch(/\n/);
+  }
+}
+
 function rulesOf(source: string, virtualPath = 'probe.ts'): string[] {
-  return inspectSource(source, virtualPath).map((f: { rule: string }) => f.rule);
+  const findings = inspectSource(source, virtualPath);
+  findingsAreBounded(findings);
+  return findings.map((f: { rule: string }) => f.rule);
 }
 
 function walkSourceFiles(absDir: string, out: string[] = []): string[] {
@@ -214,6 +228,108 @@ describe('F3D-2B H2 runtime parser import boundary', () => {
       expect(dirRules.has(probe.rule), probe.name).toBe(true);
     }
     expect(scanParserRuntimeTrees(root)).toEqual([]);
+  });
+
+  it('detects root require, dynamic import, re-export, and alias parser access', () => {
+    const probeDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ehas2-f3d2b-h2-root-'));
+    tmpDirs.push(probeDir);
+    const probes: { name: string; snippet: string; rule: string }[] = [
+      {
+        name: 'root require namespace dot call',
+        snippet: `const extract = require('@ehas2/evidence-extract');\nextract.parseOwnerFrozenCues(input, pack);\n`,
+        rule: 'H2_NAMESPACE_PARSER_ACCESS',
+      },
+      {
+        name: 'root require namespace bracket call',
+        snippet: `const extract = require('@ehas2/evidence-extract');\nextract['parseOwnerFrozenCues'](input, pack);\n`,
+        rule: 'H2_NAMESPACE_PARSER_ACCESS',
+      },
+      {
+        name: 'root require direct destructuring',
+        snippet: `const { parseOwnerFrozenCues } =\n  require('@ehas2/evidence-extract');\nparseOwnerFrozenCues(input, pack);\n`,
+        rule: 'H2_ROOT_PARSE_IMPORT',
+      },
+      {
+        name: 'root require renamed destructuring',
+        snippet: `const { parseOwnerFrozenCues: run } =\n  require('@ehas2/evidence-extract');\nrun(input, pack);\n`,
+        rule: 'H2_ALIASED_PARSER_IMPORT',
+      },
+      {
+        name: 'direct alias from namespace property then call',
+        snippet: `const extract = require('@ehas2/evidence-extract');\nconst run = extract.parseOwnerFrozenCues;\nrun(input, pack);\n`,
+        rule: 'H2_PARSE_OWNER_FROZEN_CUES_CALL',
+      },
+      {
+        name: 'root dynamic-import namespace dot call',
+        snippet: `const extract =\n  await import('@ehas2/evidence-extract');\nextract.parseOwnerFrozenCues(input, pack);\n`,
+        rule: 'H2_NAMESPACE_PARSER_ACCESS',
+      },
+      {
+        name: 'root dynamic-import namespace bracket call',
+        snippet: `const extract =\n  await import('@ehas2/evidence-extract');\nextract['parseOwnerFrozenCues'](input, pack);\n`,
+        rule: 'H2_NAMESPACE_PARSER_ACCESS',
+      },
+      {
+        name: 'root dynamic-import direct destructuring',
+        snippet: `const { parseOwnerFrozenCues } =\n  await import('@ehas2/evidence-extract');\nparseOwnerFrozenCues(input, pack);\n`,
+        rule: 'H2_ROOT_PARSE_IMPORT',
+      },
+      {
+        name: 'root dynamic-import renamed destructuring',
+        snippet: `const { parseOwnerFrozenCues: run } =\n  await import('@ehas2/evidence-extract');\nrun(input, pack);\n`,
+        rule: 'H2_ALIASED_PARSER_IMPORT',
+      },
+      {
+        name: 'named re-export',
+        snippet: `export { parseOwnerFrozenCues }\n  from '@ehas2/evidence-extract';\n`,
+        rule: 'H2_ROOT_PARSE_IMPORT',
+      },
+      {
+        name: 'renamed re-export',
+        snippet: `export {\n  parseOwnerFrozenCues as runtimeParser\n} from '@ehas2/evidence-extract';\n`,
+        rule: 'H2_ALIASED_PARSER_IMPORT',
+      },
+      {
+        name: 'forbidden internal symbol through root namespace',
+        snippet: `const extract = require('@ehas2/evidence-extract');\nextract.scanFrozenAliases();\n`,
+        rule: 'H2_SCAN_FROZEN_ALIASES',
+      },
+      {
+        name: 'multiline spaced require namespace call',
+        snippet: `const extract =\n  require(\n    '@ehas2/evidence-extract'\n  );\nextract.parseOwnerFrozenCues(\n  input,\n  pack\n);\n`,
+        rule: 'H2_NAMESPACE_PARSER_ACCESS',
+      },
+    ];
+    try {
+      for (const probe of probes) {
+        const found = rulesOf(probe.snippet);
+        expect(found, probe.name).toContain(probe.rule);
+        fs.writeFileSync(
+          path.join(probeDir, `${probe.name.replace(/\s+/g, '-')}.ts`),
+          probe.snippet,
+        );
+      }
+      const dirFindings = scanDirectory(probeDir, probeDir);
+      findingsAreBounded(dirFindings);
+      const dirRules = new Set(dirFindings.map((f: { rule: string }) => f.rule));
+      for (const probe of probes) {
+        expect(dirRules.has(probe.rule), probe.name).toBe(true);
+      }
+    } finally {
+      fs.rmSync(probeDir, { recursive: true, force: true });
+    }
+  });
+
+  it('allows unrelated require/dynamic import and readiness root imports', () => {
+    expect(
+      inspectSource(`require('@ehas2/database');\nawait import('@ehas2/database');\n`),
+    ).toEqual([]);
+    expect(inspectSource(`const db = require('@ehas2/database');\nvoid db;\n`)).toEqual([]);
+    expect(
+      inspectSource(
+        `const extract = require('@ehas2/evidence-extract');\nvoid extract.CUE_PARSER_FOUNDATION;\n`,
+      ),
+    ).toEqual([]);
   });
 
   it('does not treat comments or readiness strings as parser imports', () => {

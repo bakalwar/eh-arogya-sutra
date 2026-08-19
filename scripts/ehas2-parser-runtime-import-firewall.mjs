@@ -130,8 +130,78 @@ function stringFromExpr(node) {
   return null;
 }
 
+function isEvidenceExtractRootSpec(spec) {
+  return spec === '@ehas2/evidence-extract';
+}
+
+function unwrapExpr(node) {
+  let cur = node;
+  while (cur) {
+    if (ts.isParenthesizedExpression(cur) || ts.isAwaitExpression(cur)) {
+      cur = cur.expression;
+      continue;
+    }
+    if (
+      ts.isAsExpression(cur) ||
+      ts.isTypeAssertionExpression(cur) ||
+      ts.isNonNullExpression(cur)
+    ) {
+      cur = cur.expression;
+      continue;
+    }
+    if (typeof ts.isSatisfiesExpression === 'function' && ts.isSatisfiesExpression(cur)) {
+      cur = cur.expression;
+      continue;
+    }
+    break;
+  }
+  return cur;
+}
+
+function loadCallMeta(node) {
+  const inner = unwrapExpr(node);
+  if (!inner || !ts.isCallExpression(inner)) return { spec: null, kind: null };
+  const expr = inner.expression;
+  const kind =
+    expr.kind === ts.SyntaxKind.ImportKeyword
+      ? 'H2_DYNAMIC_IMPORT'
+      : ts.isIdentifier(expr) && expr.text === 'require'
+        ? 'H2_REQUIRE'
+        : null;
+  if (!kind) return { spec: null, kind: null };
+  return { spec: stringFromExpr(inner.arguments[0]), kind };
+}
+
+function forbiddenMemberName(node) {
+  if (ts.isPropertyAccessExpression(node)) return node.name.text;
+  if (
+    ts.isElementAccessExpression(node) &&
+    node.argumentExpression &&
+    ts.isStringLiteral(node.argumentExpression)
+  ) {
+    return node.argumentExpression.text;
+  }
+  return null;
+}
+
+function exprIsRootNamespace(expr, namespaces) {
+  if (ts.isIdentifier(expr) && namespaces.has(expr.text)) return true;
+  const { spec } = loadCallMeta(expr);
+  return Boolean(spec && isEvidenceExtractRootSpec(spec));
+}
+
 function pushFinding(findings, filePath, rule) {
   findings.push({ path: filePath, rule });
+}
+
+function flagForbiddenBinding(imported, local, filePath, findings, aliases) {
+  const rule = FORBIDDEN_BINDING_RULE[imported];
+  if (!rule) return;
+  pushFinding(findings, filePath, rule);
+  if (local !== imported) {
+    pushFinding(findings, filePath, 'H2_ALIASED_PARSER_IMPORT');
+  }
+  aliases.set(local, imported);
 }
 
 function recordNamedImport(importClause, spec, filePath, findings, aliases, namespaces) {
@@ -143,38 +213,36 @@ function recordNamedImport(importClause, spec, filePath, findings, aliases, name
   if (importClause.namedBindings && ts.isNamedImports(importClause.namedBindings)) {
     for (const el of importClause.namedBindings.elements) {
       const imported = (el.propertyName ?? el.name).text;
-      const local = el.name.text;
-      const rule = FORBIDDEN_BINDING_RULE[imported];
-      if (rule) {
-        pushFinding(findings, filePath, rule);
-        if (local !== imported) {
-          pushFinding(findings, filePath, 'H2_ALIASED_PARSER_IMPORT');
-        }
-        aliases.set(local, imported);
-      }
+      flagForbiddenBinding(imported, el.name.text, filePath, findings, aliases);
     }
   }
 }
 
-function visitForbiddenAccess(node, filePath, findings, aliases, namespaces) {
-  if (ts.isPropertyAccessExpression(node)) {
-    const name = node.name.text;
-    if (ts.isIdentifier(node.expression) && namespaces.has(node.expression.text)) {
-      if (FORBIDDEN_BINDING_RULE[name] || FORBIDDEN_CALL_RULE[name]) {
-        pushFinding(findings, filePath, 'H2_NAMESPACE_PARSER_ACCESS');
-        if (FORBIDDEN_CALL_RULE[name]) pushFinding(findings, filePath, FORBIDDEN_CALL_RULE[name]);
-      }
-    }
-    return;
+function recordObjectBindings(pattern, filePath, findings, aliases) {
+  for (const el of pattern.elements) {
+    if (!ts.isBindingElement(el) || el.dotDotDotToken) continue;
+    if (!ts.isIdentifier(el.name)) continue;
+    let imported;
+    if (!el.propertyName) imported = el.name.text;
+    else if (ts.isIdentifier(el.propertyName)) imported = el.propertyName.text;
+    else if (ts.isStringLiteral(el.propertyName)) imported = el.propertyName.text;
+    else continue;
+    flagForbiddenBinding(imported, el.name.text, filePath, findings, aliases);
   }
-  if (ts.isElementAccessExpression(node) && ts.isStringLiteral(node.argumentExpression)) {
-    const name = node.argumentExpression.text;
-    if (ts.isIdentifier(node.expression) && namespaces.has(node.expression.text)) {
-      if (FORBIDDEN_BINDING_RULE[name] || FORBIDDEN_CALL_RULE[name]) {
-        pushFinding(findings, filePath, 'H2_NAMESPACE_PARSER_ACCESS');
-        if (FORBIDDEN_CALL_RULE[name]) pushFinding(findings, filePath, FORBIDDEN_CALL_RULE[name]);
-      }
-    }
+}
+
+function visitForbiddenAccess(node, filePath, findings, namespaces) {
+  const name = forbiddenMemberName(node);
+  if (!name) return;
+  const target =
+    ts.isPropertyAccessExpression(node) || ts.isElementAccessExpression(node)
+      ? node.expression
+      : null;
+  if (!target || !exprIsRootNamespace(target, namespaces)) return;
+  if (FORBIDDEN_BINDING_RULE[name] || FORBIDDEN_CALL_RULE[name]) {
+    pushFinding(findings, filePath, 'H2_NAMESPACE_PARSER_ACCESS');
+    if (FORBIDDEN_BINDING_RULE[name]) pushFinding(findings, filePath, FORBIDDEN_BINDING_RULE[name]);
+    if (FORBIDDEN_CALL_RULE[name]) pushFinding(findings, filePath, FORBIDDEN_CALL_RULE[name]);
   }
 }
 
@@ -196,8 +264,41 @@ function inspectNode(node, filePath, findings, aliases, namespaces) {
     node.moduleSpecifier &&
     ts.isStringLiteral(node.moduleSpecifier)
   ) {
-    for (const rule of classifyModuleSpecifier(node.moduleSpecifier.text)) {
+    const spec = node.moduleSpecifier.text;
+    for (const rule of classifyModuleSpecifier(spec)) {
       pushFinding(findings, filePath, rule);
+    }
+    if (
+      (isEvidenceExtractRootSpec(spec) || classifyModuleSpecifier(spec).length > 0) &&
+      node.exportClause &&
+      ts.isNamedExports(node.exportClause)
+    ) {
+      for (const el of node.exportClause.elements) {
+        const imported = (el.propertyName ?? el.name).text;
+        flagForbiddenBinding(imported, el.name.text, filePath, findings, aliases);
+      }
+    }
+  }
+
+  if (ts.isVariableDeclaration(node) && node.initializer) {
+    const { spec } = loadCallMeta(node.initializer);
+    if (spec && isEvidenceExtractRootSpec(spec)) {
+      if (ts.isIdentifier(node.name)) {
+        namespaces.set(node.name.text, spec);
+      } else if (ts.isObjectBindingPattern(node.name)) {
+        recordObjectBindings(node.name, filePath, findings, aliases);
+      }
+    }
+    const init = unwrapExpr(node.initializer);
+    const member = forbiddenMemberName(init);
+    if (
+      ts.isIdentifier(node.name) &&
+      member &&
+      (FORBIDDEN_BINDING_RULE[member] || FORBIDDEN_CALL_RULE[member]) &&
+      (ts.isPropertyAccessExpression(init) || ts.isElementAccessExpression(init)) &&
+      exprIsRootNamespace(init.expression, namespaces)
+    ) {
+      aliases.set(node.name.text, member);
     }
   }
 
@@ -259,12 +360,12 @@ function inspectNode(node, filePath, findings, aliases, namespaces) {
       }
     }
     if (ts.isPropertyAccessExpression(expr) || ts.isElementAccessExpression(expr)) {
-      visitForbiddenAccess(expr, filePath, findings, aliases, namespaces);
+      visitForbiddenAccess(expr, filePath, findings, namespaces);
     }
   }
 
   if (ts.isPropertyAccessExpression(node) || ts.isElementAccessExpression(node)) {
-    visitForbiddenAccess(node, filePath, findings, aliases, namespaces);
+    visitForbiddenAccess(node, filePath, findings, namespaces);
   }
 
   ts.forEachChild(node, (child) => inspectNode(child, filePath, findings, aliases, namespaces));
