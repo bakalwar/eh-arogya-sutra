@@ -14,9 +14,19 @@ import {
   type LoadedTerminologyPack,
   type TerminologyLookupResult,
   type TerminologyPack,
+  type TerminologyPackEntry,
   type TerminologyReadinessPosture,
 } from './types.js';
 import { parseAndValidatePack } from './validate.js';
+
+const OWNER_FROZEN_ENTRIES = new WeakMap<LoadedTerminologyPack, readonly TerminologyPackEntry[]>();
+
+/** Internal Freeze A+B+C entry view for the in-memory cue parser only. */
+export function ownerFrozenEntriesForCueParser(
+  loaded: LoadedTerminologyPack,
+): readonly TerminologyPackEntry[] | undefined {
+  return OWNER_FROZEN_ENTRIES.get(loaded);
+}
 
 export type LoadTerminologyOptions = {
   allowSyntheticTestPacks?: boolean;
@@ -141,6 +151,7 @@ function toLoaded(pack: TerminologyPack): LoadedTerminologyPack {
     syntheticTestOnly: pack.status === 'SYNTHETIC_TEST_ONLY',
     lookupAlias,
   };
+  OWNER_FROZEN_ENTRIES.set(loaded, pack.entries);
   return deepFreeze(loaded);
 }
 

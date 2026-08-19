@@ -51,3 +51,17 @@ export {
   resolveAllowedPackPath,
 } from './loader.js';
 export type { LoadTerminologyOptions } from './loader.js';
+export {
+  CUE_PARSER_FOUNDATION,
+  CUE_PARSER_CONNECTED,
+  CUE_PARSER_PRODUCTION_ENABLED,
+  CUE_PARSER_VERSION,
+  CUE_PARSER_AUTHORITY_SCOPE,
+  parseOwnerFrozenCues,
+} from './parser/index.js';
+export type {
+  EligibleCueParserInput,
+  TerminologyCueMatchCandidate,
+  CueParserResult,
+  CueParserReasonCode,
+} from './parser/types.js';
