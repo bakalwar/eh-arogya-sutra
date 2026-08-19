@@ -373,6 +373,10 @@ describe('F3D-1 source-linked fact-candidate persistence', () => {
     expect(ready.json.extractProduction).toBe(false);
     expect(ready.json.clinicalEngine).toBe(false);
     expect(ready.json.f3dFactCandidateFoundation).toBe(true);
+    expect(ready.json.f3d2TerminologyPackFoundation).toBe(true);
+    expect(ready.json.terminologyProductionEntryCount).toBe(0);
+    expect(ready.json.ownerTerminologyFreezePending).toBe(true);
+    expect(ready.json.normalizationParserAvailable).toBe(false);
   });
 
   it('materializes doctor-declared, intake, and reviewed categories without findings writes', async () => {
