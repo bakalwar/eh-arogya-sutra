@@ -15,6 +15,7 @@ import {
   parseOwnerFrozenCues,
   type EligibleCueParserInput,
 } from '../../packages/evidence-extract/src/index.ts';
+import { parseOwnerFrozenCuesInternalForTests } from '../../packages/evidence-extract/src/terminology/parser/internalForTests.ts';
 import { scanFrozenAliases } from '../../packages/evidence-extract/src/terminology/parser/match.ts';
 import { CueParserError } from '../../packages/evidence-extract/src/terminology/parser/types.ts';
 import type { TerminologyPackEntry } from '../../packages/evidence-extract/src/terminology/types.ts';
@@ -198,16 +199,141 @@ describe('F3D-2B in-memory cue parser foundation', () => {
     expect(parseOwnerFrozenCues(input('a'.repeat(2001)), pack).reason).toBe('INPUT_TOO_LARGE');
   });
 
-  it('returns PARSER_TIMEOUT with no partial matches', () => {
-    let n = 0;
-    const res = parseOwnerFrozenCues(input('denies fever'), pack, {
-      budgetMs: 0,
-      now: () => {
-        n += 1;
-        return n * 10;
-      },
+  it('public parser accepts only two arguments and a fixed 50 ms budget', () => {
+    expect(parseOwnerFrozenCues.length).toBe(2);
+    type PublicParams = Parameters<typeof parseOwnerFrozenCues>;
+    type ArityTwo = PublicParams['length'] extends 2
+      ? 2 extends PublicParams['length']
+        ? true
+        : never
+      : never;
+    const arityTwo: ArityTwo = true;
+    expect(arityTwo).toBe(true);
+    const publicSrc = fs.readFileSync(
+      path.join(root, 'packages/evidence-extract/src/terminology/parser/index.ts'),
+      'utf8',
+    );
+    expect(publicSrc).not.toMatch(/budgetMs/);
+    expect(publicSrc).not.toMatch(/\bnow\?:/);
+    expect(publicSrc).toMatch(/CUE_PARSER_BUDGET_MS/);
+    expect(publicSrc).toMatch(/trustedMonotonicNow/);
+    const pkg = fs.readFileSync(path.join(root, 'packages/evidence-extract/src/index.ts'), 'utf8');
+    const term = fs.readFileSync(
+      path.join(root, 'packages/evidence-extract/src/terminology/index.ts'),
+      'utf8',
+    );
+    expect(pkg).not.toMatch(/internalForTests|parseOwnerFrozenCuesInternalForTests|budgetMs/);
+    expect(term).not.toMatch(/internalForTests|parseOwnerFrozenCuesInternalForTests|budgetMs/);
+    expect(publicSrc).not.toMatch(/parseOwnerFrozenCuesInternalForTests|internalForTests/);
+    const distIndex = path.join(root, 'packages/evidence-extract/dist/index.d.ts');
+    const distParser = path.join(
+      root,
+      'packages/evidence-extract/dist/terminology/parser/index.d.ts',
+    );
+    const distTerm = path.join(root, 'packages/evidence-extract/dist/terminology/index.d.ts');
+    for (const rel of [distIndex, distParser, distTerm]) {
+      if (!fs.existsSync(rel)) continue;
+      const dts = fs.readFileSync(rel, 'utf8');
+      expect(dts, rel).not.toMatch(/budgetMs|now\?:/);
+      expect(dts, rel).not.toMatch(/parseOwnerFrozenCuesInternalForTests|internalForTests/);
+    }
+    if (fs.existsSync(distParser)) {
+      expect(fs.readFileSync(distParser, 'utf8')).toMatch(
+        /parseOwnerFrozenCues\(eligibleInput: EligibleCueParserInput, loadedPack: LoadedTerminologyPack\)/,
+      );
+    }
+  });
+
+  it('does not expose the internal seam from production sources', () => {
+    const skip = new Set([
+      path.join(root, 'packages/evidence-extract/src/terminology/parser/internalForTests.ts'),
+    ]);
+    const stack = [path.join(root, 'apps'), path.join(root, 'packages')];
+    const hits: string[] = [];
+    while (stack.length > 0) {
+      const dir = stack.pop();
+      if (!dir) break;
+      for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
+        const abs = path.join(dir, ent.name);
+        if (ent.isDirectory()) {
+          if (ent.name === 'dist' || ent.name === 'node_modules') continue;
+          stack.push(abs);
+          continue;
+        }
+        if (!ent.name.endsWith('.ts') && !ent.name.endsWith('.js')) continue;
+        if (skip.has(abs)) continue;
+        const src = fs.readFileSync(abs, 'utf8');
+        if (
+          src.includes('internalForTests') ||
+          src.includes('parseOwnerFrozenCuesInternalForTests')
+        ) {
+          hits.push(path.relative(root, abs).replaceAll('\\', '/'));
+        }
+      }
+    }
+    expect(hits).toEqual([]);
+  });
+
+  it('returns PARSER_TIMEOUT with no partial matches via the internal test seam', () => {
+    const res = parseOwnerFrozenCuesInternalForTests(input('denies fever'), pack, {
+      budgetMs: 50,
+      now: (() => {
+        let n = 0;
+        return () => {
+          n += 1;
+          return n === 1 ? 0 : 51;
+        };
+      })(),
     });
     expect(res).toEqual({ ok: false, reason: 'PARSER_TIMEOUT', matches: [] });
+    expect(JSON.stringify(res)).not.toMatch(LEAK);
+    expect(JSON.stringify(res)).not.toMatch(/denies|fever|bukhar/);
+  });
+
+  it('internal test seam rejects invalid budgets and clocks without leaking source', () => {
+    const cases: { name: string; budgetMs: number; now: () => number }[] = [
+      { name: 'Infinity', budgetMs: Number.POSITIVE_INFINITY, now: () => 0 },
+      { name: 'NaN', budgetMs: Number.NaN, now: () => 0 },
+      { name: 'negative', budgetMs: -1, now: () => 0 },
+      { name: 'zero', budgetMs: 0, now: () => 0 },
+      { name: 'greater than 50', budgetMs: 51, now: () => 0 },
+    ];
+    for (const row of cases) {
+      const res = parseOwnerFrozenCuesInternalForTests(input('denies fever'), pack, {
+        budgetMs: row.budgetMs,
+        now: row.now,
+      });
+      expect(res, row.name).toEqual({ ok: false, reason: 'UNTRUSTED_INPUT', matches: [] });
+      expect(JSON.stringify(res), row.name).not.toMatch(LEAK);
+      expect(JSON.stringify(res), row.name).not.toMatch(/denies fever/);
+    }
+    const throwing = parseOwnerFrozenCuesInternalForTests(input('denies fever'), pack, {
+      budgetMs: 50,
+      now: () => {
+        throw new Error(
+          'secret b3abc204139186c7c666a6bcd1c529117bda1bc2da9f2eac6a377d57914083a5 denies',
+        );
+      },
+    });
+    expect(throwing).toEqual({ ok: false, reason: 'PARSER_TIMEOUT', matches: [] });
+    expect(JSON.stringify(throwing)).not.toMatch(LEAK);
+    expect(JSON.stringify(throwing)).not.toMatch(/secret|denies/);
+    const nonFinite = parseOwnerFrozenCuesInternalForTests(input('denies fever'), pack, {
+      budgetMs: 50,
+      now: () => Number.NaN,
+    });
+    expect(nonFinite).toEqual({ ok: false, reason: 'PARSER_TIMEOUT', matches: [] });
+    const backwards = parseOwnerFrozenCuesInternalForTests(input('denies fever'), pack, {
+      budgetMs: 50,
+      now: (() => {
+        let step = 0;
+        return () => {
+          step += 1;
+          return step === 1 ? 10 : 1;
+        };
+      })(),
+    });
+    expect(backwards).toEqual({ ok: false, reason: 'PARSER_TIMEOUT', matches: [] });
   });
 
   it('refuses empty and mutated packs without partial output', () => {
@@ -331,6 +457,8 @@ describe('F3D-2B in-memory cue parser foundation', () => {
       expect(json.cueParserConnected).toBe(CUE_PARSER_CONNECTED);
       expect(json.cueParserProductionEnabled).toBe(CUE_PARSER_PRODUCTION_ENABLED);
       expect(json).not.toHaveProperty('cueParserVersion');
+      expect(json).not.toHaveProperty('budgetMs');
+      expect(JSON.stringify(json)).not.toMatch(/budgetMs|trustedMonotonicNow|performance\.now/);
       expect(JSON.stringify(json)).not.toMatch(LEAK);
       expect(JSON.stringify(json)).not.toMatch(/नहीं है|dheere dheere|mmHg|denies/);
     } finally {
@@ -348,5 +476,6 @@ describe('F3D-2B in-memory cue parser foundation', () => {
     expect(flags).not.toMatch(/EHAS2_F3D2B_CUE_PARSER\s*=\s*'1'/);
     const api = fs.readFileSync(path.join(root, 'apps/api/src/createApp.ts'), 'utf8');
     expect(api).not.toMatch(/parseOwnerFrozenCues/);
+    expect(api).not.toMatch(/internalForTests|parseOwnerFrozenCuesInternalForTests/);
   });
 });
