@@ -1,7 +1,8 @@
 export {
   F3D2_TERMINOLOGY_PACK_FOUNDATION,
-  TERMINOLOGY_PRODUCTION_ENTRY_COUNT,
-  OWNER_TERMINOLOGY_FREEZE_PENDING,
+  EMPTY_PACK_ENTRY_COUNT,
+  PRODUCTION_TERMINOLOGY_PACK_PIN,
+  INVALID_TERMINOLOGY_READINESS_POSTURE,
   NORMALIZATION_PARSER_AVAILABLE,
   TERMINOLOGY_SCHEMA_VERSION,
   TERMINOLOGY_CANONICALIZATION_VERSION,
@@ -24,6 +25,7 @@ export type {
   TerminologyPackEntry,
   LoadedTerminologyPack,
   TerminologyLookupResult,
+  TerminologyReadinessPosture,
   PackStatus,
   TerminologyEntryType,
 } from './types.js';
@@ -37,9 +39,14 @@ export {
 export { parseAndValidatePack, assertNoForbiddenKeys } from './validate.js';
 export {
   loadDefaultProductionPack,
+  loadPinnedProductionPack,
+  loadHistoricalEmptyPack,
   loadTerminologyPackFromFile,
   loadTerminologyPackFromObject,
+  getTerminologyReadinessPosture,
   defaultProductionPackPath,
+  pinnedProductionPackPath,
+  historicalEmptyPackPath,
   syntheticFixturePackPath,
   resolveAllowedPackPath,
 } from './loader.js';

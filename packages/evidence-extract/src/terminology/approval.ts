@@ -50,7 +50,6 @@ function meta(pack: TerminologyPack) {
   return {
     packId: pack.packId,
     packVersion: pack.packVersion,
-    contentChecksum: pack.contentChecksum,
     entryCount: pack.entries.length,
   };
 }

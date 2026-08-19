@@ -11,6 +11,7 @@ export const TERMINOLOGY_PACK_ERROR_CODES = [
   'TERMINOLOGY_PACK_DUPLICATE_ALIAS',
   'TERMINOLOGY_PACK_TOO_LARGE',
   'TERMINOLOGY_PACK_IO_FORBIDDEN',
+  'TERMINOLOGY_PACK_PIN_MISMATCH',
 ] as const;
 export type TerminologyPackErrorCode = (typeof TERMINOLOGY_PACK_ERROR_CODES)[number];
 
@@ -18,7 +19,6 @@ export class TerminologyPackError extends Error {
   readonly code: TerminologyPackErrorCode;
   readonly packId?: string;
   readonly packVersion?: string;
-  readonly contentChecksum?: string;
   readonly entryCount?: number;
 
   constructor(
@@ -26,7 +26,6 @@ export class TerminologyPackError extends Error {
     meta?: {
       packId?: string;
       packVersion?: string;
-      contentChecksum?: string;
       entryCount?: number;
     },
   ) {
@@ -35,7 +34,6 @@ export class TerminologyPackError extends Error {
     this.code = code;
     this.packId = meta?.packId;
     this.packVersion = meta?.packVersion;
-    this.contentChecksum = meta?.contentChecksum;
     this.entryCount = meta?.entryCount;
   }
 
@@ -44,7 +42,6 @@ export class TerminologyPackError extends Error {
       code: this.code,
       packId: this.packId,
       packVersion: this.packVersion,
-      contentChecksum: this.contentChecksum,
       entryCount: this.entryCount,
     };
   }

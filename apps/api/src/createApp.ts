@@ -31,8 +31,7 @@ import {
   F3D_FACT_CANDIDATE_FOUNDATION,
   F3D2_TERMINOLOGY_PACK_FOUNDATION,
   NORMALIZATION_PARSER_AVAILABLE,
-  OWNER_TERMINOLOGY_FREEZE_PENDING,
-  TERMINOLOGY_PRODUCTION_ENTRY_COUNT,
+  getTerminologyReadinessPosture,
 } from '@ehas2/evidence-extract';
 import { logInfo } from '@ehas2/observability';
 import { requirePermission, type AuthedRequest } from './middleware/authorization.js';
@@ -157,6 +156,7 @@ export function createApp(deps: CreateAppDeps = {}) {
 
   app.get('/ready', (req: RequestWithId, res) => {
     const database = databaseReadinessCode();
+    const terminology = getTerminologyReadinessPosture();
     const payload = {
       ready: false,
       clinicalEngine: false,
@@ -176,8 +176,10 @@ export function createApp(deps: CreateAppDeps = {}) {
       f3cCandidateReviewFoundation: F3C_CANDIDATE_REVIEW_FOUNDATION,
       f3dFactCandidateFoundation: F3D_FACT_CANDIDATE_FOUNDATION,
       f3d2TerminologyPackFoundation: F3D2_TERMINOLOGY_PACK_FOUNDATION,
-      terminologyProductionEntryCount: TERMINOLOGY_PRODUCTION_ENTRY_COUNT,
-      ownerTerminologyFreezePending: OWNER_TERMINOLOGY_FREEZE_PENDING,
+      terminologyProductionEntryCount: terminology.terminologyProductionEntryCount,
+      ownerTerminologyFreezePending: terminology.ownerTerminologyFreezePending,
+      terminologyPackFrozen: terminology.terminologyPackFrozen,
+      terminologyPackValid: terminology.terminologyPackValid,
       normalizationParserAvailable: NORMALIZATION_PARSER_AVAILABLE,
       ocr: EVIDENCE_OCR_CONNECTED,
       ocrAdapter: EVIDENCE_OCR_ADAPTER_CONNECTED,
@@ -208,6 +210,7 @@ export function createApp(deps: CreateAppDeps = {}) {
   });
 
   app.get(`${EHAS2_API_NAMESPACE}/system/authz-status`, (req: RequestWithId, res) => {
+    const terminology = getTerminologyReadinessPosture();
     res.json({
       success: true,
       data: {
@@ -226,8 +229,10 @@ export function createApp(deps: CreateAppDeps = {}) {
         f3cCandidateReviewFoundation: F3C_CANDIDATE_REVIEW_FOUNDATION,
         f3dFactCandidateFoundation: F3D_FACT_CANDIDATE_FOUNDATION,
         f3d2TerminologyPackFoundation: F3D2_TERMINOLOGY_PACK_FOUNDATION,
-        terminologyProductionEntryCount: TERMINOLOGY_PRODUCTION_ENTRY_COUNT,
-        ownerTerminologyFreezePending: OWNER_TERMINOLOGY_FREEZE_PENDING,
+        terminologyProductionEntryCount: terminology.terminologyProductionEntryCount,
+        ownerTerminologyFreezePending: terminology.ownerTerminologyFreezePending,
+        terminologyPackFrozen: terminology.terminologyPackFrozen,
+        terminologyPackValid: terminology.terminologyPackValid,
         normalizationParserAvailable: NORMALIZATION_PARSER_AVAILABLE,
         ocr: EVIDENCE_OCR_CONNECTED,
         ocrAdapter: EVIDENCE_OCR_ADAPTER_CONNECTED,

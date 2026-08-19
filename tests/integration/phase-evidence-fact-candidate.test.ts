@@ -374,8 +374,10 @@ describe('F3D-1 source-linked fact-candidate persistence', () => {
     expect(ready.json.clinicalEngine).toBe(false);
     expect(ready.json.f3dFactCandidateFoundation).toBe(true);
     expect(ready.json.f3d2TerminologyPackFoundation).toBe(true);
-    expect(ready.json.terminologyProductionEntryCount).toBe(0);
-    expect(ready.json.ownerTerminologyFreezePending).toBe(true);
+    expect(ready.json.terminologyProductionEntryCount).toBe(45);
+    expect(ready.json.ownerTerminologyFreezePending).toBe(false);
+    expect(ready.json.terminologyPackFrozen).toBe(true);
+    expect(ready.json.terminologyPackValid).toBe(true);
     expect(ready.json.normalizationParserAvailable).toBe(false);
   });
 

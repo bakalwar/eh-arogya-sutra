@@ -8,8 +8,8 @@ import {
   bindOwnerApprovalToken,
   bindSyntheticTestToken,
   computeContentChecksum,
-  defaultProductionPackPath,
-  loadDefaultProductionPack,
+  historicalEmptyPackPath,
+  loadHistoricalEmptyPack,
   loadTerminologyPackFromFile,
   loadTerminologyPackFromObject,
   parseAndValidatePack,
@@ -58,7 +58,7 @@ function syntheticEntry(over: Record<string, unknown> = {}): Record<string, unkn
 
 describe('F3D-2A terminology pack schema', () => {
   it('accepts the empty default production pack', () => {
-    const raw = readJson(defaultProductionPackPath());
+    const raw = readJson(historicalEmptyPackPath());
     const pack = parseAndValidatePack(raw, bytesOf(raw));
     expect(pack.status).toBe('EMPTY_AWAITING_OWNER_FREEZE');
     expect(pack.entries).toEqual([]);
@@ -80,7 +80,7 @@ describe('F3D-2A terminology pack schema', () => {
   });
 
   it('rejects unsupported versions, missing fields, unknown fields, and invalid enums', () => {
-    const raw = readJson(defaultProductionPackPath());
+    const raw = readJson(historicalEmptyPackPath());
     expectCode(() => {
       parseAndValidatePack({ ...raw, schemaVersion: 'v0' }, bytesOf(raw));
     }, 'TERMINOLOGY_PACK_UNSUPPORTED_VERSION');
@@ -157,8 +157,8 @@ describe('F3D-2A canonicalization and checksum', () => {
   });
 
   it('matches the committed checksum and rejects one-byte and version mutations', () => {
-    const raw = readJson(defaultProductionPackPath());
-    const loaded = loadDefaultProductionPack();
+    const raw = readJson(historicalEmptyPackPath());
+    const loaded = loadHistoricalEmptyPack();
     expect(loaded.contentChecksum).toBe(raw.contentChecksum);
     const mutated = {
       ...raw,
@@ -209,7 +209,7 @@ describe('F3D-2A owner approval binding', () => {
         { allowSyntheticTestPacks: true },
       );
     }, 'TERMINOLOGY_PACK_APPROVAL_INVALID');
-    const empty = readJson(defaultProductionPackPath());
+    const empty = readJson(historicalEmptyPackPath());
     expectCode(() => {
       parseAndValidatePack({ ...empty, ownerApprovalToken: 'OWNER_APPROVED' }, bytesOf(empty));
     }, 'TERMINOLOGY_PACK_APPROVAL_INVALID');
@@ -269,7 +269,7 @@ describe('F3D-2A owner approval binding', () => {
 
 describe('F3D-2A loader security and fail-closed lookup', () => {
   it('loads the empty pack as a non-executable immutable foundation', () => {
-    const loaded = loadDefaultProductionPack();
+    const loaded = loadHistoricalEmptyPack();
     expect(loaded.entryCount).toBe(0);
     expect(loaded.executable).toBe(false);
     expect(loaded.ownerTerminologyFreezePending).toBe(true);
@@ -285,19 +285,19 @@ describe('F3D-2A loader security and fail-closed lookup', () => {
   });
 
   it('rejects path traversal, external paths, and symlink escape where applicable', () => {
-    const traversal = path.join(path.dirname(defaultProductionPackPath()), '..', 'package.json');
+    const traversal = path.join(path.dirname(historicalEmptyPackPath()), '..', 'package.json');
     expectCode(() => loadTerminologyPackFromFile(traversal), 'TERMINOLOGY_PACK_PATH_FORBIDDEN');
     const external = path.join(os.tmpdir(), 'ehas2-term-external.json');
-    fs.writeFileSync(external, fs.readFileSync(defaultProductionPackPath()));
+    fs.writeFileSync(external, fs.readFileSync(historicalEmptyPackPath()));
     try {
       expectCode(() => loadTerminologyPackFromFile(external), 'TERMINOLOGY_PACK_PATH_FORBIDDEN');
     } finally {
       fs.unlinkSync(external);
     }
-    const packsDir = path.dirname(defaultProductionPackPath());
+    const packsDir = path.dirname(historicalEmptyPackPath());
     const link = path.join(packsDir, 'symlink-escape.v1.json');
     try {
-      fs.symlinkSync(defaultProductionPackPath(), link);
+      fs.symlinkSync(historicalEmptyPackPath(), link);
       expectCode(() => loadTerminologyPackFromFile(link), 'TERMINOLOGY_PACK_PATH_FORBIDDEN');
     } catch (err) {
       const code = (err as NodeJS.ErrnoException).code;
@@ -321,7 +321,7 @@ describe('F3D-2A loader security and fail-closed lookup', () => {
 
 describe('F3D-2A PHI and selector pack-content firewall', () => {
   it('rejects recursive selector and PHI keys and PHI-like content', () => {
-    const raw = readJson(defaultProductionPackPath());
+    const raw = readJson(historicalEmptyPackPath());
     expectCode(
       () => parseAndValidatePack({ ...raw, diseaseId: 'x' }, bytesOf(raw)),
       'TERMINOLOGY_PACK_SELECTOR_FORBIDDEN',
