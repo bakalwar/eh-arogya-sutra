@@ -93,6 +93,15 @@ describe('F3D-2B H2 runtime parser import boundary', () => {
         const rel = path.relative(root, abs).split(path.sep).join('/');
         if (/\.(?:test|spec)\./.test(rel) || /(?:^|\/)tests\//.test(rel)) continue;
         const src = fs.readFileSync(abs, 'utf8');
+        const allowlistedAdapter =
+          rel === 'packages/database/src/services/cueEligibleSourceService.ts';
+        if (allowlistedAdapter) {
+          expect(src).toMatch(/loadPinnedProductionPack/);
+          expect(src).toMatch(/parseOwnerFrozenCues/);
+          expect(src).toMatch(/from '@ehas2\/evidence-extract'/);
+          expect(src).not.toMatch(/terminology\/parser|internalForTests|scanFrozenAliases/);
+          continue;
+        }
         if (
           /terminology\/parser|internalForTests|executeOwnerFrozenCueParse|scanFrozenAliases|parseOwnerFrozenCues/.test(
             src,
@@ -366,5 +375,69 @@ describe('F3D-2B H2 runtime parser import boundary', () => {
       classifyModuleSpecifier('@ehas2/evidence-extract/dist/terminology/parser/execute.js'),
     ).toEqual(expect.arrayContaining(['H2_DIST_PARSER_PATH', 'H2_PACKAGE_PARSER_SUBPATH']));
     expect(classifyModuleSpecifier('@ehas2/evidence-extract')).toEqual([]);
+  });
+
+  it('H2 exact-file allowlist permits only the chief-complaint adapter public named import', () => {
+    const adapterRel = 'packages/database/src/services/cueEligibleSourceService.ts';
+    const allowed = `
+      import { loadPinnedProductionPack, parseOwnerFrozenCues } from '@ehas2/evidence-extract';
+      parseOwnerFrozenCues({} as never, loadPinnedProductionPack());
+    `;
+    expect(inspectSource(allowed, adapterRel)).toEqual([]);
+    expect(
+      inspectSource(allowed, 'packages/database/src/services/factCandidateService.ts'),
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ rule: 'H2_ROOT_PARSE_IMPORT' }),
+        expect.objectContaining({ rule: 'H2_PARSE_OWNER_FROZEN_CUES_CALL' }),
+      ]),
+    );
+    expect(inspectSource(allowed, 'apps/api/src/createApp.ts')).toEqual(
+      expect.arrayContaining([expect.objectContaining({ rule: 'H2_ROOT_PARSE_IMPORT' })]),
+    );
+    expect(inspectSource(allowed, 'apps/worker/src/index.ts')).toEqual(
+      expect.arrayContaining([expect.objectContaining({ rule: 'H2_ROOT_PARSE_IMPORT' })]),
+    );
+    expect(
+      inspectSource(allowed, 'packages/database/src/services/cueEligibleSourceService.copy.ts'),
+    ).toEqual(expect.arrayContaining([expect.objectContaining({ rule: 'H2_ROOT_PARSE_IMPORT' })]));
+
+    const deep = `import { parseOwnerFrozenCues } from '@ehas2/evidence-extract/src/terminology/parser/index.js';\nvoid parseOwnerFrozenCues;\n`;
+    expect(inspectSource(deep, adapterRel).map((f: { rule: string }) => f.rule)).toEqual(
+      expect.arrayContaining(['H2_PACKAGE_NON_ROOT', 'H2_PACKAGE_PARSER_SUBPATH']),
+    );
+
+    const req = `const { parseOwnerFrozenCues } = require('@ehas2/evidence-extract');\nparseOwnerFrozenCues({} as never, {} as never);\n`;
+    expect(inspectSource(req, adapterRel).map((f: { rule: string }) => f.rule)).toEqual(
+      expect.arrayContaining(['H2_ROOT_PARSE_IMPORT', 'H2_PARSE_OWNER_FROZEN_CUES_CALL']),
+    );
+
+    const dyn = `const { parseOwnerFrozenCues } = await import('@ehas2/evidence-extract');\nparseOwnerFrozenCues({} as never, {} as never);\n`;
+    expect(inspectSource(dyn, adapterRel).map((f: { rule: string }) => f.rule)).toEqual(
+      expect.arrayContaining(['H2_ROOT_PARSE_IMPORT']),
+    );
+
+    const aliased = `import { parseOwnerFrozenCues as run } from '@ehas2/evidence-extract';\nrun({} as never, {} as never);\n`;
+    expect(inspectSource(aliased, adapterRel).map((f: { rule: string }) => f.rule)).toEqual(
+      expect.arrayContaining(['H2_ALIASED_PARSER_IMPORT']),
+    );
+
+    const reexport = `export { parseOwnerFrozenCues } from '@ehas2/evidence-extract';\n`;
+    expect(inspectSource(reexport, adapterRel).map((f: { rule: string }) => f.rule)).toEqual(
+      expect.arrayContaining(['H2_ROOT_PARSE_IMPORT']),
+    );
+
+    const ns = `import * as extract from '@ehas2/evidence-extract';\nextract.parseOwnerFrozenCues({} as never, {} as never);\n`;
+    expect(inspectSource(ns, adapterRel).map((f: { rule: string }) => f.rule)).toEqual(
+      expect.arrayContaining(['H2_NAMESPACE_PARSER_ACCESS']),
+    );
+
+    const seam = `import { parseOwnerFrozenCuesInternalForTests } from '@ehas2/evidence-extract';\nparseOwnerFrozenCuesInternalForTests();\n`;
+    expect(inspectSource(seam, adapterRel).map((f: { rule: string }) => f.rule)).toEqual(
+      expect.arrayContaining(['H2_PARSE_INTERNAL_FOR_TESTS']),
+    );
+
+    const adapterSrc = fs.readFileSync(path.join(root, adapterRel), 'utf8');
+    expect(inspectSource(adapterSrc, adapterRel)).toEqual([]);
   });
 });

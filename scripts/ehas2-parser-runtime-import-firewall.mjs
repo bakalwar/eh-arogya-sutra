@@ -16,6 +16,14 @@ export const PARSER_RUNTIME_TREES = [
   'packages/evidence-extract-adapters',
 ];
 
+/** Exact file only. Not a directory or suffix allowlist. */
+export const H2_CUE_ADAPTER_ALLOWLIST_REL =
+  'packages/database/src/services/cueEligibleSourceService.ts';
+
+export function isExactCueAdapterPath(filePath) {
+  return String(filePath).replaceAll('\\', '/') === H2_CUE_ADAPTER_ALLOWLIST_REL;
+}
+
 const SKIP_DIR_NAMES = new Set([
   'node_modules',
   'dist',
@@ -194,7 +202,15 @@ function pushFinding(findings, filePath, rule) {
   findings.push({ path: filePath, rule });
 }
 
-function flagForbiddenBinding(imported, local, filePath, findings, aliases) {
+function flagForbiddenBinding(imported, local, filePath, findings, aliases, origin = 'any') {
+  if (
+    origin === 'esm-named-import' &&
+    isExactCueAdapterPath(filePath) &&
+    imported === 'parseOwnerFrozenCues' &&
+    local === 'parseOwnerFrozenCues'
+  ) {
+    return;
+  }
   const rule = FORBIDDEN_BINDING_RULE[imported];
   if (!rule) return;
   pushFinding(findings, filePath, rule);
@@ -213,7 +229,7 @@ function recordNamedImport(importClause, spec, filePath, findings, aliases, name
   if (importClause.namedBindings && ts.isNamedImports(importClause.namedBindings)) {
     for (const el of importClause.namedBindings.elements) {
       const imported = (el.propertyName ?? el.name).text;
-      flagForbiddenBinding(imported, el.name.text, filePath, findings, aliases);
+      flagForbiddenBinding(imported, el.name.text, filePath, findings, aliases, 'esm-named-import');
     }
   }
 }
@@ -352,7 +368,13 @@ function inspectNode(node, filePath, findings, aliases, namespaces) {
 
     if (ts.isIdentifier(expr)) {
       if (FORBIDDEN_CALL_RULE[expr.text]) {
-        pushFinding(findings, filePath, FORBIDDEN_CALL_RULE[expr.text]);
+        const allowAdapterEsmCall =
+          isExactCueAdapterPath(filePath) &&
+          expr.text === 'parseOwnerFrozenCues' &&
+          !aliases.has(expr.text);
+        if (!allowAdapterEsmCall) {
+          pushFinding(findings, filePath, FORBIDDEN_CALL_RULE[expr.text]);
+        }
       } else if (aliases.has(expr.text)) {
         pushFinding(findings, filePath, 'H2_ALIASED_PARSER_IMPORT');
         const orig = aliases.get(expr.text);

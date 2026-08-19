@@ -14,6 +14,7 @@ import {
   hashPayload,
 } from '../validation.js';
 import { consultationAllowsFieldUpdate } from '../consultationTransitions.js';
+import { lockChiefComplaintCueSource } from './cueSourceLock.js';
 
 const intakeRepo = new PgConsultationIntakeRepository();
 const consultations = new PgConsultationRepository();
@@ -213,6 +214,26 @@ export class ConsultationIntakeService {
         assertCaseOwner(tenant, current.doctorUserId);
         if (!consultationAllowsFieldUpdate(current.status)) {
           throw new ValidationError('Consultation fields are locked in current state');
+        }
+        const mutatesChiefComplaintText = Object.prototype.hasOwnProperty.call(
+          input,
+          'chiefComplaintText',
+        );
+        if (mutatesChiefComplaintText) {
+          await lockChiefComplaintCueSource(tx, tenant, consultationId);
+          const locked = await consultations.findById(tenant, tx, consultationId);
+          if (!locked) throw new ResourceNotFoundError();
+          if (
+            locked.organizationId !== tenant.organizationId ||
+            locked.clinicId !== tenant.clinicId ||
+            locked.id !== consultationId
+          ) {
+            throw new ValidationError('SOURCE_MUTATED');
+          }
+          assertCaseOwner(tenant, locked.doctorUserId);
+          if (!consultationAllowsFieldUpdate(locked.status)) {
+            throw new ValidationError('Consultation fields are locked in current state');
+          }
         }
         if (Object.keys(complaint).length > 0) {
           await intakeRepo.updateComplaintFields(tenant, tx, consultationId, complaint);

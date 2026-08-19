@@ -114,6 +114,21 @@ export {
   consultationIntakeService,
 } from './services/consultationIntakeService.js';
 export type { ConsultationIntakePatch } from './services/consultationIntakeService.js';
+export {
+  CueEligibleSourceService,
+  cueEligibleSourceService,
+  bindDoctorDeclaredChiefComplaintSourceIdentity,
+} from './services/cueEligibleSourceService.js';
+export type {
+  ParseDoctorDeclaredChiefComplaintCuesInput,
+  DoctorDeclaredChiefComplaintCueAdapterResult,
+} from './services/cueEligibleSourceService.js';
+export {
+  lockChiefComplaintCueSource,
+  chiefComplaintCueSourceLockKey,
+  CUE_SOURCE_LOCK_PREFIX,
+  CUE_SOURCE_LOCK_FIELD_CHIEF_COMPLAINT,
+} from './services/cueSourceLock.js';
 export { EvidenceService, evidenceService } from './services/evidenceService.js';
 export type { EvidenceServiceDeps } from './services/evidenceService.js';
 export { PgEvidenceRepository } from './repositories/evidence.js';
