@@ -3,11 +3,11 @@
   "packId": "ehas2-owner-cue-pack",
   "packVersion": "1.0.0",
   "status": "OWNER_FROZEN",
-  "ownerApprovalToken": "EHAS2_F3D2_PACK_APPROVAL:ehas2-owner-cue-pack:1.0.0:68f65b133dbf91077fe3a962d6f6755e2714e10c0ec317ec35605348b48d5b20",
+  "ownerApprovalToken": "EHAS2_F3D2_PACK_APPROVAL:ehas2-owner-cue-pack:1.0.0:b3abc204139186c7c666a6bcd1c529117bda1bc2da9f2eac6a377d57914083a5",
   "createdAt": "2026-08-19T00:00:00.000Z",
   "provenance": {
     "source": "OWNER_CLINIC_LANGUAGE_DECLARATION",
-    "note": "Freeze A+B+C cues/units only. Not owner-approved. No complaint aliases."
+    "note": "Freeze A+B+C cues/units only. No complaint aliases."
   },
   "licenseClassification": "OWNER_CLINIC_FROZEN",
   "entries": [
@@ -689,5 +689,5 @@
   ],
   "canonicalizationVersion": "ehas2-terminology-canonical-v1",
   "checksumAlgorithm": "sha256",
-  "contentChecksum": "68f65b133dbf91077fe3a962d6f6755e2714e10c0ec317ec35605348b48d5b20"
+  "contentChecksum": "b3abc204139186c7c666a6bcd1c529117bda1bc2da9f2eac6a377d57914083a5"
 }

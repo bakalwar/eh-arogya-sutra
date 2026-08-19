@@ -12,7 +12,7 @@ export const PRODUCTION_TERMINOLOGY_PACK_PIN = Object.freeze({
   packVersion: '1.0.0',
   relativePath: 'packs/ehas2-owner-cue-pack.v1.0.0.json',
   expectedEntryCount: 45,
-  expectedContentChecksum: '68f65b133dbf91077fe3a962d6f6755e2714e10c0ec317ec35605348b48d5b20',
+  expectedContentChecksum: 'b3abc204139186c7c666a6bcd1c529117bda1bc2da9f2eac6a377d57914083a5',
 } as const);
 
 export type TerminologyReadinessPosture = {

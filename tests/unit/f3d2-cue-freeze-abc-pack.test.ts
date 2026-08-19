@@ -24,14 +24,19 @@ import {
 } from '../../packages/evidence-extract/src/index.ts';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
-const APPROVED_CHECKSUM = '68f65b133dbf91077fe3a962d6f6755e2714e10c0ec317ec35605348b48d5b20';
+const APPROVED_CHECKSUM = 'b3abc204139186c7c666a6bcd1c529117bda1bc2da9f2eac6a377d57914083a5';
 const APPROVED_TOKEN =
+  'EHAS2_F3D2_PACK_APPROVAL:ehas2-owner-cue-pack:1.0.0:b3abc204139186c7c666a6bcd1c529117bda1bc2da9f2eac6a377d57914083a5';
+const SUPERSEDED_CHECKSUM = '68f65b133dbf91077fe3a962d6f6755e2714e10c0ec317ec35605348b48d5b20';
+const SUPERSEDED_TOKEN =
   'EHAS2_F3D2_PACK_APPROVAL:ehas2-owner-cue-pack:1.0.0:68f65b133dbf91077fe3a962d6f6755e2714e10c0ec317ec35605348b48d5b20';
 const EMPTY_CHECKSUM = '3bd6d37db4a65952b9386106138ebd67ac4d78d34da21446dbb910761541771e';
 const LEAK = new RegExp(
   [
     APPROVED_CHECKSUM,
     APPROVED_TOKEN,
+    SUPERSEDED_CHECKSUM,
+    SUPERSEDED_TOKEN,
     EMPTY_CHECKSUM,
     'ehas2-owner-cue-pack\\.v1\\.0\\.0\\.json',
     'empty-awaiting-owner-freeze\\.v1\\.json',
@@ -68,18 +73,38 @@ describe('F3D-2 Freeze A+B+C pinned cue pack', () => {
   it('matches the approved canonical checksum and byte length', () => {
     const raw = readJson(pinnedProductionPackPath());
     const canon = canonicalChecksumJson(raw);
-    expect(Buffer.byteLength(canon, 'utf8')).toBe(18928);
+    expect(Buffer.byteLength(canon, 'utf8')).toBe(18908);
     expect(computeContentChecksum(raw)).toBe(APPROVED_CHECKSUM);
+    expect(computeContentChecksum(raw)).not.toBe(SUPERSEDED_CHECKSUM);
     expect(raw.contentChecksum).toBe(APPROVED_CHECKSUM);
     expect(raw.ownerApprovalToken).toBe(APPROVED_TOKEN);
+    expect(raw.ownerApprovalToken).not.toBe(SUPERSEDED_TOKEN);
+    expect(JSON.stringify(raw.provenance)).not.toMatch(/Not owner-approved|unapproved|pending/i);
     const pack = parseAndValidatePack(raw, bytesOf(raw));
     expect(pack.schemaVersion).toBe('ehas2-terminology-pack-v1');
     expect(pack.canonicalizationVersion).toBe('ehas2-terminology-canonical-v1');
     expect(pack.checksumAlgorithm).toBe('sha256');
     expect(pack.createdAt).toBe('2026-08-19T00:00:00.000Z');
     expect(pack.provenance.source).toBe('OWNER_CLINIC_LANGUAGE_DECLARATION');
+    expect(pack.provenance.note).toBe('Freeze A+B+C cues/units only. No complaint aliases.');
     expect(pack.licenseClassification).toBe('OWNER_CLINIC_FROZEN');
     expect(pack.status).toBe('OWNER_FROZEN');
+    expectCode(
+      () =>
+        loadTerminologyPackFromObject(
+          { ...raw, contentChecksum: SUPERSEDED_CHECKSUM },
+          bytesOf({ ...raw, contentChecksum: SUPERSEDED_CHECKSUM }),
+        ),
+      'TERMINOLOGY_PACK_CHECKSUM_MISMATCH',
+    );
+    expectCode(
+      () =>
+        loadTerminologyPackFromObject(
+          { ...raw, ownerApprovalToken: SUPERSEDED_TOKEN },
+          bytesOf(raw),
+        ),
+      'TERMINOLOGY_PACK_APPROVAL_INVALID',
+    );
   });
 
   it('has exactly 45 unique ACTIVE entries with group counts 11/16/18', () => {

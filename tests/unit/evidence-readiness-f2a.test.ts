@@ -67,6 +67,9 @@ describe('F2A readiness truthfulness', () => {
     expect(JSON.stringify(res.json)).not.toMatch(
       /68f65b133dbf91077fe3a962d6f6755e2714e10c0ec317ec35605348b48d5b20/,
     );
+    expect(JSON.stringify(res.json)).not.toMatch(
+      /b3abc204139186c7c666a6bcd1c529117bda1bc2da9f2eac6a377d57914083a5/,
+    );
     expect(JSON.stringify(res.json)).not.toMatch(/EHAS2_F3D2_PACK_APPROVAL/);
     expect(JSON.stringify(res.json)).not.toMatch(/ehas2-owner-cue-pack\.v1\.0\.0\.json/);
     expect(JSON.stringify(res.json)).not.toMatch(/नहीं है|dheere dheere|mmHg/);
