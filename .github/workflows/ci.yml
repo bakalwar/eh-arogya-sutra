@@ -166,6 +166,8 @@ jobs:
             echo 'F3D-2A must not add migration 016' >&2
             exit 1
           fi
+      - name: F3D-2B H2 runtime parser import firewall
+        run: node scripts/ehas2-parser-runtime-import-firewall.mjs
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
