@@ -113,19 +113,76 @@ function hitsAt(
   return { length: bestLen, entries: found };
 }
 
+type BudgetClock = {
+  readonly kind: 'clock';
+  readonly t0: number;
+  readonly tick: () => number | ScanOutcome;
+};
+
+function isBudgetClock(clock: BudgetClock | ScanOutcome): clock is BudgetClock {
+  return 'kind' in clock && clock.kind === 'clock';
+}
+
+function readBudgetClock(budgetMs: number, now: () => number): BudgetClock | ScanOutcome {
+  if (
+    typeof budgetMs !== 'number' ||
+    !Number.isFinite(budgetMs) ||
+    budgetMs <= 0 ||
+    budgetMs > CUE_PARSER_BUDGET_MS
+  ) {
+    return { ok: false, reason: 'UNTRUSTED_INPUT' };
+  }
+  if (typeof now !== 'function') {
+    return { ok: false, reason: 'UNTRUSTED_INPUT' };
+  }
+  const tickRaw = (): number | ScanOutcome => {
+    let value: number;
+    try {
+      value = now();
+    } catch {
+      return { ok: false, reason: 'PARSER_TIMEOUT' };
+    }
+    if (typeof value !== 'number' || !Number.isFinite(value)) {
+      return { ok: false, reason: 'PARSER_TIMEOUT' };
+    }
+    return value;
+  };
+  const t0OrFail = tickRaw();
+  if (typeof t0OrFail !== 'number') return t0OrFail;
+  let last = t0OrFail;
+  return {
+    kind: 'clock',
+    t0: t0OrFail,
+    tick: () => {
+      const next = tickRaw();
+      if (typeof next !== 'number') return next;
+      if (next < last) {
+        return { ok: false, reason: 'PARSER_TIMEOUT' };
+      }
+      last = next;
+      return next;
+    },
+  };
+}
+
 export function scanFrozenAliases(
   text: string,
   entries: readonly TerminologyPackEntry[],
   budgetMs: number = CUE_PARSER_BUDGET_MS,
   now: () => number = () => performance.now(),
 ): ScanOutcome {
-  const t0 = now();
+  const clock = readBudgetClock(budgetMs, now);
+  if (!isBudgetClock(clock)) {
+    return clock;
+  }
   const sorted = sortActiveAliases(entries);
   const hits: RawCueHit[] = [];
   const seen = new Set<string>();
   let i = 0;
   while (i < text.length) {
-    if (now() - t0 > budgetMs) {
+    const t = clock.tick();
+    if (typeof t !== 'number') return t;
+    if (t - clock.t0 > budgetMs) {
       return { ok: false, reason: 'PARSER_TIMEOUT' };
     }
     const found = hitsAt(text, i, sorted);
