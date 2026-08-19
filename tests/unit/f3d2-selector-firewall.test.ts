@@ -31,7 +31,8 @@ const ANALYZE_COMPLETE_COUPLING =
 const OCR_COUPLING =
   /from ['"]tesseract(?:\.js)?['"]|require\s*\(\s*['"]tesseract|tesseract\.js|pdf-parse|@napi-rs\/canvas/;
 
-const NLP_COUPLING = /from ['"](?:compromise|natural|wink-nlp|openai|@xenova\/transformers)['"]/;
+const NLP_COUPLING =
+  /from ['"](?:compromise(?:\/[\w.-]+)?|natural|wink-nlp|openai|@xenova\/transformers|node-nlp)['"]|require\s*\(\s*['"](?:compromise|natural|wink-nlp|openai|@xenova\/transformers|node-nlp)/;
 
 const RX_SUMMARY_COUPLING =
   /from ['"].*\/(?:summary|prescription)['"]|ConfirmPrescription|prescriptionDraft/;
@@ -110,8 +111,20 @@ describe('F3D-2 terminology-pack selector firewall', () => {
         snippet: `\nimport summary from '../../apps/web/src/app/cases/summary';\nvoid summary;\n`,
       },
       {
-        name: 'confirm-rx',
-        snippet: `\nconst ConfirmPrescription = {};\nvoid ConfirmPrescription.prescriptionDraft;\n`,
+        name: 'node-nlp import',
+        snippet: `\nimport nlp from 'node-nlp';\nvoid nlp;\n`,
+      },
+      {
+        name: 'wink-nlp import',
+        snippet: `\nimport wink from 'wink-nlp';\nvoid wink;\n`,
+      },
+      {
+        name: 'openai import',
+        snippet: `\nimport OpenAI from 'openai';\nvoid OpenAI;\n`,
+      },
+      {
+        name: 'transformers import',
+        snippet: `\nimport { pipeline } from '@xenova/transformers';\nvoid pipeline;\n`,
       },
     ];
     try {

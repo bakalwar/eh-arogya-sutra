@@ -173,6 +173,11 @@ jobs:
             echo 'Forbidden OCR coupling in F3D-2 terminology paths' >&2
             exit 1
           fi
+          if grep -R -E "from ['\"](compromise|natural|wink-nlp|openai|@xenova/transformers|node-nlp)|require\(['\"](compromise|natural|wink-nlp|openai|@xenova/transformers|node-nlp)" \
+            packages/evidence-extract/src/terminology; then
+            echo 'Forbidden NLP/NER/parser library import in F3D-2 terminology paths' >&2
+            exit 1
+          fi
           if grep -R -E 'structured_report_findings|016_f3d' packages/evidence-extract/src/terminology packages/database/src/migrate.ts; then
             echo 'F3D-2A must not add migration 016 or findings writes' >&2
             exit 1

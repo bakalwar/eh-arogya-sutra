@@ -2,16 +2,19 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { isProductionRuntime } from '@ehas2/evidence-ingest';
-import { assertApprovalBinding } from './approval.js';
+import { assertApprovalBinding, bindOwnerApprovalToken } from './approval.js';
 import { computeContentChecksum } from './canonical.js';
 import { TerminologyPackError } from './errors.js';
 import {
   DEFAULT_PRODUCTION_PACK_REL,
   EMPTY_PACK_STATUS,
+  INVALID_TERMINOLOGY_READINESS_POSTURE,
   MAX_PACK_BYTES,
+  PRODUCTION_TERMINOLOGY_PACK_PIN,
   type LoadedTerminologyPack,
   type TerminologyLookupResult,
   type TerminologyPack,
+  type TerminologyReadinessPosture,
 } from './types.js';
 import { parseAndValidatePack } from './validate.js';
 
@@ -48,8 +51,19 @@ function isInsideDir(candidate: string, parent: string): boolean {
   return rel !== '' && !rel.startsWith('..') && !path.isAbsolute(rel);
 }
 
-export function defaultProductionPackPath(): string {
+/** Historical empty foundation asset. Not the production pin. */
+export function historicalEmptyPackPath(): string {
   return path.join(evidenceExtractRoot(), DEFAULT_PRODUCTION_PACK_REL);
+}
+
+/** Explicit production pin path only. No pack-directory scan. */
+export function pinnedProductionPackPath(): string {
+  return path.join(evidenceExtractRoot(), PRODUCTION_TERMINOLOGY_PACK_PIN.relativePath);
+}
+
+/** Production default is the explicitly pinned pack. */
+export function defaultProductionPackPath(): string {
+  return pinnedProductionPackPath();
 }
 
 export function syntheticFixturePackPath(): string {
@@ -130,6 +144,14 @@ function toLoaded(pack: TerminologyPack): LoadedTerminologyPack {
   return deepFreeze(loaded);
 }
 
+function boundedLoadMeta(pack: TerminologyPack) {
+  return {
+    packId: pack.packId,
+    packVersion: pack.packVersion,
+    entryCount: pack.entries.length,
+  };
+}
+
 export function loadTerminologyPackFromObject(
   raw: unknown,
   byteLength: number,
@@ -140,20 +162,13 @@ export function loadTerminologyPackFromObject(
   const pack = parseAndValidatePack(raw, byteLength);
   const expected = computeContentChecksum(pack as unknown as Record<string, unknown>);
   if (expected !== pack.contentChecksum) {
-    throw new TerminologyPackError('TERMINOLOGY_PACK_CHECKSUM_MISMATCH', {
-      packId: pack.packId,
-      packVersion: pack.packVersion,
-      contentChecksum: pack.contentChecksum,
-      entryCount: pack.entries.length,
-    });
+    throw new TerminologyPackError('TERMINOLOGY_PACK_CHECKSUM_MISMATCH', boundedLoadMeta(pack));
   }
   if (pack.status === 'SYNTHETIC_TEST_ONLY' && !allowSynthetic) {
-    throw new TerminologyPackError('TERMINOLOGY_PACK_PRODUCTION_SYNTHETIC_FORBIDDEN', {
-      packId: pack.packId,
-      packVersion: pack.packVersion,
-      contentChecksum: pack.contentChecksum,
-      entryCount: pack.entries.length,
-    });
+    throw new TerminologyPackError(
+      'TERMINOLOGY_PACK_PRODUCTION_SYNTHETIC_FORBIDDEN',
+      boundedLoadMeta(pack),
+    );
   }
   assertApprovalBinding(pack, allowSynthetic);
   return toLoaded(pack);
@@ -177,11 +192,96 @@ export function loadTerminologyPackFromFile(
   return loadTerminologyPackFromObject(parsed, buf.byteLength, options);
 }
 
-export function loadDefaultProductionPack(
+function assertPinnedIdentity(loaded: LoadedTerminologyPack): void {
+  const pin = PRODUCTION_TERMINOLOGY_PACK_PIN;
+  if (
+    loaded.packId !== pin.packId ||
+    loaded.packVersion !== pin.packVersion ||
+    loaded.entryCount !== pin.expectedEntryCount ||
+    loaded.contentChecksum !== pin.expectedContentChecksum ||
+    loaded.status !== 'OWNER_FROZEN' ||
+    loaded.syntheticTestOnly
+  ) {
+    throw new TerminologyPackError('TERMINOLOGY_PACK_PIN_MISMATCH', {
+      packId: loaded.packId,
+      packVersion: loaded.packVersion,
+      entryCount: loaded.entryCount,
+    });
+  }
+}
+
+export function loadHistoricalEmptyPack(
   options: LoadTerminologyOptions = {},
 ): LoadedTerminologyPack {
-  return loadTerminologyPackFromFile(defaultProductionPackPath(), {
+  return loadTerminologyPackFromFile(historicalEmptyPackPath(), {
     ...options,
     allowSyntheticTestPacks: false,
   });
+}
+
+export function loadPinnedProductionPack(
+  options: LoadTerminologyOptions = {},
+): LoadedTerminologyPack {
+  const requestedPath = pinnedProductionPackPath();
+  const safePath = resolveAllowedPackPath(requestedPath, {
+    ...options,
+    allowSyntheticTestPacks: false,
+  });
+  const buf = fs.readFileSync(safePath);
+  if (buf.byteLength > MAX_PACK_BYTES) {
+    throw new TerminologyPackError('TERMINOLOGY_PACK_TOO_LARGE');
+  }
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(buf.toString('utf8'));
+  } catch {
+    throw new TerminologyPackError('TERMINOLOGY_PACK_INVALID');
+  }
+  const loaded = loadTerminologyPackFromObject(parsed, buf.byteLength, {
+    ...options,
+    allowSyntheticTestPacks: false,
+  });
+  assertPinnedIdentity(loaded);
+  const pin = PRODUCTION_TERMINOLOGY_PACK_PIN;
+  const expectedToken = bindOwnerApprovalToken(
+    pin.packId,
+    pin.packVersion,
+    pin.expectedContentChecksum,
+  );
+  const token =
+    parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+      ? (parsed as { ownerApprovalToken?: unknown }).ownerApprovalToken
+      : undefined;
+  if (token !== expectedToken) {
+    throw new TerminologyPackError('TERMINOLOGY_PACK_PIN_MISMATCH', {
+      packId: loaded.packId,
+      packVersion: loaded.packVersion,
+      entryCount: loaded.entryCount,
+    });
+  }
+  return loaded;
+}
+
+export function loadDefaultProductionPack(
+  options: LoadTerminologyOptions = {},
+): LoadedTerminologyPack {
+  return loadPinnedProductionPack(options);
+}
+
+/**
+ * Bounded /ready posture. Never logs pack bytes, aliases, token, checksum, or filesystem path.
+ */
+export function getTerminologyReadinessPosture(): TerminologyReadinessPosture {
+  try {
+    const loaded = loadPinnedProductionPack();
+    return {
+      terminologyProductionEntryCount: loaded.entryCount,
+      ownerTerminologyFreezePending: false,
+      terminologyPackFrozen: loaded.status === 'OWNER_FROZEN',
+      terminologyPackValid: true,
+      normalizationParserAvailable: false,
+    };
+  } catch {
+    return INVALID_TERMINOLOGY_READINESS_POSTURE;
+  }
 }

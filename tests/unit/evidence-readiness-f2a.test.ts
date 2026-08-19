@@ -58,10 +58,18 @@ describe('F2A readiness truthfulness', () => {
     expect(res.json.f3cCandidateReviewFoundation).toBe(F3C_CANDIDATE_REVIEW_FOUNDATION);
     expect(res.json.f3dFactCandidateFoundation).toBe(F3D_FACT_CANDIDATE_FOUNDATION);
     expect(res.json.f3d2TerminologyPackFoundation).toBe(F3D2_TERMINOLOGY_PACK_FOUNDATION);
-    expect(res.json.terminologyProductionEntryCount).toBe(0);
-    expect(res.json.ownerTerminologyFreezePending).toBe(true);
+    expect(res.json.terminologyProductionEntryCount).toBe(45);
+    expect(res.json.ownerTerminologyFreezePending).toBe(false);
+    expect(res.json.terminologyPackFrozen).toBe(true);
+    expect(res.json.terminologyPackValid).toBe(true);
     expect(res.json.normalizationParserAvailable).toBe(false);
     expect(JSON.stringify(res.json)).not.toMatch(/zxq-alias|bukhar|Hemoglobin/);
+    expect(JSON.stringify(res.json)).not.toMatch(
+      /68f65b133dbf91077fe3a962d6f6755e2714e10c0ec317ec35605348b48d5b20/,
+    );
+    expect(JSON.stringify(res.json)).not.toMatch(/EHAS2_F3D2_PACK_APPROVAL/);
+    expect(JSON.stringify(res.json)).not.toMatch(/ehas2-owner-cue-pack\.v1\.0\.0\.json/);
+    expect(JSON.stringify(res.json)).not.toMatch(/नहीं है|dheere dheere|mmHg/);
     expect(res.json.ocrAdapter).toBe(false);
     expect(res.json.extractProduction).toBe(false);
     expect(res.json.ocr).toBe(false);

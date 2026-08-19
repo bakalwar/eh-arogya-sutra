@@ -4,9 +4,32 @@
  */
 
 export const F3D2_TERMINOLOGY_PACK_FOUNDATION = true as const;
-export const TERMINOLOGY_PRODUCTION_ENTRY_COUNT = 0 as const;
-export const OWNER_TERMINOLOGY_FREEZE_PENDING = true as const;
 export const NORMALIZATION_PARSER_AVAILABLE = false as const;
+export const EMPTY_PACK_ENTRY_COUNT = 0 as const;
+
+export const PRODUCTION_TERMINOLOGY_PACK_PIN = Object.freeze({
+  packId: 'ehas2-owner-cue-pack',
+  packVersion: '1.0.0',
+  relativePath: 'packs/ehas2-owner-cue-pack.v1.0.0.json',
+  expectedEntryCount: 45,
+  expectedContentChecksum: '68f65b133dbf91077fe3a962d6f6755e2714e10c0ec317ec35605348b48d5b20',
+} as const);
+
+export type TerminologyReadinessPosture = {
+  readonly terminologyProductionEntryCount: number;
+  readonly ownerTerminologyFreezePending: boolean;
+  readonly terminologyPackFrozen: boolean;
+  readonly terminologyPackValid: boolean;
+  readonly normalizationParserAvailable: false;
+};
+
+export const INVALID_TERMINOLOGY_READINESS_POSTURE: TerminologyReadinessPosture = Object.freeze({
+  terminologyProductionEntryCount: EMPTY_PACK_ENTRY_COUNT,
+  ownerTerminologyFreezePending: true,
+  terminologyPackFrozen: false,
+  terminologyPackValid: false,
+  normalizationParserAvailable: false,
+});
 
 export const TERMINOLOGY_SCHEMA_VERSION = 'ehas2-terminology-pack-v1' as const;
 export const TERMINOLOGY_CANONICALIZATION_VERSION = 'ehas2-terminology-canonical-v1' as const;
