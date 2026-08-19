@@ -173,7 +173,7 @@ jobs:
             echo 'Forbidden OCR coupling in F3D-2 terminology paths' >&2
             exit 1
           fi
-          if grep -R -E "from ['\"](compromise|natural|wink-nlp|openai|@xenova/transformers|node-nlp)|require\(['\"](compromise|natural|wink-nlp|openai|@xenova/transformers|node-nlp)" \
+          if grep -R -E "from ['\"](compromise|natural|wink-nlp|openai|@xenova/transformers|node-nlp)|require\(['\"](compromise|natural|wink-nlp|openai|@xenova/transformers|node-nlp)|import[[:space:]]*\([[:space:]]*['\"](openai|node-nlp|wink-nlp|compromise|natural|@xenova/transformers)" \
             packages/evidence-extract/src/terminology; then
             echo 'Forbidden NLP/NER/parser library import in F3D-2 terminology paths' >&2
             exit 1

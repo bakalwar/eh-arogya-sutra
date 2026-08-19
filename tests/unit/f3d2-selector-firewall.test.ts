@@ -16,10 +16,14 @@ function read(rel: string): string {
 }
 
 function listTs(relDir: string): string[] {
-  return fs
-    .readdirSync(path.join(root, relDir))
-    .filter((f) => f.endsWith('.ts'))
-    .map((f) => `${relDir}/${f}`);
+  const abs = path.join(root, relDir);
+  const out: string[] = [];
+  for (const ent of fs.readdirSync(abs, { withFileTypes: true })) {
+    const rel = `${relDir}/${ent.name}`;
+    if (ent.isDirectory()) out.push(...listTs(rel));
+    else if (ent.name.endsWith('.ts')) out.push(rel);
+  }
+  return out;
 }
 
 const COUPLING =
@@ -32,7 +36,7 @@ const OCR_COUPLING =
   /from ['"]tesseract(?:\.js)?['"]|require\s*\(\s*['"]tesseract|tesseract\.js|pdf-parse|@napi-rs\/canvas/;
 
 const NLP_COUPLING =
-  /from ['"](?:compromise(?:\/[\w.-]+)?|natural|wink-nlp|openai|@xenova\/transformers|node-nlp)['"]|require\s*\(\s*['"](?:compromise|natural|wink-nlp|openai|@xenova\/transformers|node-nlp)/;
+  /from ['"](?:compromise(?:\/[\w.-]+)?|natural|wink-nlp|openai|@xenova\/transformers|node-nlp)['"]|require\s*\(\s*['"](?:compromise|natural|wink-nlp|openai|@xenova\/transformers|node-nlp)|import\s*\(\s*['"](?:openai|node-nlp|wink-nlp|compromise|natural|@xenova\/transformers)/;
 
 const RX_SUMMARY_COUPLING =
   /from ['"].*\/(?:summary|prescription)['"]|ConfirmPrescription|prescriptionDraft/;
@@ -125,6 +129,14 @@ describe('F3D-2 terminology-pack selector firewall', () => {
       {
         name: 'transformers import',
         snippet: `\nimport { pipeline } from '@xenova/transformers';\nvoid pipeline;\n`,
+      },
+      {
+        name: 'dynamic openai import',
+        snippet: `\nvoid import('openai');\n`,
+      },
+      {
+        name: 'spaced require nlp',
+        snippet: `\nvoid require( 'node-nlp' );\n`,
       },
     ];
     try {

@@ -58,6 +58,9 @@ describe('F2A readiness truthfulness', () => {
     expect(res.json.f3cCandidateReviewFoundation).toBe(F3C_CANDIDATE_REVIEW_FOUNDATION);
     expect(res.json.f3dFactCandidateFoundation).toBe(F3D_FACT_CANDIDATE_FOUNDATION);
     expect(res.json.f3d2TerminologyPackFoundation).toBe(F3D2_TERMINOLOGY_PACK_FOUNDATION);
+    expect(res.json.cueParserFoundation).toBe(true);
+    expect(res.json.cueParserConnected).toBe(false);
+    expect(res.json.cueParserProductionEnabled).toBe(false);
     expect(res.json.terminologyProductionEntryCount).toBe(45);
     expect(res.json.ownerTerminologyFreezePending).toBe(false);
     expect(res.json.terminologyPackFrozen).toBe(true);

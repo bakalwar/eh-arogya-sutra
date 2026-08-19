@@ -1,5 +1,12 @@
 import { isProductionRuntime } from '@ehas2/evidence-ingest';
 import { RETENTION_JOB_TYPES, type EvidenceJobType } from './types.js';
+import {
+  CUE_PARSER_CONNECTED,
+  CUE_PARSER_FOUNDATION,
+  CUE_PARSER_PRODUCTION_ENABLED,
+} from './terminology/parser/types.js';
+
+export { CUE_PARSER_CONNECTED, CUE_PARSER_FOUNDATION, CUE_PARSER_PRODUCTION_ENABLED };
 
 /** Non-production F3C source-linked candidate review API. Production always false. */
 export function candidateReviewEnabled(

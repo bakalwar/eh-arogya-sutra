@@ -113,6 +113,10 @@ export {
   PRODUCTION_TERMINOLOGY_PACK_PIN,
   INVALID_TERMINOLOGY_READINESS_POSTURE,
   NORMALIZATION_PARSER_AVAILABLE,
+  CUE_PARSER_FOUNDATION,
+  CUE_PARSER_CONNECTED,
+  CUE_PARSER_PRODUCTION_ENABLED,
+  parseOwnerFrozenCues,
   TERMINOLOGY_SCHEMA_VERSION,
   EMPTY_PACK_STATUS,
   EMPTY_PACK_APPROVAL_POSTURE,
@@ -140,4 +144,7 @@ export type {
   LoadedTerminologyPack,
   TerminologyLookupResult,
   TerminologyReadinessPosture,
+  EligibleCueParserInput,
+  TerminologyCueMatchCandidate,
+  CueParserResult,
 } from './terminology/index.js';
