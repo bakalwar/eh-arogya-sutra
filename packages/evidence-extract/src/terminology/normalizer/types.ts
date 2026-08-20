@@ -112,7 +112,6 @@ export const NORMALIZER_FORBIDDEN_INPUT_KEYS = [
   'polarity',
   'negated',
   'structuredFindings',
-  'addStructuredFindings',
 ] as const;
 
 export type FactNormalizationDraft = {
