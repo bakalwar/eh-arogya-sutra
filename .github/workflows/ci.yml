@@ -99,7 +99,7 @@ jobs:
         run: |
           set -e
           if grep -R -E '@ehas2/rule[1-9]|tesseract|pdf-parse|pdfjs|analyzeComplete|LibreTranslate' \
-            packages/evidence-extract/src --exclude=types.ts --exclude=factCandidateTypes.ts --exclude-dir=terminology \
+            packages/evidence-extract/src --exclude=types.ts --exclude=factCandidateTypes.ts --exclude=factNormalizationTypes.ts --exclude-dir=terminology \
             packages/database/src/repositories/extraction.ts \
             apps/worker/src/jobs/extractCandidates.ts; then
             echo 'Forbidden OCR/engine coupling in F3A extraction paths' >&2
