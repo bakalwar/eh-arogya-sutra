@@ -247,7 +247,8 @@ describe('F1 evidence ingest foundation', () => {
     expect(getOrderedMigrationIds()).toContain('011_f2a_malware_clean_gate');
     expect(getOrderedMigrationIds()).toContain('014_f3c_candidate_review');
     expect(getOrderedMigrationIds()).toContain('015_f3d1_fact_candidates');
-    expect(getOrderedMigrationIds()).toHaveLength(15);
+    expect(getOrderedMigrationIds()).toContain('016_f3d2_fact_normalizations');
+    expect(getOrderedMigrationIds()).toHaveLength(16);
   });
 
   it('creates patient, consultation intake, evidence metadata, and stores temp bytes', async () => {

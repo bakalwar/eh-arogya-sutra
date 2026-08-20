@@ -37,23 +37,16 @@ describe('F3D-1 stale fact supersede on candidate lifecycle contract', () => {
     expect(factSuper).toBeGreaterThan(factLock);
   });
 
-  it('does not add migration 016, F3D-2D persistence, or readiness activation', () => {
-    const migrations = fs.readdirSync(path.join(root, 'packages/database/migrations'));
-    expect(migrations.some((name) => name.startsWith('016_'))).toBe(false);
+  it('keeps readiness inactive and does not wire a production normalization writer', () => {
     const ready = fs.readFileSync(path.join(root, 'apps/api/src/createApp.ts'), 'utf8');
     expect(ready).toMatch(/ready:\s*false/);
-    const trees = ['packages/database/src', 'apps/api/src', 'apps/worker/src'];
-    for (const tree of trees) {
-      const absTree = path.join(root, tree);
-      if (!fs.existsSync(absTree)) continue;
-      const files = fs.readdirSync(absTree, { recursive: true, encoding: 'utf8' }) as string[];
-      for (const file of files) {
-        if (!/\.[cm]?[jt]sx?$/.test(file)) continue;
-        const abs = path.join(absTree, file);
-        const src = fs.readFileSync(abs, 'utf8');
-        expect(src).not.toMatch(/F3D-2D|F3D2D/);
-        expect(src).not.toMatch(/FACT_NORMALIZED_SOURCE_LINKED\s*=/);
-      }
-    }
+    expect(ready).not.toMatch(/f3d2dFoundation:\s*true/);
+    const services = fs.readdirSync(path.join(root, 'packages/database/src/services'));
+    expect(services.some((n) => /factNormalization.*Service/i.test(n))).toBe(false);
+    const extraction = fs.readFileSync(
+      path.join(root, 'packages/database/src/repositories/extraction.ts'),
+      'utf8',
+    );
+    expect(extraction).not.toMatch(/supersedeActiveLinkedToFacts|factNormalization/);
   });
 });

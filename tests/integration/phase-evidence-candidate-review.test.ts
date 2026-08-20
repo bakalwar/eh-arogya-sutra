@@ -257,7 +257,8 @@ describe('F3C source-linked candidate review foundation', () => {
   it('registers migration 014 and keeps /ready 503', async () => {
     expect(getOrderedMigrationIds()).toContain('014_f3c_candidate_review');
     expect(getOrderedMigrationIds()).toContain('015_f3d1_fact_candidates');
-    expect(getOrderedMigrationIds()).toHaveLength(15);
+    expect(getOrderedMigrationIds()).toContain('016_f3d2_fact_normalizations');
+    expect(getOrderedMigrationIds()).toHaveLength(16);
     const app = createApp();
     const ready = await httpJson(app, 'GET', '/ready');
     expect(ready.status).toBe(503);

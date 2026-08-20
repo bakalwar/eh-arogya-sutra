@@ -149,6 +149,8 @@ export { PgExtractionRepository } from './repositories/extraction.js';
 export type { ExtractionRunRecord } from './repositories/extraction.js';
 export { PgCandidateReviewRepository } from './repositories/candidateReview.js';
 export { PgFactCandidateRepository } from './repositories/factCandidate.js';
+export { PgFactNormalizationRepository } from './repositories/factNormalization.js';
+export type { InsertFactNormalizationInput } from './repositories/factNormalization.js';
 export { FactCandidateService, factCandidateService } from './services/factCandidateService.js';
 export type {
   FactCandidateServiceDeps,
