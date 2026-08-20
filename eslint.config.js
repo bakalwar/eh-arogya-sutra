@@ -102,4 +102,33 @@ export default tseslint.config(
       ],
     },
   },
+  {
+    files: ['packages/database/src/services/cueEligibleSourceService.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [],
+          patterns: [
+            {
+              group: ['**/EH_Arogya_Sutra_App/**', '**/eh-api/**'],
+              message: 'EHAS2 must not import the old project at runtime.',
+            },
+            {
+              group: [
+                '**/terminology/parser/**',
+                '**/src/terminology/parser/**',
+                '**/dist/terminology/parser/**',
+                '@ehas2/evidence-extract/src/**',
+                '@ehas2/evidence-extract/dist/**',
+                '@ehas2/evidence-extract/*',
+              ],
+              message:
+                'H2: runtime trees may import @ehas2/evidence-extract root only; parser internals are forbidden.',
+            },
+          ],
+        },
+      ],
+    },
+  },
 );

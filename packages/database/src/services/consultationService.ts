@@ -24,6 +24,7 @@ import {
 } from '../consultationTransitions.js';
 import { assertValidReviewTransition, type ReviewState } from '../reviewTransitions.js';
 import { sanitizeDatabaseError } from '../errors.js';
+import { lockChiefComplaintCueSource } from './cueSourceLock.js';
 
 const consultations = new PgConsultationRepository();
 const patients = new PgPatientRepository();
@@ -32,6 +33,12 @@ const summaries = new PgSummarySnapshotRepository();
 const prescriptions = new PgPrescriptionRepository();
 const audit = new PgAuditEventRepository();
 const idempotency = new PgIdempotencyRepository();
+
+function assertCaseOwner(tenant: TenantContext, doctorUserId: string): void {
+  if (tenant.actorRole === 'ClinicAdmin') return;
+  if (tenant.actorRole === 'Doctor' && tenant.actorId === doctorUserId) return;
+  throw new ResourceNotFoundError();
+}
 
 const FINDING_STATUSES = new Set([
   'EXTRACTED_UNVERIFIED',
@@ -168,6 +175,10 @@ export class ConsultationService {
   ): Promise<ConsultationRecord> {
     assertTenantContext(tenant);
     assertUuid(consultationId, 'consultationId');
+    const mutatesChiefComplaintText = Object.prototype.hasOwnProperty.call(
+      input,
+      'chiefComplaintText',
+    );
     return withTenantTransaction(
       tenant,
       async (tx) => {
@@ -175,6 +186,23 @@ export class ConsultationService {
         if (!current) throw new ResourceNotFoundError();
         if (!consultationAllowsFieldUpdate(current.status)) {
           throw new ValidationError('Consultation fields are locked in current state');
+        }
+        if (mutatesChiefComplaintText) {
+          assertCaseOwner(tenant, current.doctorUserId);
+          await lockChiefComplaintCueSource(tx, tenant, consultationId);
+          const locked = await consultations.findById(tenant, tx, consultationId);
+          if (!locked) throw new ResourceNotFoundError();
+          if (
+            locked.organizationId !== tenant.organizationId ||
+            locked.clinicId !== tenant.clinicId ||
+            locked.id !== consultationId
+          ) {
+            throw new ValidationError('SOURCE_MUTATED');
+          }
+          assertCaseOwner(tenant, locked.doctorUserId);
+          if (!consultationAllowsFieldUpdate(locked.status)) {
+            throw new ValidationError('Consultation fields are locked in current state');
+          }
         }
         const updated = await consultations.updateAllowedFields(tenant, tx, consultationId, input);
         await audit.append(tx, {
