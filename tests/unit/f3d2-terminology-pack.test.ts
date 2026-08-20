@@ -375,16 +375,21 @@ describe('F3D-2A PHI and selector pack-content firewall', () => {
   });
 });
 
-describe('F3D-2A regression', () => {
-  it('does not add migration 016 and keeps 001–015', () => {
+describe('F3D-2A / F3D-2D1 migration registry', () => {
+  it('keeps 001–016 with fact-normalization foundation as tip', () => {
     const ids = getOrderedMigrationIds();
     expect(ids[0]).toBe('001_extensions_and_meta');
-    expect(ids.at(-1)).toBe('015_f3d1_fact_candidates');
-    expect(ids.some((id) => id.startsWith('016_'))).toBe(false);
+    expect(ids.at(-1)).toBe('016_f3d2_fact_normalizations');
+    expect(ids).toHaveLength(16);
     expect(
       fs.existsSync(
         path.join(root, 'packages/database/migrations/016_f3d2_fact_normalizations.sql'),
       ),
-    ).toBe(false);
+    ).toBe(true);
+    expect(
+      fs.existsSync(
+        path.join(root, 'packages/database/migrations/016_f3d2_fact_normalizations.down.sql'),
+      ),
+    ).toBe(true);
   });
 });

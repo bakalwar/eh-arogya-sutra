@@ -81,6 +81,27 @@ export type {
   FactCandidateDto,
 } from './factCandidateTypes.js';
 export {
+  F3D2D_FACT_NORMALIZATION_FOUNDATION,
+  F3D2D_NORMALIZER_CONNECTED,
+  F3D2D_PRODUCTION_ENABLED,
+  FACT_NORMALIZATION_AUTHORITY_SCOPE,
+  FACT_NORMALIZATION_KINDS,
+  FACT_NORMALIZATION_NEGATION_SCOPE,
+  FACT_NORMALIZATION_METHODS,
+  FACT_NORMALIZATION_DECISION_STATUSES,
+  FACT_NORMALIZATION_LIMITATION_CODES,
+  F3D2D_PARENT_FACT_SUPERSEDE_PROPAGATES_NORMALIZATIONS,
+  F3D2D_CUE_MATCH_ROWS_PERSISTED,
+  FACT_NORMALIZATION_SELECTOR_FORBIDDEN_FIELD_NAMES,
+} from './factNormalizationTypes.js';
+export type {
+  FactNormalizationKind,
+  FactNormalizationMethod,
+  FactNormalizationDecisionStatus,
+  FactNormalizationLimitationCode,
+  FactNormalizationDto,
+} from './factNormalizationTypes.js';
+export {
   sha256Hex,
   extractorFingerprint,
   contentAwareExtractorFingerprint,

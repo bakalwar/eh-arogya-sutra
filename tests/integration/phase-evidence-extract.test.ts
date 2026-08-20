@@ -189,7 +189,8 @@ describe('F3A source-linked extraction candidates', () => {
   it('registers migration 012 without expanding production extraction_status', () => {
     expect(getOrderedMigrationIds()).toContain('014_f3c_candidate_review');
     expect(getOrderedMigrationIds()).toContain('015_f3d1_fact_candidates');
-    expect(getOrderedMigrationIds()).toHaveLength(15);
+    expect(getOrderedMigrationIds()).toContain('016_f3d2_fact_normalizations');
+    expect(getOrderedMigrationIds()).toHaveLength(16);
     expect(extractJobsEnabled(env)).toBe(false);
   });
 

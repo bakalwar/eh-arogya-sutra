@@ -172,7 +172,7 @@ async function seedTwoClinics(): Promise<{
 describe('Phase 3A PostgreSQL persistence integration', () => {
   it('1-7 schema migration gates', async () => {
     requireDb();
-    expect(getOrderedMigrationIds()).toHaveLength(15);
+    expect(getOrderedMigrationIds()).toHaveLength(16);
     expect(listMigrationFiles('up').every((f) => f.checksum.length === 64)).toBe(true);
 
     const version = await withAdminClient(async (query) => {
@@ -214,12 +214,12 @@ describe('Phase 3A PostgreSQL persistence integration', () => {
 
     const second = await migrateUp(env);
     expect(second.applied).toEqual([]);
-    expect(second.skipped.length).toBe(15);
+    expect(second.skipped.length).toBe(16);
 
     const downId = await migrateDownLastForIsolatedTest(env);
-    expect(downId).toBe('015_f3d1_fact_candidates');
+    expect(downId).toBe('016_f3d2_fact_normalizations');
     const reup = await migrateUp(env);
-    expect(reup.applied).toEqual(['015_f3d1_fact_candidates']);
+    expect(reup.applied).toEqual(['016_f3d2_fact_normalizations']);
   }, 120_000);
 
   it('8-14 tenant isolation gates', async () => {

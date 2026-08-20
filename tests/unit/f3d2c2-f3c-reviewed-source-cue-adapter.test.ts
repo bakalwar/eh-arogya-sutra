@@ -194,7 +194,8 @@ describe('F3D-2C2 F3C reviewed-source cue adapter contract', () => {
         if (
           /pg_advisory_xact_lock\(\s*hashtext\s*\(/i.test(src) &&
           /candidate/i.test(src) &&
-          !rel.includes('factCandidate')
+          !rel.includes('factCandidate') &&
+          !rel.includes('factNormalization')
         ) {
           legacyHashtextLocks.push(rel);
         }

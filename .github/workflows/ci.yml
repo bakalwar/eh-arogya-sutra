@@ -49,7 +49,7 @@ jobs:
           PGPASSWORD: ehas2_isolated_test_only
         run: |
           set -e
-          for db in ehas2_phase3a_test ehas2_phase3b_test ehas2_phase3c_test ehas2_phase3d_test ehas2_phase4a_preflight ehas2_phase_evidence_test ehas2_phase_extract_test ehas2_phase_ocr_test ehas2_phase_f3c_test ehas2_phase_f3d_test; do
+          for db in ehas2_phase3a_test ehas2_phase3b_test ehas2_phase3c_test ehas2_phase3d_test ehas2_phase4a_preflight ehas2_phase_evidence_test ehas2_phase_extract_test ehas2_phase_ocr_test ehas2_phase_f3c_test ehas2_phase_f3d_test ehas2_phase_f3d2d1_test; do
             psql -h 127.0.0.1 -p 55432 -U ehas2 -d postgres -tc "SELECT 1 FROM pg_database WHERE datname = '${db}'" | grep -q 1 \
               || psql -h 127.0.0.1 -p 55432 -U ehas2 -d postgres -c "CREATE DATABASE ${db} OWNER ehas2;"
           done
@@ -99,7 +99,7 @@ jobs:
         run: |
           set -e
           if grep -R -E '@ehas2/rule[1-9]|tesseract|pdf-parse|pdfjs|analyzeComplete|LibreTranslate' \
-            packages/evidence-extract/src --exclude=types.ts --exclude=factCandidateTypes.ts --exclude-dir=terminology \
+            packages/evidence-extract/src --exclude=types.ts --exclude=factCandidateTypes.ts --exclude=factNormalizationTypes.ts --exclude-dir=terminology \
             packages/database/src/repositories/extraction.ts \
             apps/worker/src/jobs/extractCandidates.ts; then
             echo 'Forbidden OCR/engine coupling in F3A extraction paths' >&2
@@ -158,12 +158,60 @@ jobs:
         run: |
           set -e
           node scripts/f3d2-terminology-firewall.mjs
-          if grep -R -E 'structured_report_findings|016_f3d' packages/database/src/migrate.ts; then
-            echo 'F3D-2A must not add migration 016 or findings writes' >&2
+          if grep -R -E 'structured_report_findings' packages/database/src/migrate.ts; then
+            echo 'F3D-2D1 must not add findings writes to migrate.ts' >&2
             exit 1
           fi
-          if [ -e packages/database/migrations/016_f3d2_fact_normalizations.sql ] || [ -e packages/database/migrations/016_f3d2_fact_normalizations.down.sql ]; then
-            echo 'F3D-2A must not add migration 016' >&2
+          if [ ! -e packages/database/migrations/016_f3d2_fact_normalizations.sql ] || [ ! -e packages/database/migrations/016_f3d2_fact_normalizations.down.sql ]; then
+            echo 'F3D-2D1 requires migration 016_f3d2_fact_normalizations' >&2
+            exit 1
+          fi
+      - name: F3D-2D1 fact-normalization persistence firewall
+        run: |
+          set -e
+          F3D2D1_PATHS="packages/database/src/repositories/factNormalization.ts packages/evidence-extract/src/factNormalizationTypes.ts packages/database/migrations/016_f3d2_fact_normalizations.sql"
+          if grep -R -E '@ehas2/rule[1-9]|@ehas2/medicine-registry|@ehas2/engine-adapter|@ehas2/clinical-engine|evaluateRule[1-9]|tesseract\.js|pdf-parse|LibreTranslate|addStructuredFindings|parseOwnerFrozenCues|FactNormalizationService|ON DELETE CASCADE' \
+            $F3D2D1_PATHS; then
+            echo 'Forbidden coupling or CASCADE in F3D-2D1 persistence paths' >&2
+            exit 1
+          fi
+          if grep -E -i 'import[[:space:]].*analyzeComplete|analyzeComplete[[:space:]]*\(' $F3D2D1_PATHS; then
+            echo 'Forbidden AnalyzeComplete coupling in F3D-2D1 persistence paths' >&2
+            exit 1
+          fi
+          if grep -E 'UPDATE clinical_fact_candidates|INSERT INTO clinical_fact_candidates' \
+            packages/database/src/repositories/factNormalization.ts; then
+            echo 'F3D-2D1 must not mutate parent clinical_fact_candidates' >&2
+            exit 1
+          fi
+          if ! grep -E 'clinical_fact_normalizations_parent_link_fk|clinical_fact_candidates_016_norm_parent_uq' \
+            packages/database/migrations/016_f3d2_fact_normalizations.sql; then
+            echo 'F3D-2D1 requires composite parent binding FK/index' >&2
+            exit 1
+          fi
+          if awk '/export type InsertFactNormalizationInput/,/^};/' \
+            packages/database/src/repositories/factNormalization.ts \
+            | grep -E '\b(patientId|consultationId|sourceChannel|sourceField|sourceIdentityFingerprint)\b'; then
+            echo 'F3D-2D1 insert input must not accept caller-supplied parent linkage fields' >&2
+            exit 1
+          fi
+          if ! grep -F 'FACT_INELIGIBLE' packages/database/src/repositories/factNormalization.ts; then
+            echo 'F3D-2D1 insert must fail closed on ineligible parents' >&2
+            exit 1
+          fi
+          if grep -E 'object_key|storage_path|https?://|password|api_key' \
+            packages/database/migrations/016_f3d2_fact_normalizations.sql \
+            packages/database/src/repositories/factNormalization.ts; then
+            echo 'F3D-2D1 must not persist storage/credentials/PHI keys' >&2
+            exit 1
+          fi
+          if ! grep -F "supersedeRuns" packages/database/src/repositories/extraction.ts >/dev/null; then
+            echo 'expected supersedeRuns to remain in extraction repository' >&2
+            exit 1
+          fi
+          if grep -E 'clinical_fact_normalizations|supersedeActiveLinkedToFacts|factNormalization' \
+            packages/database/src/repositories/extraction.ts; then
+            echo 'F3D-2D1 must not wire normalization lifecycle into #125 supersedeRuns yet' >&2
             exit 1
           fi
       - name: F3D-2B H2 runtime parser import firewall

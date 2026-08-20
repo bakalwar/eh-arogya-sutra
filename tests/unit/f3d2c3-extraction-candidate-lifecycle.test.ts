@@ -89,9 +89,7 @@ describe('F3D-2C3 extraction-candidate lifecycle eligibility contract', () => {
     expect(extraction).toMatch(/lockF3cReviewedCueSource/);
   });
 
-  it('does not add migration 016 or change readiness activation', () => {
-    const migrations = fs.readdirSync(path.join(root, 'packages/database/migrations'));
-    expect(migrations.some((name) => name.startsWith('016_'))).toBe(false);
+  it('keeps readiness inactive after candidate-lifecycle work', () => {
     const ready = fs.readFileSync(path.join(root, 'apps/api/src/createApp.ts'), 'utf8');
     expect(ready).toMatch(/ready:\s*false/);
     expect(ready).toMatch(/cueParserConnected:\s*CUE_PARSER_CONNECTED/);

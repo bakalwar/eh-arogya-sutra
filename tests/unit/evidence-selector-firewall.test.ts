@@ -82,6 +82,7 @@ describe('evidence selector firewall', () => {
           f.endsWith('.ts') &&
           f !== 'types.ts' &&
           f !== 'factCandidateTypes.ts' &&
+          f !== 'factNormalizationTypes.ts' &&
           f !== 'terminology',
       )
       .map((f) => read(`packages/evidence-extract/src/${f}`))
