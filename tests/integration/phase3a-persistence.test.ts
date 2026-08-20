@@ -214,7 +214,7 @@ describe('Phase 3A PostgreSQL persistence integration', () => {
 
     const second = await migrateUp(env);
     expect(second.applied).toEqual([]);
-    expect(second.skipped.length).toBe(15);
+    expect(second.skipped.length).toBe(16);
 
     const downId = await migrateDownLastForIsolatedTest(env);
     expect(downId).toBe('016_f3d2_fact_normalizations');
