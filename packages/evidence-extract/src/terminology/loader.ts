@@ -28,6 +28,44 @@ export function ownerFrozenEntriesForCueParser(
   return OWNER_FROZEN_ENTRIES.get(loaded);
 }
 
+/**
+ * Package-internal exact UNIT_ALIAS lookup for F3D-2D2 structured vitals.
+ * Accepts only a verified LoadedTerminologyPack; does not export raw entries.
+ * Synthetic packs are rejected. Exact case-sensitive aliasText match only.
+ */
+export function ownerFrozenExactActiveUnitAlias(
+  loaded: LoadedTerminologyPack,
+  unitText: string,
+): { readonly entryId: string; readonly canonicalLabel: string } | undefined {
+  if (loaded.syntheticTestOnly || loaded.status !== 'OWNER_FROZEN') return undefined;
+  const entries = OWNER_FROZEN_ENTRIES.get(loaded);
+  if (!entries) return undefined;
+  for (const entry of entries) {
+    if (
+      entry.entryType === 'UNIT_ALIAS' &&
+      entry.decisionStatus === 'ACTIVE' &&
+      entry.aliasText === unitText
+    ) {
+      return { entryId: entry.id, canonicalLabel: entry.canonicalLabel };
+    }
+  }
+  return undefined;
+}
+
+/** Resolve a single ACTIVE pack entry by id for cue-result binding (package-internal). */
+export function ownerFrozenActiveEntryById(
+  loaded: LoadedTerminologyPack,
+  entryId: string,
+): TerminologyPackEntry | undefined {
+  if (loaded.syntheticTestOnly || loaded.status !== 'OWNER_FROZEN') return undefined;
+  const entries = OWNER_FROZEN_ENTRIES.get(loaded);
+  if (!entries) return undefined;
+  for (const entry of entries) {
+    if (entry.id === entryId && entry.decisionStatus === 'ACTIVE') return entry;
+  }
+  return undefined;
+}
+
 export type LoadTerminologyOptions = {
   allowSyntheticTestPacks?: boolean;
   env?: Record<string, string | undefined>;

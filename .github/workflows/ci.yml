@@ -166,6 +166,8 @@ jobs:
             echo 'F3D-2D1 requires migration 016_f3d2_fact_normalizations' >&2
             exit 1
           fi
+      - name: F3D-2D2 deterministic normalizer firewall
+        run: node scripts/f3d2d2-normalizer-firewall.mjs
       - name: F3D-2D1 fact-normalization persistence firewall
         run: |
           set -e

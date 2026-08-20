@@ -162,6 +162,16 @@ export {
   bindOwnerApprovalToken,
   bindSyntheticTestToken,
   parseAndValidatePack,
+  F3D2D2_DETERMINISTIC_NORMALIZER_FOUNDATION,
+  F3D2D2_PERSISTENCE_CONNECTED,
+  F3D2D2_PRODUCTION_WRITER_CONNECTED,
+  FACT_NORMALIZER_METHOD,
+  FACT_NORMALIZER_VERSION,
+  NORMALIZER_CUE_SOURCE_COMBINATIONS,
+  NORMALIZER_STRUCTURED_VITAL_FIELDS,
+  NORMALIZER_FAILURE_CODES,
+  normalizeSourceLinkedFact,
+  computeNormalizerFingerprint,
 } from './terminology/index.js';
 export type {
   TerminologyPack,
@@ -171,4 +181,8 @@ export type {
   EligibleCueParserInput,
   TerminologyCueMatchCandidate,
   CueParserResult,
+  FactNormalizationDraft,
+  NormalizeSourceLinkedFactInput,
+  NormalizeSourceLinkedFactResult,
+  NormalizerFailureCode,
 } from './terminology/index.js';
