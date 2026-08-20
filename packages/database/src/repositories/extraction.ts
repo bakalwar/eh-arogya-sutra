@@ -13,6 +13,9 @@ import {
   type SourceLocator,
 } from '@ehas2/evidence-extract';
 import { lockF3cReviewedCueSource } from '../services/cueSourceLock.js';
+import { PgFactCandidateRepository } from './factCandidate.js';
+
+const factCandidates = new PgFactCandidateRepository();
 
 export type ExtractionRunRecord = {
   id: string;
@@ -246,6 +249,7 @@ export class PgExtractionRepository {
     for (const candidateId of candidateIds) {
       await lockF3cReviewedCueSource(tx, tenant, candidateId);
     }
+    await factCandidates.lockIdentitiesForActiveLinkedCandidates(tenant, tx, candidateIds);
 
     await tx.query(
       `UPDATE clinical_evidence_extraction_candidates SET status = 'SUPERSEDED'
@@ -254,6 +258,7 @@ export class PgExtractionRepository {
          AND status = 'EXTRACTED_UNVERIFIED'`,
       [tenant.organizationId, tenant.clinicId, ids],
     );
+    await factCandidates.supersedeActiveLinkedToCandidates(tenant, tx, candidateIds);
     return ids.length;
   }
 

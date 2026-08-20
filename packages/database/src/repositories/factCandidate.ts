@@ -118,6 +118,59 @@ export class PgFactCandidateRepository {
     await tx.query(`SELECT pg_advisory_xact_lock(hashtext($1))`, [fingerprint]);
   }
 
+  /**
+   * Sorted fact-identity locks for ACTIVE facts linked to extraction candidates.
+   * Call only after candidate lifecycle locks are already held (candidate → fact order).
+   */
+  async lockIdentitiesForActiveLinkedCandidates(
+    tenant: TenantContext,
+    tx: TransactionContext,
+    candidateIds: readonly string[],
+  ): Promise<void> {
+    if (candidateIds.length === 0) return;
+    const r = await tx.query(
+      `SELECT DISTINCT source_identity_fingerprint AS fp
+       FROM clinical_fact_candidates
+       WHERE organization_id = $1 AND clinic_id = $2
+         AND extraction_candidate_id = ANY($3::uuid[])
+         AND decision_status = 'ACTIVE'`,
+      [tenant.organizationId, tenant.clinicId, [...candidateIds]],
+    );
+    const fingerprints = (r.rows as { fp: string }[])
+      .map((row) => String(row.fp))
+      .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+    for (const fingerprint of fingerprints) {
+      await this.lockIdentity(tx, fingerprint);
+    }
+  }
+
+  /**
+   * Append-only ACTIVE → SUPERSEDED for facts linked to superseded extraction candidates.
+   * Conditional on decision_status = ACTIVE only; never deletes or mutates content.
+   */
+  async supersedeActiveLinkedToCandidates(
+    tenant: TenantContext,
+    tx: TransactionContext,
+    candidateIds: readonly string[],
+  ): Promise<number> {
+    if (candidateIds.length === 0) return 0;
+    try {
+      const r = await tx.query(
+        `UPDATE clinical_fact_candidates
+         SET decision_status = 'SUPERSEDED'
+         WHERE organization_id = $1 AND clinic_id = $2
+           AND extraction_candidate_id = ANY($3::uuid[])
+           AND decision_status = 'ACTIVE'
+         RETURNING id`,
+        [tenant.organizationId, tenant.clinicId, [...candidateIds]],
+      );
+      return r.rowCount ?? 0;
+    } catch (err) {
+      if (isImmutableFact(err)) throw new FactConflictError();
+      throw err;
+    }
+  }
+
   async findById(
     tenant: TenantContext,
     tx: TransactionContext,
