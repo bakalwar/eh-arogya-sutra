@@ -6,7 +6,9 @@ import { assertUuid } from '../validation.js';
 export const CUE_SOURCE_LOCK_PREFIX = 'ehas2:cue-source:v1' as const;
 export const CUE_SOURCE_LOCK_FIELD_CHIEF_COMPLAINT = 'CHIEF_COMPLAINT' as const;
 
-/** Dedicated F3C reviewed-source cue lock. Not chief-complaint or F3D fact identity. */
+/** Dedicated F3C reviewed-source + extraction-candidate lifecycle lock.
+ * Shared by review writers, cue/fact reviewed-source readers, and supersedeRuns.
+ * Not chief-complaint or F3D fact identity. */
 export const F3C_REVIEWED_CUE_SOURCE_LOCK_PREFIX = 'ehas2:f3c-reviewed-cue-source:v1' as const;
 
 export function chiefComplaintCueSourceLockKey(input: {
@@ -60,8 +62,9 @@ export async function lockChiefComplaintCueSource(
 }
 
 /**
- * Shared F3C reviewed-source lock for review writers and cue readers.
- * Same key and SQL for both paths.
+ * Shared F3C reviewed-source and candidate-lifecycle lock for:
+ * review writers, C2 cue reader, F3D-1 reviewed materialize, and supersedeRuns.
+ * Same key and SQL for all paths. Acquire in sorted candidate-id order when locking many.
  */
 export async function lockF3cReviewedCueSource(
   tx: TransactionContext,

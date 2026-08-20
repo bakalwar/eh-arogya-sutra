@@ -12,6 +12,7 @@ import {
   type ScriptHint,
   type SourceLocator,
 } from '@ehas2/evidence-extract';
+import { lockF3cReviewedCueSource } from '../services/cueSourceLock.js';
 
 export type ExtractionRunRecord = {
   id: string;
@@ -231,10 +232,26 @@ export class PgExtractionRepository {
     );
     const ids = (runs.rows as { id: string }[]).map((row) => row.id);
     if (ids.length === 0) return 0;
+
+    const candidates = await tx.query(
+      `SELECT id FROM clinical_evidence_extraction_candidates
+       WHERE organization_id = $1 AND clinic_id = $2
+         AND extraction_run_id = ANY($3::uuid[])
+         AND status = 'EXTRACTED_UNVERIFIED'`,
+      [tenant.organizationId, tenant.clinicId, ids],
+    );
+    const candidateIds = (candidates.rows as { id: string }[])
+      .map((row) => String(row.id))
+      .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+    for (const candidateId of candidateIds) {
+      await lockF3cReviewedCueSource(tx, tenant, candidateId);
+    }
+
     await tx.query(
       `UPDATE clinical_evidence_extraction_candidates SET status = 'SUPERSEDED'
        WHERE organization_id = $1 AND clinic_id = $2
-         AND extraction_run_id = ANY($3::uuid[])`,
+         AND extraction_run_id = ANY($3::uuid[])
+         AND status = 'EXTRACTED_UNVERIFIED'`,
       [tenant.organizationId, tenant.clinicId, ids],
     );
     return ids.length;

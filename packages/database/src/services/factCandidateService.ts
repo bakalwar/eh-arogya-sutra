@@ -16,6 +16,7 @@ import {
 } from '../repositories/factCandidate.js';
 import { FactConflictError, ResourceNotFoundError, ValidationError } from '../domainErrors.js';
 import { assertUuid, hashPayload } from '../validation.js';
+import { lockF3cReviewedCueSource } from './cueSourceLock.js';
 import {
   FACT_CANDIDATE_CATEGORIES,
   FACT_CANDIDATE_CHANNELS,
@@ -592,6 +593,7 @@ export class FactCandidateService {
   ): Promise<InsertFactCandidateInput> {
     const evidenceId = String(input.evidenceId);
     const candidateId = String(input.candidateId);
+    await lockF3cReviewedCueSource(tx, tenant, candidateId);
     const item = await evidenceRepo.findById(tenant, tx, evidenceId);
     if (!item || item.consultationId !== consultationId || item.patientId !== patientId) {
       throw new ResourceNotFoundError();
@@ -605,6 +607,9 @@ export class FactCandidateService {
       !candidate.extractionRunId
     ) {
       throw new ResourceNotFoundError();
+    }
+    if (candidate.status !== 'EXTRACTED_UNVERIFIED') {
+      throw new ValidationError('SOURCE_INELIGIBLE');
     }
     const review = await reviewRepo.findActiveForCandidate(tenant, tx, candidateId);
     if (!review) {
