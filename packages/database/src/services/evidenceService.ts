@@ -1239,7 +1239,7 @@ export class EvidenceService {
     return withTenantTransaction(
       tenant,
       async (tx) => {
-        await candidateReviewRepo.lockCandidate(tx, candidateId);
+        await candidateReviewRepo.lockCandidate(tx, tenant, candidateId);
         const existingKey = await idempotency.resolveOrThrow(
           tenant,
           tx,

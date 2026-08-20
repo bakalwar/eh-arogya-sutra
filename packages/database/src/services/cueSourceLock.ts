@@ -6,6 +6,9 @@ import { assertUuid } from '../validation.js';
 export const CUE_SOURCE_LOCK_PREFIX = 'ehas2:cue-source:v1' as const;
 export const CUE_SOURCE_LOCK_FIELD_CHIEF_COMPLAINT = 'CHIEF_COMPLAINT' as const;
 
+/** Dedicated F3C reviewed-source cue lock. Not chief-complaint or F3D fact identity. */
+export const F3C_REVIEWED_CUE_SOURCE_LOCK_PREFIX = 'ehas2:f3c-reviewed-cue-source:v1' as const;
+
 export function chiefComplaintCueSourceLockKey(input: {
   organizationId: string;
   clinicId: string;
@@ -15,6 +18,28 @@ export function chiefComplaintCueSourceLockKey(input: {
   assertUuid(input.clinicId, 'clinicId');
   assertUuid(input.consultationId, 'consultationId');
   return `${CUE_SOURCE_LOCK_PREFIX}:${input.organizationId}:${input.clinicId}:${input.consultationId}:${CUE_SOURCE_LOCK_FIELD_CHIEF_COMPLAINT}`;
+}
+
+export function f3cReviewedCueSourceLockKey(input: {
+  organizationId: string;
+  clinicId: string;
+  candidateId: string;
+}): string {
+  assertUuid(input.organizationId, 'organizationId');
+  assertUuid(input.clinicId, 'clinicId');
+  assertUuid(input.candidateId, 'candidateId');
+  return `${F3C_REVIEWED_CUE_SOURCE_LOCK_PREFIX}:${input.organizationId}:${input.clinicId}:${input.candidateId}`;
+}
+
+async function acquireHashTextExtendedXactLock(tx: TransactionContext, key: string): Promise<void> {
+  try {
+    await tx.query(`SELECT pg_advisory_xact_lock(hashtextextended($1::text, $2::bigint))`, [
+      key,
+      0,
+    ]);
+  } catch {
+    throw new ValidationError('LOCK_UNAVAILABLE');
+  }
 }
 
 /**
@@ -31,12 +56,22 @@ export async function lockChiefComplaintCueSource(
     clinicId: tenant.clinicId,
     consultationId,
   });
-  try {
-    await tx.query(`SELECT pg_advisory_xact_lock(hashtextextended($1::text, $2::bigint))`, [
-      key,
-      0,
-    ]);
-  } catch {
-    throw new ValidationError('LOCK_UNAVAILABLE');
-  }
+  await acquireHashTextExtendedXactLock(tx, key);
+}
+
+/**
+ * Shared F3C reviewed-source lock for review writers and cue readers.
+ * Same key and SQL for both paths.
+ */
+export async function lockF3cReviewedCueSource(
+  tx: TransactionContext,
+  tenant: TenantContext,
+  candidateId: string,
+): Promise<void> {
+  const key = f3cReviewedCueSourceLockKey({
+    organizationId: tenant.organizationId,
+    clinicId: tenant.clinicId,
+    candidateId,
+  });
+  await acquireHashTextExtendedXactLock(tx, key);
 }

@@ -103,7 +103,10 @@ export default tseslint.config(
     },
   },
   {
-    files: ['packages/database/src/services/cueEligibleSourceService.ts'],
+    files: [
+      'packages/database/src/services/cueEligibleSourceService.ts',
+      'packages/database/src/services/f3cReviewedCueSourceService.ts',
+    ],
     rules: {
       'no-restricted-imports': [
         'error',

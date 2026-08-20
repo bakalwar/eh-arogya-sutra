@@ -6,10 +6,12 @@
  * bytes and not grapheme clusters. Matching never uses a separately
  * whitespace-collapsed string.
  *
- * F3C/report connection is not authorized. F3C ACTIVE eligibility must be
- * re-read after the F3D identity advisory lock before any later F3C-backed
- * parser connection (recorded F3D-1 limitation). This module does not
- * connect OCR, HTTP, workers, facts, or Rules 1–9.
+ * F3C clinical connection is not authorized. Cue matching may accept the
+ * closed REVIEWED_REPORT_TEXT + REVIEWED_EXTRACTION_CANDIDATE pair from a
+ * server-side ACTIVE ACCEPT/CORRECT adapter only. F3C ACTIVE eligibility for
+ * fact materialization must still be re-read after the F3D identity lock
+ * (recorded F3D-1 limitation). This module does not connect OCR, HTTP,
+ * workers, facts, or Rules 1–9.
  */
 
 import type { SourceLocator } from '../../types.js';
@@ -32,7 +34,7 @@ export const MAX_CUE_MATCHES = 32;
 export const MAX_MATCH_SPAN_CHARS = 80;
 export const CUE_PARSER_BUDGET_MS = 50;
 
-export const CUE_PARSER_SOURCE_CHANNELS = ['DOCTOR_DECLARED'] as const;
+export const CUE_PARSER_SOURCE_CHANNELS = ['DOCTOR_DECLARED', 'REVIEWED_REPORT_TEXT'] as const;
 export type CueParserSourceChannel = (typeof CUE_PARSER_SOURCE_CHANNELS)[number];
 
 export const CUE_PARSER_SOURCE_FIELDS = [
@@ -40,8 +42,18 @@ export const CUE_PARSER_SOURCE_FIELDS = [
   'SYMPTOM_ROW',
   'DOCTOR_OBSERVATIONS',
   'HISTORY_NOTES',
+  'REVIEWED_EXTRACTION_CANDIDATE',
 ] as const;
 export type CueParserSourceField = (typeof CUE_PARSER_SOURCE_FIELDS)[number];
+
+/** Closed channel/field pairs only. No open combinations. */
+export const CUE_PARSER_SOURCE_COMBINATIONS = [
+  { sourceChannel: 'DOCTOR_DECLARED', sourceField: 'CHIEF_COMPLAINT' },
+  { sourceChannel: 'DOCTOR_DECLARED', sourceField: 'SYMPTOM_ROW' },
+  { sourceChannel: 'DOCTOR_DECLARED', sourceField: 'DOCTOR_OBSERVATIONS' },
+  { sourceChannel: 'DOCTOR_DECLARED', sourceField: 'HISTORY_NOTES' },
+  { sourceChannel: 'REVIEWED_REPORT_TEXT', sourceField: 'REVIEWED_EXTRACTION_CANDIDATE' },
+] as const;
 
 export const CUE_ATTACHMENT_STATUSES = [
   'CUE_ONLY',

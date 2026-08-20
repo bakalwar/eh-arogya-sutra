@@ -124,10 +124,22 @@ export type {
   DoctorDeclaredChiefComplaintCueAdapterResult,
 } from './services/cueEligibleSourceService.js';
 export {
+  F3cReviewedCueSourceService,
+  f3cReviewedCueSourceService,
+  bindF3cReviewedSourceIdentity,
+} from './services/f3cReviewedCueSourceService.js';
+export type {
+  ParseF3cReviewedSourceCuesInput,
+  F3cReviewedSourceCueAdapterResult,
+} from './services/f3cReviewedCueSourceService.js';
+export {
   lockChiefComplaintCueSource,
   chiefComplaintCueSourceLockKey,
+  lockF3cReviewedCueSource,
+  f3cReviewedCueSourceLockKey,
   CUE_SOURCE_LOCK_PREFIX,
   CUE_SOURCE_LOCK_FIELD_CHIEF_COMPLAINT,
+  F3C_REVIEWED_CUE_SOURCE_LOCK_PREFIX,
 } from './services/cueSourceLock.js';
 export { EvidenceService, evidenceService } from './services/evidenceService.js';
 export type { EvidenceServiceDeps } from './services/evidenceService.js';

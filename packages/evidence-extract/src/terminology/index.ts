@@ -59,9 +59,16 @@ export {
   CUE_PARSER_AUTHORITY_SCOPE,
   parseOwnerFrozenCues,
 } from './parser/index.js';
+export {
+  CUE_PARSER_SOURCE_CHANNELS,
+  CUE_PARSER_SOURCE_FIELDS,
+  CUE_PARSER_SOURCE_COMBINATIONS,
+} from './parser/types.js';
 export type {
   EligibleCueParserInput,
   TerminologyCueMatchCandidate,
   CueParserResult,
   CueParserReasonCode,
+  CueParserSourceChannel,
+  CueParserSourceField,
 } from './parser/types.js';

@@ -94,7 +94,8 @@ describe('F3D-2B H2 runtime parser import boundary', () => {
         if (/\.(?:test|spec)\./.test(rel) || /(?:^|\/)tests\//.test(rel)) continue;
         const src = fs.readFileSync(abs, 'utf8');
         const allowlistedAdapter =
-          rel === 'packages/database/src/services/cueEligibleSourceService.ts';
+          rel === 'packages/database/src/services/cueEligibleSourceService.ts' ||
+          rel === 'packages/database/src/services/f3cReviewedCueSourceService.ts';
         if (allowlistedAdapter) {
           expect(src).toMatch(/loadPinnedProductionPack/);
           expect(src).toMatch(/parseOwnerFrozenCues/);
@@ -377,13 +378,18 @@ describe('F3D-2B H2 runtime parser import boundary', () => {
     expect(classifyModuleSpecifier('@ehas2/evidence-extract')).toEqual([]);
   });
 
-  it('H2 exact-file allowlist permits only the chief-complaint adapter public named import', () => {
-    const adapterRel = 'packages/database/src/services/cueEligibleSourceService.ts';
+  it('H2 exact-file allowlist permits only the C1 and C2 adapter public named imports', () => {
+    const adapterRels = [
+      'packages/database/src/services/cueEligibleSourceService.ts',
+      'packages/database/src/services/f3cReviewedCueSourceService.ts',
+    ];
     const allowed = `
       import { loadPinnedProductionPack, parseOwnerFrozenCues } from '@ehas2/evidence-extract';
       parseOwnerFrozenCues({} as never, loadPinnedProductionPack());
     `;
-    expect(inspectSource(allowed, adapterRel)).toEqual([]);
+    for (const adapterRel of adapterRels) {
+      expect(inspectSource(allowed, adapterRel)).toEqual([]);
+    }
     expect(
       inspectSource(allowed, 'packages/database/src/services/factCandidateService.ts'),
     ).toEqual(
@@ -401,7 +407,11 @@ describe('F3D-2B H2 runtime parser import boundary', () => {
     expect(
       inspectSource(allowed, 'packages/database/src/services/cueEligibleSourceService.copy.ts'),
     ).toEqual(expect.arrayContaining([expect.objectContaining({ rule: 'H2_ROOT_PARSE_IMPORT' })]));
+    expect(
+      inspectSource(allowed, 'packages/database/src/services/f3cReviewedCueSourceService.copy.ts'),
+    ).toEqual(expect.arrayContaining([expect.objectContaining({ rule: 'H2_ROOT_PARSE_IMPORT' })]));
 
+    const adapterRel = adapterRels[1]!;
     const deep = `import { parseOwnerFrozenCues } from '@ehas2/evidence-extract/src/terminology/parser/index.js';\nvoid parseOwnerFrozenCues;\n`;
     expect(inspectSource(deep, adapterRel).map((f: { rule: string }) => f.rule)).toEqual(
       expect.arrayContaining(['H2_PACKAGE_NON_ROOT', 'H2_PACKAGE_PARSER_SUBPATH']),
@@ -437,7 +447,9 @@ describe('F3D-2B H2 runtime parser import boundary', () => {
       expect.arrayContaining(['H2_PARSE_INTERNAL_FOR_TESTS']),
     );
 
-    const adapterSrc = fs.readFileSync(path.join(root, adapterRel), 'utf8');
-    expect(inspectSource(adapterSrc, adapterRel)).toEqual([]);
+    for (const rel of adapterRels) {
+      const adapterSrc = fs.readFileSync(path.join(root, rel), 'utf8');
+      expect(inspectSource(adapterSrc, rel)).toEqual([]);
+    }
   });
 });

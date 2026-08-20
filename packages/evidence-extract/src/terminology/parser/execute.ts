@@ -14,6 +14,7 @@ import {
   CUE_PARSER_BUDGET_MS,
   CUE_PARSER_REASON_CODES,
   CUE_PARSER_SOURCE_CHANNELS,
+  CUE_PARSER_SOURCE_COMBINATIONS,
   CUE_PARSER_SOURCE_FIELDS,
   CUE_PARSER_VERSION,
   CueParserError,
@@ -46,6 +47,19 @@ function isField(value: unknown): value is CueParserSourceField {
   return (CUE_PARSER_SOURCE_FIELDS as readonly string[]).includes(String(value));
 }
 
+function assertClosedSourceCombination(
+  channel: CueParserSourceChannel,
+  field: CueParserSourceField,
+): void {
+  const ok = (
+    CUE_PARSER_SOURCE_COMBINATIONS as readonly {
+      sourceChannel: string;
+      sourceField: string;
+    }[]
+  ).some((row) => row.sourceChannel === channel && row.sourceField === field);
+  if (!ok) throw new CueParserError('UNTRUSTED_INPUT');
+}
+
 function assertIdentity(input: EligibleCueParserInput): void {
   if (!HEX64.test(input.sourceIdentityFingerprint)) {
     throw new CueParserError('UNTRUSTED_INPUT');
@@ -53,6 +67,7 @@ function assertIdentity(input: EligibleCueParserInput): void {
   if (!isChannel(input.sourceChannel) || !isField(input.sourceField)) {
     throw new CueParserError('UNTRUSTED_INPUT');
   }
+  assertClosedSourceCombination(input.sourceChannel, input.sourceField);
   for (const id of [input.organizationId, input.clinicId, input.patientId, input.consultationId]) {
     if (!UUID_RE.test(id)) throw new CueParserError('UNTRUSTED_INPUT');
   }
