@@ -5,7 +5,10 @@ import {
   CueEligibleSourceService,
   bindDoctorDeclaredChiefComplaintSourceIdentity,
 } from '../../packages/database/src/services/cueEligibleSourceService.ts';
-import { lockChiefComplaintCueSource } from '../../packages/database/src/services/cueSourceLock.ts';
+import {
+  chiefComplaintCueSourceLockKey,
+  lockChiefComplaintCueSource,
+} from '../../packages/database/src/services/cueSourceLock.ts';
 import { PatientService } from '../../packages/database/src/services/patientService.ts';
 import {
   PgMembershipRepository,
@@ -63,14 +66,58 @@ function requireDb(): void {
   }
 }
 
-function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+async function assertCueSourceLockHeld(
+  tenant: TenantContext,
+  consultationId: string,
+): Promise<void> {
+  const key = chiefComplaintCueSourceLockKey({
+    organizationId: tenant.organizationId,
+    clinicId: tenant.clinicId,
+    consultationId,
+  });
+  await withTenantTransaction(
+    tenant,
+    async (tx) => {
+      const r = await tx.query<{ ok: boolean }>(
+        `SELECT pg_try_advisory_xact_lock(hashtextextended($1::text, $2::bigint)) AS ok`,
+        [key, 0],
+      );
+      expect(r.rows[0]?.ok).toBe(false);
+    },
+    env,
+  );
+}
+
+async function holdCueSourceLock(
+  tenant: TenantContext,
+  consultationId: string,
+): Promise<{ release: () => void; held: Promise<void> }> {
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  let signalAcquired!: () => void;
+  const acquired = new Promise<void>((resolve) => {
+    signalAcquired = resolve;
+  });
+  const held = withTenantTransaction(
+    tenant,
+    async (tx) => {
+      await lockChiefComplaintCueSource(tx, tenant, consultationId);
+      signalAcquired();
+      await gate;
+    },
+    env,
+  );
+  await acquired;
+  return { release, held };
 }
 
 async function seedTenants(): Promise<{
   doctorA: TenantContext;
   doctorB: TenantContext;
   otherDoctorA: TenantContext;
+  clinicAdminA: TenantContext;
 }> {
   const users = new PgUserRepository();
   const orgs = new PgOrganizationRepository();
@@ -97,6 +144,25 @@ async function seedTenants(): Promise<{
       { userId: uA.id, organizationId: oA.id, clinicId: cA.id, status: 'ACTIVE', actorId: uA.id },
     );
     await memberships.assignRole({ query }, { membershipId: mA.id, roleCode: 'Doctor' });
+
+    const uAdmin = await users.create(
+      { query },
+      {
+        displayName: 'Synthetic C1 Clinic Admin A',
+        actorId: '00000000-0000-4000-8000-0000000000c4',
+      },
+    );
+    const mAdmin = await memberships.create(
+      { query },
+      {
+        userId: uAdmin.id,
+        organizationId: oA.id,
+        clinicId: cA.id,
+        status: 'ACTIVE',
+        actorId: uAdmin.id,
+      },
+    );
+    await memberships.assignRole({ query }, { membershipId: mAdmin.id, roleCode: 'ClinicAdmin' });
 
     const uOther = await users.create(
       { query },
@@ -145,6 +211,14 @@ async function seedTenants(): Promise<{
         clinicId: cA.id,
         actorId: uA.id,
         actorRole: 'Doctor',
+        membershipStatus: 'ACTIVE' as const,
+        allowPatientPhi: true,
+      },
+      clinicAdminA: {
+        organizationId: oA.id,
+        clinicId: cA.id,
+        actorId: uAdmin.id,
+        actorRole: 'ClinicAdmin',
         membershipStatus: 'ACTIVE' as const,
         allowPatientPhi: true,
       },
@@ -364,47 +438,24 @@ describe('F3D-2C1 doctor-declared chief-complaint cue adapter (isolated PostgreS
     const a = await openConsultation(doctorA, 'denies fever');
     const b = await openConsultation(doctorA, 'denies fever');
 
-    let releaseA!: () => void;
-    const gateA = new Promise<void>((resolve) => {
-      releaseA = resolve;
-    });
-    let acquiredA!: () => void;
-    const gotA = new Promise<void>((resolve) => {
-      acquiredA = resolve;
-    });
-    const holderA = withTenantTransaction(
-      doctorA,
-      async (tx) => {
-        await lockChiefComplaintCueSource(tx, doctorA, a.consultationId);
-        acquiredA();
-        await gateA;
-      },
-      env,
-    );
-    await gotA;
+    const holder = await holdCueSourceLock(doctorA, a.consultationId);
+    let writerSettled = false;
+    const writerPromise = intake
+      .patch(doctorA, a.consultationId, { chiefComplaintText: 'bukhar nahi hai' }, env)
+      .finally(() => {
+        writerSettled = true;
+      });
+    await assertCueSourceLockHeld(doctorA, a.consultationId);
+    expect(writerSettled).toBe(false);
 
-    const writerStarted = Date.now();
-    const writerPromise = intake.patch(
-      doctorA,
-      a.consultationId,
-      { chiefComplaintText: 'bukhar nahi hai' },
-      env,
-    );
-    await delay(250);
-    expect(Date.now() - writerStarted).toBeGreaterThanOrEqual(200);
-
-    const unrelatedStart = Date.now();
     await intake.patch(doctorA, b.consultationId, { chiefComplaintText: 'bukhar nahi hai' }, env);
-    expect(Date.now() - unrelatedStart).toBeLessThan(800);
-
-    const vitalsStart = Date.now();
     await intake.patch(doctorA, a.consultationId, { vitals: { pulseBpm: 72 } }, env);
-    expect(Date.now() - vitalsStart).toBeLessThan(800);
+    expect(writerSettled).toBe(false);
 
-    releaseA();
-    await holderA;
+    holder.release();
+    await holder.held;
     await writerPromise;
-    expect(Date.now() - writerStarted).toBeGreaterThanOrEqual(250);
+    expect(writerSettled).toBe(true);
 
     const parsed = await cues.parseDoctorDeclaredChiefComplaintCues(
       doctorA,
@@ -439,9 +490,7 @@ describe('F3D-2C1 doctor-declared chief-complaint cue adapter (isolated PostgreS
         env,
       ),
     ).rejects.toBeInstanceOf(ValidationError);
-    const afterFail = Date.now();
     await intake.patch(doctorA, blank.consultationId, { chiefComplaintText: 'denies fever' }, env);
-    expect(Date.now() - afterFail).toBeLessThan(800);
   });
 
   it('concurrent parser and writer each bind one complete committed source', async () => {
@@ -466,5 +515,135 @@ describe('F3D-2C1 doctor-declared chief-complaint cue adapter (isolated PostgreS
       env,
     );
     expect(later.sourceIdentityFingerprint).toBe(fpB);
+  });
+
+  it('serializes updateDraftFields chief-complaint writer with the shared cue lock', async () => {
+    requireDb();
+    const { doctorA, clinicAdminA, otherDoctorA, doctorB } = await seedTenants();
+    const a = await openConsultation(doctorA, 'denies fever');
+
+    const holder = await holdCueSourceLock(doctorA, a.consultationId);
+    let writerSettled = false;
+    const writerPromise = consultations
+      .updateDraftFields(doctorA, a.consultationId, { chiefComplaintText: 'bukhar nahi hai' }, env)
+      .finally(() => {
+        writerSettled = true;
+      });
+    await assertCueSourceLockHeld(doctorA, a.consultationId);
+    expect(writerSettled).toBe(false);
+
+    await consultations.updateDraftFields(doctorA, a.consultationId, {}, env);
+    expect(writerSettled).toBe(false);
+
+    holder.release();
+    await holder.held;
+    const written = await writerPromise;
+    expect(written.chiefComplaintText).toBe('bukhar nahi hai');
+
+    const parsed = await cues.parseDoctorDeclaredChiefComplaintCues(
+      doctorA,
+      { consultationId: a.consultationId },
+      env,
+    );
+    expect(parsed.sourceIdentityFingerprint).toBe(
+      expectedFingerprint(doctorA, a.patientId, a.consultationId, 'bukhar nahi hai'),
+    );
+    expect(parsed.parser.matches.some((m) => m.entryId === 'neg-09')).toBe(true);
+
+    await consultations.updateDraftFields(
+      doctorA,
+      a.consultationId,
+      { chiefComplaintText: 'denies fever' },
+      env,
+    );
+    const afterWriter = await cues.parseDoctorDeclaredChiefComplaintCues(
+      doctorA,
+      { consultationId: a.consultationId },
+      env,
+    );
+    expect(afterWriter.sourceIdentityFingerprint).toBe(
+      expectedFingerprint(doctorA, a.patientId, a.consultationId, 'denies fever'),
+    );
+
+    const holder2 = await holdCueSourceLock(doctorA, a.consultationId);
+    let parseSettled = false;
+    const parsePromise = cues
+      .parseDoctorDeclaredChiefComplaintCues(doctorA, { consultationId: a.consultationId }, env)
+      .finally(() => {
+        parseSettled = true;
+      });
+    await assertCueSourceLockHeld(doctorA, a.consultationId);
+    expect(parseSettled).toBe(false);
+    holder2.release();
+    await holder2.held;
+    const heldParse = await parsePromise;
+    expect(heldParse.sourceIdentityFingerprint).toBe(
+      expectedFingerprint(doctorA, a.patientId, a.consultationId, 'denies fever'),
+    );
+
+    await expect(
+      consultations.updateDraftFields(
+        otherDoctorA,
+        a.consultationId,
+        { chiefComplaintText: 'zzz' },
+        env,
+      ),
+    ).rejects.toBeInstanceOf(ResourceNotFoundError);
+    await expect(
+      consultations.updateDraftFields(
+        doctorB,
+        a.consultationId,
+        { chiefComplaintText: 'zzz' },
+        env,
+      ),
+    ).rejects.toBeInstanceOf(ResourceNotFoundError);
+
+    const adminUpdated = await consultations.updateDraftFields(
+      clinicAdminA,
+      a.consultationId,
+      { chiefComplaintText: 'bukhar nahi hai' },
+      env,
+    );
+    expect(adminUpdated.chiefComplaintText).toBe('bukhar nahi hai');
+
+    await consultations.transition(doctorA, a.consultationId, 'IN_PROGRESS', {}, env);
+    await consultations.transition(doctorA, a.consultationId, 'CANCELLED', {}, env);
+    await expect(
+      consultations.updateDraftFields(
+        doctorA,
+        a.consultationId,
+        { chiefComplaintText: 'after lock' },
+        env,
+      ),
+    ).rejects.toMatchObject({
+      name: 'ValidationError',
+      message: 'Consultation fields are locked in current state',
+    });
+  });
+
+  it('updateDraftFields post-lock re-read rejects when status becomes non-editable under the cue lock', async () => {
+    requireDb();
+    const { doctorA } = await seedTenants();
+    const a = await openConsultation(doctorA, 'denies fever');
+    const holder = await holdCueSourceLock(doctorA, a.consultationId);
+    let writerSettled = false;
+    const writerPromise = consultations
+      .updateDraftFields(doctorA, a.consultationId, { chiefComplaintText: 'bukhar nahi hai' }, env)
+      .finally(() => {
+        writerSettled = true;
+      });
+    await assertCueSourceLockHeld(doctorA, a.consultationId);
+    expect(writerSettled).toBe(false);
+    await consultations.transition(doctorA, a.consultationId, 'IN_PROGRESS', {}, env);
+    await consultations.transition(doctorA, a.consultationId, 'CANCELLED', {}, env);
+    expect(writerSettled).toBe(false);
+    holder.release();
+    await holder.held;
+    await expect(writerPromise).rejects.toMatchObject({
+      name: 'ValidationError',
+      message: 'Consultation fields are locked in current state',
+    });
+    const snap = await snapshot(a.consultationId);
+    expect(snap.complaint).toBe('denies fever');
   });
 });

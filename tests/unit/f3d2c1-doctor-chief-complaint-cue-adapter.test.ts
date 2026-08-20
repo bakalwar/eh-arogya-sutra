@@ -105,4 +105,90 @@ describe('F3D-2C1 doctor-declared chief-complaint cue adapter contract', () => {
       }
     }
   });
+
+  it('registers every existing-row chief-complaint mutation writer behind the shared cue lock', () => {
+    const serviceDir = path.join(root, 'packages/database/src/services');
+    const serviceFiles = fs
+      .readdirSync(serviceDir)
+      .filter((name) => name.endsWith('.ts'))
+      .map((name) => path.join(serviceDir, name));
+
+    const mutationCallSites: { file: string; kind: string }[] = [];
+    for (const abs of serviceFiles) {
+      const src = fs.readFileSync(abs, 'utf8');
+      const rel = path.relative(root, abs).split(path.sep).join('/');
+      if (/\.updateComplaintFields\s*\(/.test(src)) {
+        mutationCallSites.push({ file: rel, kind: 'updateComplaintFields' });
+      }
+      if (
+        /\.updateAllowedFields\s*\(/.test(src) &&
+        /chiefComplaintText/.test(src) &&
+        !rel.endsWith('/patientService.ts')
+      ) {
+        mutationCallSites.push({ file: rel, kind: 'updateAllowedFields' });
+      }
+    }
+
+    expect(mutationCallSites).toEqual(
+      expect.arrayContaining([
+        {
+          file: 'packages/database/src/services/consultationIntakeService.ts',
+          kind: 'updateComplaintFields',
+        },
+        {
+          file: 'packages/database/src/services/consultationService.ts',
+          kind: 'updateAllowedFields',
+        },
+      ]),
+    );
+    expect(mutationCallSites).toHaveLength(2);
+
+    for (const site of mutationCallSites) {
+      const src = fs.readFileSync(path.join(root, site.file), 'utf8');
+      expect(src).toMatch(/lockChiefComplaintCueSource\s*\(/);
+      expect(src).toMatch(/mutatesChiefComplaintText/);
+      expect(src).toMatch(
+        /Object\.prototype\.hasOwnProperty\.call\(\s*input,\s*'chiefComplaintText'\s*,?\s*\)/,
+      );
+    }
+
+    const createSrc = fs.readFileSync(
+      path.join(root, 'packages/database/src/services/consultationService.ts'),
+      'utf8',
+    );
+    expect(createSrc).toMatch(/async create\(/);
+    expect(createSrc).toMatch(/consultations\.create\(/);
+
+    const repoSrc = fs.readFileSync(
+      path.join(root, 'packages/database/src/repositories/postgres.ts'),
+      'utf8',
+    );
+    expect(repoSrc).toMatch(/INSERT INTO consultations\s*\(/);
+    expect(repoSrc).toMatch(/chief_complaint_text/);
+
+    const productionTrees = [
+      'packages/database/src',
+      'apps/api/src',
+      'apps/worker/src',
+      'apps/web/src',
+    ];
+    const directSqlMutations: string[] = [];
+    for (const tree of productionTrees) {
+      const absTree = path.join(root, tree);
+      if (!fs.existsSync(absTree)) continue;
+      const files = fs.readdirSync(absTree, { recursive: true, encoding: 'utf8' }) as string[];
+      for (const file of files) {
+        if (!/\.ts$/.test(file) || /\.test\.ts$/.test(file)) continue;
+        const abs = path.join(absTree, file);
+        const src = fs.readFileSync(abs, 'utf8');
+        if (
+          /UPDATE\s+consultations\s+SET[\s\S]{0,400}chief_complaint_text\s*=/.test(src) &&
+          !/CASE WHEN \$/.test(src)
+        ) {
+          directSqlMutations.push(path.relative(root, abs).split(path.sep).join('/'));
+        }
+      }
+    }
+    expect(directSqlMutations).toEqual([]);
+  });
 });
