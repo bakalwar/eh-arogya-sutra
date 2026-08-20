@@ -41,13 +41,25 @@ describe('F3D-2C3 extraction-candidate lifecycle eligibility contract', () => {
     );
     const start = src.indexOf('async supersedeRuns(');
     expect(start).toBeGreaterThan(-1);
-    const body = src.slice(start, start + 2200);
+    const body = src.slice(start, start + 3200);
     expect(body).toMatch(/lockF3cReviewedCueSource/);
     expect(body).toMatch(/\.sort\(/);
     expect(body).toMatch(/status = 'EXTRACTED_UNVERIFIED'/);
     expect(body).toMatch(
       /UPDATE clinical_evidence_extraction_candidates SET status = 'SUPERSEDED'[\s\S]*AND status = 'EXTRACTED_UNVERIFIED'/,
     );
+    expect(body).toMatch(/lockIdentitiesForActiveLinkedCandidates/);
+    expect(body).toMatch(/supersedeActiveLinkedToCandidates/);
+    const candLock = body.indexOf('lockF3cReviewedCueSource');
+    const factLock = body.indexOf('lockIdentitiesForActiveLinkedCandidates');
+    const candUpdate = body.indexOf(
+      "UPDATE clinical_evidence_extraction_candidates SET status = 'SUPERSEDED'",
+    );
+    const factUpdate = body.indexOf('supersedeActiveLinkedToCandidates');
+    expect(candLock).toBeGreaterThan(-1);
+    expect(factLock).toBeGreaterThan(candLock);
+    expect(candUpdate).toBeGreaterThan(factLock);
+    expect(factUpdate).toBeGreaterThan(candUpdate);
     expect(body).not.toMatch(
       /UPDATE clinical_evidence_extraction_candidates SET status = 'SUPERSEDED'\s*\n\s*WHERE organization_id = \$1 AND clinic_id = \$2\s*\n\s*AND extraction_run_id = ANY\(\$3::uuid\[\]\)\s*`/,
     );
