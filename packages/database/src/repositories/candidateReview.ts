@@ -9,6 +9,7 @@ import {
   type CandidateReviewReasonCode,
   type SourceLocator,
 } from '@ehas2/evidence-extract';
+import { lockF3cReviewedCueSource } from '../services/cueSourceLock.js';
 
 function mapTs(value: unknown): string {
   return new Date(String(value)).toISOString();
@@ -72,8 +73,12 @@ export type InsertCandidateReviewInput = {
 };
 
 export class PgCandidateReviewRepository {
-  async lockCandidate(tx: TransactionContext, candidateId: string): Promise<void> {
-    await tx.query(`SELECT pg_advisory_xact_lock(hashtext($1))`, [candidateId]);
+  async lockCandidate(
+    tx: TransactionContext,
+    tenant: TenantContext,
+    candidateId: string,
+  ): Promise<void> {
+    await lockF3cReviewedCueSource(tx, tenant, candidateId);
   }
 
   async findById(

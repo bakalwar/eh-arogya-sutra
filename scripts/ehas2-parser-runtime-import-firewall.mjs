@@ -16,12 +16,18 @@ export const PARSER_RUNTIME_TREES = [
   'packages/evidence-extract-adapters',
 ];
 
-/** Exact file only. Not a directory or suffix allowlist. */
-export const H2_CUE_ADAPTER_ALLOWLIST_REL =
-  'packages/database/src/services/cueEligibleSourceService.ts';
+/**
+ * Exact files only. Not a directory or suffix allowlist.
+ * C1 chief-complaint adapter + C2 F3C reviewed-source adapter.
+ */
+export const H2_CUE_ADAPTER_ALLOWLIST_REL = [
+  'packages/database/src/services/cueEligibleSourceService.ts',
+  'packages/database/src/services/f3cReviewedCueSourceService.ts',
+];
 
 export function isExactCueAdapterPath(filePath) {
-  return String(filePath).replaceAll('\\', '/') === H2_CUE_ADAPTER_ALLOWLIST_REL;
+  const normalized = String(filePath).replaceAll('\\', '/');
+  return H2_CUE_ADAPTER_ALLOWLIST_REL.includes(normalized);
 }
 
 const SKIP_DIR_NAMES = new Set([
