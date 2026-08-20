@@ -263,7 +263,7 @@ export class F3cReviewedCueSourceService {
         ) {
           throw new ResourceNotFoundError();
         }
-        if (candidate.status === 'SUPERSEDED') {
+        if (candidate.status !== 'EXTRACTED_UNVERIFIED') {
           throw new ValidationError('SOURCE_INELIGIBLE');
         }
 
