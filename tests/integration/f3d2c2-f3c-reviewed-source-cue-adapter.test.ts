@@ -438,7 +438,7 @@ describe('F3D-2C2 F3C reviewed-source cue adapter (isolated PostgreSQL)', () => 
     expect(corrected.sourceIdentityFingerprint).not.toBe(accepted.sourceIdentityFingerprint);
   });
 
-  it('REJECT, UNRESOLVED, SUPERSEDED review/candidate, and blank/oversized text fail closed', async () => {
+  it('REJECT, UNRESOLVED, SUPERSEDED review/candidate, and blank effective text fail closed', async () => {
     requireDb();
     const { doctorA } = await seedTenants();
     const service = evidenceService();
@@ -567,55 +567,40 @@ describe('F3D-2C2 F3C reviewed-source cue adapter (isolated PostgreSQL)', () => 
     ).rejects.toMatchObject({ name: 'ValidationError', message: 'SOURCE_INELIGIBLE' });
 
     const fixture4 = await storedExtracted(doctorA, service);
-    const oversized = await service.submitCandidateReview(
+    const cand4 = await service.getSourceLinkedCandidate(
       doctorA,
       fixture4.consultationId,
       fixture4.itemId,
       fixture4.englishId,
-      {
-        action: 'CORRECT_SOURCE_TEXT',
-        reasonCode: 'SOURCE_TEXT_MISREAD',
-        correctedRawText: 'denies fever',
-        idempotencyKey: `c2-oversize-seed-${fixture4.englishId}`,
-      },
       extractEnv,
     );
-    await withTenantTransaction(
-      doctorA,
-      async (tx) => {
-        await tx.query(
-          `UPDATE clinical_evidence_extraction_candidate_reviews
-           SET corrected_raw_text = $1
-           WHERE id = $2`,
-          ['x'.repeat(2001), oversized.id],
-        );
-      },
-      env,
-    );
-    await expect(
-      cues.parseF3cReviewedSourceCues(
-        doctorA,
-        {
-          consultationId: fixture4.consultationId,
-          evidenceItemId: fixture4.itemId,
-          candidateId: fixture4.englishId,
-        },
-        env,
-      ),
-    ).rejects.toMatchObject({ name: 'ValidationError', message: 'INPUT_TOO_LARGE' });
-
-    await withTenantTransaction(
-      doctorA,
-      async (tx) => {
-        await tx.query(
-          `UPDATE clinical_evidence_extraction_candidate_reviews
-           SET corrected_raw_text = $1
-           WHERE id = $2`,
-          ['   ', oversized.id],
-        );
-      },
-      env,
-    );
+    await withAdminClient(async (query) => {
+      await query(
+        `INSERT INTO clinical_evidence_extraction_candidate_reviews (
+           organization_id, clinic_id, patient_id, consultation_id, evidence_item_id,
+           extraction_run_id, candidate_id, action, actor_id, actor_role, reason_code,
+           original_raw_text, original_normalized_text, corrected_raw_text,
+           corrected_normalized_text, source_locator, supersedes_review_id,
+           decision_status, authority_scope, clinically_used
+         ) VALUES (
+           $1,$2,$3,$4,$5,$6,$7,'CORRECT_SOURCE_TEXT',$8,'Doctor','SOURCE_TEXT_MISREAD',
+           $9,null,'   ',null,$10::jsonb,null,
+           'ACTIVE','SOURCE_TEXT_TRANSCRIPTION_ONLY', false
+         )`,
+        [
+          doctorA.organizationId,
+          doctorA.clinicId,
+          fixture4.patientId,
+          fixture4.consultationId,
+          fixture4.itemId,
+          cand4.extractionRunId,
+          fixture4.englishId,
+          doctorA.actorId,
+          cand4.rawText,
+          JSON.stringify(cand4.sourceLocator),
+        ],
+      );
+    }, env);
     await expect(
       cues.parseF3cReviewedSourceCues(
         doctorA,
@@ -856,18 +841,52 @@ describe('F3D-2C2 F3C reviewed-source cue adapter (isolated PostgreSQL)', () => 
       ),
     ).rejects.toBeInstanceOf(ResourceNotFoundError);
 
+    const linked = await service.getSourceLinkedCandidate(
+      doctorA,
+      fixture.consultationId,
+      fixture.itemId,
+      fixture.englishId,
+      extractEnv,
+    );
     await withTenantTransaction(
       doctorA,
       async (tx) => {
         await tx.query(
           `UPDATE clinical_evidence_extraction_candidate_reviews
-           SET original_raw_text = $1
-           WHERE candidate_id = $2 AND decision_status = 'ACTIVE'`,
-          ['\u0001', fixture.englishId],
+           SET decision_status = 'SUPERSEDED'
+           WHERE candidate_id = $1 AND decision_status = 'ACTIVE'`,
+          [fixture.englishId],
         );
       },
       env,
     );
+    await withAdminClient(async (query) => {
+      await query(
+        `INSERT INTO clinical_evidence_extraction_candidate_reviews (
+           organization_id, clinic_id, patient_id, consultation_id, evidence_item_id,
+           extraction_run_id, candidate_id, action, actor_id, actor_role, reason_code,
+           original_raw_text, original_normalized_text, corrected_raw_text,
+           corrected_normalized_text, source_locator, supersedes_review_id,
+           decision_status, authority_scope, clinically_used
+         ) VALUES (
+           $1,$2,$3,$4,$5,$6,$7,'ACCEPT_AS_SOURCE_TEXT',$8,'Doctor','SYNTHETIC_FIXTURE_REVIEW',
+           $9,null,null,null,$10::jsonb,null,
+           'ACTIVE','SOURCE_TEXT_TRANSCRIPTION_ONLY', false
+         )`,
+        [
+          doctorA.organizationId,
+          doctorA.clinicId,
+          fixture.patientId,
+          fixture.consultationId,
+          fixture.itemId,
+          linked.extractionRunId,
+          fixture.englishId,
+          doctorA.actorId,
+          String.fromCharCode(1),
+          JSON.stringify(linked.sourceLocator),
+        ],
+      );
+    }, env);
     const malformed = await cues.parseF3cReviewedSourceCues(
       doctorA,
       {
