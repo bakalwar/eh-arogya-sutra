@@ -14,6 +14,7 @@ import {
   PgMembershipRepository,
   PgOrganizationRepository,
   PgUserRepository,
+  ResourceNotFoundError,
   ValidationError,
   closePool,
   getOrderedMigrationIds,
@@ -186,24 +187,12 @@ async function openConsultation(tenant: TenantContext): Promise<{
 }
 
 function baseNormInput(
-  fact: {
-    id: string;
-    patientId: string;
-    consultationId: string;
-    sourceChannel: string;
-    sourceField: string;
-    sourceIdentityFingerprint: string;
-  },
+  fact: { id: string },
   overrides: Partial<InsertFactNormalizationInput> = {},
 ): InsertFactNormalizationInput {
   return {
-    patientId: fact.patientId,
-    consultationId: fact.consultationId,
     sourceFactCandidateId: fact.id,
-    sourceIdentityFingerprint: fact.sourceIdentityFingerprint,
     normalizationIdentityFingerprint: FP_A,
-    sourceChannel: fact.sourceChannel,
-    sourceField: fact.sourceField,
     normalizationKind: 'DURATION_PHRASE',
     canonicalLabel: 'DURATION_2_DAYS',
     negationScope: null,
@@ -260,6 +249,8 @@ describe('F3D-2D1 fact-normalization persistence foundation', () => {
     );
     expect(sql).toMatch(/FORCE ROW LEVEL SECURITY/);
     expect(sql).toMatch(/REVOKE DELETE ON clinical_fact_normalizations FROM ehas2_app/);
+    expect(sql).toMatch(/clinical_fact_normalizations_parent_link_fk/);
+    expect(sql).toMatch(/clinical_fact_candidates_016_norm_parent_uq/);
     expect(sql).not.toMatch(/ON DELETE CASCADE/);
     const app = createApp();
     const ready = await httpJson(app, 'GET', '/ready');
@@ -296,7 +287,6 @@ describe('F3D-2D1 fact-normalization persistence foundation', () => {
     const inserted = await withTenantTransaction(
       doctorA,
       async (tx) => {
-        await norms.lockIdentitiesSorted(tx, [FP_C, FP_A, FP_B]);
         return norms.insert(doctorA, tx, baseNormInput(parent));
       },
       env,
@@ -306,6 +296,11 @@ describe('F3D-2D1 fact-normalization persistence foundation', () => {
     expect(inserted.decisionStatus).toBe('ACTIVE');
     expect(inserted.canonicalLabel).toBe('DURATION_2_DAYS');
     expect(inserted.cueEntryIds).toEqual(['cue-syn-001']);
+    expect(inserted.patientId).toBe(parent.patientId);
+    expect(inserted.consultationId).toBe(parent.consultationId);
+    expect(inserted.sourceChannel).toBe(parent.sourceChannel);
+    expect(inserted.sourceField).toBe(parent.sourceField);
+    expect(inserted.sourceIdentityFingerprint).toBe(parent.sourceIdentityFingerprint);
     expect(JSON.stringify(inserted)).not.toMatch(/synthetic fever|object_key|https?:/);
 
     const parentAfter = (await facts.list(doctorA, consultationId, factEnv)).find(
@@ -669,6 +664,266 @@ describe('F3D-2D1 fact-normalization persistence foundation', () => {
     );
   }, 120_000);
 
+  it('binds child rows to parent via server copy and rejects mismatched linkage', async () => {
+    requireDb();
+    const { doctorA, doctorB } = await seedTenants();
+    const facts = factService();
+    const opened = await openConsultation(doctorA);
+    const parent = await facts.materialize(
+      doctorA,
+      opened.consultationId,
+      {
+        sourceChannel: 'DOCTOR_DECLARED',
+        sourceField: 'CHIEF_COMPLAINT',
+        idempotencyKey: 'f3d2d1-bind-parent-cc',
+      },
+      factEnv,
+    );
+    const pulse = await facts.materialize(
+      doctorA,
+      opened.consultationId,
+      {
+        sourceChannel: 'STRUCTURED_INTAKE',
+        sourceField: 'VITAL_PULSE',
+        idempotencyKey: 'f3d2d1-bind-parent-pulse',
+      },
+      factEnv,
+    );
+    const otherOpen = await openConsultation(doctorA);
+    const otherPatientParent = await facts.materialize(
+      doctorA,
+      otherOpen.consultationId,
+      {
+        sourceChannel: 'DOCTOR_DECLARED',
+        sourceField: 'CHIEF_COMPLAINT',
+        idempotencyKey: 'f3d2d1-bind-other-patient',
+      },
+      factEnv,
+    );
+
+    const keys = Object.keys(baseNormInput(parent));
+    expect(keys).not.toContain('patientId');
+    expect(keys).not.toContain('consultationId');
+    expect(keys).not.toContain('sourceChannel');
+    expect(keys).not.toContain('sourceField');
+    expect(keys).not.toContain('sourceIdentityFingerprint');
+    expect(keys).toContain('sourceFactCandidateId');
+
+    const bound = await withTenantTransaction(
+      doctorA,
+      async (tx) =>
+        norms.insert(
+          doctorA,
+          tx,
+          baseNormInput(parent, {
+            normalizationIdentityFingerprint: '3'.repeat(64),
+          }),
+        ),
+      env,
+    );
+    expect(bound.sourceFactCandidateId).toBe(parent.id);
+    expect(bound.patientId).toBe(parent.patientId);
+    expect(bound.consultationId).toBe(parent.consultationId);
+    expect(bound.sourceChannel).toBe('DOCTOR_DECLARED');
+    expect(bound.sourceField).toBe('CHIEF_COMPLAINT');
+    expect(bound.sourceIdentityFingerprint).toBe(parent.sourceIdentityFingerprint);
+
+    await expect(
+      withTenantTransaction(
+        doctorB,
+        async (tx) =>
+          norms.insert(
+            doctorB,
+            tx,
+            baseNormInput(parent, {
+              normalizationIdentityFingerprint: '4'.repeat(64),
+            }),
+          ),
+        env,
+      ),
+    ).rejects.toBeInstanceOf(ResourceNotFoundError);
+
+    await expect(
+      withTenantTransaction(
+        doctorA,
+        async (tx) =>
+          norms.insert(
+            doctorA,
+            tx,
+            baseNormInput(
+              { id: '00000000-0000-4000-8000-000000000099' },
+              {
+                normalizationIdentityFingerprint: '5'.repeat(64),
+              },
+            ),
+          ),
+        env,
+      ),
+    ).rejects.toBeInstanceOf(ResourceNotFoundError);
+
+    await intake.patch(
+      doctorA,
+      opened.consultationId,
+      { chiefComplaintText: 'synthetic fever corrected for supersede' },
+      env,
+    );
+    const replacement = await facts.materialize(
+      doctorA,
+      opened.consultationId,
+      {
+        sourceChannel: 'DOCTOR_DECLARED',
+        sourceField: 'CHIEF_COMPLAINT',
+        supersedesFactId: parent.id,
+        idempotencyKey: 'f3d2d1-bind-super-parent',
+      },
+      factEnv,
+    );
+    expect(replacement.decisionStatus).toBe('ACTIVE');
+    const historyFacts = await facts.list(doctorA, opened.consultationId, factEnv);
+    expect(historyFacts.find((f) => f.id === parent.id)?.decisionStatus).toBe('SUPERSEDED');
+
+    await expect(
+      withTenantTransaction(
+        doctorA,
+        async (tx) =>
+          norms.insert(
+            doctorA,
+            tx,
+            baseNormInput(parent, {
+              normalizationIdentityFingerprint: '6'.repeat(64),
+            }),
+          ),
+        env,
+      ),
+    ).rejects.toMatchObject({ message: 'FACT_INELIGIBLE' });
+
+    const sqlParamsBase = async (
+      tx: { query: (sql: string, params?: unknown[]) => Promise<unknown> },
+      overrides: Record<string, unknown>,
+    ) => {
+      const vals = {
+        organization_id: doctorA.organizationId,
+        clinic_id: doctorA.clinicId,
+        patient_id: parent.patientId,
+        consultation_id: parent.consultationId,
+        source_fact_candidate_id: parent.id,
+        source_identity_fingerprint: parent.sourceIdentityFingerprint,
+        normalization_identity_fingerprint: '7'.repeat(64),
+        source_channel: parent.sourceChannel,
+        source_field: parent.sourceField,
+        ...overrides,
+      };
+      await tx.query(
+        `INSERT INTO clinical_fact_normalizations (
+           organization_id, clinic_id, patient_id, consultation_id,
+           source_fact_candidate_id, source_identity_fingerprint, normalization_identity_fingerprint,
+           source_channel, source_field, normalization_kind, canonical_label, negation_scope,
+           cue_entry_ids, pack_id, pack_version, pack_content_checksum,
+           parser_version, parser_fingerprint, normalizer_method, normalizer_version,
+           normalizer_fingerprint, authority_scope, decision_status, limitation_codes,
+           clinically_used, actor_id, actor_role
+         ) VALUES (
+           $1,$2,$3,$4,$5,$6,$7,$8,$9,'DURATION_PHRASE','SQL_MISMATCH',NULL,
+           '{}','pack','1',$10,'none',$11,'OWNER_FROZEN_SOURCE_PRESERVING_V1','0',$12,
+           'FACT_NORMALIZED_SOURCE_LINKED','ACTIVE','{}',false,$13,'Doctor'
+         )`,
+        [
+          vals.organization_id,
+          vals.clinic_id,
+          vals.patient_id,
+          vals.consultation_id,
+          vals.source_fact_candidate_id,
+          vals.source_identity_fingerprint,
+          vals.normalization_identity_fingerprint,
+          vals.source_channel,
+          vals.source_field,
+          FP_PACK,
+          FP_PARSER,
+          FP_NORM,
+          doctorA.actorId,
+        ],
+      );
+    };
+
+    await withTenantTransaction(
+      doctorA,
+      async (tx) => {
+        await expect(
+          sqlParamsBase(tx, { patient_id: otherPatientParent.patientId }),
+        ).rejects.toThrow();
+      },
+      env,
+    );
+    await withTenantTransaction(
+      doctorA,
+      async (tx) => {
+        await expect(
+          sqlParamsBase(tx, {
+            consultation_id: otherPatientParent.consultationId,
+            normalization_identity_fingerprint: '8'.repeat(64),
+          }),
+        ).rejects.toThrow();
+      },
+      env,
+    );
+    await withTenantTransaction(
+      doctorA,
+      async (tx) => {
+        await expect(
+          sqlParamsBase(tx, {
+            organization_id: doctorB.organizationId,
+            clinic_id: doctorB.clinicId,
+            normalization_identity_fingerprint: '9'.repeat(64),
+          }),
+        ).rejects.toThrow();
+      },
+      env,
+    );
+    await withTenantTransaction(
+      doctorA,
+      async (tx) => {
+        await expect(
+          sqlParamsBase(tx, {
+            source_channel: 'STRUCTURED_INTAKE',
+            normalization_identity_fingerprint: 'a'.repeat(64),
+          }),
+        ).rejects.toThrow();
+      },
+      env,
+    );
+    await withTenantTransaction(
+      doctorA,
+      async (tx) => {
+        await expect(
+          sqlParamsBase(tx, {
+            source_field: 'VITAL_PULSE',
+            normalization_identity_fingerprint: 'b'.repeat(64),
+          }),
+        ).rejects.toThrow();
+      },
+      env,
+    );
+    await withTenantTransaction(
+      doctorA,
+      async (tx) => {
+        await expect(
+          sqlParamsBase(tx, {
+            source_identity_fingerprint: pulse.sourceIdentityFingerprint,
+            normalization_identity_fingerprint: 'c'.repeat(64),
+          }),
+        ).rejects.toThrow();
+      },
+      env,
+    );
+
+    const afterParent = (await facts.list(doctorA, opened.consultationId, factEnv)).find(
+      (f) => f.id === parent.id,
+    );
+    expect(afterParent?.authorityStatus).toBe('FACT_CANDIDATE_UNVERIFIED');
+    expect(afterParent?.clinicallyUsed).toBe(false);
+    expect(afterParent?.normalizationMethod).toBe('NONE');
+  }, 180_000);
+
   it('migration 016 down removes only owned objects then re-applies', async () => {
     requireDb();
     const downId = await migrateDownLastForIsolatedTest(env);
@@ -682,6 +937,10 @@ describe('F3D-2D1 fact-normalization persistence foundation', () => {
         `SELECT count(*)::text AS c FROM pg_proc
          WHERE proname = 'ehas2_fact_normalization_append_only'`,
       );
+      const idx = await query<{ c: string }>(
+        `SELECT count(*)::text AS c FROM pg_indexes
+         WHERE schemaname = 'public' AND indexname = 'clinical_fact_candidates_016_norm_parent_uq'`,
+      );
       const facts = await query<{ c: string }>(
         `SELECT count(*)::text AS c FROM information_schema.tables
          WHERE table_schema = 'public' AND table_name = 'clinical_fact_candidates'`,
@@ -689,11 +948,13 @@ describe('F3D-2D1 fact-normalization persistence foundation', () => {
       return {
         table: Number(t.rows[0]?.c ?? -1),
         fn: Number(f.rows[0]?.c ?? -1),
+        idx: Number(idx.rows[0]?.c ?? -1),
         parentTable: Number(facts.rows[0]?.c ?? -1),
       };
     }, env);
     expect(gone.table).toBe(0);
     expect(gone.fn).toBe(0);
+    expect(gone.idx).toBe(0);
     expect(gone.parentTable).toBe(1);
     const up = await migrateUp(env);
     expect(up.applied).toEqual(['016_f3d2_fact_normalizations']);

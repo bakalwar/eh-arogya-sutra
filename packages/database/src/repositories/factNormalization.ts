@@ -1,5 +1,5 @@
 import type { TenantContext, TransactionContext } from '../tenantContext.js';
-import { FactConflictError, ValidationError } from '../domainErrors.js';
+import { FactConflictError, ResourceNotFoundError, ValidationError } from '../domainErrors.js';
 import {
   FACT_NORMALIZATION_AUTHORITY_SCOPE,
   FACT_NORMALIZATION_KINDS,
@@ -12,6 +12,8 @@ import {
   type FactNormalizationLimitationCode,
   type FactNormalizationMethod,
 } from '@ehas2/evidence-extract';
+
+const PARENT_AUTHORITY = 'FACT_CANDIDATE_UNVERIFIED' as const;
 
 function mapTs(value: unknown): string {
   return new Date(String(value)).toISOString();
@@ -98,14 +100,27 @@ function mapNorm(row: Record<string, unknown>): FactNormalizationDto {
   };
 }
 
+type ParentFactLinkRow = {
+  id: string;
+  organization_id: string;
+  clinic_id: string;
+  patient_id: string;
+  consultation_id: string;
+  source_channel: string;
+  source_field: string;
+  source_identity_fingerprint: string;
+  authority_status: string;
+  decision_status: string;
+  clinically_used: boolean;
+};
+
+/**
+ * Caller supplies only parent id + normalization-specific fields.
+ * Parent tenant/patient/consultation/source linkage is server-copied.
+ */
 export type InsertFactNormalizationInput = {
-  patientId: string;
-  consultationId: string;
   sourceFactCandidateId: string;
-  sourceIdentityFingerprint: string;
   normalizationIdentityFingerprint: string;
-  sourceChannel: string;
-  sourceField: string;
   normalizationKind: FactNormalizationKind;
   canonicalLabel: string;
   negationScope: typeof FACT_NORMALIZATION_NEGATION_SCOPE | null;
@@ -125,6 +140,11 @@ export type InsertFactNormalizationInput = {
 /**
  * F3D-2D1 persistence primitives only.
  * No production normalization writer / materializer / cue-parser invocation.
+ *
+ * Insert lock order:
+ * 1) tenant-scoped parent fact row lock (SELECT … FOR UPDATE)
+ * 2) normalization identity advisory lock (sorted when batching)
+ * 3) INSERT
  */
 export class PgFactNormalizationRepository {
   async lockIdentity(tx: TransactionContext, fingerprint: string): Promise<void> {
@@ -135,7 +155,7 @@ export class PgFactNormalizationRepository {
     tx: TransactionContext,
     fingerprints: readonly string[],
   ): Promise<void> {
-    const sorted = [...fingerprints].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+    const sorted = [...new Set(fingerprints)].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
     for (const fingerprint of sorted) {
       await this.lockIdentity(tx, fingerprint);
     }
@@ -236,6 +256,34 @@ export class PgFactNormalizationRepository {
     }
   }
 
+  private async lockAndLoadEligibleParent(
+    tenant: TenantContext,
+    tx: TransactionContext,
+    sourceFactCandidateId: string,
+  ): Promise<ParentFactLinkRow> {
+    const r = await tx.query(
+      `SELECT id, organization_id, clinic_id, patient_id, consultation_id,
+              source_channel, source_field, source_identity_fingerprint,
+              authority_status, decision_status, clinically_used
+       FROM clinical_fact_candidates
+       WHERE organization_id = $1 AND clinic_id = $2 AND id = $3
+       FOR UPDATE`,
+      [tenant.organizationId, tenant.clinicId, sourceFactCandidateId],
+    );
+    if (!r.rows[0]) {
+      throw new ResourceNotFoundError();
+    }
+    const parent = r.rows[0] as ParentFactLinkRow;
+    if (
+      parent.decision_status !== 'ACTIVE' ||
+      parent.authority_status !== PARENT_AUTHORITY ||
+      parent.clinically_used === true
+    ) {
+      throw new ValidationError('FACT_INELIGIBLE');
+    }
+    return parent;
+  }
+
   async insert(
     tenant: TenantContext,
     tx: TransactionContext,
@@ -259,6 +307,10 @@ export class PgFactNormalizationRepository {
     } else if (input.negationScope != null) {
       throw new ValidationError('INVALID_FACT_NORMALIZATION');
     }
+
+    const parent = await this.lockAndLoadEligibleParent(tenant, tx, input.sourceFactCandidateId);
+    await this.lockIdentity(tx, input.normalizationIdentityFingerprint);
+
     try {
       const r = await tx.query(
         `INSERT INTO clinical_fact_normalizations (
@@ -274,15 +326,15 @@ export class PgFactNormalizationRepository {
            'FACT_NORMALIZED_SOURCE_LINKED','ACTIVE',$22,$23::text[],false,$24,$25
          ) RETURNING *`,
         [
-          tenant.organizationId,
-          tenant.clinicId,
-          input.patientId,
-          input.consultationId,
-          input.sourceFactCandidateId,
-          input.sourceIdentityFingerprint,
+          parent.organization_id,
+          parent.clinic_id,
+          parent.patient_id,
+          parent.consultation_id,
+          parent.id,
+          parent.source_identity_fingerprint,
           input.normalizationIdentityFingerprint,
-          input.sourceChannel,
-          input.sourceField,
+          parent.source_channel,
+          parent.source_field,
           input.normalizationKind,
           input.canonicalLabel,
           input.negationScope,

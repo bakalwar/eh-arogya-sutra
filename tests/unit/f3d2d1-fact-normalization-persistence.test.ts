@@ -61,13 +61,16 @@ describe('F3D-2D0/2D1 fact-normalization persistence contract', () => {
     expect(down).toMatch(/DROP TRIGGER IF EXISTS clinical_fact_normalizations_append_only/);
     expect(down).toMatch(/DROP FUNCTION IF EXISTS ehas2_fact_normalization_append_only/);
     expect(down).toMatch(/DROP TABLE IF EXISTS clinical_fact_normalizations/);
-    expect(down).not.toMatch(/clinical_fact_candidates/);
+    expect(down).toMatch(/DROP INDEX IF EXISTS clinical_fact_candidates_016_norm_parent_uq/);
+    expect(down).not.toMatch(/DROP TABLE IF EXISTS clinical_fact_candidates/);
     expect(down).not.toMatch(/DROP TABLE IF EXISTS organizations/);
   });
 
   it('migration 016 schema enforces RLS, append-only, and bounded child authority', () => {
     const sql = read(UP);
     expect(sql).toMatch(/CREATE TABLE clinical_fact_normalizations/);
+    expect(sql).toMatch(/clinical_fact_candidates_016_norm_parent_uq/);
+    expect(sql).toMatch(/clinical_fact_normalizations_parent_link_fk/);
     expect(sql).toMatch(/ENABLE ROW LEVEL SECURITY/);
     expect(sql).toMatch(/FORCE ROW LEVEL SECURITY/);
     expect(sql).toMatch(/ehas2_tenant_ok\(organization_id, clinic_id\)/);
@@ -106,7 +109,19 @@ describe('F3D-2D0/2D1 fact-normalization persistence contract', () => {
     expect(repo).toMatch(/async lockIdentitiesSorted\(/);
     expect(repo).toMatch(/async supersedeActive\(/);
     expect(repo).toMatch(/async supersedeActiveLinkedToFacts\(/);
-    expect(repo).toMatch(/\[\.\.\.fingerprints\]\.sort\(/);
+    expect(repo).toMatch(/\[\.\.\.new Set\(fingerprints\)\]\.sort\(/);
+    expect(repo).toMatch(/FOR UPDATE/);
+    expect(repo).toMatch(/FACT_INELIGIBLE/);
+    expect(repo).toMatch(/ResourceNotFoundError/);
+    expect(repo).toMatch(/lockAndLoadEligibleParent|parent fact row lock/);
+    const inputStart = repo.indexOf('export type InsertFactNormalizationInput');
+    const inputSlice = repo.slice(inputStart, repo.indexOf('/**', inputStart + 10));
+    expect(inputSlice).toMatch(/sourceFactCandidateId/);
+    expect(inputSlice).not.toMatch(/\bpatientId\b/);
+    expect(inputSlice).not.toMatch(/\bconsultationId\b/);
+    expect(inputSlice).not.toMatch(/\bsourceChannel\b/);
+    expect(inputSlice).not.toMatch(/\bsourceField\b/);
+    expect(inputSlice).not.toMatch(/\bsourceIdentityFingerprint\b/);
     expect(repo).not.toMatch(COUPLING);
     expect(repo).not.toMatch(/UPDATE clinical_fact_candidates/);
     expect(repo).not.toMatch(/INSERT INTO clinical_fact_candidates/);

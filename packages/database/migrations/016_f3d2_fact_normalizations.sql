@@ -3,6 +3,20 @@
 -- FACT_NORMALIZED_SOURCE_LINKED is child-event authority only — not diagnosis,
 -- clinical verification, Rules 1–9, medicine, or clinically usable findings.
 -- No cue-match row persistence. No normalizer execution in this migration.
+-- Parent linkage is composite-bound; callers must not invent tenant/patient/source fields.
+
+-- 016-owned parent unique target for child composite FK (non-partial).
+CREATE UNIQUE INDEX clinical_fact_candidates_016_norm_parent_uq
+  ON clinical_fact_candidates (
+    organization_id,
+    clinic_id,
+    patient_id,
+    consultation_id,
+    source_channel,
+    source_field,
+    source_identity_fingerprint,
+    id
+  );
 
 CREATE TABLE clinical_fact_normalizations (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -10,7 +24,7 @@ CREATE TABLE clinical_fact_normalizations (
   clinic_id uuid NOT NULL REFERENCES clinics(id),
   patient_id uuid NOT NULL REFERENCES patients(id),
   consultation_id uuid NOT NULL REFERENCES consultations(id),
-  source_fact_candidate_id uuid NOT NULL REFERENCES clinical_fact_candidates(id),
+  source_fact_candidate_id uuid NOT NULL,
   source_identity_fingerprint text NOT NULL CHECK (source_identity_fingerprint ~ '^[a-f0-9]{64}$'),
   normalization_identity_fingerprint text NOT NULL CHECK (normalization_identity_fingerprint ~ '^[a-f0-9]{64}$'),
   source_channel text NOT NULL CHECK (source_channel IN (
@@ -68,6 +82,27 @@ CREATE TABLE clinical_fact_normalizations (
   CONSTRAINT clinical_fact_normalizations_clinic_org_fk
     FOREIGN KEY (clinic_id, organization_id)
     REFERENCES clinics(id, organization_id),
+  CONSTRAINT clinical_fact_normalizations_parent_link_fk
+    FOREIGN KEY (
+      organization_id,
+      clinic_id,
+      patient_id,
+      consultation_id,
+      source_channel,
+      source_field,
+      source_identity_fingerprint,
+      source_fact_candidate_id
+    )
+    REFERENCES clinical_fact_candidates (
+      organization_id,
+      clinic_id,
+      patient_id,
+      consultation_id,
+      source_channel,
+      source_field,
+      source_identity_fingerprint,
+      id
+    ),
   CONSTRAINT clinical_fact_normalizations_negation_kind_ok CHECK (
     (
       normalization_kind = 'NEGATION_CUE'

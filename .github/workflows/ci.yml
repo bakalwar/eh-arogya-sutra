@@ -184,6 +184,21 @@ jobs:
             echo 'F3D-2D1 must not mutate parent clinical_fact_candidates' >&2
             exit 1
           fi
+          if ! grep -E 'clinical_fact_normalizations_parent_link_fk|clinical_fact_candidates_016_norm_parent_uq' \
+            packages/database/migrations/016_f3d2_fact_normalizations.sql; then
+            echo 'F3D-2D1 requires composite parent binding FK/index' >&2
+            exit 1
+          fi
+          if awk '/export type InsertFactNormalizationInput/,/^};/' \
+            packages/database/src/repositories/factNormalization.ts \
+            | grep -E '\b(patientId|consultationId|sourceChannel|sourceField|sourceIdentityFingerprint)\b'; then
+            echo 'F3D-2D1 insert input must not accept caller-supplied parent linkage fields' >&2
+            exit 1
+          fi
+          if ! grep -F 'FACT_INELIGIBLE' packages/database/src/repositories/factNormalization.ts; then
+            echo 'F3D-2D1 insert must fail closed on ineligible parents' >&2
+            exit 1
+          fi
           if grep -E 'object_key|storage_path|https?://|password|api_key' \
             packages/database/migrations/016_f3d2_fact_normalizations.sql \
             packages/database/src/repositories/factNormalization.ts; then
