@@ -192,6 +192,18 @@ export {
   invalidateReviewedCandidateFactsAndNormalizations,
   invalidateStructuredVitalFactsAndNormalizations,
 } from './services/factNormalizationLifecycle.js';
+export { PgFactVerificationRepository } from './repositories/factVerification.js';
+export { lockAndSupersedeFactVerifications } from './repositories/factVerification.js';
+export {
+  FactVerificationService,
+  factVerificationService,
+  FACT_VERIFICATION_OPERATION,
+  buildNormalizationSnapshotFingerprint,
+} from './services/factVerificationService.js';
+export type {
+  ReviewSourceLinkedFactInput,
+  FactVerificationServiceDeps,
+} from './services/factVerificationService.js';
 export { PgConsultationIntakeRepository } from './repositories/consultationIntake.js';
 export type {
   ConsultationIntakeBundle,

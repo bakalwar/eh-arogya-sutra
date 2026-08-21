@@ -379,8 +379,8 @@ describe('F3D-2A / F3D-2D1 migration registry', () => {
   it('keeps 001–016 with fact-normalization foundation as tip', () => {
     const ids = getOrderedMigrationIds();
     expect(ids[0]).toBe('001_extensions_and_meta');
-    expect(ids.at(-1)).toBe('016_f3d2_fact_normalizations');
-    expect(ids).toHaveLength(16);
+    expect(ids.at(-1)).toBe('017_f3d2d5_clinical_fact_verification');
+    expect(ids).toHaveLength(17);
     expect(
       fs.existsSync(
         path.join(root, 'packages/database/migrations/016_f3d2_fact_normalizations.sql'),

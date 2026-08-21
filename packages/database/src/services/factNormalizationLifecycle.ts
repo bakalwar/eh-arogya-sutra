@@ -1,26 +1,29 @@
 import type { TenantContext, TransactionContext } from '../tenantContext.js';
 import { PgFactCandidateRepository } from '../repositories/factCandidate.js';
 import { PgFactNormalizationRepository } from '../repositories/factNormalization.js';
+import { lockAndSupersedeFactVerifications } from '../repositories/factVerification.js';
 
 const facts = new PgFactCandidateRepository();
 const norms = new PgFactNormalizationRepository();
 
 /**
- * Global lock order for fact+normalization supersession (caller must already hold
+ * Global lock order for fact+normalization+verification supersession (caller must already hold
  * the shared source/candidate lifecycle lock when invalidating from a source writer):
  *   1) sorted fact identity advisory locks
  *   2) sorted ACTIVE normalization identity advisory locks
- *   3) conditional ACTIVE→SUPERSEDED on facts
- *   4) conditional ACTIVE→SUPERSEDED on linked normalizations
+ *   3) sorted verification subject advisory locks
+ *   4) conditional ACTIVE→SUPERSEDED on facts
+ *   5) conditional ACTIVE→SUPERSEDED on linked normalizations
+ *   6) conditional ACTIVE→SUPERSEDED on linked verification events
  *
- * Never take source/candidate locks after fact/norm locks.
+ * Never take source/candidate locks after fact/norm/verification locks.
  */
 export async function lockAndSupersedeFactsWithNormalizations(
   tenant: TenantContext,
   tx: TransactionContext,
   factIds: readonly string[],
-): Promise<{ factCount: number; normalizationCount: number }> {
-  if (factIds.length === 0) return { factCount: 0, normalizationCount: 0 };
+): Promise<{ factCount: number; normalizationCount: number; verificationCount: number }> {
+  if (factIds.length === 0) return { factCount: 0, normalizationCount: 0, verificationCount: 0 };
   const uniqueIds = [...new Set(factIds)];
 
   const locked = await tx.query(
@@ -32,7 +35,7 @@ export async function lockAndSupersedeFactsWithNormalizations(
     [tenant.organizationId, tenant.clinicId, uniqueIds],
   );
   const rows = locked.rows as { id: string; fp: string }[];
-  if (rows.length === 0) return { factCount: 0, normalizationCount: 0 };
+  if (rows.length === 0) return { factCount: 0, normalizationCount: 0, verificationCount: 0 };
 
   const fingerprints = [...new Set(rows.map((r) => String(r.fp)))].sort((a, b) =>
     a < b ? -1 : a > b ? 1 : 0,
@@ -43,10 +46,11 @@ export async function lockAndSupersedeFactsWithNormalizations(
 
   const activeIds = rows.map((r) => String(r.id));
   await norms.lockActiveIdentitiesForParentFacts(tenant, tx, activeIds);
+  const verificationCount = await lockAndSupersedeFactVerifications(tenant, tx, activeIds);
 
   const factCount = await facts.supersedeActiveByIds(tenant, tx, activeIds);
   const normalizationCount = await norms.supersedeActiveLinkedToFacts(tenant, tx, activeIds);
-  return { factCount, normalizationCount };
+  return { factCount, normalizationCount, verificationCount };
 }
 
 export async function invalidateChiefComplaintFactsAndNormalizations(

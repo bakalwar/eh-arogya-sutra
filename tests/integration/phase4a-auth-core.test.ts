@@ -785,9 +785,9 @@ describe('Phase 4A authentication core', () => {
 
   it('38-39 clean migration and latest migration down/up', async () => {
     requireDb();
-    expect(getOrderedMigrationIds()).toHaveLength(16);
+    expect(getOrderedMigrationIds()).toHaveLength(17);
     const downId = await migrateDownLastForIsolatedTest(env);
-    expect(downId).toBe('016_f3d2_fact_normalizations');
+    expect(downId).toBe('017_f3d2d5_clinical_fact_verification');
     const up = await migrateUp(env);
     expect(up.applied).toContain('016_f3d2_fact_normalizations');
     expect(getOrderedMigrationIds()).toContain('016_f3d2_fact_normalizations');

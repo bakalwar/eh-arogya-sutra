@@ -102,6 +102,20 @@ export type {
   FactNormalizationDto,
 } from './factNormalizationTypes.js';
 export {
+  FACT_VERIFICATION_AUTHORITY_SCOPE,
+  FACT_VERIFICATION_ACTIONS,
+  FACT_VERIFICATION_REASON_CODES,
+  FACT_VERIFICATION_ACTION_REASON_CODES,
+  MAX_FACT_VERIFICATION_SNAPSHOT_NORMS,
+} from './factVerificationTypes.js';
+export type {
+  FactVerificationAction,
+  FactVerificationReasonCode,
+  FactVerificationDecisionStatus,
+  FactVerificationEventDto,
+  FactVerificationNormalizationDto,
+} from './factVerificationTypes.js';
+export {
   sha256Hex,
   extractorFingerprint,
   contentAwareExtractorFingerprint,
