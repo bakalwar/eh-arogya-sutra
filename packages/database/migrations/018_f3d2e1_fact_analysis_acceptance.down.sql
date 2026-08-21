@@ -1,0 +1,33 @@
+DROP TRIGGER IF EXISTS clinical_fact_candidates_acceptance_snapshot_deferred
+  ON clinical_fact_candidates;
+DROP TRIGGER IF EXISTS clinical_fact_normalizations_acceptance_snapshot_deferred
+  ON clinical_fact_normalizations;
+DROP TRIGGER IF EXISTS clinical_fact_verification_events_acceptance_snapshot_deferred
+  ON clinical_fact_verification_events;
+DROP TRIGGER IF EXISTS clinical_fact_analysis_acceptance_norms_snapshot_deferred
+  ON clinical_fact_analysis_acceptance_normalizations;
+DROP TRIGGER IF EXISTS clinical_fact_analysis_acceptance_events_snapshot_deferred
+  ON clinical_fact_analysis_acceptance_events;
+
+DROP FUNCTION IF EXISTS ehas2_fact_analysis_acceptance_deferred_from_subject();
+DROP FUNCTION IF EXISTS ehas2_fact_analysis_acceptance_deferred_from_child();
+DROP FUNCTION IF EXISTS ehas2_fact_analysis_acceptance_deferred_from_event();
+DROP FUNCTION IF EXISTS ehas2_fact_analysis_acceptance_validate_event(uuid);
+DROP FUNCTION IF EXISTS ehas2_fact_analysis_acceptance_snapshot_fingerprint(uuid);
+DROP FUNCTION IF EXISTS ehas2_fact_analysis_acceptance_lock_subjects_sorted(text[]);
+DROP FUNCTION IF EXISTS ehas2_fact_analysis_acceptance_lock_subject(uuid, uuid, uuid);
+DROP FUNCTION IF EXISTS ehas2_fact_analysis_acceptance_subject_lock_key(uuid, uuid, uuid);
+
+DROP TRIGGER IF EXISTS clinical_fact_analysis_acceptance_normalizations_append_only
+  ON clinical_fact_analysis_acceptance_normalizations;
+DROP FUNCTION IF EXISTS ehas2_fact_analysis_acceptance_norm_append_only();
+DROP TABLE IF EXISTS clinical_fact_analysis_acceptance_normalizations;
+
+DROP TRIGGER IF EXISTS clinical_fact_analysis_acceptance_events_append_only
+  ON clinical_fact_analysis_acceptance_events;
+DROP FUNCTION IF EXISTS ehas2_fact_analysis_acceptance_event_append_only();
+DROP TABLE IF EXISTS clinical_fact_analysis_acceptance_events;
+
+DROP INDEX IF EXISTS clinical_fact_analysis_acceptance_018_child_parent_uq;
+DROP INDEX IF EXISTS clinical_fact_normalizations_018_acceptance_norm_uq;
+DROP INDEX IF EXISTS clinical_fact_candidates_018_acceptance_parent_uq;

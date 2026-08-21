@@ -42,8 +42,8 @@ const tenant: TenantContext = {
 describe('F3D-2D3 atomic normalization persistence + lifecycle contract', () => {
   it('keeps migration tip at 017 with D5 foundation', () => {
     const ids = getOrderedMigrationIds();
-    expect(ids.at(-1)).toBe('017_f3d2d5_clinical_fact_verification');
-    expect(ids).toHaveLength(17);
+    expect(ids.at(-2)).toBe('017_f3d2d5_clinical_fact_verification');
+    expect(ids).toHaveLength(18);
     expect(
       fs
         .readdirSync(path.join(root, 'packages/database/migrations'))

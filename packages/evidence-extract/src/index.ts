@@ -116,6 +116,18 @@ export type {
   FactVerificationNormalizationDto,
 } from './factVerificationTypes.js';
 export {
+  FACT_ANALYSIS_ACCEPTANCE_ACTION,
+  FACT_ANALYSIS_ACCEPTANCE_AUTHORITY,
+  FACT_ANALYSIS_ACCEPTANCE_REASON,
+  FACT_ANALYSIS_ACCEPTANCE_CONTRACT_VERSION,
+  MAX_FACT_ANALYSIS_ACCEPTANCE_SNAPSHOT_NORMS,
+} from './factAnalysisAcceptanceTypes.js';
+export type {
+  FactAnalysisAcceptanceDecisionStatus,
+  FactAnalysisAcceptanceEventDto,
+  FactAnalysisAcceptanceNormalizationDto,
+} from './factAnalysisAcceptanceTypes.js';
+export {
   sha256Hex,
   extractorFingerprint,
   contentAwareExtractorFingerprint,

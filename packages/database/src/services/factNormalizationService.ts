@@ -51,6 +51,7 @@ import {
   vitalValueContentSha256,
 } from './structuredVitalSource.js';
 import { lockAndSupersedeFactVerifications } from '../repositories/factVerification.js';
+import { lockAndSupersedeFactAnalysisAcceptances } from '../repositories/factAnalysisAcceptance.js';
 
 const FACT_NORMALIZATION_OPERATION = 'clinical.fact_normalization';
 const CLOSED_INPUT_KEYS = new Set(['sourceFactCandidateId', 'idempotencyKey']);
@@ -554,6 +555,7 @@ export class FactNormalizationService {
           if (prior.length > 0) {
             await norms.lockActiveIdentitiesForParentFacts(tenant, tx, [parent.id]);
             await lockAndSupersedeFactVerifications(tenant, tx, [parent.id]);
+            await lockAndSupersedeFactAnalysisAcceptances(tenant, tx, [parent.id]);
             await norms.supersedeActiveLinkedToFacts(tenant, tx, [parent.id]);
           }
           await idempotency.insert(tenant, tx, {
@@ -604,10 +606,12 @@ export class FactNormalizationService {
         if (existingActive.length > 0) {
           await norms.lockActiveIdentitiesForParentFacts(tenant, tx, [parent.id]);
           await lockAndSupersedeFactVerifications(tenant, tx, [parent.id]);
+          await lockAndSupersedeFactAnalysisAcceptances(tenant, tx, [parent.id]);
           await norms.supersedeActiveLinkedToFacts(tenant, tx, [parent.id]);
         } else if (drafts.length > 0) {
           // Empty → non-empty ACTIVE snapshot invalidates prior empty-snapshot reviews.
           await lockAndSupersedeFactVerifications(tenant, tx, [parent.id]);
+          await lockAndSupersedeFactAnalysisAcceptances(tenant, tx, [parent.id]);
         }
 
         const inserted: FactNormalizationDto[] = [];
