@@ -9,7 +9,11 @@ import {
 import { ResourceNotFoundError, ValidationError } from '../domainErrors.js';
 import { withTenantTransaction } from '../pool.js';
 import { PgConsultationRepository } from '../repositories/postgres.js';
-import { assertTenantContext, type TenantContext } from '../tenantContext.js';
+import {
+  assertTenantContext,
+  type TenantContext,
+  type TransactionContext,
+} from '../tenantContext.js';
 import { assertUuid, hashPayload } from '../validation.js';
 import { lockChiefComplaintCueSource } from './cueSourceLock.js';
 
@@ -33,6 +37,18 @@ const PARSER_FAIL_CODES = new Set([
 
 export type ParseDoctorDeclaredChiefComplaintCuesInput = {
   readonly consultationId: string;
+};
+
+export type DoctorDeclaredChiefComplaintBinding = {
+  readonly organizationId: string;
+  readonly clinicId: string;
+  readonly patientId: string;
+  readonly consultationId: string;
+  readonly sourceChannel: typeof SOURCE_CHANNEL;
+  readonly sourceField: typeof SOURCE_FIELD;
+  readonly sourceIdentityFingerprint: string;
+  readonly contentSha256: string;
+  readonly exactPersistedText: string;
 };
 
 export type DoctorDeclaredChiefComplaintCueAdapterResult = {
@@ -116,6 +132,114 @@ function mapParserThrow(err: unknown): never {
 }
 
 export class CueEligibleSourceService {
+  /**
+   * Caller must already hold the shared chief-complaint cue source lock.
+   * Binding only — does not invoke the cue parser.
+   */
+  async loadDoctorDeclaredChiefComplaintBindingLocked(
+    tenant: TenantContext,
+    tx: TransactionContext,
+    consultationId: string,
+    pack: LoadedTerminologyPack,
+  ): Promise<DoctorDeclaredChiefComplaintBinding> {
+    const row = await consultations.findById(tenant, tx, consultationId);
+    if (!row) throw new ResourceNotFoundError();
+    assertCaseOwner(tenant, row.doctorUserId);
+    if (
+      row.organizationId !== tenant.organizationId ||
+      row.clinicId !== tenant.clinicId ||
+      row.id !== consultationId
+    ) {
+      throw new ValidationError('SOURCE_MUTATED');
+    }
+    if (!row.patientId) throw new ResourceNotFoundError();
+
+    const persisted = row.chiefComplaintText;
+    if (persisted == null || persisted.trim() === '') {
+      throw new ValidationError('SOURCE_INELIGIBLE');
+    }
+    if (persisted.length > PARSER_MAX_UTF16) {
+      throw new ValidationError('INPUT_TOO_LARGE');
+    }
+
+    const contentSha256 = sha256Utf8(persisted);
+    const sourceIdentityFingerprint = bindDoctorDeclaredChiefComplaintSourceIdentity({
+      organizationId: row.organizationId,
+      clinicId: row.clinicId,
+      patientId: row.patientId,
+      consultationId: row.id,
+      exactPersistedText: persisted,
+      packId: pack.packId,
+      packVersion: pack.packVersion,
+      packContentChecksum: pack.contentChecksum,
+    });
+
+    return {
+      organizationId: row.organizationId,
+      clinicId: row.clinicId,
+      patientId: row.patientId,
+      consultationId: row.id,
+      sourceChannel: SOURCE_CHANNEL,
+      sourceField: SOURCE_FIELD,
+      sourceIdentityFingerprint,
+      contentSha256,
+      exactPersistedText: persisted,
+    };
+  }
+
+  /**
+   * Parse only — H2 allowlisted. Does not re-read source or take locks.
+   */
+  parseDoctorDeclaredChiefComplaintFromBinding(
+    binding: DoctorDeclaredChiefComplaintBinding,
+    pack: LoadedTerminologyPack,
+  ): CueParserResult {
+    const eligibleInput: EligibleCueParserInput = {
+      sourceIdentityFingerprint: binding.sourceIdentityFingerprint,
+      sourceChannel: SOURCE_CHANNEL,
+      sourceField: SOURCE_FIELD,
+      eligibleText: binding.exactPersistedText,
+      sourceLocator: null,
+      organizationId: binding.organizationId,
+      clinicId: binding.clinicId,
+      patientId: binding.patientId,
+      consultationId: binding.consultationId,
+    };
+    try {
+      return parseOwnerFrozenCues(eligibleInput, pack);
+    } catch (err) {
+      mapParserThrow(err);
+    }
+  }
+
+  /**
+   * Caller must already hold the shared chief-complaint cue source lock.
+   */
+  async parseDoctorDeclaredChiefComplaintCuesLocked(
+    tenant: TenantContext,
+    tx: TransactionContext,
+    consultationId: string,
+    pack: LoadedTerminologyPack,
+  ): Promise<DoctorDeclaredChiefComplaintCueAdapterResult> {
+    const binding = await this.loadDoctorDeclaredChiefComplaintBindingLocked(
+      tenant,
+      tx,
+      consultationId,
+      pack,
+    );
+    const parser = this.parseDoctorDeclaredChiefComplaintFromBinding(binding, pack);
+    return {
+      organizationId: binding.organizationId,
+      clinicId: binding.clinicId,
+      patientId: binding.patientId,
+      consultationId: binding.consultationId,
+      sourceChannel: SOURCE_CHANNEL,
+      sourceField: SOURCE_FIELD,
+      sourceIdentityFingerprint: binding.sourceIdentityFingerprint,
+      parser,
+    };
+  }
+
   async parseDoctorDeclaredChiefComplaintCues(
     tenant: TenantContext,
     input: ParseDoctorDeclaredChiefComplaintCuesInput,
@@ -132,66 +256,12 @@ export class CueEligibleSourceService {
       tenant,
       async (tx) => {
         await lockChiefComplaintCueSource(tx, tenant, input.consultationId);
-        const row = await consultations.findById(tenant, tx, input.consultationId);
-        if (!row) throw new ResourceNotFoundError();
-        assertCaseOwner(tenant, row.doctorUserId);
-        if (
-          row.organizationId !== tenant.organizationId ||
-          row.clinicId !== tenant.clinicId ||
-          row.id !== input.consultationId
-        ) {
-          throw new ValidationError('SOURCE_MUTATED');
-        }
-        if (!row.patientId) throw new ResourceNotFoundError();
-
-        const persisted = row.chiefComplaintText;
-        if (persisted == null || persisted.trim() === '') {
-          throw new ValidationError('SOURCE_INELIGIBLE');
-        }
-        if (persisted.length > PARSER_MAX_UTF16) {
-          throw new ValidationError('INPUT_TOO_LARGE');
-        }
-
-        const sourceIdentityFingerprint = bindDoctorDeclaredChiefComplaintSourceIdentity({
-          organizationId: row.organizationId,
-          clinicId: row.clinicId,
-          patientId: row.patientId,
-          consultationId: row.id,
-          exactPersistedText: persisted,
-          packId: pack.packId,
-          packVersion: pack.packVersion,
-          packContentChecksum: pack.contentChecksum,
-        });
-
-        const eligibleInput: EligibleCueParserInput = {
-          sourceIdentityFingerprint,
-          sourceChannel: SOURCE_CHANNEL,
-          sourceField: SOURCE_FIELD,
-          eligibleText: persisted,
-          sourceLocator: null,
-          organizationId: row.organizationId,
-          clinicId: row.clinicId,
-          patientId: row.patientId,
-          consultationId: row.id,
-        };
-
-        let parser: CueParserResult;
-        try {
-          parser = parseOwnerFrozenCues(eligibleInput, pack);
-        } catch (err) {
-          mapParserThrow(err);
-        }
-
-        return {
-          organizationId: row.organizationId,
-          clinicId: row.clinicId,
-          patientId: row.patientId,
-          consultationId: row.id,
-          sourceChannel: SOURCE_CHANNEL,
-          sourceField: SOURCE_FIELD,
-          sourceIdentityFingerprint,
-          parser,
-        };
+        return this.parseDoctorDeclaredChiefComplaintCuesLocked(
+          tenant,
+          tx,
+          input.consultationId,
+          pack,
+        );
       },
       env,
     );

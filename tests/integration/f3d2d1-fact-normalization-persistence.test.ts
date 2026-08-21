@@ -767,18 +767,22 @@ describe('F3D-2D1 fact-normalization persistence foundation', () => {
       { chiefComplaintText: 'synthetic fever corrected for supersede' },
       env,
     );
+    expect(
+      (await facts.list(doctorA, opened.consultationId, factEnv)).find((f) => f.id === parent.id)
+        ?.decisionStatus,
+    ).toBe('SUPERSEDED');
     const replacement = await facts.materialize(
       doctorA,
       opened.consultationId,
       {
         sourceChannel: 'DOCTOR_DECLARED',
         sourceField: 'CHIEF_COMPLAINT',
-        supersedesFactId: parent.id,
         idempotencyKey: 'f3d2d1-bind-super-parent',
       },
       factEnv,
     );
     expect(replacement.decisionStatus).toBe('ACTIVE');
+    expect(replacement.id).not.toBe(parent.id);
     const historyFacts = await facts.list(doctorA, opened.consultationId, factEnv);
     expect(historyFacts.find((f) => f.id === parent.id)?.decisionStatus).toBe('SUPERSEDED');
 

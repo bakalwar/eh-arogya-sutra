@@ -63,7 +63,8 @@ describe('F3D-2D2 deterministic source-preserving normalizer', () => {
     expect(F3D2D2_PERSISTENCE_CONNECTED).toBe(false);
     expect(F3D2D2_PRODUCTION_WRITER_CONNECTED).toBe(false);
     expect(FACT_NORMALIZER_METHOD).toBe('OWNER_FROZEN_SOURCE_PRESERVING_V1');
-    expect(FACT_NORMALIZER_VERSION).toBe('f3d2d2-source-preserving-normalizer-v1');
+    expect(FACT_NORMALIZER_VERSION).toBe('f3d2d2-src-norm-v1');
+    expect(FACT_NORMALIZER_VERSION.length).toBeLessThanOrEqual(32);
     expect(computeNormalizerFingerprint()).toMatch(/^[a-f0-9]{64}$/);
     expect(NORMALIZER_FAILURE_CODES).toContain('AMBIGUOUS_OVERLAP');
   });

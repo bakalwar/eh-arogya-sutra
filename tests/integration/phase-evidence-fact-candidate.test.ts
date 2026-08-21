@@ -791,18 +791,20 @@ describe('F3D-1 source-linked fact-candidate persistence', () => {
       { chiefComplaintText: 'synthetic headache corrected' },
       env,
     );
-    await expect(
-      facts.materialize(
-        doctorA,
-        consultationId,
-        {
-          sourceChannel: 'DOCTOR_DECLARED',
-          sourceField: 'CHIEF_COMPLAINT',
-          idempotencyKey: 'fact-conflict-no-super',
-        },
-        factEnv,
-      ),
-    ).rejects.toBeInstanceOf(FactConflictError);
+    const afterEdit = await facts.list(doctorA, consultationId, factEnv);
+    expect(afterEdit.find((f) => f.id === first.id)?.decisionStatus).toBe('SUPERSEDED');
+    const rematerialized = await facts.materialize(
+      doctorA,
+      consultationId,
+      {
+        sourceChannel: 'DOCTOR_DECLARED',
+        sourceField: 'CHIEF_COMPLAINT',
+        idempotencyKey: 'fact-after-source-edit',
+      },
+      factEnv,
+    );
+    expect(rematerialized.id).not.toBe(first.id);
+    expect(rematerialized.originalSourceSpan).toBe('synthetic headache corrected');
 
     const replacement = await facts.materialize(
       doctorA,
@@ -810,18 +812,18 @@ describe('F3D-1 source-linked fact-candidate persistence', () => {
       {
         sourceChannel: 'DOCTOR_DECLARED',
         sourceField: 'CHIEF_COMPLAINT',
-        supersedesFactId: first.id,
+        supersedesFactId: rematerialized.id,
         idempotencyKey: 'fact-super-0001',
       },
       factEnv,
     );
-    expect(replacement.id).not.toBe(first.id);
-    expect(replacement.supersedesFactId).toBe(first.id);
+    expect(replacement.id).not.toBe(rematerialized.id);
+    expect(replacement.supersedesFactId).toBe(rematerialized.id);
     expect(replacement.originalSourceSpan).toBe('synthetic headache corrected');
     const history = await facts.list(doctorA, consultationId, factEnv);
     const cc = history.filter((f) => f.sourceField === 'CHIEF_COMPLAINT');
     expect(cc.filter((f) => f.decisionStatus === 'ACTIVE')).toHaveLength(1);
-    expect(cc.filter((f) => f.decisionStatus === 'SUPERSEDED')).toHaveLength(1);
+    expect(cc.filter((f) => f.decisionStatus === 'SUPERSEDED').length).toBeGreaterThanOrEqual(2);
     expect(cc.find((f) => f.id === first.id)?.originalSourceSpan).toBe('synthetic headache');
 
     await withTenantTransaction(
@@ -903,8 +905,16 @@ describe('F3D-1 source-linked fact-candidate persistence', () => {
     expect(afterRace.filter((f) => f.decisionStatus === 'ACTIVE')).toHaveLength(1);
 
     await intake.patch(doctorA, c2, { chiefComplaintText: 'synthetic race correction' }, env);
-    const active = afterRace.find((f) => f.decisionStatus === 'ACTIVE');
-    if (!active) throw new Error('BLOCKED: expected active fact');
+    const raceParent = await facts.materialize(
+      doctorA,
+      c2,
+      {
+        sourceChannel: 'DOCTOR_DECLARED',
+        sourceField: 'CHIEF_COMPLAINT',
+        idempotencyKey: 'fact-super-race-seed',
+      },
+      factEnv,
+    );
     const superRace = await Promise.allSettled([
       facts.materialize(
         doctorA,
@@ -912,7 +922,7 @@ describe('F3D-1 source-linked fact-candidate persistence', () => {
         {
           sourceChannel: 'DOCTOR_DECLARED',
           sourceField: 'CHIEF_COMPLAINT',
-          supersedesFactId: active.id,
+          supersedesFactId: raceParent.id,
           idempotencyKey: 'fact-super-race-a',
         },
         factEnv,
@@ -923,7 +933,7 @@ describe('F3D-1 source-linked fact-candidate persistence', () => {
         {
           sourceChannel: 'DOCTOR_DECLARED',
           sourceField: 'CHIEF_COMPLAINT',
-          supersedesFactId: active.id,
+          supersedesFactId: raceParent.id,
           idempotencyKey: 'fact-super-race-b',
         },
         factEnv,
@@ -978,6 +988,18 @@ describe('F3D-1 source-linked fact-candidate persistence', () => {
     );
     expect(unknown.status).toBe(400);
     expect(String(unknown.json.message)).toMatch(/UNKNOWN_FIELD_REJECTED/);
+    const rematerializeHttp = await httpJson(
+      app,
+      'POST',
+      `${EHAS2_API_NAMESPACE}/consultations/${consultationId}/fact-candidates/materialize`,
+      {
+        sourceChannel: 'DOCTOR_DECLARED',
+        sourceField: 'CHIEF_COMPLAINT',
+      },
+      { 'Idempotency-Key': 'fact-http-after-edit' },
+    );
+    expect([200, 201]).toContain(rematerializeHttp.status);
+    expect(rematerializeHttp.json.code).not.toBe('FACT_CONFLICT');
     const conflictHttp = await httpJson(
       app,
       'POST',
@@ -985,6 +1007,7 @@ describe('F3D-1 source-linked fact-candidate persistence', () => {
       {
         sourceChannel: 'DOCTOR_DECLARED',
         sourceField: 'CHIEF_COMPLAINT',
+        supersedesFactId: '00000000-0000-4000-8000-00000000dead',
       },
       { 'Idempotency-Key': 'fact-http-conflict' },
     );
@@ -1012,12 +1035,6 @@ describe('F3D-1 source-linked fact-candidate persistence', () => {
           idempotencyKey: `fact-super-round-${round}-seed`,
         },
         factEnv,
-      );
-      await intake.patch(
-        doctorA,
-        consultationId,
-        { chiefComplaintText: `synthetic race correction ${round}` },
-        env,
       );
       const raced = await Promise.allSettled([
         facts.materialize(
@@ -1083,7 +1100,6 @@ describe('F3D-1 source-linked fact-candidate persistence', () => {
       {
         sourceChannel: 'DOCTOR_DECLARED',
         sourceField: 'CHIEF_COMPLAINT',
-        supersedesFactId: seed.id,
         idempotencyKey: 'fact-super-replay-same',
       },
       factEnv,
@@ -1094,12 +1110,12 @@ describe('F3D-1 source-linked fact-candidate persistence', () => {
       {
         sourceChannel: 'DOCTOR_DECLARED',
         sourceField: 'CHIEF_COMPLAINT',
-        supersedesFactId: seed.id,
         idempotencyKey: 'fact-super-replay-same',
       },
       factEnv,
     );
     expect(replayed.id).toBe(created.id);
+    expect(seed.id).not.toBe(created.id);
     await expect(
       facts.materialize(
         doctorA,
@@ -1123,12 +1139,6 @@ describe('F3D-1 source-linked fact-candidate persistence', () => {
         idempotencyKey: 'fact-insert-fail-seed',
       },
       factEnv,
-    );
-    await intake.patch(
-      doctorA,
-      insertFailConsultation,
-      { chiefComplaintText: 'synthetic insert rollback' },
-      env,
     );
     await expect(
       withTenantTransaction(

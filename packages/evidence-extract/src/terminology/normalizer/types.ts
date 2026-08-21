@@ -20,7 +20,7 @@ export const F3D2D2_PERSISTENCE_CONNECTED = false as const;
 export const F3D2D2_PRODUCTION_WRITER_CONNECTED = false as const;
 
 export const FACT_NORMALIZER_METHOD: FactNormalizationMethod = FACT_NORMALIZATION_METHODS[0];
-export const FACT_NORMALIZER_VERSION = 'f3d2d2-source-preserving-normalizer-v1' as const;
+export const FACT_NORMALIZER_VERSION = 'f3d2d2-src-norm-v1' as const;
 /** Identity canonicalization contract id bound into normalizerFingerprint. */
 export const FACT_NORMALIZATION_IDENTITY_CANONICALIZATION =
   'ehas2-fact-normalization-identity-v1' as const;

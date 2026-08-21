@@ -103,6 +103,24 @@ export type F3cReviewedSourceCueAdapterResult = {
   readonly parser: CueParserResult;
 };
 
+export type F3cReviewedSourceBinding = {
+  readonly organizationId: string;
+  readonly clinicId: string;
+  readonly patientId: string;
+  readonly consultationId: string;
+  readonly evidenceItemId: string;
+  readonly extractionRunId: string;
+  readonly candidateId: string;
+  readonly reviewEventId: string;
+  readonly reviewAction: 'ACCEPT_AS_SOURCE_TEXT' | 'CORRECT_SOURCE_TEXT';
+  readonly sourceChannel: typeof SOURCE_CHANNEL;
+  readonly sourceField: typeof SOURCE_FIELD;
+  readonly sourceIdentityFingerprint: string;
+  readonly contentSha256: string;
+  readonly exactEffectiveText: string;
+  readonly sourceLocator: SourceLocator;
+};
+
 function assertClosedSelectorInput(input: ParseF3cReviewedSourceCuesInput): void {
   if (!input || typeof input !== 'object' || Array.isArray(input)) {
     throw new ValidationError('UNTRUSTED_INPUT');
@@ -190,7 +208,7 @@ export function bindF3cReviewedSourceIdentity(input: {
   });
 }
 
-function deriveEffectiveText(
+export function deriveEffectiveReviewedCueText(
   action: string,
   originalRawText: string,
   correctedRawText: string | null,
@@ -205,6 +223,14 @@ function deriveEffectiveText(
     return correctedRawText;
   }
   throw new ValidationError('SOURCE_INELIGIBLE');
+}
+
+function deriveEffectiveText(
+  action: string,
+  originalRawText: string,
+  correctedRawText: string | null,
+): string {
+  return deriveEffectiveReviewedCueText(action, originalRawText, correctedRawText);
 }
 
 function loadPinnedPackOrThrow(): LoadedTerminologyPack {
@@ -225,6 +251,169 @@ function mapParserThrow(err: unknown): never {
 }
 
 export class F3cReviewedCueSourceService {
+  /**
+   * Caller must already hold the shared F3C reviewed-candidate cue source lock.
+   * Binding only — does not invoke the cue parser.
+   */
+  async loadF3cReviewedSourceBindingLocked(
+    tenant: TenantContext,
+    tx: TransactionContext,
+    input: ParseF3cReviewedSourceCuesInput,
+    pack: LoadedTerminologyPack,
+  ): Promise<F3cReviewedSourceBinding> {
+    const item = await evidenceRepo.findById(tenant, tx, input.evidenceItemId);
+    if (!item) throw new ResourceNotFoundError();
+    if (item.consultationId !== input.consultationId) {
+      throw new ResourceNotFoundError();
+    }
+    if (item.organizationId !== tenant.organizationId || item.clinicId !== tenant.clinicId) {
+      throw new ResourceNotFoundError();
+    }
+    assertCaseOwner(tenant, item.submittedByActorId);
+
+    const candidate = await loadCandidateForReviewedCue(tenant, tx, input.candidateId);
+    if (
+      !candidate ||
+      candidate.evidenceItemId !== input.evidenceItemId ||
+      candidate.consultationId !== input.consultationId ||
+      candidate.organizationId !== tenant.organizationId ||
+      candidate.clinicId !== tenant.clinicId ||
+      candidate.patientId !== item.patientId
+    ) {
+      throw new ResourceNotFoundError();
+    }
+    if (candidate.status !== 'EXTRACTED_UNVERIFIED') {
+      throw new ValidationError('SOURCE_INELIGIBLE');
+    }
+
+    const active = await candidateReviewRepo.findActiveForCandidate(tenant, tx, input.candidateId);
+    if (!active) {
+      throw new ValidationError('SOURCE_INELIGIBLE');
+    }
+    if (active.decisionStatus !== 'ACTIVE') {
+      throw new ValidationError('SOURCE_INELIGIBLE');
+    }
+    if (
+      active.candidateId !== candidate.id ||
+      active.evidenceItemId !== input.evidenceItemId ||
+      active.consultationId !== input.consultationId ||
+      active.extractionRunId !== candidate.extractionRunId ||
+      active.patientId !== candidate.patientId ||
+      active.organizationId !== tenant.organizationId ||
+      active.clinicId !== tenant.clinicId
+    ) {
+      throw new ResourceNotFoundError();
+    }
+    if (!ELIGIBLE_ACTIONS.has(active.action)) {
+      throw new ValidationError('SOURCE_INELIGIBLE');
+    }
+    const reviewAction = active.action as 'ACCEPT_AS_SOURCE_TEXT' | 'CORRECT_SOURCE_TEXT';
+
+    const effectiveText = deriveEffectiveText(
+      reviewAction,
+      active.originalRawText,
+      active.correctedRawText,
+    );
+    if (effectiveText.trim() === '') {
+      throw new ValidationError('SOURCE_INELIGIBLE');
+    }
+    if (effectiveText.length > PARSER_MAX_UTF16) {
+      throw new ValidationError('INPUT_TOO_LARGE');
+    }
+
+    assertNoStorageInLocator(active.sourceLocator);
+    const sourceLocator = presentSourceLocator(active.sourceLocator);
+    const contentSha256 = sha256Utf8(effectiveText);
+
+    const sourceIdentityFingerprint = bindF3cReviewedSourceIdentity({
+      organizationId: candidate.organizationId,
+      clinicId: candidate.clinicId,
+      patientId: candidate.patientId,
+      consultationId: candidate.consultationId,
+      evidenceItemId: candidate.evidenceItemId,
+      extractionRunId: candidate.extractionRunId,
+      candidateId: candidate.id,
+      reviewEventId: active.id,
+      reviewAction,
+      exactEffectiveText: effectiveText,
+      sourceLocator,
+      packId: pack.packId,
+      packVersion: pack.packVersion,
+      packContentChecksum: pack.contentChecksum,
+    });
+
+    return {
+      organizationId: candidate.organizationId,
+      clinicId: candidate.clinicId,
+      patientId: candidate.patientId,
+      consultationId: candidate.consultationId,
+      evidenceItemId: candidate.evidenceItemId,
+      extractionRunId: candidate.extractionRunId,
+      candidateId: candidate.id,
+      reviewEventId: active.id,
+      reviewAction,
+      sourceChannel: SOURCE_CHANNEL,
+      sourceField: SOURCE_FIELD,
+      sourceIdentityFingerprint,
+      contentSha256,
+      exactEffectiveText: effectiveText,
+      sourceLocator,
+    };
+  }
+
+  /**
+   * Parse only — H2 allowlisted. Does not re-read source or take locks.
+   */
+  parseF3cReviewedSourceFromBinding(
+    binding: F3cReviewedSourceBinding,
+    pack: LoadedTerminologyPack,
+  ): CueParserResult {
+    const eligibleInput: EligibleCueParserInput = {
+      sourceIdentityFingerprint: binding.sourceIdentityFingerprint,
+      sourceChannel: SOURCE_CHANNEL,
+      sourceField: SOURCE_FIELD,
+      eligibleText: binding.exactEffectiveText,
+      sourceLocator: binding.sourceLocator,
+      organizationId: binding.organizationId,
+      clinicId: binding.clinicId,
+      patientId: binding.patientId,
+      consultationId: binding.consultationId,
+    };
+    try {
+      return parseOwnerFrozenCues(eligibleInput, pack);
+    } catch (err) {
+      mapParserThrow(err);
+    }
+  }
+
+  /**
+   * Caller must already hold the shared F3C reviewed-candidate cue source lock.
+   */
+  async parseF3cReviewedSourceCuesLocked(
+    tenant: TenantContext,
+    tx: TransactionContext,
+    input: ParseF3cReviewedSourceCuesInput,
+    pack: LoadedTerminologyPack,
+  ): Promise<F3cReviewedSourceCueAdapterResult> {
+    const binding = await this.loadF3cReviewedSourceBindingLocked(tenant, tx, input, pack);
+    const parser = this.parseF3cReviewedSourceFromBinding(binding, pack);
+    return {
+      organizationId: binding.organizationId,
+      clinicId: binding.clinicId,
+      patientId: binding.patientId,
+      consultationId: binding.consultationId,
+      evidenceItemId: binding.evidenceItemId,
+      extractionRunId: binding.extractionRunId,
+      candidateId: binding.candidateId,
+      reviewEventId: binding.reviewEventId,
+      reviewAction: binding.reviewAction,
+      sourceChannel: SOURCE_CHANNEL,
+      sourceField: SOURCE_FIELD,
+      sourceIdentityFingerprint: binding.sourceIdentityFingerprint,
+      parser,
+    };
+  }
+
   async parseF3cReviewedSourceCues(
     tenant: TenantContext,
     input: ParseF3cReviewedSourceCuesInput,
@@ -241,125 +430,7 @@ export class F3cReviewedCueSourceService {
       tenant,
       async (tx) => {
         await lockF3cReviewedCueSource(tx, tenant, input.candidateId);
-
-        const item = await evidenceRepo.findById(tenant, tx, input.evidenceItemId);
-        if (!item) throw new ResourceNotFoundError();
-        if (item.consultationId !== input.consultationId) {
-          throw new ResourceNotFoundError();
-        }
-        if (item.organizationId !== tenant.organizationId || item.clinicId !== tenant.clinicId) {
-          throw new ResourceNotFoundError();
-        }
-        assertCaseOwner(tenant, item.submittedByActorId);
-
-        const candidate = await loadCandidateForReviewedCue(tenant, tx, input.candidateId);
-        if (
-          !candidate ||
-          candidate.evidenceItemId !== input.evidenceItemId ||
-          candidate.consultationId !== input.consultationId ||
-          candidate.organizationId !== tenant.organizationId ||
-          candidate.clinicId !== tenant.clinicId ||
-          candidate.patientId !== item.patientId
-        ) {
-          throw new ResourceNotFoundError();
-        }
-        if (candidate.status !== 'EXTRACTED_UNVERIFIED') {
-          throw new ValidationError('SOURCE_INELIGIBLE');
-        }
-
-        const active = await candidateReviewRepo.findActiveForCandidate(
-          tenant,
-          tx,
-          input.candidateId,
-        );
-        if (!active) {
-          throw new ValidationError('SOURCE_INELIGIBLE');
-        }
-        if (active.decisionStatus !== 'ACTIVE') {
-          throw new ValidationError('SOURCE_INELIGIBLE');
-        }
-        if (
-          active.candidateId !== candidate.id ||
-          active.evidenceItemId !== input.evidenceItemId ||
-          active.consultationId !== input.consultationId ||
-          active.extractionRunId !== candidate.extractionRunId ||
-          active.patientId !== candidate.patientId ||
-          active.organizationId !== tenant.organizationId ||
-          active.clinicId !== tenant.clinicId
-        ) {
-          throw new ResourceNotFoundError();
-        }
-        if (!ELIGIBLE_ACTIONS.has(active.action)) {
-          throw new ValidationError('SOURCE_INELIGIBLE');
-        }
-        const reviewAction = active.action as 'ACCEPT_AS_SOURCE_TEXT' | 'CORRECT_SOURCE_TEXT';
-
-        const effectiveText = deriveEffectiveText(
-          reviewAction,
-          active.originalRawText,
-          active.correctedRawText,
-        );
-        if (effectiveText.trim() === '') {
-          throw new ValidationError('SOURCE_INELIGIBLE');
-        }
-        if (effectiveText.length > PARSER_MAX_UTF16) {
-          throw new ValidationError('INPUT_TOO_LARGE');
-        }
-
-        assertNoStorageInLocator(active.sourceLocator);
-        const sourceLocator = presentSourceLocator(active.sourceLocator);
-
-        const sourceIdentityFingerprint = bindF3cReviewedSourceIdentity({
-          organizationId: candidate.organizationId,
-          clinicId: candidate.clinicId,
-          patientId: candidate.patientId,
-          consultationId: candidate.consultationId,
-          evidenceItemId: candidate.evidenceItemId,
-          extractionRunId: candidate.extractionRunId,
-          candidateId: candidate.id,
-          reviewEventId: active.id,
-          reviewAction,
-          exactEffectiveText: effectiveText,
-          sourceLocator,
-          packId: pack.packId,
-          packVersion: pack.packVersion,
-          packContentChecksum: pack.contentChecksum,
-        });
-
-        const eligibleInput: EligibleCueParserInput = {
-          sourceIdentityFingerprint,
-          sourceChannel: SOURCE_CHANNEL,
-          sourceField: SOURCE_FIELD,
-          eligibleText: effectiveText,
-          sourceLocator,
-          organizationId: candidate.organizationId,
-          clinicId: candidate.clinicId,
-          patientId: candidate.patientId,
-          consultationId: candidate.consultationId,
-        };
-
-        let parser: CueParserResult;
-        try {
-          parser = parseOwnerFrozenCues(eligibleInput, pack);
-        } catch (err) {
-          mapParserThrow(err);
-        }
-
-        return {
-          organizationId: candidate.organizationId,
-          clinicId: candidate.clinicId,
-          patientId: candidate.patientId,
-          consultationId: candidate.consultationId,
-          evidenceItemId: candidate.evidenceItemId,
-          extractionRunId: candidate.extractionRunId,
-          candidateId: candidate.id,
-          reviewEventId: active.id,
-          reviewAction,
-          sourceChannel: SOURCE_CHANNEL,
-          sourceField: SOURCE_FIELD,
-          sourceIdentityFingerprint,
-          parser,
-        };
+        return this.parseF3cReviewedSourceCuesLocked(tenant, tx, input, pack);
       },
       env,
     );

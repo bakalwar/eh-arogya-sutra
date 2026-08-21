@@ -14,6 +14,7 @@ import {
   hashPayload,
 } from '../validation.js';
 import { consultationAllowsFieldUpdate } from '../consultationTransitions.js';
+import { invalidateChiefComplaintFactsAndNormalizations } from './factNormalizationLifecycle.js';
 import { lockChiefComplaintCueSource } from './cueSourceLock.js';
 
 const intakeRepo = new PgConsultationIntakeRepository();
@@ -234,6 +235,7 @@ export class ConsultationIntakeService {
           if (!consultationAllowsFieldUpdate(locked.status)) {
             throw new ValidationError('Consultation fields are locked in current state');
           }
+          await invalidateChiefComplaintFactsAndNormalizations(tenant, tx, consultationId);
         }
         if (Object.keys(complaint).length > 0) {
           await intakeRepo.updateComplaintFields(tenant, tx, consultationId, complaint);

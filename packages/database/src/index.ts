@@ -122,6 +122,7 @@ export {
 export type {
   ParseDoctorDeclaredChiefComplaintCuesInput,
   DoctorDeclaredChiefComplaintCueAdapterResult,
+  DoctorDeclaredChiefComplaintBinding,
 } from './services/cueEligibleSourceService.js';
 export {
   F3cReviewedCueSourceService,
@@ -131,6 +132,7 @@ export {
 export type {
   ParseF3cReviewedSourceCuesInput,
   F3cReviewedSourceCueAdapterResult,
+  F3cReviewedSourceBinding,
 } from './services/f3cReviewedCueSourceService.js';
 export {
   lockChiefComplaintCueSource,
@@ -156,6 +158,20 @@ export type {
   FactCandidateServiceDeps,
   MaterializeFactCandidateInput,
 } from './services/factCandidateService.js';
+export {
+  FactNormalizationService,
+  factNormalizationService,
+} from './services/factNormalizationService.js';
+export type {
+  MaterializeFactNormalizationsInput,
+  MaterializeFactNormalizationsResult,
+  FactNormalizationServiceDeps,
+} from './services/factNormalizationService.js';
+export {
+  lockAndSupersedeFactsWithNormalizations,
+  invalidateChiefComplaintFactsAndNormalizations,
+  invalidateReviewedCandidateFactsAndNormalizations,
+} from './services/factNormalizationLifecycle.js';
 export { PgConsultationIntakeRepository } from './repositories/consultationIntake.js';
 export type {
   ConsultationIntakeBundle,

@@ -85,6 +85,7 @@ import {
   ValidationError,
 } from '../domainErrors.js';
 import { assertOptionalIsoDate, assertUuid, hashPayload } from '../validation.js';
+import { invalidateReviewedCandidateFactsAndNormalizations } from './factNormalizationLifecycle.js';
 
 const evidenceRepo = new PgEvidenceRepository();
 const extractionRepo = new PgExtractionRepository();
@@ -1273,6 +1274,8 @@ export class EvidenceService {
           if (!input.supersedesReviewId || input.supersedesReviewId !== active.id) {
             throw new ReviewConflictError();
           }
+          // Source-writer invalidation under F3C lock: ACTIVE facts + norms before review append.
+          await invalidateReviewedCandidateFactsAndNormalizations(tenant, tx, candidateId);
           await candidateReviewRepo.supersedeActive(tenant, tx, active.id);
         } else if (input.supersedesReviewId) {
           throw new ReviewConflictError();

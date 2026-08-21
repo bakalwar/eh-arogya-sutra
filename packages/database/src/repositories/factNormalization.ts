@@ -161,6 +161,30 @@ export class PgFactNormalizationRepository {
     }
   }
 
+  /**
+   * Sorted advisory locks for ACTIVE normalization identities linked to parent facts.
+   * Call only after fact identity locks (or parent FOR UPDATE) are already held.
+   */
+  async lockActiveIdentitiesForParentFacts(
+    tenant: TenantContext,
+    tx: TransactionContext,
+    factIds: readonly string[],
+  ): Promise<void> {
+    if (factIds.length === 0) return;
+    const r = await tx.query(
+      `SELECT DISTINCT normalization_identity_fingerprint AS fp
+       FROM clinical_fact_normalizations
+       WHERE organization_id = $1 AND clinic_id = $2
+         AND source_fact_candidate_id = ANY($3::uuid[])
+         AND decision_status = 'ACTIVE'`,
+      [tenant.organizationId, tenant.clinicId, [...factIds]],
+    );
+    const fingerprints = (r.rows as { fp: string }[])
+      .map((row) => String(row.fp))
+      .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+    await this.lockIdentitiesSorted(tx, fingerprints);
+  }
+
   async findById(
     tenant: TenantContext,
     tx: TransactionContext,
@@ -204,6 +228,36 @@ export class PgFactNormalizationRepository {
     return (r.rows as Record<string, unknown>[]).map(mapNorm);
   }
 
+  async listActiveByParentFact(
+    tenant: TenantContext,
+    tx: TransactionContext,
+    sourceFactCandidateId: string,
+  ): Promise<FactNormalizationDto[]> {
+    const r = await tx.query(
+      `SELECT * FROM clinical_fact_normalizations
+       WHERE organization_id = $1 AND clinic_id = $2
+         AND source_fact_candidate_id = $3 AND decision_status = 'ACTIVE'
+       ORDER BY created_at ASC, id ASC`,
+      [tenant.organizationId, tenant.clinicId, sourceFactCandidateId],
+    );
+    return (r.rows as Record<string, unknown>[]).map(mapNorm);
+  }
+
+  async listByParentFact(
+    tenant: TenantContext,
+    tx: TransactionContext,
+    sourceFactCandidateId: string,
+  ): Promise<FactNormalizationDto[]> {
+    const r = await tx.query(
+      `SELECT * FROM clinical_fact_normalizations
+       WHERE organization_id = $1 AND clinic_id = $2
+         AND source_fact_candidate_id = $3
+       ORDER BY created_at ASC, id ASC`,
+      [tenant.organizationId, tenant.clinicId, sourceFactCandidateId],
+    );
+    return (r.rows as Record<string, unknown>[]).map(mapNorm);
+  }
+
   async supersedeActive(
     tenant: TenantContext,
     tx: TransactionContext,
@@ -230,8 +284,8 @@ export class PgFactNormalizationRepository {
   }
 
   /**
-   * Lifecycle primitive for a future writer phase: supersede ACTIVE norms for parent facts.
-   * Not wired into supersedeRuns / fact writers in D1.
+   * Conditional ACTIVE → SUPERSEDED for normalizations linked to parent facts.
+   * Callers must already hold sorted ACTIVE normalization identity locks.
    */
   async supersedeActiveLinkedToFacts(
     tenant: TenantContext,

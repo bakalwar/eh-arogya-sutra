@@ -37,12 +37,13 @@ describe('F3D-1 stale fact supersede on candidate lifecycle contract', () => {
     expect(factSuper).toBeGreaterThan(factLock);
   });
 
-  it('keeps readiness inactive and does not wire a production normalization writer', () => {
+  it('keeps readiness inactive; D3 normalization service exists without API activation', () => {
     const ready = fs.readFileSync(path.join(root, 'apps/api/src/createApp.ts'), 'utf8');
     expect(ready).toMatch(/ready:\s*false/);
     expect(ready).not.toMatch(/f3d2dFoundation:\s*true/);
+    expect(ready).not.toMatch(/materializeFactNormalizations/);
     const services = fs.readdirSync(path.join(root, 'packages/database/src/services'));
-    expect(services.some((n) => /factNormalization.*Service/i.test(n))).toBe(false);
+    expect(services.some((n) => /factNormalizationService/i.test(n))).toBe(true);
     const extraction = fs.readFileSync(
       path.join(root, 'packages/database/src/repositories/extraction.ts'),
       'utf8',

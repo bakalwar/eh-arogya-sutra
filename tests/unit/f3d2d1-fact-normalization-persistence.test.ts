@@ -25,11 +25,10 @@ const DOWN = 'packages/database/migrations/016_f3d2_fact_normalizations.down.sql
 const REPO = 'packages/database/src/repositories/factNormalization.ts';
 const TYPES = 'packages/evidence-extract/src/factNormalizationTypes.ts';
 const READY = 'apps/api/src/createApp.ts';
-const EXTRACTION = 'packages/database/src/repositories/extraction.ts';
 const FACT_REPO = 'packages/database/src/repositories/factCandidate.ts';
 
 const COUPLING =
-  /@ehas2\/rule[1-9]|@ehas2\/medicine-registry|@ehas2\/engine-adapter|@ehas2\/clinical-engine|evaluateRule[1-9]|tesseract\.js|pdf-parse|LibreTranslate|addStructuredFindings|analyzeComplete\s*\(|from\s+['"][^'"]*parseOwnerFrozenCues|FactNormalizationService|materializeNormalization\s*\(/;
+  /@ehas2\/rule[1-9]|@ehas2\/medicine-registry|@ehas2\/engine-adapter|@ehas2\/clinical-engine|evaluateRule[1-9]|tesseract\.js|pdf-parse|LibreTranslate|addStructuredFindings|analyzeComplete\s*\(|from\s+['"][^'"]*parseOwnerFrozenCues/;
 
 const PHI_STORAGE =
   /object_key|storage_path|filename|https?:\/\/|password|api[_-]?key|secret|raw_complaint|asserted_text|original_source_span/;
@@ -128,16 +127,16 @@ describe('F3D-2D0/2D1 fact-normalization persistence contract', () => {
     expect(repo).not.toMatch(/parseOwnerFrozenCues\s*\(/);
     expect(repo).not.toMatch(/import\s+.*parseOwnerFrozenCues/);
     expect(read(TYPES)).not.toMatch(COUPLING);
-    expect(read(FACT_REPO)).not.toMatch(/clinical_fact_normalizations/);
   });
 
-  it('does not wire #125 supersedeRuns to normalization lifecycle yet', () => {
-    const extraction = read(EXTRACTION);
-    expect(extraction).not.toMatch(
-      /factNormalization|supersedeActiveLinkedToFacts|clinical_fact_normalizations/,
-    );
+  it('D3 wires parent fact SUPERSEDE to linked normalizations via factCandidate helpers', () => {
+    const factRepo = read(FACT_REPO);
+    expect(factRepo).toMatch(/PgFactNormalizationRepository/);
+    expect(factRepo).toMatch(/supersedeActiveLinkedToFacts/);
+    expect(factRepo).toMatch(/lockActiveIdentitiesForParentFacts/);
     const services = fs.readdirSync(path.join(root, 'packages/database/src/services'));
-    expect(services.some((n) => /factNormalization/i.test(n))).toBe(false);
+    expect(services.some((n) => /factNormalizationService/i.test(n))).toBe(true);
+    expect(services.some((n) => /factNormalizationLifecycle/i.test(n))).toBe(true);
   });
 
   it('keeps readiness and authz flags unchanged without f3d2dFoundation', () => {
