@@ -152,10 +152,15 @@ export {
   isStructuredVitalSourceField,
   sortStructuredVitalFields,
   vitalFieldsChanged,
+  presentVitalMeasurementKeys,
+  sourceFieldsForVitalColumns,
+  LEGACY_TEMPERATURE_UNIT_TEXT,
+  CANONICAL_TEMPERATURE_UNIT_TEXT,
 } from './services/structuredVitalSource.js';
 export type {
   StructuredVitalSourceField,
   StructuredVitalFieldSpec,
+  VitalPatchMeasurementKey,
 } from './services/structuredVitalSource.js';
 export { EvidenceService, evidenceService } from './services/evidenceService.js';
 export type { EvidenceServiceDeps } from './services/evidenceService.js';

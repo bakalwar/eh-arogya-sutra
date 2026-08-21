@@ -88,6 +88,49 @@ export function vitalFieldsChanged(
   return sortStructuredVitalFields(changed);
 }
 
+/** Own-property keys on a vitals patch object (measurement columns only). */
+export const VITAL_PATCH_MEASUREMENT_KEYS = [
+  'bloodPressureSystolic',
+  'bloodPressureDiastolic',
+  'pulseBpm',
+  'temperatureC',
+  'spo2Percent',
+  'weightKg',
+  'heightCm',
+] as const satisfies readonly StructuredVitalColumnKey[];
+
+export type VitalPatchMeasurementKey = (typeof VITAL_PATCH_MEASUREMENT_KEYS)[number];
+
+const COLUMN_TO_SOURCE = new Map(
+  STRUCTURED_VITAL_FIELD_SPECS.map((s) => [s.column, s.sourceField] as const),
+);
+
+export function sourceFieldForVitalColumn(
+  column: StructuredVitalColumnKey,
+): StructuredVitalSourceField | null {
+  return COLUMN_TO_SOURCE.get(column) ?? null;
+}
+
+export function presentVitalMeasurementKeys(vitals: object): VitalPatchMeasurementKey[] {
+  return VITAL_PATCH_MEASUREMENT_KEYS.filter((k) =>
+    Object.prototype.hasOwnProperty.call(vitals, k),
+  );
+}
+
+export function sourceFieldsForVitalColumns(
+  columns: readonly StructuredVitalColumnKey[],
+): StructuredVitalSourceField[] {
+  return sortStructuredVitalFields(
+    columns
+      .map((c) => sourceFieldForVitalColumn(c))
+      .filter((f): f is StructuredVitalSourceField => f != null),
+  );
+}
+
+/** Legacy F3D-1 temperature unit before pack-exact °C alignment (U+00B0). */
+export const LEGACY_TEMPERATURE_UNIT_TEXT = 'C' as const;
+export const CANONICAL_TEMPERATURE_UNIT_TEXT = '°C' as const;
+
 export function asFactCandidateVitalField(
   sourceField: StructuredVitalSourceField,
 ): FactCandidateSourceField {

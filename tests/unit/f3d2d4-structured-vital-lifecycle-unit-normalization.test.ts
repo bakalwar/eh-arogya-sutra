@@ -203,7 +203,11 @@ describe('F3D-2D4 structured vital lifecycle + STRUCTURED_UNIT contract', () => 
       intake.indexOf('invalidateStructuredVitalFactsAndNormalizations'),
     );
     expect(intake.indexOf('invalidateStructuredVitalFactsAndNormalizations')).toBeLessThan(
-      intake.indexOf('upsertVitals'),
+      intake.indexOf('patchVitalsColumns'),
     );
+    expect(intake).toMatch(/presentVitalMeasurementKeys|hasOwnProperty/);
+    expect(intake).toMatch(/vitalsTouch/);
+    expect(factSvc).toMatch(/isLegacyTemperatureUnitDriftOnly|LEGACY_TEMPERATURE_UNIT_TEXT/);
+    expect(factSvc).toMatch(/schemaUnitText/);
   });
 });

@@ -14,7 +14,12 @@ import {
   PgFactCandidateRepository,
   type InsertFactCandidateInput,
 } from '../repositories/factCandidate.js';
-import { FactConflictError, ResourceNotFoundError, ValidationError } from '../domainErrors.js';
+import {
+  FactConflictError,
+  IdempotencyConflictError,
+  ResourceNotFoundError,
+  ValidationError,
+} from '../domainErrors.js';
 import { assertUuid, hashPayload } from '../validation.js';
 import {
   lockChiefComplaintCueSource,
@@ -22,8 +27,14 @@ import {
   lockStructuredVitalSourceFields,
 } from './cueSourceLock.js';
 import {
+  CANONICAL_TEMPERATURE_UNIT_TEXT,
+  LEGACY_TEMPERATURE_UNIT_TEXT,
+  structuredVitalSpec,
+} from './structuredVitalSource.js';
+import {
   FACT_CANDIDATE_CATEGORIES,
   FACT_CANDIDATE_CHANNELS,
+  FACT_CANDIDATE_F3D1_AUTHORITY,
   FACT_CANDIDATE_SOURCE_FIELDS,
   FACT_LIMITATION_CODES,
   assertNoStorageInLocator,
@@ -169,6 +180,68 @@ function contentFingerprint(input: {
   return hashPayload(input);
 }
 
+/**
+ * Narrow B2 recovery: ACTIVE legacy temperature unit `C` → canonical `°C` only when
+ * live numeric source value and all other linkage match; no generalized unit rewrite.
+ */
+function isLegacyTemperatureUnitDriftOnly(
+  tenant: TenantContext,
+  active: FactCandidateDto,
+  draft: InsertFactCandidateInput,
+): boolean {
+  if (draft.sourceChannel !== 'STRUCTURED_INTAKE' || draft.sourceField !== 'VITAL_TEMPERATURE') {
+    return false;
+  }
+  if (active.sourceChannel !== 'STRUCTURED_INTAKE' || active.sourceField !== 'VITAL_TEMPERATURE') {
+    return false;
+  }
+  if (active.decisionStatus !== 'ACTIVE') return false;
+  if (active.authorityStatus !== FACT_CANDIDATE_F3D1_AUTHORITY) return false;
+  if (active.clinicallyUsed !== false) return false;
+  if (active.organizationId !== tenant.organizationId || active.clinicId !== tenant.clinicId) {
+    return false;
+  }
+  if (active.unitText !== LEGACY_TEMPERATURE_UNIT_TEXT) return false;
+  if (draft.unitText !== CANONICAL_TEMPERATURE_UNIT_TEXT) return false;
+  if (active.unitPosture !== 'EXACT_AS_SOURCE' || draft.unitPosture !== 'EXACT_AS_SOURCE') {
+    return false;
+  }
+  if (active.originalSourceSpan !== draft.originalSourceSpan) return false;
+  if (active.assertedValue !== draft.assertedValue) return false;
+  if (active.assertedText !== draft.assertedText) return false;
+  if (active.negated !== draft.negated) return false;
+  if (active.durationText !== draft.durationText) return false;
+  if (active.onsetText !== draft.onsetText) return false;
+  if (active.factCategory !== draft.factCategory) return false;
+  if (active.patientId !== draft.patientId) return false;
+  if (active.consultationId !== draft.consultationId) return false;
+  if (active.sourceIdentityFingerprint !== draft.sourceIdentityFingerprint) return false;
+  if (active.intakeSymptomId !== draft.intakeSymptomId) return false;
+  if (active.evidenceItemId !== draft.evidenceItemId) return false;
+  if (active.extractionCandidateId !== draft.extractionCandidateId) return false;
+  if (active.reviewEventId !== draft.reviewEventId) return false;
+  if (active.contentFingerprint === draft.contentFingerprint) return false;
+  const expectedLegacyContent = contentFingerprint({
+    originalSourceSpan: draft.originalSourceSpan,
+    assertedText: draft.assertedText,
+    assertedValue: draft.assertedValue,
+    unitText: LEGACY_TEMPERATURE_UNIT_TEXT,
+    unitPosture: 'EXACT_AS_SOURCE',
+    negated: draft.negated,
+    durationText: draft.durationText,
+    onsetText: draft.onsetText,
+  });
+  return active.contentFingerprint === expectedLegacyContent;
+}
+
+function schemaUnitComponentForFactRequest(
+  sourceChannel: FactCandidateChannel,
+  sourceField: FactCandidateSourceField,
+): string | null {
+  if (sourceChannel !== 'STRUCTURED_INTAKE') return null;
+  return structuredVitalSpec(sourceField)?.unitText ?? null;
+}
+
 function unitFromExact(unit: string): { unitText: string; unitPosture: FactUnitPosture } {
   return { unitText: boundSpan(unit).slice(0, 32), unitPosture: 'EXACT_AS_SOURCE' };
 }
@@ -304,6 +377,7 @@ export class FactCandidateService {
       candidateId: input.candidateId ?? null,
       supersedesFactId: input.supersedesFactId ?? null,
       consultationId,
+      schemaUnitText: schemaUnitComponentForFactRequest(sourceChannel, sourceField),
     });
 
     return withTenantTransaction(
@@ -365,26 +439,22 @@ export class FactCandidateService {
           throw new ResourceNotFoundError();
         }
 
-        const existingKey = await idempotency.resolveOrThrow(
-          tenant,
-          tx,
-          FACT_OPERATION,
-          input.idempotencyKey,
-          requestHash,
-        );
-        if (existingKey) {
-          const replay = await facts.findById(tenant, tx, existingKey.resourceId);
-          if (!replay) throw new ResourceNotFoundError();
-          this.metric('IDEMPOTENT_REPLAY');
-          return replay;
-        }
-
         const active = await facts.findActiveByIdentity(
           tenant,
           tx,
           draft.sourceIdentityFingerprint,
         );
-        if (active) {
+
+        // B2: schema-unit drift recovery before any idempotent stale-success replay.
+        if (
+          active &&
+          !input.supersedesFactId &&
+          isLegacyTemperatureUnitDriftOnly(tenant, active, draft)
+        ) {
+          const superseded = await facts.supersedeActive(tenant, tx, active.id);
+          if (superseded.id !== active.id) throw new FactConflictError();
+          draft.supersedesFactId = active.id;
+        } else if (active) {
           if (
             active.decisionStatus !== 'ACTIVE' ||
             active.patientId !== lockedConsultation.patientId ||
@@ -405,19 +475,69 @@ export class FactCandidateService {
             }
             draft.supersedesFactId = active.id;
           } else if (active.contentFingerprint === draft.contentFingerprint) {
-            await idempotency.insert(tenant, tx, {
-              operation: FACT_OPERATION,
-              key: input.idempotencyKey,
-              requestHash,
-              resourceType: 'fact_candidate',
-              resourceId: active.id,
-            });
-            this.metric('IDENTITY_REPLAY');
-            return active;
+            // Identity replay — still gate idempotency below before returning.
           } else {
             throw new FactConflictError();
           }
         } else if (input.supersedesFactId) {
+          throw new FactConflictError();
+        }
+
+        const existingKey = await idempotency.resolveOrThrow(
+          tenant,
+          tx,
+          FACT_OPERATION,
+          input.idempotencyKey,
+          requestHash,
+        );
+        if (existingKey) {
+          const replay = await facts.findById(tenant, tx, existingKey.resourceId);
+          if (!replay) throw new ResourceNotFoundError();
+          if (
+            sourceField === 'VITAL_TEMPERATURE' &&
+            replay.unitText === LEGACY_TEMPERATURE_UNIT_TEXT
+          ) {
+            throw new IdempotencyConflictError();
+          }
+          if (replay.decisionStatus !== 'ACTIVE') {
+            throw new IdempotencyConflictError();
+          }
+          if (
+            sourceChannel === 'STRUCTURED_INTAKE' &&
+            sourceField.startsWith('VITAL_') &&
+            schemaUnitComponentForFactRequest(sourceChannel, sourceField) != null &&
+            replay.unitText !== schemaUnitComponentForFactRequest(sourceChannel, sourceField)
+          ) {
+            throw new IdempotencyConflictError();
+          }
+          this.metric('IDEMPOTENT_REPLAY');
+          return replay;
+        }
+
+        if (
+          active &&
+          !draft.supersedesFactId &&
+          active.contentFingerprint === draft.contentFingerprint &&
+          active.decisionStatus === 'ACTIVE'
+        ) {
+          await idempotency.insert(tenant, tx, {
+            operation: FACT_OPERATION,
+            key: input.idempotencyKey,
+            requestHash,
+            resourceType: 'fact_candidate',
+            resourceId: active.id,
+          });
+          this.metric('IDENTITY_REPLAY');
+          return active;
+        }
+
+        // After legacy recovery, active row is SUPERSEDED; re-check no other ACTIVE identity.
+        const stillActive = await facts.findActiveByIdentity(
+          tenant,
+          tx,
+          draft.sourceIdentityFingerprint,
+        );
+        if (stillActive && stillActive.id !== draft.supersedesFactId) {
           throw new FactConflictError();
         }
 
