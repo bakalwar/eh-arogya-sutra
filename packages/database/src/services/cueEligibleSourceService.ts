@@ -39,6 +39,18 @@ export type ParseDoctorDeclaredChiefComplaintCuesInput = {
   readonly consultationId: string;
 };
 
+export type DoctorDeclaredChiefComplaintBinding = {
+  readonly organizationId: string;
+  readonly clinicId: string;
+  readonly patientId: string;
+  readonly consultationId: string;
+  readonly sourceChannel: typeof SOURCE_CHANNEL;
+  readonly sourceField: typeof SOURCE_FIELD;
+  readonly sourceIdentityFingerprint: string;
+  readonly contentSha256: string;
+  readonly exactPersistedText: string;
+};
+
 export type DoctorDeclaredChiefComplaintCueAdapterResult = {
   readonly organizationId: string;
   readonly clinicId: string;
@@ -122,13 +134,14 @@ function mapParserThrow(err: unknown): never {
 export class CueEligibleSourceService {
   /**
    * Caller must already hold the shared chief-complaint cue source lock.
+   * Binding only — does not invoke the cue parser.
    */
-  async parseDoctorDeclaredChiefComplaintCuesLocked(
+  async loadDoctorDeclaredChiefComplaintBindingLocked(
     tenant: TenantContext,
     tx: TransactionContext,
     consultationId: string,
     pack: LoadedTerminologyPack,
-  ): Promise<DoctorDeclaredChiefComplaintCueAdapterResult> {
+  ): Promise<DoctorDeclaredChiefComplaintBinding> {
     const row = await consultations.findById(tenant, tx, consultationId);
     if (!row) throw new ResourceNotFoundError();
     assertCaseOwner(tenant, row.doctorUserId);
@@ -149,6 +162,7 @@ export class CueEligibleSourceService {
       throw new ValidationError('INPUT_TOO_LARGE');
     }
 
+    const contentSha256 = sha256Utf8(persisted);
     const sourceIdentityFingerprint = bindDoctorDeclaredChiefComplaintSourceIdentity({
       organizationId: row.organizationId,
       clinicId: row.clinicId,
@@ -160,25 +174,6 @@ export class CueEligibleSourceService {
       packContentChecksum: pack.contentChecksum,
     });
 
-    const eligibleInput: EligibleCueParserInput = {
-      sourceIdentityFingerprint,
-      sourceChannel: SOURCE_CHANNEL,
-      sourceField: SOURCE_FIELD,
-      eligibleText: persisted,
-      sourceLocator: null,
-      organizationId: row.organizationId,
-      clinicId: row.clinicId,
-      patientId: row.patientId,
-      consultationId: row.id,
-    };
-
-    let parser: CueParserResult;
-    try {
-      parser = parseOwnerFrozenCues(eligibleInput, pack);
-    } catch (err) {
-      mapParserThrow(err);
-    }
-
     return {
       organizationId: row.organizationId,
       clinicId: row.clinicId,
@@ -187,6 +182,60 @@ export class CueEligibleSourceService {
       sourceChannel: SOURCE_CHANNEL,
       sourceField: SOURCE_FIELD,
       sourceIdentityFingerprint,
+      contentSha256,
+      exactPersistedText: persisted,
+    };
+  }
+
+  /**
+   * Parse only — H2 allowlisted. Does not re-read source or take locks.
+   */
+  parseDoctorDeclaredChiefComplaintFromBinding(
+    binding: DoctorDeclaredChiefComplaintBinding,
+    pack: LoadedTerminologyPack,
+  ): CueParserResult {
+    const eligibleInput: EligibleCueParserInput = {
+      sourceIdentityFingerprint: binding.sourceIdentityFingerprint,
+      sourceChannel: SOURCE_CHANNEL,
+      sourceField: SOURCE_FIELD,
+      eligibleText: binding.exactPersistedText,
+      sourceLocator: null,
+      organizationId: binding.organizationId,
+      clinicId: binding.clinicId,
+      patientId: binding.patientId,
+      consultationId: binding.consultationId,
+    };
+    try {
+      return parseOwnerFrozenCues(eligibleInput, pack);
+    } catch (err) {
+      mapParserThrow(err);
+    }
+  }
+
+  /**
+   * Caller must already hold the shared chief-complaint cue source lock.
+   */
+  async parseDoctorDeclaredChiefComplaintCuesLocked(
+    tenant: TenantContext,
+    tx: TransactionContext,
+    consultationId: string,
+    pack: LoadedTerminologyPack,
+  ): Promise<DoctorDeclaredChiefComplaintCueAdapterResult> {
+    const binding = await this.loadDoctorDeclaredChiefComplaintBindingLocked(
+      tenant,
+      tx,
+      consultationId,
+      pack,
+    );
+    const parser = this.parseDoctorDeclaredChiefComplaintFromBinding(binding, pack);
+    return {
+      organizationId: binding.organizationId,
+      clinicId: binding.clinicId,
+      patientId: binding.patientId,
+      consultationId: binding.consultationId,
+      sourceChannel: SOURCE_CHANNEL,
+      sourceField: SOURCE_FIELD,
+      sourceIdentityFingerprint: binding.sourceIdentityFingerprint,
       parser,
     };
   }

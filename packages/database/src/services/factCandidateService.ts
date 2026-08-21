@@ -16,7 +16,7 @@ import {
 } from '../repositories/factCandidate.js';
 import { FactConflictError, ResourceNotFoundError, ValidationError } from '../domainErrors.js';
 import { assertUuid, hashPayload } from '../validation.js';
-import { lockF3cReviewedCueSource } from './cueSourceLock.js';
+import { lockChiefComplaintCueSource, lockF3cReviewedCueSource } from './cueSourceLock.js';
 import {
   FACT_CANDIDATE_CATEGORIES,
   FACT_CANDIDATE_CHANNELS,
@@ -308,6 +308,23 @@ export class FactCandidateService {
         const consultation = await consultations.findById(tenant, tx, consultationId);
         if (!consultation) throw new ResourceNotFoundError();
         assertCaseOwner(tenant, consultation.doctorUserId);
+
+        // B1: chief path must take shared source lock before fact identity / norm locks.
+        // F3C path keeps existing order inside deriveReviewed (F3C lock first).
+        if (sourceChannel === 'DOCTOR_DECLARED' && sourceField === 'CHIEF_COMPLAINT') {
+          await lockChiefComplaintCueSource(tx, tenant, consultationId);
+          const lockedSource = await consultations.findById(tenant, tx, consultationId);
+          if (!lockedSource) throw new ResourceNotFoundError();
+          assertCaseOwner(tenant, lockedSource.doctorUserId);
+          if (
+            lockedSource.organizationId !== tenant.organizationId ||
+            lockedSource.clinicId !== tenant.clinicId ||
+            lockedSource.id !== consultationId ||
+            lockedSource.patientId !== consultation.patientId
+          ) {
+            throw new ResourceNotFoundError();
+          }
+        }
 
         const draft = await this.deriveRow(
           tenant,

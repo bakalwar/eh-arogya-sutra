@@ -18,7 +18,9 @@ import {
   ResourceNotFoundError,
   ValidationError,
   closePool,
+  chiefComplaintCueSourceLockKey,
   getOrderedMigrationIds,
+  lockChiefComplaintCueSource,
   migrateUp,
   resetDatabaseSchema,
   withAdminClient,
@@ -596,8 +598,218 @@ describe('F3D-2D3 atomic normalization persistence + lifecycle (isolated Postgre
       { sourceFactCandidateId: factId, idempotencyKey: 'd3-hash-stable-01' },
       env,
     );
-    // Same key after source invalidation on a NEW fact id with reused key from another parent
-    // is covered above; ensure conflict error type exists for changed hash paths.
     expect(IdempotencyConflictError.name).toBe('IdempotencyConflictError');
   });
+
+  it('same-key replay skips parser/D2 and survives injected first-write parse failure', async () => {
+    requireDb();
+    const { doctorA } = await seedTenants();
+    const { factId } = await openChiefFact(doctorA, 'denies fever');
+    const key = `d3-replay-noparse-${factId}`;
+    let parseInvocations = 0;
+    const instrumented = new FactNormalizationService({
+      beforeFirstWriteParse: () => {
+        parseInvocations += 1;
+      },
+    });
+
+    const first = await instrumented.materializeFactNormalizations(
+      doctorA,
+      { sourceFactCandidateId: factId, idempotencyKey: key },
+      env,
+    );
+    expect(first.replayed).toBe(false);
+    expect(parseInvocations).toBe(1);
+
+    const replay = await instrumented.materializeFactNormalizations(
+      doctorA,
+      { sourceFactCandidateId: factId, idempotencyKey: key },
+      env,
+    );
+    expect(replay.replayed).toBe(true);
+    expect(parseInvocations).toBe(1);
+    expect(replay.normalizations.map((n) => n.id).sort()).toEqual(
+      first.normalizations.map((n) => n.id).sort(),
+    );
+
+    const failing = new FactNormalizationService({
+      beforeFirstWriteParse: () => {
+        throw new ValidationError('PARSER_TIMEOUT');
+      },
+    });
+    const survive = await failing.materializeFactNormalizations(
+      doctorA,
+      { sourceFactCandidateId: factId, idempotencyKey: key },
+      env,
+    );
+    expect(survive.replayed).toBe(true);
+    expect(survive.normalizations.map((n) => n.id).sort()).toEqual(
+      first.normalizations.map((n) => n.id).sort(),
+    );
+  });
+
+  it('NO_MATCHES replay skips parser and records parent resourceId with zero rows', async () => {
+    requireDb();
+    const { doctorA } = await seedTenants();
+    const { factId } = await openChiefFact(doctorA, 'zzzz no cue tokens here');
+    const key = `d3-nomatch-noparse-${factId}`;
+    let parseInvocations = 0;
+    const instrumented = new FactNormalizationService({
+      beforeFirstWriteParse: () => {
+        parseInvocations += 1;
+      },
+    });
+    const first = await instrumented.materializeFactNormalizations(
+      doctorA,
+      { sourceFactCandidateId: factId, idempotencyKey: key },
+      env,
+    );
+    expect(first.reason).toBe('NO_MATCHES');
+    expect(parseInvocations).toBe(1);
+    const replay = await instrumented.materializeFactNormalizations(
+      doctorA,
+      { sourceFactCandidateId: factId, idempotencyKey: key },
+      env,
+    );
+    expect(replay.replayed).toBe(true);
+    expect(replay.reason).toBe('NO_MATCHES');
+    expect(replay.normalizations).toEqual([]);
+    expect(parseInvocations).toBe(1);
+    expect(await countNorms(doctorA, factId)).toMatchObject({ total: 0, active: 0 });
+  });
+
+  it('chief D3 × explicit fact replacement barrier race serializes safely', async () => {
+    requireDb();
+    const { doctorA } = await seedTenants();
+    const { consultationId, factId } = await openChiefFact(doctorA, 'denies fever');
+    await normService.materializeFactNormalizations(
+      doctorA,
+      { sourceFactCandidateId: factId, idempotencyKey: `d3-race-seed-${factId}` },
+      env,
+    );
+
+    let releaseHold!: () => void;
+    const holdGate = new Promise<void>((resolve) => {
+      releaseHold = resolve;
+    });
+    let signalHeld!: () => void;
+    const held = new Promise<void>((resolve) => {
+      signalHeld = resolve;
+    });
+    const holder = withTenantTransaction(
+      doctorA,
+      async (tx) => {
+        await lockChiefComplaintCueSource(tx, doctorA, consultationId);
+        signalHeld();
+        await holdGate;
+      },
+      env,
+    );
+    await held;
+
+    const key = chiefComplaintCueSourceLockKey({
+      organizationId: doctorA.organizationId,
+      clinicId: doctorA.clinicId,
+      consultationId,
+    });
+    await withTenantTransaction(
+      doctorA,
+      async (tx) => {
+        const r = await tx.query<{ ok: boolean }>(
+          `SELECT pg_try_advisory_xact_lock(hashtextextended($1::text, $2::bigint)) AS ok`,
+          [key, 0],
+        );
+        expect(r.rows[0]?.ok).toBe(false);
+      },
+      env,
+    );
+
+    let d3Settled = false;
+    let replaceSettled = false;
+    const d3Promise = normService
+      .materializeFactNormalizations(
+        doctorA,
+        { sourceFactCandidateId: factId, idempotencyKey: `d3-race-d3-${factId}` },
+        env,
+      )
+      .finally(() => {
+        d3Settled = true;
+      });
+    const replacePromise = factService()
+      .materialize(
+        doctorA,
+        consultationId,
+        {
+          sourceChannel: 'DOCTOR_DECLARED',
+          sourceField: 'CHIEF_COMPLAINT',
+          supersedesFactId: factId,
+          idempotencyKey: `d3-race-repl-${consultationId}`,
+        },
+        factEnv,
+      )
+      .finally(() => {
+        replaceSettled = true;
+      });
+
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    expect(d3Settled).toBe(false);
+    expect(replaceSettled).toBe(false);
+
+    releaseHold();
+    await holder;
+
+    const [d3Outcome, replaceOutcome] = await Promise.allSettled([d3Promise, replacePromise]);
+    expect(d3Settled).toBe(true);
+    expect(replaceSettled).toBe(true);
+
+    const successes = [d3Outcome, replaceOutcome].filter((o) => o.status === 'fulfilled');
+    expect(successes.length).toBeGreaterThanOrEqual(1);
+
+    const parent = await withTenantTransaction(
+      doctorA,
+      async (tx) => factsRepo.findById(doctorA, tx, factId),
+      env,
+    );
+    const replaced = replaceOutcome.status === 'fulfilled' ? replaceOutcome.value : null;
+    if (replaced) {
+      expect(replaced.id).not.toBe(factId);
+      expect(parent?.decisionStatus).toBe('SUPERSEDED');
+      const oldNorms = await countNorms(doctorA, factId);
+      expect(oldNorms.active).toBe(0);
+    } else {
+      // D3 won serialization while replace failed closed; parent may remain ACTIVE.
+      expect(parent).toBeTruthy();
+    }
+
+    // Unrelated consultation remains non-blocking while this consultation held the lock earlier.
+    const other = await openChiefFact(doctorA, 'denies cough');
+    const otherNorm = await normService.materializeFactNormalizations(
+      doctorA,
+      { sourceFactCandidateId: other.factId, idempotencyKey: `d3-race-other-${other.factId}` },
+      env,
+    );
+    expect(otherNorm.sourceFactCandidateId).toBe(other.factId);
+
+    // Repeated replacement remains deterministic after lock release.
+    if (replaced) {
+      const again = await factService().materialize(
+        doctorA,
+        consultationId,
+        {
+          sourceChannel: 'DOCTOR_DECLARED',
+          sourceField: 'CHIEF_COMPLAINT',
+          supersedesFactId: replaced.id,
+          idempotencyKey: `d3-race-repl2-${consultationId}`,
+        },
+        factEnv,
+      );
+      expect(again.id).not.toBe(replaced.id);
+      const mid = await withTenantTransaction(
+        doctorA,
+        async (tx) => factsRepo.findById(doctorA, tx, replaced.id),
+        env,
+      );
+      expect(mid?.decisionStatus).toBe('SUPERSEDED');
+    }
+  }, 180_000);
 });

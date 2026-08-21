@@ -103,6 +103,24 @@ export type F3cReviewedSourceCueAdapterResult = {
   readonly parser: CueParserResult;
 };
 
+export type F3cReviewedSourceBinding = {
+  readonly organizationId: string;
+  readonly clinicId: string;
+  readonly patientId: string;
+  readonly consultationId: string;
+  readonly evidenceItemId: string;
+  readonly extractionRunId: string;
+  readonly candidateId: string;
+  readonly reviewEventId: string;
+  readonly reviewAction: 'ACCEPT_AS_SOURCE_TEXT' | 'CORRECT_SOURCE_TEXT';
+  readonly sourceChannel: typeof SOURCE_CHANNEL;
+  readonly sourceField: typeof SOURCE_FIELD;
+  readonly sourceIdentityFingerprint: string;
+  readonly contentSha256: string;
+  readonly exactEffectiveText: string;
+  readonly sourceLocator: SourceLocator;
+};
+
 function assertClosedSelectorInput(input: ParseF3cReviewedSourceCuesInput): void {
   if (!input || typeof input !== 'object' || Array.isArray(input)) {
     throw new ValidationError('UNTRUSTED_INPUT');
@@ -235,13 +253,14 @@ function mapParserThrow(err: unknown): never {
 export class F3cReviewedCueSourceService {
   /**
    * Caller must already hold the shared F3C reviewed-candidate cue source lock.
+   * Binding only — does not invoke the cue parser.
    */
-  async parseF3cReviewedSourceCuesLocked(
+  async loadF3cReviewedSourceBindingLocked(
     tenant: TenantContext,
     tx: TransactionContext,
     input: ParseF3cReviewedSourceCuesInput,
     pack: LoadedTerminologyPack,
-  ): Promise<F3cReviewedSourceCueAdapterResult> {
+  ): Promise<F3cReviewedSourceBinding> {
     const item = await evidenceRepo.findById(tenant, tx, input.evidenceItemId);
     if (!item) throw new ResourceNotFoundError();
     if (item.consultationId !== input.consultationId) {
@@ -304,6 +323,7 @@ export class F3cReviewedCueSourceService {
 
     assertNoStorageInLocator(active.sourceLocator);
     const sourceLocator = presentSourceLocator(active.sourceLocator);
+    const contentSha256 = sha256Utf8(effectiveText);
 
     const sourceIdentityFingerprint = bindF3cReviewedSourceIdentity({
       organizationId: candidate.organizationId,
@@ -322,25 +342,6 @@ export class F3cReviewedCueSourceService {
       packContentChecksum: pack.contentChecksum,
     });
 
-    const eligibleInput: EligibleCueParserInput = {
-      sourceIdentityFingerprint,
-      sourceChannel: SOURCE_CHANNEL,
-      sourceField: SOURCE_FIELD,
-      eligibleText: effectiveText,
-      sourceLocator,
-      organizationId: candidate.organizationId,
-      clinicId: candidate.clinicId,
-      patientId: candidate.patientId,
-      consultationId: candidate.consultationId,
-    };
-
-    let parser: CueParserResult;
-    try {
-      parser = parseOwnerFrozenCues(eligibleInput, pack);
-    } catch (err) {
-      mapParserThrow(err);
-    }
-
     return {
       organizationId: candidate.organizationId,
       clinicId: candidate.clinicId,
@@ -354,6 +355,61 @@ export class F3cReviewedCueSourceService {
       sourceChannel: SOURCE_CHANNEL,
       sourceField: SOURCE_FIELD,
       sourceIdentityFingerprint,
+      contentSha256,
+      exactEffectiveText: effectiveText,
+      sourceLocator,
+    };
+  }
+
+  /**
+   * Parse only — H2 allowlisted. Does not re-read source or take locks.
+   */
+  parseF3cReviewedSourceFromBinding(
+    binding: F3cReviewedSourceBinding,
+    pack: LoadedTerminologyPack,
+  ): CueParserResult {
+    const eligibleInput: EligibleCueParserInput = {
+      sourceIdentityFingerprint: binding.sourceIdentityFingerprint,
+      sourceChannel: SOURCE_CHANNEL,
+      sourceField: SOURCE_FIELD,
+      eligibleText: binding.exactEffectiveText,
+      sourceLocator: binding.sourceLocator,
+      organizationId: binding.organizationId,
+      clinicId: binding.clinicId,
+      patientId: binding.patientId,
+      consultationId: binding.consultationId,
+    };
+    try {
+      return parseOwnerFrozenCues(eligibleInput, pack);
+    } catch (err) {
+      mapParserThrow(err);
+    }
+  }
+
+  /**
+   * Caller must already hold the shared F3C reviewed-candidate cue source lock.
+   */
+  async parseF3cReviewedSourceCuesLocked(
+    tenant: TenantContext,
+    tx: TransactionContext,
+    input: ParseF3cReviewedSourceCuesInput,
+    pack: LoadedTerminologyPack,
+  ): Promise<F3cReviewedSourceCueAdapterResult> {
+    const binding = await this.loadF3cReviewedSourceBindingLocked(tenant, tx, input, pack);
+    const parser = this.parseF3cReviewedSourceFromBinding(binding, pack);
+    return {
+      organizationId: binding.organizationId,
+      clinicId: binding.clinicId,
+      patientId: binding.patientId,
+      consultationId: binding.consultationId,
+      evidenceItemId: binding.evidenceItemId,
+      extractionRunId: binding.extractionRunId,
+      candidateId: binding.candidateId,
+      reviewEventId: binding.reviewEventId,
+      reviewAction: binding.reviewAction,
+      sourceChannel: SOURCE_CHANNEL,
+      sourceField: SOURCE_FIELD,
+      sourceIdentityFingerprint: binding.sourceIdentityFingerprint,
       parser,
     };
   }

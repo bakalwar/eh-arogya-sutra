@@ -122,4 +122,24 @@ describe('F3D-2D3 atomic normalization persistence + lifecycle contract', () => 
       } as never),
     ).rejects.toBeInstanceOf(ValidationError);
   });
+
+  it('orders idempotency resolve before first-write parse/D2; chief fact path locks source first', () => {
+    const service = read(SERVICE);
+    const resolveAt = service.indexOf('idempotency.resolveOrThrow');
+    const parseAt = service.indexOf('this.deps.beforeFirstWriteParse');
+    const normalizeAt = service.indexOf('normalizeSourceLinkedFact(');
+    expect(resolveAt).toBeGreaterThan(-1);
+    expect(parseAt).toBeGreaterThan(resolveAt);
+    expect(normalizeAt).toBeGreaterThan(parseAt);
+    expect(service).toMatch(/v:\s*2/);
+    expect(service).toMatch(/liveContentSha256/);
+    expect(service).toMatch(/normalizerFingerprint/);
+    expect(service).toMatch(/loadDoctorDeclaredChiefComplaintBindingLocked/);
+    expect(service).toMatch(/loadF3cReviewedSourceBindingLocked/);
+
+    const factSvc = read('packages/database/src/services/factCandidateService.ts');
+    expect(factSvc).toMatch(
+      /sourceField === 'CHIEF_COMPLAINT'[\s\S]*?lockChiefComplaintCueSource[\s\S]*?facts\.lockIdentity/,
+    );
+  });
 });

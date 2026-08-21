@@ -122,6 +122,7 @@ export {
 export type {
   ParseDoctorDeclaredChiefComplaintCuesInput,
   DoctorDeclaredChiefComplaintCueAdapterResult,
+  DoctorDeclaredChiefComplaintBinding,
 } from './services/cueEligibleSourceService.js';
 export {
   F3cReviewedCueSourceService,
@@ -131,6 +132,7 @@ export {
 export type {
   ParseF3cReviewedSourceCuesInput,
   F3cReviewedSourceCueAdapterResult,
+  F3cReviewedSourceBinding,
 } from './services/f3cReviewedCueSourceService.js';
 export {
   lockChiefComplaintCueSource,
@@ -163,6 +165,7 @@ export {
 export type {
   MaterializeFactNormalizationsInput,
   MaterializeFactNormalizationsResult,
+  FactNormalizationServiceDeps,
 } from './services/factNormalizationService.js';
 export {
   lockAndSupersedeFactsWithNormalizations,
