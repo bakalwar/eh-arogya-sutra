@@ -58,7 +58,8 @@ describe('F3D-2D3 atomic normalization persistence + lifecycle contract', () => 
     expect(F3D2D_PRODUCTION_ENABLED).toBe(false);
     expect(FACT_NORMALIZATION_AUTHORITY_SCOPE).toBe('FACT_NORMALIZED_SOURCE_LINKED');
     expect(read(SERVICE)).toMatch(/materializeFactNormalizations/);
-    expect(read(SERVICE)).toMatch(/STRUCTURED_UNIT_DEFERRED/);
+    expect(read(SERVICE)).toMatch(/mode:\s*'STRUCTURED_UNIT'/);
+    expect(read(SERVICE)).not.toMatch(/STRUCTURED_UNIT_DEFERRED/);
     expect(read(SERVICE)).toMatch(/clinical\.fact_normalization/);
     expect(read(SERVICE)).not.toMatch(FORBIDDEN_RUNTIME);
     expect(read(SERVICE)).not.toMatch(/parseOwnerFrozenCues\s*\(/);

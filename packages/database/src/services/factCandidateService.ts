@@ -16,7 +16,11 @@ import {
 } from '../repositories/factCandidate.js';
 import { FactConflictError, ResourceNotFoundError, ValidationError } from '../domainErrors.js';
 import { assertUuid, hashPayload } from '../validation.js';
-import { lockChiefComplaintCueSource, lockF3cReviewedCueSource } from './cueSourceLock.js';
+import {
+  lockChiefComplaintCueSource,
+  lockF3cReviewedCueSource,
+  lockStructuredVitalSourceFields,
+} from './cueSourceLock.js';
 import {
   FACT_CANDIDATE_CATEGORIES,
   FACT_CANDIDATE_CHANNELS,
@@ -311,8 +315,22 @@ export class FactCandidateService {
 
         // B1: chief path must take shared source lock before fact identity / norm locks.
         // F3C path keeps existing order inside deriveReviewed (F3C lock first).
+        // F3D-2D4: structured vitals take per-field vital source locks first.
         if (sourceChannel === 'DOCTOR_DECLARED' && sourceField === 'CHIEF_COMPLAINT') {
           await lockChiefComplaintCueSource(tx, tenant, consultationId);
+          const lockedSource = await consultations.findById(tenant, tx, consultationId);
+          if (!lockedSource) throw new ResourceNotFoundError();
+          assertCaseOwner(tenant, lockedSource.doctorUserId);
+          if (
+            lockedSource.organizationId !== tenant.organizationId ||
+            lockedSource.clinicId !== tenant.clinicId ||
+            lockedSource.id !== consultationId ||
+            lockedSource.patientId !== consultation.patientId
+          ) {
+            throw new ResourceNotFoundError();
+          }
+        } else if (sourceChannel === 'STRUCTURED_INTAKE' && sourceField.startsWith('VITAL_')) {
+          await lockStructuredVitalSourceFields(tx, tenant, consultationId, [sourceField]);
           const lockedSource = await consultations.findById(tenant, tx, consultationId);
           if (!lockedSource) throw new ResourceNotFoundError();
           assertCaseOwner(tenant, lockedSource.doctorUserId);
@@ -531,7 +549,7 @@ export class FactCandidateService {
         VITAL_BP_SYSTOLIC: { value: vitals.bloodPressureSystolic, unit: 'mmHg' },
         VITAL_BP_DIASTOLIC: { value: vitals.bloodPressureDiastolic, unit: 'mmHg' },
         VITAL_PULSE: { value: vitals.pulseBpm, unit: 'bpm' },
-        VITAL_TEMPERATURE: { value: vitals.temperatureC, unit: 'C' },
+        VITAL_TEMPERATURE: { value: vitals.temperatureC, unit: '°C' },
         VITAL_SPO2: { value: vitals.spo2Percent, unit: '%' },
         VITAL_WEIGHT: { value: vitals.weightKg, unit: 'kg' },
         VITAL_HEIGHT: { value: vitals.heightCm, unit: 'cm' },

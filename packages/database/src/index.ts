@@ -139,10 +139,24 @@ export {
   chiefComplaintCueSourceLockKey,
   lockF3cReviewedCueSource,
   f3cReviewedCueSourceLockKey,
+  lockStructuredVitalSourceFields,
+  structuredVitalSourceLockKey,
   CUE_SOURCE_LOCK_PREFIX,
   CUE_SOURCE_LOCK_FIELD_CHIEF_COMPLAINT,
   F3C_REVIEWED_CUE_SOURCE_LOCK_PREFIX,
+  STRUCTURED_VITAL_SOURCE_LOCK_PREFIX,
 } from './services/cueSourceLock.js';
+export {
+  STRUCTURED_VITAL_FIELD_SPECS,
+  STRUCTURED_VITAL_SOURCE_FIELDS,
+  isStructuredVitalSourceField,
+  sortStructuredVitalFields,
+  vitalFieldsChanged,
+} from './services/structuredVitalSource.js';
+export type {
+  StructuredVitalSourceField,
+  StructuredVitalFieldSpec,
+} from './services/structuredVitalSource.js';
 export { EvidenceService, evidenceService } from './services/evidenceService.js';
 export type { EvidenceServiceDeps } from './services/evidenceService.js';
 export { PgEvidenceRepository } from './repositories/evidence.js';
@@ -171,6 +185,7 @@ export {
   lockAndSupersedeFactsWithNormalizations,
   invalidateChiefComplaintFactsAndNormalizations,
   invalidateReviewedCandidateFactsAndNormalizations,
+  invalidateStructuredVitalFactsAndNormalizations,
 } from './services/factNormalizationLifecycle.js';
 export { PgConsultationIntakeRepository } from './repositories/consultationIntake.js';
 export type {

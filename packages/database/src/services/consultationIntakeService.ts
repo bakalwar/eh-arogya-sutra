@@ -16,6 +16,9 @@ import {
 import { consultationAllowsFieldUpdate } from '../consultationTransitions.js';
 import { invalidateChiefComplaintFactsAndNormalizations } from './factNormalizationLifecycle.js';
 import { lockChiefComplaintCueSource } from './cueSourceLock.js';
+import { lockStructuredVitalSourceFields } from './cueSourceLock.js';
+import { invalidateStructuredVitalFactsAndNormalizations } from './factNormalizationLifecycle.js';
+import { STRUCTURED_VITAL_FIELD_SPECS, vitalFieldsChanged } from './structuredVitalSource.js';
 
 const intakeRepo = new PgConsultationIntakeRepository();
 const consultations = new PgConsultationRepository();
@@ -241,6 +244,37 @@ export class ConsultationIntakeService {
           await intakeRepo.updateComplaintFields(tenant, tx, consultationId, complaint);
         }
         if (vitals) {
+          // F3D-2D4: lock all structured-vital fields that upsert may rewrite, then
+          // invalidate only fields whose persisted value actually changes.
+          await lockStructuredVitalSourceFields(
+            tx,
+            tenant,
+            consultationId,
+            STRUCTURED_VITAL_FIELD_SPECS.map((s) => s.sourceField),
+          );
+          const lockedConsult = await consultations.findById(tenant, tx, consultationId);
+          if (!lockedConsult) throw new ResourceNotFoundError();
+          if (
+            lockedConsult.organizationId !== tenant.organizationId ||
+            lockedConsult.clinicId !== tenant.clinicId ||
+            lockedConsult.id !== consultationId
+          ) {
+            throw new ValidationError('SOURCE_MUTATED');
+          }
+          assertCaseOwner(tenant, lockedConsult.doctorUserId);
+          if (!consultationAllowsFieldUpdate(lockedConsult.status)) {
+            throw new ValidationError('Consultation fields are locked in current state');
+          }
+          const priorBundle = await intakeRepo.getBundle(tenant, tx, consultationId);
+          const changedFields = vitalFieldsChanged(priorBundle?.vitals ?? null, vitals);
+          if (changedFields.length > 0) {
+            await invalidateStructuredVitalFactsAndNormalizations(
+              tenant,
+              tx,
+              consultationId,
+              changedFields,
+            );
+          }
           await intakeRepo.upsertVitals(tenant, tx, consultationId, vitals);
         }
         if (symptoms) {

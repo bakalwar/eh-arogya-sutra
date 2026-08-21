@@ -82,3 +82,24 @@ export async function invalidateReviewedCandidateFactsAndNormalizations(
   const ids = (r.rows as { id: string }[]).map((row) => String(row.id));
   return lockAndSupersedeFactsWithNormalizations(tenant, tx, ids);
 }
+
+export async function invalidateStructuredVitalFactsAndNormalizations(
+  tenant: TenantContext,
+  tx: TransactionContext,
+  consultationId: string,
+  sourceFields: readonly string[],
+): Promise<{ factCount: number; normalizationCount: number }> {
+  const fields = [...new Set(sourceFields)].filter((f) => String(f).startsWith('VITAL_'));
+  if (fields.length === 0) return { factCount: 0, normalizationCount: 0 };
+  const r = await tx.query(
+    `SELECT id FROM clinical_fact_candidates
+     WHERE organization_id = $1 AND clinic_id = $2
+       AND consultation_id = $3
+       AND source_channel = 'STRUCTURED_INTAKE'
+       AND source_field = ANY($4::text[])
+       AND decision_status = 'ACTIVE'`,
+    [tenant.organizationId, tenant.clinicId, consultationId, fields],
+  );
+  const ids = (r.rows as { id: string }[]).map((row) => String(row.id));
+  return lockAndSupersedeFactsWithNormalizations(tenant, tx, ids);
+}
