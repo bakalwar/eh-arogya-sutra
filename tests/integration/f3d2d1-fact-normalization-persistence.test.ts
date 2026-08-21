@@ -242,7 +242,7 @@ async function httpJson(
 describe('F3D-2D1 fact-normalization persistence foundation', () => {
   it('registers migration 016 and keeps readiness inactive', async () => {
     expect(getOrderedMigrationIds()).toContain('016_f3d2_fact_normalizations');
-    expect(getOrderedMigrationIds()).toHaveLength(17);
+    expect(getOrderedMigrationIds()).toHaveLength(18);
     const sql = fs.readFileSync(
       path.join(root, 'packages/database/migrations/016_f3d2_fact_normalizations.sql'),
       'utf8',
@@ -928,10 +928,12 @@ describe('F3D-2D1 fact-normalization persistence foundation', () => {
     expect(afterParent?.normalizationMethod).toBe('NONE');
   }, 180_000);
 
-  it('migration 017 down removes only owned objects then re-applies; 016 remains', async () => {
+  it('migration 018/017 down removes only owned objects then re-applies; 016 remains', async () => {
     requireDb();
-    const downId = await migrateDownLastForIsolatedTest(env);
-    expect(downId).toBe('017_f3d2d5_clinical_fact_verification');
+    const down018 = await migrateDownLastForIsolatedTest(env);
+    expect(down018).toBe('018_f3d2e1_fact_analysis_acceptance');
+    const down017 = await migrateDownLastForIsolatedTest(env);
+    expect(down017).toBe('017_f3d2d5_clinical_fact_verification');
     const gone = await withAdminClient(async (query) => {
       const t = await query<{ c: string }>(
         `SELECT count(*)::text AS c FROM information_schema.tables
@@ -973,6 +975,9 @@ describe('F3D-2D1 fact-normalization persistence foundation', () => {
     expect(gone.normsTable).toBe(1);
     expect(gone.idx016).toBe(1);
     const up = await migrateUp(env);
-    expect(up.applied).toEqual(['017_f3d2d5_clinical_fact_verification']);
+    expect(up.applied).toEqual([
+      '017_f3d2d5_clinical_fact_verification',
+      '018_f3d2e1_fact_analysis_acceptance',
+    ]);
   }, 120_000);
 });

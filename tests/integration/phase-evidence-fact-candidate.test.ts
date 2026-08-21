@@ -355,7 +355,7 @@ describe('F3D-1 source-linked fact-candidate persistence', () => {
   it('registers migration 015, RLS, and keeps /ready 503', async () => {
     expect(getOrderedMigrationIds()).toContain('015_f3d1_fact_candidates');
     expect(getOrderedMigrationIds()).toContain('016_f3d2_fact_normalizations');
-    expect(getOrderedMigrationIds()).toHaveLength(17);
+    expect(getOrderedMigrationIds()).toHaveLength(18);
     const sql = fs.readFileSync(
       path.join(root, 'packages/database/migrations/015_f3d1_fact_candidates.sql'),
       'utf8',

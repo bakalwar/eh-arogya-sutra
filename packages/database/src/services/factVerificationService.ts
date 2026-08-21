@@ -25,6 +25,7 @@ import { PgCandidateReviewRepository } from '../repositories/candidateReview.js'
 import { PgFactCandidateRepository } from '../repositories/factCandidate.js';
 import { PgFactNormalizationRepository } from '../repositories/factNormalization.js';
 import { PgFactVerificationRepository } from '../repositories/factVerification.js';
+import { lockAndSupersedeFactAnalysisAcceptances } from '../repositories/factAnalysisAcceptance.js';
 import { PgIdempotencyRepository } from '../repositories/idempotency.js';
 import { assertTenantContext, type TenantContext } from '../tenantContext.js';
 import { assertUuid, hashPayload } from '../validation.js';
@@ -402,6 +403,9 @@ export class FactVerificationService {
           ) {
             throw new FactConflictError();
           }
+          // Global order: verification subject already held; supersede linked
+          // analysis-acceptance before replacing D5 so COMMIT cannot leave stale ACTIVE.
+          await lockAndSupersedeFactAnalysisAcceptances(tenant, tx, [parent.id]);
           const superseded = await verifications.supersedeActive(tenant, tx, active.id);
           if (superseded.id !== active.id) throw new FactConflictError();
           supersedesId = active.id;

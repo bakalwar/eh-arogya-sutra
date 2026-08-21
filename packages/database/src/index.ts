@@ -206,6 +206,26 @@ export type {
   ReviewSourceLinkedFactInput,
   FactVerificationServiceDeps,
 } from './services/factVerificationService.js';
+export {
+  PgFactAnalysisAcceptanceRepository,
+  lockAndSupersedeFactAnalysisAcceptances,
+} from './repositories/factAnalysisAcceptance.js';
+export type { InsertFactAnalysisAcceptanceInput } from './repositories/factAnalysisAcceptance.js';
+export { factAnalysisAcceptanceSubjectLockKey } from './factAnalysisAcceptanceLock.js';
+export {
+  FactAnalysisAcceptanceService,
+  factAnalysisAcceptanceService,
+  materializeFactAnalysisAcceptance,
+  FACT_ANALYSIS_ACCEPTANCE_OPERATION,
+} from './services/factAnalysisAcceptanceService.js';
+export type {
+  MaterializeFactAnalysisAcceptanceInput,
+  FactAnalysisAcceptanceServiceDeps,
+} from './services/factAnalysisAcceptanceService.js';
+export {
+  buildNormalizationSnapshotFingerprint as buildFactAnalysisAcceptanceSnapshotFingerprint,
+  EMPTY_FACT_ANALYSIS_ACCEPTANCE_SNAPSHOT_FINGERPRINT,
+} from './factAnalysisAcceptanceSnapshot.js';
 export { PgConsultationIntakeRepository } from './repositories/consultationIntake.js';
 export type {
   ConsultationIntakeBundle,

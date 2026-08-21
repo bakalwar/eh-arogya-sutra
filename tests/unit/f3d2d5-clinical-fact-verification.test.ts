@@ -26,10 +26,10 @@ const SERVICE_FIREWALL =
   /@ehas2\/rule[1-9]|Rules\b|medicine-registry|medicineCode|clinically_used\s*[:=]\s*true|clinicallyUsed\s*[:=]\s*true|AnalyzeComplete|analyzeComplete|ConfirmPrescription|confirmPrescription/i;
 
 describe('F3D-2D5 clinical fact-verification contract', () => {
-  it('keeps migration tip at 017_f3d2d5_clinical_fact_verification length 17', () => {
+  it('keeps D5 migration registered before E1', () => {
     const ids = getOrderedMigrationIds();
-    expect(ids).toHaveLength(17);
-    expect(ids.at(-1)).toBe('017_f3d2d5_clinical_fact_verification');
+    expect(ids).toHaveLength(18);
+    expect(ids.at(-2)).toBe('017_f3d2d5_clinical_fact_verification');
     expect(fs.existsSync(path.join(root, UP))).toBe(true);
     expect(fs.existsSync(path.join(root, DOWN))).toBe(true);
   });

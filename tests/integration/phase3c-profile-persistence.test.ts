@@ -171,11 +171,11 @@ async function seedTenants(): Promise<{
 describe('Phase 3C doctor and clinic profile persistence', () => {
   it('migration 009 down/up on isolated DB', async () => {
     requireDb();
-    expect(getOrderedMigrationIds()).toHaveLength(17);
+    expect(getOrderedMigrationIds()).toHaveLength(18);
     const downId = await migrateDownLastForIsolatedTest(env);
-    expect(downId).toBe('017_f3d2d5_clinical_fact_verification');
+    expect(downId).toBe('018_f3d2e1_fact_analysis_acceptance');
     const reup = await migrateUp(env);
-    expect(reup.applied).toEqual(['017_f3d2d5_clinical_fact_verification']);
+    expect(reup.applied).toEqual(['018_f3d2e1_fact_analysis_acceptance']);
   }, 120_000);
 
   it('doctor profile CRUD, ordering, validation, tenant isolation, roles', async () => {

@@ -17,6 +17,7 @@ import {
 } from '@ehas2/evidence-extract';
 import { PgFactNormalizationRepository } from './factNormalization.js';
 import { lockAndSupersedeFactVerifications } from './factVerification.js';
+import { lockAndSupersedeFactAnalysisAcceptances } from './factAnalysisAcceptance.js';
 
 const factNormalizations = new PgFactNormalizationRepository();
 
@@ -173,6 +174,7 @@ export class PgFactCandidateRepository {
       if (factIds.length === 0) return 0;
       await factNormalizations.lockActiveIdentitiesForParentFacts(tenant, tx, factIds);
       await lockAndSupersedeFactVerifications(tenant, tx, factIds);
+      await lockAndSupersedeFactAnalysisAcceptances(tenant, tx, factIds);
       const r = await tx.query(
         `UPDATE clinical_fact_candidates
          SET decision_status = 'SUPERSEDED'
@@ -268,6 +270,7 @@ export class PgFactCandidateRepository {
     try {
       await factNormalizations.lockActiveIdentitiesForParentFacts(tenant, tx, [factId]);
       await lockAndSupersedeFactVerifications(tenant, tx, [factId]);
+      await lockAndSupersedeFactAnalysisAcceptances(tenant, tx, [factId]);
       const r = await tx.query(
         `UPDATE clinical_fact_candidates
          SET decision_status = 'SUPERSEDED'

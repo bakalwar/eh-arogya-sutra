@@ -52,8 +52,8 @@ describe('F3D-2D0/2D1 fact-normalization persistence contract', () => {
 
   it('registers migration 016 tip and down-only owned objects', () => {
     const ids = getOrderedMigrationIds();
-    expect(ids).toHaveLength(17);
-    expect(ids.at(-1)).toBe('017_f3d2d5_clinical_fact_verification');
+    expect(ids).toHaveLength(18);
+    expect(ids.at(-2)).toBe('017_f3d2d5_clinical_fact_verification');
     expect(fs.existsSync(path.join(root, UP))).toBe(true);
     expect(fs.existsSync(path.join(root, DOWN))).toBe(true);
     const down = read(DOWN);
