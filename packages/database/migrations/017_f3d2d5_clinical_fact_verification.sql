@@ -277,10 +277,81 @@ GRANT SELECT, INSERT ON clinical_fact_verification_normalizations TO ehas2_app;
 REVOKE UPDATE, DELETE ON clinical_fact_verification_normalizations FROM ehas2_app;
 
 -- ---------------------------------------------------------------------------
--- F3D-2D5 snapshot completeness: deferred commit-time DB binding (Aâ€“I)
+-- F3D-2D5 snapshot completeness: deferred commit-time DB binding (A-I)
 -- Canonical fingerprint: SHA-256(UTF-8 of sorted unique "uuid:64hex" lines joined by LF;
--- empty set => SHA-256 of empty string).
+-- empty set => SHA-256 of empty string). Sort with COLLATE "C".
+-- Concurrent write-skew: shared advisory xact lock on
+--   ehas2:fact-verification:v1:<org>:<clinic>:<factId>
+-- acquired in a separate statement before final-state validation reads.
 -- ---------------------------------------------------------------------------
+
+CREATE OR REPLACE FUNCTION ehas2_fact_verification_subject_lock_key(
+  p_organization_id uuid,
+  p_clinic_id uuid,
+  p_fact_candidate_id uuid
+) RETURNS text
+LANGUAGE sql
+IMMUTABLE
+AS $fn$
+  SELECT 'ehas2:fact-verification:v1:'
+    || lower(p_organization_id::text) || ':'
+    || lower(p_clinic_id::text) || ':'
+    || lower(p_fact_candidate_id::text);
+$fn$;
+
+CREATE OR REPLACE FUNCTION ehas2_fact_verification_lock_subject(
+  p_organization_id uuid,
+  p_clinic_id uuid,
+  p_fact_candidate_id uuid
+) RETURNS void
+LANGUAGE plpgsql
+AS $fn$
+BEGIN
+  IF p_organization_id IS NULL
+     OR p_clinic_id IS NULL
+     OR p_fact_candidate_id IS NULL THEN
+    RAISE EXCEPTION 'FACT_VERIFICATION_SUBJECT_INVALID'
+      USING ERRCODE = 'check_violation';
+  END IF;
+  -- Separate statement: wait for lock before any subsequent validation snapshot.
+  PERFORM pg_advisory_xact_lock(
+    hashtextextended(
+      ehas2_fact_verification_subject_lock_key(
+        p_organization_id,
+        p_clinic_id,
+        p_fact_candidate_id
+      ),
+      0
+    )
+  );
+END;
+$fn$;
+
+CREATE OR REPLACE FUNCTION ehas2_fact_verification_lock_subjects_sorted(
+  p_keys text[]
+) RETURNS void
+LANGUAGE plpgsql
+AS $fn$
+DECLARE
+  k text;
+BEGIN
+  IF p_keys IS NULL OR cardinality(p_keys) = 0 THEN
+    RAISE EXCEPTION 'FACT_VERIFICATION_SUBJECT_INVALID'
+      USING ERRCODE = 'check_violation';
+  END IF;
+  FOR k IN
+    SELECT s.x
+    FROM (
+      SELECT DISTINCT t.x COLLATE "C" AS x
+      FROM unnest(p_keys) AS t(x)
+      WHERE t.x IS NOT NULL AND length(t.x) > 0
+    ) s
+    ORDER BY s.x
+  LOOP
+    PERFORM pg_advisory_xact_lock(hashtextextended(k, 0));
+  END LOOP;
+END;
+$fn$;
 
 CREATE OR REPLACE FUNCTION ehas2_fact_verification_snapshot_fingerprint(p_event_id uuid)
 RETURNS text
@@ -291,7 +362,7 @@ AS $fn$
     digest(
       coalesce(
         (
-          SELECT string_agg(x.line, E'\n' ORDER BY x.line)
+          SELECT string_agg(x.line, E'\n' ORDER BY x.line COLLATE "C")
           FROM (
             SELECT DISTINCT
               lower(c.normalization_id::text)
@@ -310,13 +381,16 @@ AS $fn$
 $fn$;
 
 COMMENT ON FUNCTION ehas2_fact_verification_snapshot_fingerprint(uuid) IS
-  'F3D-2D5 canonical snapshot fingerprint from child rows (uuid:hex lines, LF-joined, sha256 hex). Empty => sha256 empty.';
+  'F3D-2D5 canonical snapshot fingerprint from child rows (uuid:hex lines, COLLATE C, LF-joined, sha256 hex). Empty => sha256 empty.';
 
 CREATE OR REPLACE FUNCTION ehas2_fact_verification_validate_event(p_event_id uuid)
 RETURNS void
 LANGUAGE plpgsql
 AS $fn$
 DECLARE
+  subj_org uuid;
+  subj_clinic uuid;
+  subj_fact uuid;
   ev clinical_fact_verification_events%ROWTYPE;
   child_count integer;
   expected_fp text;
@@ -324,11 +398,30 @@ DECLARE
   mismatch_count integer;
   parent clinical_fact_candidates%ROWTYPE;
 BEGIN
+  IF p_event_id IS NULL THEN
+    RAISE EXCEPTION 'FACT_VERIFICATION_SUBJECT_INVALID'
+      USING ERRCODE = 'check_violation';
+  END IF;
+
+  -- Subject derivation read (may be stale). Lock in a separate statement, then re-read.
+  SELECT organization_id, clinic_id, fact_candidate_id
+    INTO subj_org, subj_clinic, subj_fact
+  FROM clinical_fact_verification_events
+  WHERE id = p_event_id;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'FACT_VERIFICATION_SUBJECT_INVALID'
+      USING ERRCODE = 'check_violation';
+  END IF;
+
+  PERFORM ehas2_fact_verification_lock_subject(subj_org, subj_clinic, subj_fact);
+
+  -- Post-lock final-state reads (new statement snapshots after wait).
   SELECT * INTO ev
   FROM clinical_fact_verification_events
   WHERE id = p_event_id;
   IF NOT FOUND THEN
-    RETURN;
+    RAISE EXCEPTION 'FACT_VERIFICATION_SUBJECT_INVALID'
+      USING ERRCODE = 'check_violation';
   END IF;
 
   SELECT count(*)::integer INTO child_count
@@ -467,6 +560,17 @@ BEGIN
   IF TG_OP = 'DELETE' THEN
     RETURN OLD;
   END IF;
+  IF NEW.organization_id IS NULL
+     OR NEW.clinic_id IS NULL
+     OR NEW.fact_candidate_id IS NULL THEN
+    RAISE EXCEPTION 'FACT_VERIFICATION_SUBJECT_INVALID'
+      USING ERRCODE = 'check_violation';
+  END IF;
+  PERFORM ehas2_fact_verification_lock_subject(
+    NEW.organization_id,
+    NEW.clinic_id,
+    NEW.fact_candidate_id
+  );
   PERFORM ehas2_fact_verification_validate_event(NEW.id);
   RETURN NEW;
 END;
@@ -476,13 +580,53 @@ CREATE OR REPLACE FUNCTION ehas2_fact_verification_deferred_from_child()
 RETURNS trigger
 LANGUAGE plpgsql
 AS $fn$
+DECLARE
+  event_ids uuid[];
+  eid uuid;
+  subj RECORD;
+  keys text[] := ARRAY[]::text[];
 BEGIN
   IF TG_OP = 'DELETE' THEN
-    PERFORM ehas2_fact_verification_validate_event(OLD.verification_event_id);
-    RETURN OLD;
+    event_ids := ARRAY[OLD.verification_event_id];
+  ELSIF TG_OP = 'UPDATE'
+        AND OLD.verification_event_id IS DISTINCT FROM NEW.verification_event_id THEN
+    event_ids := ARRAY[OLD.verification_event_id, NEW.verification_event_id];
+  ELSE
+    event_ids := ARRAY[NEW.verification_event_id];
   END IF;
-  PERFORM ehas2_fact_verification_validate_event(NEW.verification_event_id);
-  RETURN NEW;
+
+  FOREACH eid IN ARRAY event_ids
+  LOOP
+    IF eid IS NULL THEN
+      RAISE EXCEPTION 'FACT_VERIFICATION_SUBJECT_INVALID'
+        USING ERRCODE = 'check_violation';
+    END IF;
+    SELECT organization_id, clinic_id, fact_candidate_id
+      INTO subj
+    FROM clinical_fact_verification_events
+    WHERE id = eid;
+    IF NOT FOUND THEN
+      RAISE EXCEPTION 'FACT_VERIFICATION_SUBJECT_INVALID'
+        USING ERRCODE = 'check_violation';
+    END IF;
+    keys := array_append(
+      keys,
+      ehas2_fact_verification_subject_lock_key(
+        subj.organization_id,
+        subj.clinic_id,
+        subj.fact_candidate_id
+      )
+    );
+  END LOOP;
+
+  PERFORM ehas2_fact_verification_lock_subjects_sorted(keys);
+
+  FOREACH eid IN ARRAY event_ids
+  LOOP
+    PERFORM ehas2_fact_verification_validate_event(eid);
+  END LOOP;
+
+  RETURN COALESCE(NEW, OLD);
 END;
 $fn$;
 
@@ -491,18 +635,71 @@ RETURNS trigger
 LANGUAGE plpgsql
 AS $fn$
 DECLARE
-  fact_id uuid;
+  keys text[] := ARRAY[]::text[];
   r RECORD;
 BEGIN
-  fact_id := COALESCE(NEW.source_fact_candidate_id, OLD.source_fact_candidate_id);
+  IF TG_OP = 'DELETE' THEN
+    IF OLD.organization_id IS NULL
+       OR OLD.clinic_id IS NULL
+       OR OLD.source_fact_candidate_id IS NULL THEN
+      RAISE EXCEPTION 'FACT_VERIFICATION_SUBJECT_INVALID'
+        USING ERRCODE = 'check_violation';
+    END IF;
+    keys := ARRAY[
+      ehas2_fact_verification_subject_lock_key(
+        OLD.organization_id,
+        OLD.clinic_id,
+        OLD.source_fact_candidate_id
+      )
+    ];
+  ELSIF TG_OP = 'UPDATE'
+        AND (
+          OLD.organization_id IS DISTINCT FROM NEW.organization_id
+          OR OLD.clinic_id IS DISTINCT FROM NEW.clinic_id
+          OR OLD.source_fact_candidate_id IS DISTINCT FROM NEW.source_fact_candidate_id
+        ) THEN
+    keys := ARRAY[
+      ehas2_fact_verification_subject_lock_key(
+        OLD.organization_id,
+        OLD.clinic_id,
+        OLD.source_fact_candidate_id
+      ),
+      ehas2_fact_verification_subject_lock_key(
+        NEW.organization_id,
+        NEW.clinic_id,
+        NEW.source_fact_candidate_id
+      )
+    ];
+  ELSE
+    IF NEW.organization_id IS NULL
+       OR NEW.clinic_id IS NULL
+       OR NEW.source_fact_candidate_id IS NULL THEN
+      RAISE EXCEPTION 'FACT_VERIFICATION_SUBJECT_INVALID'
+        USING ERRCODE = 'check_violation';
+    END IF;
+    keys := ARRAY[
+      ehas2_fact_verification_subject_lock_key(
+        NEW.organization_id,
+        NEW.clinic_id,
+        NEW.source_fact_candidate_id
+      )
+    ];
+  END IF;
+
+  -- Always lock subject(s) even when no ACTIVE verification yet (write-skew close).
+  PERFORM ehas2_fact_verification_lock_subjects_sorted(keys);
+
   FOR r IN
     SELECT e.id
     FROM clinical_fact_verification_events e
-    WHERE e.fact_candidate_id = fact_id
+    WHERE e.organization_id = COALESCE(NEW.organization_id, OLD.organization_id)
+      AND e.clinic_id = COALESCE(NEW.clinic_id, OLD.clinic_id)
+      AND e.fact_candidate_id = COALESCE(NEW.source_fact_candidate_id, OLD.source_fact_candidate_id)
       AND e.decision_status = 'ACTIVE'
   LOOP
     PERFORM ehas2_fact_verification_validate_event(r.id);
   END LOOP;
+
   RETURN COALESCE(NEW, OLD);
 END;
 $fn$;
@@ -512,18 +709,50 @@ RETURNS trigger
 LANGUAGE plpgsql
 AS $fn$
 DECLARE
-  fact_id uuid;
+  keys text[] := ARRAY[]::text[];
   r RECORD;
 BEGIN
-  fact_id := COALESCE(NEW.id, OLD.id);
+  IF TG_OP = 'DELETE' THEN
+    IF OLD.organization_id IS NULL OR OLD.clinic_id IS NULL OR OLD.id IS NULL THEN
+      RAISE EXCEPTION 'FACT_VERIFICATION_SUBJECT_INVALID'
+        USING ERRCODE = 'check_violation';
+    END IF;
+    keys := ARRAY[
+      ehas2_fact_verification_subject_lock_key(OLD.organization_id, OLD.clinic_id, OLD.id)
+    ];
+  ELSIF TG_OP = 'UPDATE'
+        AND (
+          OLD.organization_id IS DISTINCT FROM NEW.organization_id
+          OR OLD.clinic_id IS DISTINCT FROM NEW.clinic_id
+          OR OLD.id IS DISTINCT FROM NEW.id
+        ) THEN
+    keys := ARRAY[
+      ehas2_fact_verification_subject_lock_key(OLD.organization_id, OLD.clinic_id, OLD.id),
+      ehas2_fact_verification_subject_lock_key(NEW.organization_id, NEW.clinic_id, NEW.id)
+    ];
+  ELSE
+    IF NEW.organization_id IS NULL OR NEW.clinic_id IS NULL OR NEW.id IS NULL THEN
+      RAISE EXCEPTION 'FACT_VERIFICATION_SUBJECT_INVALID'
+        USING ERRCODE = 'check_violation';
+    END IF;
+    keys := ARRAY[
+      ehas2_fact_verification_subject_lock_key(NEW.organization_id, NEW.clinic_id, NEW.id)
+    ];
+  END IF;
+
+  PERFORM ehas2_fact_verification_lock_subjects_sorted(keys);
+
   FOR r IN
     SELECT e.id
     FROM clinical_fact_verification_events e
-    WHERE e.fact_candidate_id = fact_id
+    WHERE e.organization_id = COALESCE(NEW.organization_id, OLD.organization_id)
+      AND e.clinic_id = COALESCE(NEW.clinic_id, OLD.clinic_id)
+      AND e.fact_candidate_id = COALESCE(NEW.id, OLD.id)
       AND e.decision_status = 'ACTIVE'
   LOOP
     PERFORM ehas2_fact_verification_validate_event(r.id);
   END LOOP;
+
   RETURN COALESCE(NEW, OLD);
 END;
 $fn$;

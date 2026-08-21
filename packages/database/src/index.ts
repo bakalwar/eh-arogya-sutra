@@ -194,6 +194,7 @@ export {
 } from './services/factNormalizationLifecycle.js';
 export { PgFactVerificationRepository } from './repositories/factVerification.js';
 export { lockAndSupersedeFactVerifications } from './repositories/factVerification.js';
+export { factVerificationSubjectLockKey } from './factVerificationLock.js';
 export {
   FactVerificationService,
   factVerificationService,

@@ -13,6 +13,9 @@ DROP FUNCTION IF EXISTS ehas2_fact_verification_deferred_from_child();
 DROP FUNCTION IF EXISTS ehas2_fact_verification_deferred_from_event();
 DROP FUNCTION IF EXISTS ehas2_fact_verification_validate_event(uuid);
 DROP FUNCTION IF EXISTS ehas2_fact_verification_snapshot_fingerprint(uuid);
+DROP FUNCTION IF EXISTS ehas2_fact_verification_lock_subjects_sorted(text[]);
+DROP FUNCTION IF EXISTS ehas2_fact_verification_lock_subject(uuid, uuid, uuid);
+DROP FUNCTION IF EXISTS ehas2_fact_verification_subject_lock_key(uuid, uuid, uuid);
 
 DROP TRIGGER IF EXISTS clinical_fact_verification_normalizations_append_only
   ON clinical_fact_verification_normalizations;

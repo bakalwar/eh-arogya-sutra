@@ -8,6 +8,7 @@ import {
   type FactVerificationReasonCode,
 } from '@ehas2/evidence-extract';
 import { buildNormalizationSnapshotFingerprint } from '../factVerificationSnapshot.js';
+import { factVerificationSubjectLockKey } from '../factVerificationLock.js';
 
 function mapTs(value: unknown): string {
   return new Date(String(value)).toISOString();
@@ -89,9 +90,18 @@ export type InsertFactVerificationInput = {
 };
 
 export class PgFactVerificationRepository {
-  async lockSubject(tx: TransactionContext, factCandidateId: string): Promise<void> {
-    const key = `ehas2:fact-verification:v1:${factCandidateId}`;
+  async lockSubject(
+    tenant: TenantContext,
+    tx: TransactionContext,
+    factCandidateId: string,
+  ): Promise<void> {
+    const key = factVerificationSubjectLockKey(
+      tenant.organizationId,
+      tenant.clinicId,
+      factCandidateId,
+    );
     try {
+      // Separate statement from subsequent validation/mutation reads.
       await tx.query(`SELECT pg_advisory_xact_lock(hashtextextended($1::text, $2::bigint))`, [
         key,
         0,
@@ -102,12 +112,26 @@ export class PgFactVerificationRepository {
   }
 
   async lockSubjectsSorted(
+    tenant: TenantContext,
     tx: TransactionContext,
     factCandidateIds: readonly string[],
   ): Promise<void> {
-    const sorted = [...new Set(factCandidateIds)].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
-    for (const id of sorted) {
-      await this.lockSubject(tx, id);
+    const keys = [
+      ...new Set(
+        factCandidateIds.map((id) =>
+          factVerificationSubjectLockKey(tenant.organizationId, tenant.clinicId, id),
+        ),
+      ),
+    ].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+    for (const key of keys) {
+      try {
+        await tx.query(`SELECT pg_advisory_xact_lock(hashtextextended($1::text, $2::bigint))`, [
+          key,
+          0,
+        ]);
+      } catch {
+        throw new ValidationError('LOCK_UNAVAILABLE');
+      }
     }
   }
 
@@ -316,6 +340,6 @@ export async function lockAndSupersedeFactVerifications(
 ): Promise<number> {
   if (factIds.length === 0) return 0;
   const repo = new PgFactVerificationRepository();
-  await repo.lockSubjectsSorted(tx, factIds);
+  await repo.lockSubjectsSorted(tenant, tx, factIds);
   return repo.supersedeActiveLinkedToFacts(tenant, tx, factIds);
 }

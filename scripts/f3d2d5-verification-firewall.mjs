@@ -12,6 +12,7 @@ const SCOPED = [
   'packages/database/src/services/factVerificationService.ts',
   'packages/database/src/repositories/factVerification.ts',
   'packages/database/src/factVerificationSnapshot.ts',
+  'packages/database/src/factVerificationLock.ts',
   'packages/database/migrations/017_f3d2d5_clinical_fact_verification.sql',
   'packages/evidence-extract/src/factVerificationTypes.ts',
 ];
@@ -51,7 +52,11 @@ function scanFile(rel) {
     rel.endsWith('.sql') &&
     (!/DEFERRABLE INITIALLY DEFERRED/.test(text) ||
       !/ehas2_fact_verification_snapshot_fingerprint/.test(text) ||
-      !/FACT_VERIFICATION_SNAPSHOT_INVALID/.test(text))
+      !/FACT_VERIFICATION_SNAPSHOT_INVALID/.test(text) ||
+      !/ehas2_fact_verification_lock_subject/.test(text) ||
+      !/ehas2:fact-verification:v1:/.test(text) ||
+      !/hashtextextended/.test(text) ||
+      !/COLLATE "C"/.test(text))
   ) {
     hits.push('missing-deferred-snapshot-binding');
   }

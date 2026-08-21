@@ -54,6 +54,10 @@ describe('F3D-2D5 clinical fact-verification contract', () => {
     expect(sql).toMatch(/ehas2_fact_verification_snapshot_fingerprint/);
     expect(sql).toMatch(/FACT_VERIFICATION_SNAPSHOT_INVALID/);
     expect(sql).toMatch(/DEFERRABLE INITIALLY DEFERRED/);
+    expect(sql).toMatch(/ehas2_fact_verification_lock_subject/);
+    expect(sql).toMatch(/ehas2:fact-verification:v1:/);
+    expect(sql).toMatch(/hashtextextended/);
+    expect(sql).toMatch(/COLLATE "C"/);
     expect(sql).toMatch(/clinical_fact_verification_events_snapshot_deferred/);
     expect(sql).toMatch(/clinical_fact_verification_normalizations_snapshot_deferred/);
     expect(sql).toMatch(/clinical_fact_normalizations_verification_snapshot_deferred/);
@@ -61,7 +65,7 @@ describe('F3D-2D5 clinical fact-verification contract', () => {
     expect(sql).not.toMatch(/ON DELETE CASCADE/);
   });
 
-  it('down drops 017-owned verification tables, indexes, and deferred snapshot functions only', () => {
+  it('down drops 017-owned verification tables, indexes, deferred snapshot and lock functions only', () => {
     const down = read(DOWN);
     expect(down).toMatch(/DROP TABLE IF EXISTS clinical_fact_verification_normalizations/);
     expect(down).toMatch(/DROP TABLE IF EXISTS clinical_fact_verification_events/);
@@ -78,6 +82,8 @@ describe('F3D-2D5 clinical fact-verification contract', () => {
     expect(down).toMatch(/DROP FUNCTION IF EXISTS ehas2_fact_verification_norm_append_only/);
     expect(down).toMatch(/DROP FUNCTION IF EXISTS ehas2_fact_verification_validate_event/);
     expect(down).toMatch(/DROP FUNCTION IF EXISTS ehas2_fact_verification_snapshot_fingerprint/);
+    expect(down).toMatch(/DROP FUNCTION IF EXISTS ehas2_fact_verification_lock_subject/);
+    expect(down).toMatch(/DROP FUNCTION IF EXISTS ehas2_fact_verification_subject_lock_key/);
     expect(down).toMatch(
       /DROP TRIGGER IF EXISTS clinical_fact_candidates_verification_snapshot_deferred/,
     );

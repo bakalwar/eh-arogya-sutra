@@ -350,7 +350,7 @@ export class FactVerificationService {
           })),
         );
 
-        await verifications.lockSubject(tx, parent.id);
+        await verifications.lockSubject(tenant, tx, parent.id);
         const active = await verifications.findActiveByFactId(tenant, tx, parent.id);
 
         const requestHash = hashPayload({
