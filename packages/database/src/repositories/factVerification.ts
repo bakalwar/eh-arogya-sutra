@@ -90,9 +90,15 @@ export type InsertFactVerificationInput = {
 
 export class PgFactVerificationRepository {
   async lockSubject(tx: TransactionContext, factCandidateId: string): Promise<void> {
-    await tx.query(`SELECT pg_advisory_xact_lock(hashtext($1::text))`, [
-      `ehas2:fact-verification:v1:${factCandidateId}`,
-    ]);
+    const key = `ehas2:fact-verification:v1:${factCandidateId}`;
+    try {
+      await tx.query(`SELECT pg_advisory_xact_lock(hashtextextended($1::text, $2::bigint))`, [
+        key,
+        0,
+      ]);
+    } catch {
+      throw new ValidationError('LOCK_UNAVAILABLE');
+    }
   }
 
   async lockSubjectsSorted(
