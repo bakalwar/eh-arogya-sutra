@@ -40,16 +40,15 @@ const tenant: TenantContext = {
 };
 
 describe('F3D-2D3 atomic normalization persistence + lifecycle contract', () => {
-  it('keeps migration tip at 016 with no 017', () => {
+  it('keeps migration tip at 017 with D5 foundation', () => {
     const ids = getOrderedMigrationIds();
-    expect(ids.at(-1)).toBe('016_f3d2_fact_normalizations');
-    expect(ids).toHaveLength(16);
-    expect(fs.existsSync(path.join(root, 'packages/database/migrations/017_*.sql'))).toBe(false);
+    expect(ids.at(-1)).toBe('017_f3d2d5_clinical_fact_verification');
+    expect(ids).toHaveLength(17);
     expect(
       fs
         .readdirSync(path.join(root, 'packages/database/migrations'))
-        .some((n) => n.startsWith('017_')),
-    ).toBe(false);
+        .some((n) => n.startsWith('017_f3d2d5_clinical_fact_verification')),
+    ).toBe(true);
   });
 
   it('keeps D2 pure-normalizer production writer flags false; D3 is the service writer', () => {

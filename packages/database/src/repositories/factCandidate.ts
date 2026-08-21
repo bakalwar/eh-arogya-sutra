@@ -16,6 +16,7 @@ import {
   type SourceLocator,
 } from '@ehas2/evidence-extract';
 import { PgFactNormalizationRepository } from './factNormalization.js';
+import { lockAndSupersedeFactVerifications } from './factVerification.js';
 
 const factNormalizations = new PgFactNormalizationRepository();
 
@@ -171,6 +172,7 @@ export class PgFactCandidateRepository {
       const factIds = (listed.rows as { id: string }[]).map((row) => String(row.id));
       if (factIds.length === 0) return 0;
       await factNormalizations.lockActiveIdentitiesForParentFacts(tenant, tx, factIds);
+      await lockAndSupersedeFactVerifications(tenant, tx, factIds);
       const r = await tx.query(
         `UPDATE clinical_fact_candidates
          SET decision_status = 'SUPERSEDED'
@@ -265,6 +267,7 @@ export class PgFactCandidateRepository {
   ): Promise<{ id: string }> {
     try {
       await factNormalizations.lockActiveIdentitiesForParentFacts(tenant, tx, [factId]);
+      await lockAndSupersedeFactVerifications(tenant, tx, [factId]);
       const r = await tx.query(
         `UPDATE clinical_fact_candidates
          SET decision_status = 'SUPERSEDED'

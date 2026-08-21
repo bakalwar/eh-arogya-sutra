@@ -242,7 +242,7 @@ async function httpJson(
 describe('F3D-2D1 fact-normalization persistence foundation', () => {
   it('registers migration 016 and keeps readiness inactive', async () => {
     expect(getOrderedMigrationIds()).toContain('016_f3d2_fact_normalizations');
-    expect(getOrderedMigrationIds()).toHaveLength(16);
+    expect(getOrderedMigrationIds()).toHaveLength(17);
     const sql = fs.readFileSync(
       path.join(root, 'packages/database/migrations/016_f3d2_fact_normalizations.sql'),
       'utf8',
@@ -928,39 +928,51 @@ describe('F3D-2D1 fact-normalization persistence foundation', () => {
     expect(afterParent?.normalizationMethod).toBe('NONE');
   }, 180_000);
 
-  it('migration 016 down removes only owned objects then re-applies', async () => {
+  it('migration 017 down removes only owned objects then re-applies; 016 remains', async () => {
     requireDb();
     const downId = await migrateDownLastForIsolatedTest(env);
-    expect(downId).toBe('016_f3d2_fact_normalizations');
+    expect(downId).toBe('017_f3d2d5_clinical_fact_verification');
     const gone = await withAdminClient(async (query) => {
       const t = await query<{ c: string }>(
         `SELECT count(*)::text AS c FROM information_schema.tables
-         WHERE table_schema = 'public' AND table_name = 'clinical_fact_normalizations'`,
+         WHERE table_schema = 'public' AND table_name = 'clinical_fact_verification_events'`,
+      );
+      const child = await query<{ c: string }>(
+        `SELECT count(*)::text AS c FROM information_schema.tables
+         WHERE table_schema = 'public' AND table_name = 'clinical_fact_verification_normalizations'`,
       );
       const f = await query<{ c: string }>(
         `SELECT count(*)::text AS c FROM pg_proc
-         WHERE proname = 'ehas2_fact_normalization_append_only'`,
+         WHERE proname = 'ehas2_fact_verification_event_append_only'`,
       );
       const idx = await query<{ c: string }>(
         `SELECT count(*)::text AS c FROM pg_indexes
-         WHERE schemaname = 'public' AND indexname = 'clinical_fact_candidates_016_norm_parent_uq'`,
+         WHERE schemaname = 'public' AND indexname = 'clinical_fact_candidates_017_verification_parent_uq'`,
       );
-      const facts = await query<{ c: string }>(
+      const norms = await query<{ c: string }>(
         `SELECT count(*)::text AS c FROM information_schema.tables
-         WHERE table_schema = 'public' AND table_name = 'clinical_fact_candidates'`,
+         WHERE table_schema = 'public' AND table_name = 'clinical_fact_normalizations'`,
+      );
+      const idx016 = await query<{ c: string }>(
+        `SELECT count(*)::text AS c FROM pg_indexes
+         WHERE schemaname = 'public' AND indexname = 'clinical_fact_candidates_016_norm_parent_uq'`,
       );
       return {
         table: Number(t.rows[0]?.c ?? -1),
+        child: Number(child.rows[0]?.c ?? -1),
         fn: Number(f.rows[0]?.c ?? -1),
         idx: Number(idx.rows[0]?.c ?? -1),
-        parentTable: Number(facts.rows[0]?.c ?? -1),
+        normsTable: Number(norms.rows[0]?.c ?? -1),
+        idx016: Number(idx016.rows[0]?.c ?? -1),
       };
     }, env);
     expect(gone.table).toBe(0);
+    expect(gone.child).toBe(0);
     expect(gone.fn).toBe(0);
     expect(gone.idx).toBe(0);
-    expect(gone.parentTable).toBe(1);
+    expect(gone.normsTable).toBe(1);
+    expect(gone.idx016).toBe(1);
     const up = await migrateUp(env);
-    expect(up.applied).toEqual(['016_f3d2_fact_normalizations']);
+    expect(up.applied).toEqual(['017_f3d2d5_clinical_fact_verification']);
   }, 120_000);
 });

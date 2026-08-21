@@ -14,7 +14,8 @@ export type EvidenceSafeMetricName =
   | 'extract_result'
   | 'extract_latency_ms'
   | 'candidate_review_result'
-  | 'fact_candidate_result';
+  | 'fact_candidate_result'
+  | 'fact_verification_result';
 
 export type EvidenceSafeMetric = {
   name: EvidenceSafeMetricName;
@@ -44,6 +45,7 @@ function emptyTotals(): Totals {
     extract_latency_ms: 0,
     candidate_review_result: 0,
     fact_candidate_result: 0,
+    fact_verification_result: 0,
   };
 }
 
@@ -68,6 +70,7 @@ const METRIC_NAMES = new Set<string>([
   'extract_latency_ms',
   'candidate_review_result',
   'fact_candidate_result',
+  'fact_verification_result',
 ]);
 
 const MAX_CODE_CHARS = 64;
@@ -86,6 +89,8 @@ const FACT_CANDIDATE_RESULT_CODES = new Set([
   'IDENTITY_REPLAY',
   'MATERIALIZED',
 ]);
+
+const FACT_VERIFICATION_RESULT_CODES = new Set(['IDEMPOTENT_REPLAY', 'MATERIALIZED']);
 
 const INGEST_CREATED_CODES = new Set(['INTAKE_CREATED']);
 
@@ -225,6 +230,10 @@ const SCHEMA_BY_METRIC: Record<
   fact_candidate_result: {
     keys: new Set(['name', 'code']),
     codes: FACT_CANDIDATE_RESULT_CODES,
+  },
+  fact_verification_result: {
+    keys: new Set(['name', 'code']),
+    codes: FACT_VERIFICATION_RESULT_CODES,
   },
 };
 

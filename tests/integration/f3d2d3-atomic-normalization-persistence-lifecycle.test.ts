@@ -230,9 +230,9 @@ async function countNorms(
 }
 
 describe('F3D-2D3 atomic normalization persistence + lifecycle (isolated PostgreSQL)', () => {
-  it('migration tip remains 016', () => {
+  it('migration tip remains 017', () => {
     requireDb();
-    expect(getOrderedMigrationIds().at(-1)).toBe('016_f3d2_fact_normalizations');
+    expect(getOrderedMigrationIds().at(-1)).toBe('017_f3d2d5_clinical_fact_verification');
   });
 
   it('chief-complaint source materializes ACTIVE norms; replay and stale binding behave', async () => {
