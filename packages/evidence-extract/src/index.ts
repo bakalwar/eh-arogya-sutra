@@ -128,6 +128,22 @@ export type {
   FactAnalysisAcceptanceNormalizationDto,
 } from './factAnalysisAcceptanceTypes.js';
 export {
+  RULES_SHADOW_INPUT_AUTHORITY,
+  RULES_SHADOW_INPUT_SCHEMA_VERSION,
+  RULES_SHADOW_INPUT_CREATED_FROM_CONTRACT_VERSION,
+  MAX_RULES_SHADOW_INPUT_FACTS,
+  MAX_RULES_SHADOW_INPUT_NORMS_PER_FACT,
+  MAX_RULES_SHADOW_INPUT_TOTAL_NORMS,
+  RULES_SHADOW_INPUT_REASON_CODES,
+} from './rulesShadowInputTypes.js';
+export type {
+  RulesShadowInputReasonCode,
+  RulesShadowInputNormalizedSignal,
+  RulesShadowInputFactEnvelope,
+  RulesShadowInputDto,
+  BuildRulesShadowInputResult,
+} from './rulesShadowInputTypes.js';
+export {
   sha256Hex,
   extractorFingerprint,
   contentAwareExtractorFingerprint,
