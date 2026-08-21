@@ -16,11 +16,21 @@ import {
 import { consultationAllowsFieldUpdate } from '../consultationTransitions.js';
 import { invalidateChiefComplaintFactsAndNormalizations } from './factNormalizationLifecycle.js';
 import { lockChiefComplaintCueSource } from './cueSourceLock.js';
+import { lockStructuredVitalSourceFields } from './cueSourceLock.js';
+import { invalidateStructuredVitalFactsAndNormalizations } from './factNormalizationLifecycle.js';
+import {
+  presentVitalMeasurementKeys,
+  sourceFieldsForVitalColumns,
+  vitalFieldsChanged,
+  type VitalPatchMeasurementKey,
+} from './structuredVitalSource.js';
 
 const intakeRepo = new PgConsultationIntakeRepository();
 const consultations = new PgConsultationRepository();
 const audit = new PgAuditEventRepository();
 const idempotency = new PgIdempotencyRepository();
+
+const VITAL_NOTES_KEY = 'notes' as const;
 
 function assertCaseOwner(tenant: TenantContext, doctorUserId: string): void {
   if (tenant.actorRole === 'ClinicAdmin') return;
@@ -44,6 +54,73 @@ function optionalNumber(value: unknown, field: string, min: number, max: number)
     throw new ValidationError(`Invalid ${field}`);
   }
   return n;
+}
+
+type ValidatedVitalTouch = {
+  readonly measurementKeys: readonly VitalPatchMeasurementKey[];
+  readonly notesTouched: boolean;
+  readonly values: Partial<{
+    bloodPressureSystolic: number | null;
+    bloodPressureDiastolic: number | null;
+    pulseBpm: number | null;
+    temperatureC: number | null;
+    spo2Percent: number | null;
+    weightKg: number | null;
+    heightCm: number | null;
+    notes: string | null;
+  }>;
+};
+
+function validateVitalPatchTouches(
+  raw: NonNullable<ConsultationIntakePatch['vitals']>,
+): ValidatedVitalTouch | null {
+  if (raw === null || typeof raw !== 'object' || Array.isArray(raw)) {
+    throw new ValidationError('Invalid vitals');
+  }
+  const measurementKeys = presentVitalMeasurementKeys(raw);
+  const notesTouched = Object.prototype.hasOwnProperty.call(raw, VITAL_NOTES_KEY);
+  for (const key of measurementKeys) {
+    if ((raw as Record<string, unknown>)[key] === undefined) {
+      throw new ValidationError(`Invalid ${key}`);
+    }
+  }
+  if (notesTouched && (raw as Record<string, unknown>).notes === undefined) {
+    throw new ValidationError('Invalid notes');
+  }
+  if (measurementKeys.length === 0 && !notesTouched) {
+    return null;
+  }
+  const values: ValidatedVitalTouch['values'] = {};
+  if (measurementKeys.includes('bloodPressureSystolic')) {
+    values.bloodPressureSystolic = optionalInt(raw.bloodPressureSystolic, 'systolic', 60, 260);
+  }
+  if (measurementKeys.includes('bloodPressureDiastolic')) {
+    values.bloodPressureDiastolic = optionalInt(raw.bloodPressureDiastolic, 'diastolic', 30, 160);
+  }
+  if (measurementKeys.includes('pulseBpm')) {
+    values.pulseBpm = optionalInt(raw.pulseBpm, 'pulse', 20, 250);
+  }
+  if (measurementKeys.includes('temperatureC')) {
+    values.temperatureC = optionalNumber(raw.temperatureC, 'temperatureC', 30, 45);
+  }
+  if (measurementKeys.includes('spo2Percent')) {
+    values.spo2Percent = optionalNumber(raw.spo2Percent, 'spo2', 50, 100);
+  }
+  if (measurementKeys.includes('weightKg')) {
+    values.weightKg = optionalNumber(raw.weightKg, 'weightKg', 0.1, 400);
+  }
+  if (measurementKeys.includes('heightCm')) {
+    values.heightCm = optionalNumber(raw.heightCm, 'heightCm', 20, 250);
+  }
+  if (notesTouched) {
+    values.notes = assertOptionalBoundedText(raw.notes, 'vitals.notes', 500);
+  }
+  const sys = values.bloodPressureSystolic;
+  const dia = values.bloodPressureDiastolic;
+  if (sys != null && dia != null && sys <= dia) {
+    throw new ValidationError('systolic must be greater than diastolic');
+  }
+  return { measurementKeys, notesTouched, values };
 }
 
 export type ConsultationIntakePatch = {
@@ -147,33 +224,15 @@ export class ConsultationIntakeService {
         if (!s.label) throw new ValidationError('symptom.label required');
       }
     }
-    const vitals = input.vitals
-      ? {
-          bloodPressureSystolic: optionalInt(
-            input.vitals.bloodPressureSystolic,
-            'systolic',
-            60,
-            260,
-          ),
-          bloodPressureDiastolic: optionalInt(
-            input.vitals.bloodPressureDiastolic,
-            'diastolic',
-            30,
-            160,
-          ),
-          pulseBpm: optionalInt(input.vitals.pulseBpm, 'pulse', 20, 250),
-          temperatureC: optionalNumber(input.vitals.temperatureC, 'temperatureC', 30, 45),
-          spo2Percent: optionalNumber(input.vitals.spo2Percent, 'spo2', 50, 100),
-          weightKg: optionalNumber(input.vitals.weightKg, 'weightKg', 0.1, 400),
-          heightCm: optionalNumber(input.vitals.heightCm, 'heightCm', 20, 250),
-          notes: assertOptionalBoundedText(input.vitals.notes, 'vitals.notes', 500),
-        }
-      : undefined;
+    const vitalsTouch =
+      input.vitals !== undefined && input.vitals !== null
+        ? validateVitalPatchTouches(input.vitals)
+        : undefined;
     if (
-      vitals &&
-      vitals.bloodPressureSystolic != null &&
-      vitals.bloodPressureDiastolic != null &&
-      vitals.bloodPressureSystolic <= vitals.bloodPressureDiastolic
+      vitalsTouch &&
+      vitalsTouch.values.bloodPressureSystolic != null &&
+      vitalsTouch.values.bloodPressureDiastolic != null &&
+      vitalsTouch.values.bloodPressureSystolic <= vitalsTouch.values.bloodPressureDiastolic
     ) {
       throw new ValidationError('systolic must be greater than diastolic');
     }
@@ -191,7 +250,15 @@ export class ConsultationIntakeService {
     const requestHash = hashPayload({
       consultationId,
       complaint,
-      vitals,
+      vitalsTouch: vitalsTouch
+        ? {
+            measurementKeys: [...vitalsTouch.measurementKeys].sort(),
+            notesTouched: vitalsTouch.notesTouched,
+            values: vitalsTouch.values,
+          }
+        : input.vitals !== undefined
+          ? { empty: true }
+          : undefined,
       symptoms,
       context,
     });
@@ -240,8 +307,69 @@ export class ConsultationIntakeService {
         if (Object.keys(complaint).length > 0) {
           await intakeRepo.updateComplaintFields(tenant, tx, consultationId, complaint);
         }
-        if (vitals) {
-          await intakeRepo.upsertVitals(tenant, tx, consultationId, vitals);
+        if (vitalsTouch) {
+          const touchedSourceFields = sourceFieldsForVitalColumns(vitalsTouch.measurementKeys);
+          if (touchedSourceFields.length > 0) {
+            await lockStructuredVitalSourceFields(tx, tenant, consultationId, touchedSourceFields);
+          }
+          const lockedConsult = await consultations.findById(tenant, tx, consultationId);
+          if (!lockedConsult) throw new ResourceNotFoundError();
+          if (
+            lockedConsult.organizationId !== tenant.organizationId ||
+            lockedConsult.clinicId !== tenant.clinicId ||
+            lockedConsult.id !== consultationId
+          ) {
+            throw new ValidationError('SOURCE_MUTATED');
+          }
+          assertCaseOwner(tenant, lockedConsult.doctorUserId);
+          if (!consultationAllowsFieldUpdate(lockedConsult.status)) {
+            throw new ValidationError('Consultation fields are locked in current state');
+          }
+          const priorBundle = await intakeRepo.getBundle(tenant, tx, consultationId);
+          const prior = priorBundle?.vitals ?? null;
+          const merged = {
+            bloodPressureSystolic: vitalsTouch.measurementKeys.includes('bloodPressureSystolic')
+              ? (vitalsTouch.values.bloodPressureSystolic ?? null)
+              : (prior?.bloodPressureSystolic ?? null),
+            bloodPressureDiastolic: vitalsTouch.measurementKeys.includes('bloodPressureDiastolic')
+              ? (vitalsTouch.values.bloodPressureDiastolic ?? null)
+              : (prior?.bloodPressureDiastolic ?? null),
+            pulseBpm: vitalsTouch.measurementKeys.includes('pulseBpm')
+              ? (vitalsTouch.values.pulseBpm ?? null)
+              : (prior?.pulseBpm ?? null),
+            temperatureC: vitalsTouch.measurementKeys.includes('temperatureC')
+              ? (vitalsTouch.values.temperatureC ?? null)
+              : (prior?.temperatureC ?? null),
+            spo2Percent: vitalsTouch.measurementKeys.includes('spo2Percent')
+              ? (vitalsTouch.values.spo2Percent ?? null)
+              : (prior?.spo2Percent ?? null),
+            weightKg: vitalsTouch.measurementKeys.includes('weightKg')
+              ? (vitalsTouch.values.weightKg ?? null)
+              : (prior?.weightKg ?? null),
+            heightCm: vitalsTouch.measurementKeys.includes('heightCm')
+              ? (vitalsTouch.values.heightCm ?? null)
+              : (prior?.heightCm ?? null),
+            notes: vitalsTouch.notesTouched
+              ? (vitalsTouch.values.notes ?? null)
+              : (prior?.notes ?? null),
+          };
+          if (
+            merged.bloodPressureSystolic != null &&
+            merged.bloodPressureDiastolic != null &&
+            merged.bloodPressureSystolic <= merged.bloodPressureDiastolic
+          ) {
+            throw new ValidationError('systolic must be greater than diastolic');
+          }
+          const changedFields = vitalFieldsChanged(prior, merged);
+          if (changedFields.length > 0) {
+            await invalidateStructuredVitalFactsAndNormalizations(
+              tenant,
+              tx,
+              consultationId,
+              changedFields,
+            );
+          }
+          await intakeRepo.patchVitalsColumns(tenant, tx, consultationId, vitalsTouch.values);
         }
         if (symptoms) {
           await intakeRepo.replaceSymptoms(tenant, tx, consultationId, symptoms);
@@ -285,7 +413,7 @@ export class ConsultationIntakeService {
           resourceType: 'consultation',
           resourceId: consultationId,
           outcome: 'SUCCESS',
-          metadata: { hasVitals: Boolean(vitals), symptomCount: symptoms?.length ?? 0 },
+          metadata: { hasVitals: Boolean(vitalsTouch), symptomCount: symptoms?.length ?? 0 },
         });
         const bundle = await intakeRepo.getBundle(tenant, tx, consultationId);
         if (!bundle) throw new ResourceNotFoundError();

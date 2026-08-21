@@ -49,7 +49,7 @@ jobs:
           PGPASSWORD: ehas2_isolated_test_only
         run: |
           set -e
-          for db in ehas2_phase3a_test ehas2_phase3b_test ehas2_phase3c_test ehas2_phase3d_test ehas2_phase4a_preflight ehas2_phase_evidence_test ehas2_phase_extract_test ehas2_phase_ocr_test ehas2_phase_f3c_test ehas2_phase_f3d_test ehas2_phase_f3d2d1_test ehas2_phase_f3d2d3_test; do
+          for db in ehas2_phase3a_test ehas2_phase3b_test ehas2_phase3c_test ehas2_phase3d_test ehas2_phase4a_preflight ehas2_phase_evidence_test ehas2_phase_extract_test ehas2_phase_ocr_test ehas2_phase_f3c_test ehas2_phase_f3d_test ehas2_phase_f3d2d1_test ehas2_phase_f3d2d3_test ehas2_phase_f3d2d4_test; do
             psql -h 127.0.0.1 -p 55432 -U ehas2 -d postgres -tc "SELECT 1 FROM pg_database WHERE datname = '${db}'" | grep -q 1 \
               || psql -h 127.0.0.1 -p 55432 -U ehas2 -d postgres -c "CREATE DATABASE ${db} OWNER ehas2;"
           done

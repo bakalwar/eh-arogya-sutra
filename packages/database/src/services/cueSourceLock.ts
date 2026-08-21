@@ -1,6 +1,11 @@
 import { ValidationError } from '../domainErrors.js';
 import type { TenantContext, TransactionContext } from '../tenantContext.js';
 import { assertUuid } from '../validation.js';
+import {
+  isStructuredVitalSourceField,
+  sortStructuredVitalFields,
+  type StructuredVitalSourceField,
+} from './structuredVitalSource.js';
 
 /** Dedicated chief-complaint cue-source lock. Not F3C candidate or F3D fact identity. */
 export const CUE_SOURCE_LOCK_PREFIX = 'ehas2:cue-source:v1' as const;
@@ -10,6 +15,9 @@ export const CUE_SOURCE_LOCK_FIELD_CHIEF_COMPLAINT = 'CHIEF_COMPLAINT' as const;
  * Shared by review writers, cue/fact reviewed-source readers, and supersedeRuns.
  * Not chief-complaint or F3D fact identity. */
 export const F3C_REVIEWED_CUE_SOURCE_LOCK_PREFIX = 'ehas2:f3c-reviewed-cue-source:v1' as const;
+
+/** Dedicated structured-vital source lock domain (F3D-2D4). Not chief or F3C. */
+export const STRUCTURED_VITAL_SOURCE_LOCK_PREFIX = 'ehas2:structured-vital-source:v1' as const;
 
 export function chiefComplaintCueSourceLockKey(input: {
   organizationId: string;
@@ -77,4 +85,42 @@ export async function lockF3cReviewedCueSource(
     candidateId,
   });
   await acquireHashTextExtendedXactLock(tx, key);
+}
+
+export function structuredVitalSourceLockKey(input: {
+  organizationId: string;
+  clinicId: string;
+  consultationId: string;
+  sourceField: StructuredVitalSourceField;
+}): string {
+  assertUuid(input.organizationId, 'organizationId');
+  assertUuid(input.clinicId, 'clinicId');
+  assertUuid(input.consultationId, 'consultationId');
+  if (!isStructuredVitalSourceField(input.sourceField)) {
+    throw new ValidationError('SOURCE_INELIGIBLE');
+  }
+  return `${STRUCTURED_VITAL_SOURCE_LOCK_PREFIX}:${input.organizationId}:${input.clinicId}:${input.consultationId}:${input.sourceField}`;
+}
+
+/**
+ * Acquire transaction-scoped structured-vital source locks in sorted field order.
+ * Fail closed: no session lock and no unlocked fallback.
+ */
+export async function lockStructuredVitalSourceFields(
+  tx: TransactionContext,
+  tenant: TenantContext,
+  consultationId: string,
+  sourceFields: readonly string[],
+): Promise<StructuredVitalSourceField[]> {
+  const sorted = sortStructuredVitalFields(sourceFields);
+  for (const sourceField of sorted) {
+    const key = structuredVitalSourceLockKey({
+      organizationId: tenant.organizationId,
+      clinicId: tenant.clinicId,
+      consultationId,
+      sourceField,
+    });
+    await acquireHashTextExtendedXactLock(tx, key);
+  }
+  return sorted;
 }

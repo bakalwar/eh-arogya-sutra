@@ -193,6 +193,58 @@ export class PgConsultationIntakeRepository {
     );
   }
 
+  /**
+   * F3D-2D4 B1: update only own-property columns so concurrent disjoint patches
+   * cannot clobber untouched vitals via full-row rewrite.
+   */
+  async patchVitalsColumns(
+    tenant: TenantContext,
+    tx: TransactionContext,
+    consultationId: string,
+    patch: Partial<{
+      bloodPressureSystolic: number | null;
+      bloodPressureDiastolic: number | null;
+      pulseBpm: number | null;
+      temperatureC: number | null;
+      spo2Percent: number | null;
+      weightKg: number | null;
+      heightCm: number | null;
+      notes: string | null;
+    }>,
+  ): Promise<void> {
+    await tx.query(
+      `INSERT INTO vitals (consultation_id, organization_id, clinic_id)
+       VALUES ($1,$2,$3)
+       ON CONFLICT (consultation_id) DO NOTHING`,
+      [consultationId, tenant.organizationId, tenant.clinicId],
+    );
+    const columnSql: Record<string, string> = {
+      bloodPressureSystolic: 'blood_pressure_systolic',
+      bloodPressureDiastolic: 'blood_pressure_diastolic',
+      pulseBpm: 'pulse_bpm',
+      temperatureC: 'temperature_c',
+      spo2Percent: 'spo2_percent',
+      weightKg: 'weight_kg',
+      heightCm: 'height_cm',
+      notes: 'notes',
+    };
+    const sets: string[] = [];
+    const params: unknown[] = [consultationId, tenant.organizationId, tenant.clinicId];
+    let i = 4;
+    for (const [key, sqlCol] of Object.entries(columnSql)) {
+      if (!Object.prototype.hasOwnProperty.call(patch, key)) continue;
+      sets.push(`${sqlCol} = $${i++}`);
+      params.push((patch as Record<string, unknown>)[key]);
+    }
+    if (sets.length === 0) return;
+    sets.push('recorded_at = now()');
+    await tx.query(
+      `UPDATE vitals SET ${sets.join(', ')}
+       WHERE consultation_id = $1 AND organization_id = $2 AND clinic_id = $3`,
+      params,
+    );
+  }
+
   async replaceSymptoms(
     tenant: TenantContext,
     tx: TransactionContext,

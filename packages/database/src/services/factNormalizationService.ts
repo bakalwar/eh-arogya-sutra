@@ -25,6 +25,7 @@ import {
   type InsertFactNormalizationInput,
 } from '../repositories/factNormalization.js';
 import { PgIdempotencyRepository } from '../repositories/idempotency.js';
+import { PgConsultationIntakeRepository } from '../repositories/consultationIntake.js';
 import { PgConsultationRepository } from '../repositories/postgres.js';
 import {
   assertTenantContext,
@@ -37,8 +38,18 @@ import {
   deriveEffectiveReviewedCueText,
   F3cReviewedCueSourceService,
 } from './f3cReviewedCueSourceService.js';
-import { lockChiefComplaintCueSource, lockF3cReviewedCueSource } from './cueSourceLock.js';
+import {
+  lockChiefComplaintCueSource,
+  lockF3cReviewedCueSource,
+  lockStructuredVitalSourceFields,
+} from './cueSourceLock.js';
 import { PgCandidateReviewRepository } from '../repositories/candidateReview.js';
+import {
+  exactVitalValueText,
+  isStructuredVitalSourceField,
+  structuredVitalSpec,
+  vitalValueContentSha256,
+} from './structuredVitalSource.js';
 
 const FACT_NORMALIZATION_OPERATION = 'clinical.fact_normalization';
 const CLOSED_INPUT_KEYS = new Set(['sourceFactCandidateId', 'idempotencyKey']);
@@ -47,6 +58,7 @@ const facts = new PgFactCandidateRepository();
 const norms = new PgFactNormalizationRepository();
 const idempotency = new PgIdempotencyRepository();
 const consultations = new PgConsultationRepository();
+const intakeRepo = new PgConsultationIntakeRepository();
 const reviews = new PgCandidateReviewRepository();
 const cueChief = new CueEligibleSourceService();
 const cueF3c = new F3cReviewedCueSourceService();
@@ -64,7 +76,7 @@ export type MaterializeFactNormalizationsResult = {
 };
 
 export type FactNormalizationServiceDeps = {
-  /** Invoked only on first-write path immediately before C1/C2 parse + D2. */
+  /** Invoked only on first-write path immediately before C1/C2 parse or D2. */
   readonly beforeFirstWriteParse?: () => void;
 };
 
@@ -133,6 +145,12 @@ function expectedParserFingerprint(packChecksum: string): string {
     .digest('hex');
 }
 
+function structuredUnitParserFingerprint(packChecksum: string): string {
+  return createHash('sha256')
+    .update(`STRUCTURED_UNIT_NO_PARSER|${FACT_NORMALIZER_VERSION}|${packChecksum}`, 'utf8')
+    .digest('hex');
+}
+
 function draftToInsert(
   draft: FactNormalizationDraft,
   sourceFactCandidateId: string,
@@ -185,9 +203,18 @@ function buildRequestHash(input: {
   liveReviewEventId: string | null;
   liveReviewAction: string | null;
   liveCandidateId: string | null;
+  normalizationMode: 'CUE_RESULT' | 'STRUCTURED_UNIT';
+  sourceChannel: string;
+  sourceField: string;
+  liveUnitText: string | null;
+  liveUnitPosture: string | null;
   pack: LoadedTerminologyPack;
 }): string {
-  const parserFingerprint = expectedParserFingerprint(input.pack.contentChecksum);
+  const parserVersion = input.normalizationMode === 'STRUCTURED_UNIT' ? 'none' : CUE_PARSER_VERSION;
+  const parserFingerprint =
+    input.normalizationMode === 'STRUCTURED_UNIT'
+      ? structuredUnitParserFingerprint(input.pack.contentChecksum)
+      : expectedParserFingerprint(input.pack.contentChecksum);
   const normalizerFingerprint = computeNormalizerFingerprint();
   return hashPayload({
     v: 2,
@@ -202,10 +229,15 @@ function buildRequestHash(input: {
     liveReviewEventId: input.liveReviewEventId,
     liveReviewAction: input.liveReviewAction,
     liveCandidateId: input.liveCandidateId,
+    normalizationMode: input.normalizationMode,
+    sourceChannel: input.sourceChannel,
+    sourceField: input.sourceField,
+    liveUnitText: input.liveUnitText,
+    liveUnitPosture: input.liveUnitPosture,
     packId: input.pack.packId,
     packVersion: input.pack.packVersion,
     packContentChecksum: input.pack.contentChecksum,
-    parserVersion: CUE_PARSER_VERSION,
+    parserVersion,
     parserFingerprint,
     normalizerVersion: FACT_NORMALIZER_VERSION,
     normalizerFingerprint,
@@ -248,10 +280,17 @@ export class FactNormalizationService {
           if (!peek.extractionCandidateId) throw new ValidationError('SOURCE_INELIGIBLE');
           await lockF3cReviewedCueSource(tx, tenant, peek.extractionCandidateId);
         } else if (
+          peek.sourceChannel === 'STRUCTURED_INTAKE' &&
+          isStructuredVitalSourceField(peek.sourceField)
+        ) {
+          await lockStructuredVitalSourceFields(tx, tenant, peek.consultationId, [
+            peek.sourceField,
+          ]);
+        } else if (
           peek.sourceChannel === 'STRUCTURED_INTAKE' ||
           String(peek.sourceField).startsWith('VITAL_')
         ) {
-          throw new ValidationError('STRUCTURED_UNIT_DEFERRED');
+          throw new ValidationError('SOURCE_INELIGIBLE');
         } else {
           throw new ValidationError('SOURCE_INELIGIBLE');
         }
@@ -281,12 +320,16 @@ export class FactNormalizationService {
         let liveReviewEventId: string | null = null;
         let liveReviewAction: string | null = null;
         let liveCandidateId: string | null = null;
+        let normalizationMode: 'CUE_RESULT' | 'STRUCTURED_UNIT' = 'CUE_RESULT';
+        let liveUnitText: string | null = null;
+        let liveUnitPosture: string | null = null;
         let chiefBinding: Awaited<
           ReturnType<CueEligibleSourceService['loadDoctorDeclaredChiefComplaintBindingLocked']>
         > | null = null;
         let f3cBinding: Awaited<
           ReturnType<F3cReviewedCueSourceService['loadF3cReviewedSourceBindingLocked']>
         > | null = null;
+        let structuredAssertedValueText: string | null = null;
 
         if (
           parent.sourceChannel === 'DOCTOR_DECLARED' &&
@@ -311,6 +354,33 @@ export class FactNormalizationService {
           }
           liveSourceIdentityFingerprint = chiefBinding.sourceIdentityFingerprint;
           liveContentSha256 = chiefBinding.contentSha256;
+        } else if (
+          parent.sourceChannel === 'STRUCTURED_INTAKE' &&
+          isStructuredVitalSourceField(parent.sourceField)
+        ) {
+          const spec = structuredVitalSpec(parent.sourceField);
+          if (!spec) throw new ValidationError('SOURCE_INELIGIBLE');
+          const bundle = await intakeRepo.getBundle(tenant, tx, parent.consultationId);
+          if (!bundle || bundle.consultationId !== parent.consultationId) {
+            throw new ResourceNotFoundError();
+          }
+          const liveValue = bundle.vitals?.[spec.column];
+          if (liveValue == null || typeof liveValue !== 'number' || !Number.isFinite(liveValue)) {
+            throw new ValidationError('SOURCE_INELIGIBLE');
+          }
+          const valueText = exactVitalValueText(liveValue);
+          if (parent.originalSourceSpan !== boundSpanForBinding(valueText)) {
+            throw new ValidationError('SOURCE_MUTATED');
+          }
+          if (parent.unitText !== spec.unitText || parent.unitPosture !== 'EXACT_AS_SOURCE') {
+            throw new ValidationError('SOURCE_MUTATED');
+          }
+          normalizationMode = 'STRUCTURED_UNIT';
+          liveUnitText = spec.unitText;
+          liveUnitPosture = 'EXACT_AS_SOURCE';
+          structuredAssertedValueText = valueText;
+          liveSourceIdentityFingerprint = parent.sourceIdentityFingerprint;
+          liveContentSha256 = vitalValueContentSha256(valueText, spec.unitText);
         } else {
           if (!parent.extractionCandidateId || !parent.evidenceItemId || !parent.reviewEventId) {
             throw new ValidationError('SOURCE_INELIGIBLE');
@@ -368,10 +438,15 @@ export class FactNormalizationService {
           liveReviewEventId,
           liveReviewAction,
           liveCandidateId,
+          normalizationMode,
+          sourceChannel: parent.sourceChannel,
+          sourceField: parent.sourceField,
+          liveUnitText,
+          liveUnitPosture,
           pack,
         });
 
-        // B2: resolve/replay before any C1/C2 parse or D2 normalize.
+        // Resolve/replay before any C1/C2 parse or D2 normalize.
         const existingKey = await idempotency.resolveOrThrow(
           tenant,
           tx,
@@ -394,30 +469,58 @@ export class FactNormalizationService {
 
         this.deps.beforeFirstWriteParse?.();
 
-        let parserResult;
-        if (chiefBinding) {
-          parserResult = cueChief.parseDoctorDeclaredChiefComplaintFromBinding(chiefBinding, pack);
-        } else if (f3cBinding) {
-          parserResult = cueF3c.parseF3cReviewedSourceFromBinding(f3cBinding, pack);
+        let normalizeResult;
+        if (normalizationMode === 'STRUCTURED_UNIT') {
+          if (!liveUnitText || !liveUnitPosture || structuredAssertedValueText == null) {
+            throw new ValidationError('SOURCE_INELIGIBLE');
+          }
+          normalizeResult = normalizeSourceLinkedFact(
+            {
+              mode: 'STRUCTURED_UNIT',
+              sourceRef: parent.id,
+              sourceChannel: 'STRUCTURED_INTAKE',
+              sourceField: parent.sourceField as
+                | 'VITAL_BP_SYSTOLIC'
+                | 'VITAL_BP_DIASTOLIC'
+                | 'VITAL_PULSE'
+                | 'VITAL_TEMPERATURE'
+                | 'VITAL_SPO2'
+                | 'VITAL_WEIGHT'
+                | 'VITAL_HEIGHT',
+              sourceIdentityFingerprint: liveSourceIdentityFingerprint,
+              assertedValueText: structuredAssertedValueText,
+              unitText: liveUnitText,
+              unitPosture: liveUnitPosture as 'EXACT_AS_SOURCE',
+            },
+            pack,
+          );
         } else {
-          throw new ValidationError('SOURCE_INELIGIBLE');
+          let parserResult;
+          if (chiefBinding) {
+            parserResult = cueChief.parseDoctorDeclaredChiefComplaintFromBinding(
+              chiefBinding,
+              pack,
+            );
+          } else if (f3cBinding) {
+            parserResult = cueF3c.parseF3cReviewedSourceFromBinding(f3cBinding, pack);
+          } else {
+            throw new ValidationError('SOURCE_INELIGIBLE');
+          }
+          if (!parserResult.ok) {
+            mapNormalizerFailure(parserResult.reason);
+          }
+          normalizeResult = normalizeSourceLinkedFact(
+            {
+              mode: 'CUE_RESULT',
+              sourceRef: parent.id,
+              sourceChannel: parent.sourceChannel,
+              sourceField: parent.sourceField,
+              sourceIdentityFingerprint: liveSourceIdentityFingerprint,
+              parserResult,
+            },
+            pack,
+          );
         }
-
-        if (!parserResult.ok) {
-          mapNormalizerFailure(parserResult.reason);
-        }
-
-        const normalizeResult = normalizeSourceLinkedFact(
-          {
-            mode: 'CUE_RESULT',
-            sourceRef: parent.id,
-            sourceChannel: parent.sourceChannel,
-            sourceField: parent.sourceField,
-            sourceIdentityFingerprint: liveSourceIdentityFingerprint,
-            parserResult,
-          },
-          pack,
-        );
         if (!normalizeResult.ok) {
           mapNormalizerFailure(normalizeResult.reason);
         }
@@ -431,7 +534,7 @@ export class FactNormalizationService {
               (d: FactNormalizationDraft) => d.normalizationIdentityFingerprint,
             ),
           ),
-        ].sort((a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0));
+        ].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
         const draftsByFp = new Map<string, FactNormalizationDraft>();
         for (const draft of normalizeResult.drafts) {
           if (!draftsByFp.has(draft.normalizationIdentityFingerprint)) {

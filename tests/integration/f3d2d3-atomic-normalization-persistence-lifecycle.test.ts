@@ -371,7 +371,7 @@ describe('F3D-2D3 atomic normalization persistence + lifecycle (isolated Postgre
     ).rejects.toMatchObject({ name: 'ValidationError', message: 'FACT_INELIGIBLE' });
   });
 
-  it('STRUCTURED_UNIT / vitals are deferred fail-closed', async () => {
+  it('STRUCTURED_UNIT / vitals persist NO_MATCHES for unapproved pack units (bpm)', async () => {
     requireDb();
     const { doctorA } = await seedTenants();
     const patient = await patients.create(
@@ -401,13 +401,15 @@ describe('F3D-2D3 atomic normalization persistence + lifecycle (isolated Postgre
       },
       factEnv,
     );
-    await expect(
-      normService.materializeFactNormalizations(
-        doctorA,
-        { sourceFactCandidateId: vitalFact.id, idempotencyKey: `d3-vital-norm-${vitalFact.id}` },
-        env,
-      ),
-    ).rejects.toMatchObject({ name: 'ValidationError', message: 'STRUCTURED_UNIT_DEFERRED' });
+    // Pack has no bpm alias → source-preserving NO_MATCHES (not deferred).
+    const vitalNorm = await normService.materializeFactNormalizations(
+      doctorA,
+      { sourceFactCandidateId: vitalFact.id, idempotencyKey: `d3-vital-norm-${vitalFact.id}` },
+      env,
+    );
+    expect(vitalNorm.reason).toBe('NO_MATCHES');
+    expect(vitalNorm.normalizations).toHaveLength(0);
+    expect(vitalNorm.sourceFactCandidateId).toBe(vitalFact.id);
   });
 
   it('F3C ACCEPT/CORRECT path persists; review replacement supersedes linked norms', async () => {
