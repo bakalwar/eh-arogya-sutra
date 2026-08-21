@@ -175,10 +175,10 @@ export class PgFactCandidateRepository {
         `UPDATE clinical_fact_candidates
          SET decision_status = 'SUPERSEDED'
          WHERE organization_id = $1 AND clinic_id = $2
-           AND id = ANY($3::uuid[])
+           AND extraction_candidate_id = ANY($3::uuid[])
            AND decision_status = 'ACTIVE'
          RETURNING id`,
-        [tenant.organizationId, tenant.clinicId, factIds],
+        [tenant.organizationId, tenant.clinicId, [...candidateIds]],
       );
       await factNormalizations.supersedeActiveLinkedToFacts(tenant, tx, factIds);
       return r.rowCount ?? 0;

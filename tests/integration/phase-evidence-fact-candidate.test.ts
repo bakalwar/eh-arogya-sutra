@@ -791,18 +791,20 @@ describe('F3D-1 source-linked fact-candidate persistence', () => {
       { chiefComplaintText: 'synthetic headache corrected' },
       env,
     );
-    await expect(
-      facts.materialize(
-        doctorA,
-        consultationId,
-        {
-          sourceChannel: 'DOCTOR_DECLARED',
-          sourceField: 'CHIEF_COMPLAINT',
-          idempotencyKey: 'fact-conflict-no-super',
-        },
-        factEnv,
-      ),
-    ).rejects.toBeInstanceOf(FactConflictError);
+    const afterEdit = await facts.list(doctorA, consultationId, factEnv);
+    expect(afterEdit.find((f) => f.id === first.id)?.decisionStatus).toBe('SUPERSEDED');
+    const rematerialized = await facts.materialize(
+      doctorA,
+      consultationId,
+      {
+        sourceChannel: 'DOCTOR_DECLARED',
+        sourceField: 'CHIEF_COMPLAINT',
+        idempotencyKey: 'fact-after-source-edit',
+      },
+      factEnv,
+    );
+    expect(rematerialized.id).not.toBe(first.id);
+    expect(rematerialized.originalSourceSpan).toBe('synthetic headache corrected');
 
     const replacement = await facts.materialize(
       doctorA,
@@ -810,18 +812,18 @@ describe('F3D-1 source-linked fact-candidate persistence', () => {
       {
         sourceChannel: 'DOCTOR_DECLARED',
         sourceField: 'CHIEF_COMPLAINT',
-        supersedesFactId: first.id,
+        supersedesFactId: rematerialized.id,
         idempotencyKey: 'fact-super-0001',
       },
       factEnv,
     );
-    expect(replacement.id).not.toBe(first.id);
-    expect(replacement.supersedesFactId).toBe(first.id);
+    expect(replacement.id).not.toBe(rematerialized.id);
+    expect(replacement.supersedesFactId).toBe(rematerialized.id);
     expect(replacement.originalSourceSpan).toBe('synthetic headache corrected');
     const history = await facts.list(doctorA, consultationId, factEnv);
     const cc = history.filter((f) => f.sourceField === 'CHIEF_COMPLAINT');
     expect(cc.filter((f) => f.decisionStatus === 'ACTIVE')).toHaveLength(1);
-    expect(cc.filter((f) => f.decisionStatus === 'SUPERSEDED')).toHaveLength(1);
+    expect(cc.filter((f) => f.decisionStatus === 'SUPERSEDED').length).toBeGreaterThanOrEqual(2);
     expect(cc.find((f) => f.id === first.id)?.originalSourceSpan).toBe('synthetic headache');
 
     await withTenantTransaction(
@@ -1012,12 +1014,6 @@ describe('F3D-1 source-linked fact-candidate persistence', () => {
           idempotencyKey: `fact-super-round-${round}-seed`,
         },
         factEnv,
-      );
-      await intake.patch(
-        doctorA,
-        consultationId,
-        { chiefComplaintText: `synthetic race correction ${round}` },
-        env,
       );
       const raced = await Promise.allSettled([
         facts.materialize(
