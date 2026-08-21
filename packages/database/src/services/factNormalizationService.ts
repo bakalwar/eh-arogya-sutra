@@ -32,10 +32,7 @@ import {
   deriveEffectiveReviewedCueText,
   F3cReviewedCueSourceService,
 } from './f3cReviewedCueSourceService.js';
-import {
-  lockChiefComplaintCueSource,
-  lockF3cReviewedCueSource,
-} from './cueSourceLock.js';
+import { lockChiefComplaintCueSource, lockF3cReviewedCueSource } from './cueSourceLock.js';
 import { PgCandidateReviewRepository } from '../repositories/candidateReview.js';
 
 const FACT_NORMALIZATION_OPERATION = 'clinical.fact_normalization';
@@ -182,10 +179,7 @@ export class FactNormalizationService {
         const peek = await facts.findById(tenant, tx, input.sourceFactCandidateId);
         if (!peek) throw new ResourceNotFoundError();
 
-        if (
-          peek.sourceChannel === 'DOCTOR_DECLARED' &&
-          peek.sourceField === 'CHIEF_COMPLAINT'
-        ) {
+        if (peek.sourceChannel === 'DOCTOR_DECLARED' && peek.sourceField === 'CHIEF_COMPLAINT') {
           await lockChiefComplaintCueSource(tx, tenant, peek.consultationId);
         } else if (
           peek.sourceChannel === 'REVIEWED_REPORT_TEXT' &&
@@ -248,20 +242,13 @@ export class FactNormalizationService {
           if (!lockedConsult?.chiefComplaintText) {
             throw new ValidationError('SOURCE_MUTATED');
           }
-          if (
-            parent.originalSourceSpan !==
-            boundSpanForBinding(lockedConsult.chiefComplaintText)
-          ) {
+          if (parent.originalSourceSpan !== boundSpanForBinding(lockedConsult.chiefComplaintText)) {
             throw new ValidationError('SOURCE_MUTATED');
           }
           liveSourceIdentityFingerprint = live.sourceIdentityFingerprint;
           parserResult = live.parser;
         } else {
-          if (
-            !parent.extractionCandidateId ||
-            !parent.evidenceItemId ||
-            !parent.reviewEventId
-          ) {
+          if (!parent.extractionCandidateId || !parent.evidenceItemId || !parent.reviewEventId) {
             throw new ValidationError('SOURCE_INELIGIBLE');
           }
           const live = await cueF3c.parseF3cReviewedSourceCuesLocked(

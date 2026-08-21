@@ -246,8 +246,9 @@ describe('F3D-2D3 atomic normalization persistence + lifecycle (isolated Postgre
     );
     expect(first.reason).toBe('NORMALIZED');
     expect(first.normalizations.length).toBeGreaterThanOrEqual(1);
-    expect(first.normalizations.every((n) => n.authorityScope === 'FACT_NORMALIZED_SOURCE_LINKED'))
-      .toBe(true);
+    expect(
+      first.normalizations.every((n) => n.authorityScope === 'FACT_NORMALIZED_SOURCE_LINKED'),
+    ).toBe(true);
     expect(first.normalizations.every((n) => n.clinicallyUsed === false)).toBe(true);
     expect(first.normalizations.every((n) => n.sourceFactCandidateId === factId)).toBe(true);
 

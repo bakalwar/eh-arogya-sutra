@@ -46,9 +46,9 @@ describe('F3D-2D3 atomic normalization persistence + lifecycle contract', () => 
     expect(ids).toHaveLength(16);
     expect(fs.existsSync(path.join(root, 'packages/database/migrations/017_*.sql'))).toBe(false);
     expect(
-      fs.readdirSync(path.join(root, 'packages/database/migrations')).some((n) =>
-        n.startsWith('017_'),
-      ),
+      fs
+        .readdirSync(path.join(root, 'packages/database/migrations'))
+        .some((n) => n.startsWith('017_')),
     ).toBe(false);
   });
 
