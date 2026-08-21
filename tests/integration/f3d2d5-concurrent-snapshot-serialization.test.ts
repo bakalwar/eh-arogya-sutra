@@ -436,7 +436,6 @@ describe('F3D-2D5 concurrent snapshot serialization', () => {
     requireDb();
     const doctor = await seedDoctor();
     const { fact } = await openChiefFact(doctor, 'skew vis xzy', 'vis');
-    const lockKey = factVerificationSubjectLockKey(doctor.organizationId, doctor.clinicId, fact.id);
 
     const holder = await openAppTx(doctor);
     const waiter = await openAppTx(doctor);
