@@ -156,7 +156,9 @@ export class FactVerificationService {
     }
     if (!isAction(input.action)) throw new ValidationError('INVALID_ACTION');
     if (!isReason(input.reasonCode)) throw new ValidationError('INVALID_REASON');
-    assertActionReason(input.action, input.reasonCode);
+    const action: FactVerificationAction = input.action;
+    const reasonCode: FactVerificationReasonCode = input.reasonCode;
+    assertActionReason(action, reasonCode);
 
     const key = String(input.idempotencyKey ?? '').trim();
     if (key.length < 8 || key.length > 128) {
@@ -374,8 +376,8 @@ export class FactVerificationService {
           contentFingerprint: parent.contentFingerprint,
           normalizationSnapshotFingerprint: snapshotFingerprint,
           normalizationCount: snapshot.length,
-          action: input.action,
-          reasonCode: input.reasonCode,
+          action,
+          reasonCode,
           supersedesVerificationId: input.supersedesVerificationId ?? null,
           reviewerId: tenant.actorId,
           authorityScope: FACT_VERIFICATION_AUTHORITY_SCOPE,
@@ -431,8 +433,8 @@ export class FactVerificationService {
           contentFingerprint: parent.contentFingerprint,
           normalizationSnapshotFingerprint: snapshotFingerprint,
           normalizationCount: snapshot.length,
-          action: input.action,
-          reasonCode: input.reasonCode,
+          action,
+          reasonCode,
           supersedesVerificationId: supersedesId,
           actorId: tenant.actorId,
           snapshot,
@@ -456,9 +458,9 @@ export class FactVerificationService {
           resourceId: created.id,
           outcome: 'SUCCESS',
           metadata: {
-            code: input.action,
+            code: action,
             factCandidateId: parent.id,
-            reasonCode: input.reasonCode,
+            reasonCode,
             decisionStatus: created.decisionStatus,
             authorityScope: FACT_VERIFICATION_AUTHORITY_SCOPE,
             normalizationCount: created.normalizationCount,
