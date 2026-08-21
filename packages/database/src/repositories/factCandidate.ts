@@ -15,6 +15,9 @@ import {
   type FactUnitPosture,
   type SourceLocator,
 } from '@ehas2/evidence-extract';
+import { PgFactNormalizationRepository } from './factNormalization.js';
+
+const factNormalizations = new PgFactNormalizationRepository();
 
 function mapTs(value: unknown): string {
   return new Date(String(value)).toISOString();
@@ -146,7 +149,10 @@ export class PgFactCandidateRepository {
 
   /**
    * Append-only ACTIVE → SUPERSEDED for facts linked to superseded extraction candidates.
+   * Also supersedes linked ACTIVE normalizations in the same transaction.
    * Conditional on decision_status = ACTIVE only; never deletes or mutates content.
+   * Caller must already hold sorted fact identity locks for linked ACTIVE facts.
+   * Order: norm identity locks → supersede facts → supersede norms.
    */
   async supersedeActiveLinkedToCandidates(
     tenant: TenantContext,
@@ -155,14 +161,52 @@ export class PgFactCandidateRepository {
   ): Promise<number> {
     if (candidateIds.length === 0) return 0;
     try {
+      const listed = await tx.query(
+        `SELECT id FROM clinical_fact_candidates
+         WHERE organization_id = $1 AND clinic_id = $2
+           AND extraction_candidate_id = ANY($3::uuid[])
+           AND decision_status = 'ACTIVE'`,
+        [tenant.organizationId, tenant.clinicId, [...candidateIds]],
+      );
+      const factIds = (listed.rows as { id: string }[]).map((row) => String(row.id));
+      if (factIds.length === 0) return 0;
+      await factNormalizations.lockActiveIdentitiesForParentFacts(tenant, tx, factIds);
       const r = await tx.query(
         `UPDATE clinical_fact_candidates
          SET decision_status = 'SUPERSEDED'
          WHERE organization_id = $1 AND clinic_id = $2
-           AND extraction_candidate_id = ANY($3::uuid[])
+           AND id = ANY($3::uuid[])
            AND decision_status = 'ACTIVE'
          RETURNING id`,
-        [tenant.organizationId, tenant.clinicId, [...candidateIds]],
+        [tenant.organizationId, tenant.clinicId, factIds],
+      );
+      await factNormalizations.supersedeActiveLinkedToFacts(tenant, tx, factIds);
+      return r.rowCount ?? 0;
+    } catch (err) {
+      if (isImmutableFact(err)) throw new FactConflictError();
+      throw err;
+    }
+  }
+
+  /**
+   * Bulk ACTIVE → SUPERSEDED by fact ids only (no normalization side effects).
+   * Used by shared fact+normalization lifecycle helpers that lock/supersede norms separately.
+   */
+  async supersedeActiveByIds(
+    tenant: TenantContext,
+    tx: TransactionContext,
+    factIds: readonly string[],
+  ): Promise<number> {
+    if (factIds.length === 0) return 0;
+    try {
+      const r = await tx.query(
+        `UPDATE clinical_fact_candidates
+         SET decision_status = 'SUPERSEDED'
+         WHERE organization_id = $1 AND clinic_id = $2
+           AND id = ANY($3::uuid[])
+           AND decision_status = 'ACTIVE'
+         RETURNING id`,
+        [tenant.organizationId, tenant.clinicId, [...factIds]],
       );
       return r.rowCount ?? 0;
     } catch (err) {
@@ -220,6 +264,7 @@ export class PgFactCandidateRepository {
     factId: string,
   ): Promise<{ id: string }> {
     try {
+      await factNormalizations.lockActiveIdentitiesForParentFacts(tenant, tx, [factId]);
       const r = await tx.query(
         `UPDATE clinical_fact_candidates
          SET decision_status = 'SUPERSEDED'
@@ -231,7 +276,9 @@ export class PgFactCandidateRepository {
       if (r.rowCount !== 1 || !r.rows[0]) {
         throw new FactConflictError();
       }
-      return { id: String((r.rows[0] as { id: string }).id) };
+      const id = String((r.rows[0] as { id: string }).id);
+      await factNormalizations.supersedeActiveLinkedToFacts(tenant, tx, [id]);
+      return { id };
     } catch (err) {
       if (err instanceof FactConflictError) throw err;
       if (isImmutableFact(err)) throw new FactConflictError();

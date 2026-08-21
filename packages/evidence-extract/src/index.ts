@@ -170,6 +170,7 @@ export {
   NORMALIZER_CUE_SOURCE_COMBINATIONS,
   NORMALIZER_STRUCTURED_VITAL_FIELDS,
   NORMALIZER_FAILURE_CODES,
+  MAX_NORMALIZER_DRAFTS,
   normalizeSourceLinkedFact,
   computeNormalizerFingerprint,
 } from './terminology/index.js';

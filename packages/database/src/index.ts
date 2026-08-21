@@ -156,6 +156,19 @@ export type {
   FactCandidateServiceDeps,
   MaterializeFactCandidateInput,
 } from './services/factCandidateService.js';
+export {
+  FactNormalizationService,
+  factNormalizationService,
+} from './services/factNormalizationService.js';
+export type {
+  MaterializeFactNormalizationsInput,
+  MaterializeFactNormalizationsResult,
+} from './services/factNormalizationService.js';
+export {
+  lockAndSupersedeFactsWithNormalizations,
+  invalidateChiefComplaintFactsAndNormalizations,
+  invalidateReviewedCandidateFactsAndNormalizations,
+} from './services/factNormalizationLifecycle.js';
 export { PgConsultationIntakeRepository } from './repositories/consultationIntake.js';
 export type {
   ConsultationIntakeBundle,

@@ -24,6 +24,7 @@ import {
 } from '../consultationTransitions.js';
 import { assertValidReviewTransition, type ReviewState } from '../reviewTransitions.js';
 import { sanitizeDatabaseError } from '../errors.js';
+import { invalidateChiefComplaintFactsAndNormalizations } from './factNormalizationLifecycle.js';
 import { lockChiefComplaintCueSource } from './cueSourceLock.js';
 
 const consultations = new PgConsultationRepository();
@@ -203,6 +204,7 @@ export class ConsultationService {
           if (!consultationAllowsFieldUpdate(locked.status)) {
             throw new ValidationError('Consultation fields are locked in current state');
           }
+          await invalidateChiefComplaintFactsAndNormalizations(tenant, tx, consultationId);
         }
         const updated = await consultations.updateAllowedFields(tenant, tx, consultationId, input);
         await audit.append(tx, {

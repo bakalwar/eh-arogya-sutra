@@ -15,6 +15,7 @@ export default defineConfig({
       ),
       '@ehas2/database': path.join(root, 'packages/database/src/index.ts'),
       '@ehas2/observability': path.join(root, 'packages/observability/src/index.ts'),
+      '@ehas2/security': path.join(root, 'packages/security/src/index.ts'),
     },
   },
   test: {
