@@ -199,6 +199,7 @@ export {
   factVerificationService,
   FACT_VERIFICATION_OPERATION,
   buildNormalizationSnapshotFingerprint,
+  EMPTY_FACT_VERIFICATION_SNAPSHOT_FINGERPRINT,
 } from './services/factVerificationService.js';
 export type {
   ReviewSourceLinkedFactInput,

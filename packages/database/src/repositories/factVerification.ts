@@ -7,6 +7,7 @@ import {
   type FactVerificationNormalizationDto,
   type FactVerificationReasonCode,
 } from '@ehas2/evidence-extract';
+import { buildNormalizationSnapshotFingerprint } from '../factVerificationSnapshot.js';
 
 function mapTs(value: unknown): string {
   return new Date(String(value)).toISOString();
@@ -15,6 +16,11 @@ function mapTs(value: unknown): string {
 function isImmutable(err: unknown): boolean {
   const msg = err instanceof Error ? err.message : String(err);
   return /FACT_VERIFICATIONS_IMMUTABLE|FACT_VERIFICATION_NORMS_IMMUTABLE/i.test(msg);
+}
+
+function isSnapshotConstraint(err: unknown): boolean {
+  const msg = err instanceof Error ? err.message : String(err);
+  return /FACT_VERIFICATION_SNAPSHOT_INVALID/i.test(msg);
 }
 
 function mapEvent(row: Record<string, unknown>): FactVerificationEventDto {
@@ -67,6 +73,7 @@ function mapNormRow(row: Record<string, unknown>): FactVerificationNormalization
   };
 }
 
+/** Caller supplies parent/source linkage + decision only; snapshot is server-derived. */
 export type InsertFactVerificationInput = {
   patientId: string;
   consultationId: string;
@@ -75,17 +82,10 @@ export type InsertFactVerificationInput = {
   sourceField: string;
   sourceIdentityFingerprint: string;
   contentFingerprint: string;
-  normalizationSnapshotFingerprint: string;
-  normalizationCount: number;
   action: FactVerificationAction;
   reasonCode: FactVerificationReasonCode;
   supersedesVerificationId: string | null;
   actorId: string;
-  snapshot: readonly {
-    normalizationId: string;
-    normalizationIdentityFingerprint: string;
-    snapshotOrdinal: number;
-  }[];
 };
 
 export class PgFactVerificationRepository {
@@ -140,21 +140,7 @@ export class PgFactVerificationRepository {
     return mapEvent(r.rows[0] as Record<string, unknown>);
   }
 
-  async listByFactId(
-    tenant: TenantContext,
-    tx: TransactionContext,
-    factCandidateId: string,
-  ): Promise<FactVerificationEventDto[]> {
-    const r = await tx.query(
-      `SELECT * FROM clinical_fact_verification_events
-       WHERE organization_id = $1 AND clinic_id = $2 AND fact_candidate_id = $3
-       ORDER BY created_at ASC, id ASC`,
-      [tenant.organizationId, tenant.clinicId, factCandidateId],
-    );
-    return (r.rows as Record<string, unknown>[]).map(mapEvent);
-  }
-
-  async listSnapshotRows(
+  async listSnapshotByEventId(
     tenant: TenantContext,
     tx: TransactionContext,
     verificationEventId: string,
@@ -171,32 +157,26 @@ export class PgFactVerificationRepository {
   async supersedeActive(
     tenant: TenantContext,
     tx: TransactionContext,
-    verificationId: string,
-  ): Promise<{ id: string }> {
+    id: string,
+  ): Promise<FactVerificationEventDto> {
     try {
       const r = await tx.query(
         `UPDATE clinical_fact_verification_events
          SET decision_status = 'SUPERSEDED'
-         WHERE organization_id = $1 AND clinic_id = $2
-           AND id = $3 AND decision_status = 'ACTIVE'
-         RETURNING id`,
-        [tenant.organizationId, tenant.clinicId, verificationId],
+         WHERE organization_id = $1 AND clinic_id = $2 AND id = $3
+           AND decision_status = 'ACTIVE'
+         RETURNING *`,
+        [tenant.organizationId, tenant.clinicId, id],
       );
-      if (r.rowCount !== 1 || !r.rows[0]) {
-        throw new FactConflictError();
-      }
-      return { id: String((r.rows[0] as { id: string }).id) };
+      if (!r.rows[0]) throw new FactConflictError();
+      return mapEvent(r.rows[0] as Record<string, unknown>);
     } catch (err) {
       if (err instanceof FactConflictError) throw err;
-      if (isImmutable(err)) throw new FactConflictError();
+      if (isImmutable(err) || isSnapshotConstraint(err)) throw new FactConflictError();
       throw err;
     }
   }
 
-  /**
-   * Conditional ACTIVE → SUPERSEDED for verification events linked to facts.
-   * Caller must already hold sorted verification subject locks.
-   */
   async supersedeActiveLinkedToFacts(
     tenant: TenantContext,
     tx: TransactionContext,
@@ -215,24 +195,43 @@ export class PgFactVerificationRepository {
       );
       return r.rowCount ?? 0;
     } catch (err) {
-      if (isImmutable(err)) throw new FactConflictError();
+      if (isImmutable(err) || isSnapshotConstraint(err)) throw new FactConflictError();
       throw err;
     }
   }
 
+  /**
+   * Inserts verification event + complete ACTIVE-normalization snapshot.
+   * Count and fingerprint are computed server-side from locked ACTIVE norms;
+   * callers cannot supply snapshot children / count / fingerprint.
+   */
   async insert(
     tenant: TenantContext,
     tx: TransactionContext,
     input: InsertFactVerificationInput,
   ): Promise<FactVerificationEventDto> {
-    if (input.normalizationCount !== input.snapshot.length) {
-      throw new ValidationError('SNAPSHOT_COUNT_MISMATCH');
-    }
-    if (input.snapshot.length > 32) {
-      throw new ValidationError('SNAPSHOT_OVERFLOW');
-    }
-
     try {
+      const active = await tx.query(
+        `SELECT id, normalization_identity_fingerprint AS fp
+         FROM clinical_fact_normalizations
+         WHERE organization_id = $1 AND clinic_id = $2
+           AND source_fact_candidate_id = $3
+           AND decision_status = 'ACTIVE'
+           AND authority_scope = 'FACT_NORMALIZED_SOURCE_LINKED'
+           AND clinically_used = false
+         ORDER BY id ASC`,
+        [tenant.organizationId, tenant.clinicId, input.factCandidateId],
+      );
+      const rows = (active.rows as { id: string; fp: string }[]).map((r) => ({
+        id: String(r.id),
+        normalizationIdentityFingerprint: String(r.fp),
+      }));
+      if (rows.length > 32) {
+        throw new ValidationError('SNAPSHOT_OVERFLOW');
+      }
+      const fingerprint = buildNormalizationSnapshotFingerprint(rows);
+      const sorted = [...rows].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+
       const r = await tx.query(
         `INSERT INTO clinical_fact_verification_events (
            organization_id, clinic_id, patient_id, consultation_id, fact_candidate_id,
@@ -254,8 +253,8 @@ export class PgFactVerificationRepository {
           input.sourceField,
           input.sourceIdentityFingerprint,
           input.contentFingerprint,
-          input.normalizationSnapshotFingerprint,
-          input.normalizationCount,
+          fingerprint,
+          sorted.length,
           input.action,
           input.reasonCode,
           input.supersedesVerificationId,
@@ -265,7 +264,8 @@ export class PgFactVerificationRepository {
       if (!r.rows[0]) throw new FactConflictError();
       const event = mapEvent(r.rows[0] as Record<string, unknown>);
 
-      for (const row of input.snapshot) {
+      for (let i = 0; i < sorted.length; i++) {
+        const row = sorted[i]!;
         await tx.query(
           `INSERT INTO clinical_fact_verification_normalizations (
              verification_event_id, organization_id, clinic_id, fact_candidate_id,
@@ -276,9 +276,9 @@ export class PgFactVerificationRepository {
             tenant.organizationId,
             tenant.clinicId,
             input.factCandidateId,
-            row.normalizationId,
+            row.id,
             row.normalizationIdentityFingerprint,
-            row.snapshotOrdinal,
+            i,
           ],
         );
       }
@@ -289,14 +289,17 @@ export class PgFactVerificationRepository {
         [tenant.organizationId, tenant.clinicId, event.id],
       );
       const c = Number((childCount.rows[0] as { c: number }).c);
-      if (c !== input.normalizationCount) {
+      if (c !== sorted.length || event.normalizationCount !== sorted.length) {
         throw new ValidationError('SNAPSHOT_COUNT_MISMATCH');
+      }
+      if (event.normalizationSnapshotFingerprint !== fingerprint) {
+        throw new ValidationError('SNAPSHOT_FINGERPRINT_MISMATCH');
       }
 
       return event;
     } catch (err) {
       if (err instanceof ValidationError || err instanceof FactConflictError) throw err;
-      if (isImmutable(err)) throw new FactConflictError();
+      if (isImmutable(err) || isSnapshotConstraint(err)) throw new FactConflictError();
       const code = (err as { code?: string } | null)?.code;
       if (code === '23503' || code === '23505' || code === '23514') {
         throw new ValidationError('FACT_VERIFICATION_REJECTED');

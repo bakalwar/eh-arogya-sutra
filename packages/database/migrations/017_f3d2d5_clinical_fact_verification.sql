@@ -275,3 +275,287 @@ CREATE POLICY clinical_fact_verification_normalizations_tenant_isolation
 
 GRANT SELECT, INSERT ON clinical_fact_verification_normalizations TO ehas2_app;
 REVOKE UPDATE, DELETE ON clinical_fact_verification_normalizations FROM ehas2_app;
+
+-- ---------------------------------------------------------------------------
+-- F3D-2D5 snapshot completeness: deferred commit-time DB binding (Aâ€“I)
+-- Canonical fingerprint: SHA-256(UTF-8 of sorted unique "uuid:64hex" lines joined by LF;
+-- empty set => SHA-256 of empty string).
+-- ---------------------------------------------------------------------------
+
+CREATE OR REPLACE FUNCTION ehas2_fact_verification_snapshot_fingerprint(p_event_id uuid)
+RETURNS text
+LANGUAGE sql
+STABLE
+AS $fn$
+  SELECT encode(
+    digest(
+      coalesce(
+        (
+          SELECT string_agg(x.line, E'\n' ORDER BY x.line)
+          FROM (
+            SELECT DISTINCT
+              lower(c.normalization_id::text)
+                || ':'
+                || lower(c.normalization_identity_fingerprint) AS line
+            FROM clinical_fact_verification_normalizations c
+            WHERE c.verification_event_id = p_event_id
+          ) x
+        ),
+        ''
+      ),
+      'sha256'
+    ),
+    'hex'
+  );
+$fn$;
+
+COMMENT ON FUNCTION ehas2_fact_verification_snapshot_fingerprint(uuid) IS
+  'F3D-2D5 canonical snapshot fingerprint from child rows (uuid:hex lines, LF-joined, sha256 hex). Empty => sha256 empty.';
+
+CREATE OR REPLACE FUNCTION ehas2_fact_verification_validate_event(p_event_id uuid)
+RETURNS void
+LANGUAGE plpgsql
+AS $fn$
+DECLARE
+  ev clinical_fact_verification_events%ROWTYPE;
+  child_count integer;
+  expected_fp text;
+  active_norm_count integer;
+  mismatch_count integer;
+  parent clinical_fact_candidates%ROWTYPE;
+BEGIN
+  SELECT * INTO ev
+  FROM clinical_fact_verification_events
+  WHERE id = p_event_id;
+  IF NOT FOUND THEN
+    RETURN;
+  END IF;
+
+  SELECT count(*)::integer INTO child_count
+  FROM clinical_fact_verification_normalizations
+  WHERE verification_event_id = p_event_id;
+
+  IF child_count IS DISTINCT FROM ev.normalization_count THEN
+    RAISE EXCEPTION 'FACT_VERIFICATION_SNAPSHOT_INVALID'
+      USING ERRCODE = 'check_violation';
+  END IF;
+
+  expected_fp := ehas2_fact_verification_snapshot_fingerprint(p_event_id);
+  IF expected_fp IS DISTINCT FROM ev.normalization_snapshot_fingerprint THEN
+    RAISE EXCEPTION 'FACT_VERIFICATION_SNAPSHOT_INVALID'
+      USING ERRCODE = 'check_violation';
+  END IF;
+
+  SELECT count(*)::integer INTO mismatch_count
+  FROM clinical_fact_verification_normalizations c
+  LEFT JOIN clinical_fact_normalizations n ON n.id = c.normalization_id
+  WHERE c.verification_event_id = p_event_id
+    AND (
+      n.id IS NULL
+      OR c.organization_id IS DISTINCT FROM ev.organization_id
+      OR c.clinic_id IS DISTINCT FROM ev.clinic_id
+      OR c.fact_candidate_id IS DISTINCT FROM ev.fact_candidate_id
+      OR n.organization_id IS DISTINCT FROM ev.organization_id
+      OR n.clinic_id IS DISTINCT FROM ev.clinic_id
+      OR n.source_fact_candidate_id IS DISTINCT FROM ev.fact_candidate_id
+      OR n.normalization_identity_fingerprint
+           IS DISTINCT FROM c.normalization_identity_fingerprint
+    );
+  IF mismatch_count > 0 THEN
+    RAISE EXCEPTION 'FACT_VERIFICATION_SNAPSHOT_INVALID'
+      USING ERRCODE = 'check_violation';
+  END IF;
+
+  IF ev.decision_status = 'SUPERSEDED' THEN
+    RETURN;
+  END IF;
+
+  IF ev.decision_status IS DISTINCT FROM 'ACTIVE' THEN
+    RAISE EXCEPTION 'FACT_VERIFICATION_SNAPSHOT_INVALID'
+      USING ERRCODE = 'check_violation';
+  END IF;
+
+  SELECT * INTO parent
+  FROM clinical_fact_candidates
+  WHERE id = ev.fact_candidate_id;
+  IF NOT FOUND
+     OR parent.decision_status IS DISTINCT FROM 'ACTIVE'
+     OR parent.authority_status IS DISTINCT FROM 'FACT_CANDIDATE_UNVERIFIED'
+     OR parent.clinically_used IS DISTINCT FROM false
+     OR parent.organization_id IS DISTINCT FROM ev.organization_id
+     OR parent.clinic_id IS DISTINCT FROM ev.clinic_id
+     OR parent.patient_id IS DISTINCT FROM ev.patient_id
+     OR parent.consultation_id IS DISTINCT FROM ev.consultation_id
+     OR parent.source_channel IS DISTINCT FROM ev.source_channel
+     OR parent.source_field IS DISTINCT FROM ev.source_field
+     OR parent.source_identity_fingerprint IS DISTINCT FROM ev.source_identity_fingerprint
+     OR parent.content_fingerprint IS DISTINCT FROM ev.content_fingerprint
+  THEN
+    RAISE EXCEPTION 'FACT_VERIFICATION_SNAPSHOT_INVALID'
+      USING ERRCODE = 'check_violation';
+  END IF;
+
+  SELECT count(*)::integer INTO mismatch_count
+  FROM clinical_fact_verification_normalizations c
+  JOIN clinical_fact_normalizations n ON n.id = c.normalization_id
+  WHERE c.verification_event_id = p_event_id
+    AND (
+      n.decision_status IS DISTINCT FROM 'ACTIVE'
+      OR n.authority_scope IS DISTINCT FROM 'FACT_NORMALIZED_SOURCE_LINKED'
+      OR n.clinically_used IS DISTINCT FROM false
+    );
+  IF mismatch_count > 0 THEN
+    RAISE EXCEPTION 'FACT_VERIFICATION_SNAPSHOT_INVALID'
+      USING ERRCODE = 'check_violation';
+  END IF;
+
+  SELECT count(*)::integer INTO active_norm_count
+  FROM clinical_fact_normalizations
+  WHERE organization_id = ev.organization_id
+    AND clinic_id = ev.clinic_id
+    AND source_fact_candidate_id = ev.fact_candidate_id
+    AND decision_status = 'ACTIVE';
+
+  IF active_norm_count IS DISTINCT FROM ev.normalization_count THEN
+    RAISE EXCEPTION 'FACT_VERIFICATION_SNAPSHOT_INVALID'
+      USING ERRCODE = 'check_violation';
+  END IF;
+
+  SELECT count(*)::integer INTO mismatch_count
+  FROM clinical_fact_normalizations n
+  WHERE n.organization_id = ev.organization_id
+    AND n.clinic_id = ev.clinic_id
+    AND n.source_fact_candidate_id = ev.fact_candidate_id
+    AND n.decision_status = 'ACTIVE'
+    AND NOT EXISTS (
+      SELECT 1
+      FROM clinical_fact_verification_normalizations c
+      WHERE c.verification_event_id = p_event_id
+        AND c.normalization_id = n.id
+        AND c.normalization_identity_fingerprint = n.normalization_identity_fingerprint
+    );
+  IF mismatch_count > 0 THEN
+    RAISE EXCEPTION 'FACT_VERIFICATION_SNAPSHOT_INVALID'
+      USING ERRCODE = 'check_violation';
+  END IF;
+
+  SELECT count(*)::integer INTO mismatch_count
+  FROM clinical_fact_verification_normalizations c
+  WHERE c.verification_event_id = p_event_id
+    AND NOT EXISTS (
+      SELECT 1
+      FROM clinical_fact_normalizations n
+      WHERE n.id = c.normalization_id
+        AND n.decision_status = 'ACTIVE'
+        AND n.normalization_identity_fingerprint = c.normalization_identity_fingerprint
+        AND n.source_fact_candidate_id = ev.fact_candidate_id
+        AND n.organization_id = ev.organization_id
+        AND n.clinic_id = ev.clinic_id
+    );
+  IF mismatch_count > 0 THEN
+    RAISE EXCEPTION 'FACT_VERIFICATION_SNAPSHOT_INVALID'
+      USING ERRCODE = 'check_violation';
+  END IF;
+END;
+$fn$;
+
+CREATE OR REPLACE FUNCTION ehas2_fact_verification_deferred_from_event()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $fn$
+BEGIN
+  IF TG_OP = 'DELETE' THEN
+    RETURN OLD;
+  END IF;
+  PERFORM ehas2_fact_verification_validate_event(NEW.id);
+  RETURN NEW;
+END;
+$fn$;
+
+CREATE OR REPLACE FUNCTION ehas2_fact_verification_deferred_from_child()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $fn$
+BEGIN
+  IF TG_OP = 'DELETE' THEN
+    PERFORM ehas2_fact_verification_validate_event(OLD.verification_event_id);
+    RETURN OLD;
+  END IF;
+  PERFORM ehas2_fact_verification_validate_event(NEW.verification_event_id);
+  RETURN NEW;
+END;
+$fn$;
+
+CREATE OR REPLACE FUNCTION ehas2_fact_verification_deferred_from_norm()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $fn$
+DECLARE
+  fact_id uuid;
+  r RECORD;
+BEGIN
+  fact_id := COALESCE(NEW.source_fact_candidate_id, OLD.source_fact_candidate_id);
+  FOR r IN
+    SELECT e.id
+    FROM clinical_fact_verification_events e
+    WHERE e.fact_candidate_id = fact_id
+      AND e.decision_status = 'ACTIVE'
+  LOOP
+    PERFORM ehas2_fact_verification_validate_event(r.id);
+  END LOOP;
+  RETURN COALESCE(NEW, OLD);
+END;
+$fn$;
+
+CREATE OR REPLACE FUNCTION ehas2_fact_verification_deferred_from_fact()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $fn$
+DECLARE
+  fact_id uuid;
+  r RECORD;
+BEGIN
+  fact_id := COALESCE(NEW.id, OLD.id);
+  FOR r IN
+    SELECT e.id
+    FROM clinical_fact_verification_events e
+    WHERE e.fact_candidate_id = fact_id
+      AND e.decision_status = 'ACTIVE'
+  LOOP
+    PERFORM ehas2_fact_verification_validate_event(r.id);
+  END LOOP;
+  RETURN COALESCE(NEW, OLD);
+END;
+$fn$;
+
+DROP TRIGGER IF EXISTS clinical_fact_verification_events_snapshot_deferred
+  ON clinical_fact_verification_events;
+CREATE CONSTRAINT TRIGGER clinical_fact_verification_events_snapshot_deferred
+  AFTER INSERT OR UPDATE ON clinical_fact_verification_events
+  DEFERRABLE INITIALLY DEFERRED
+  FOR EACH ROW
+  EXECUTE FUNCTION ehas2_fact_verification_deferred_from_event();
+
+DROP TRIGGER IF EXISTS clinical_fact_verification_normalizations_snapshot_deferred
+  ON clinical_fact_verification_normalizations;
+CREATE CONSTRAINT TRIGGER clinical_fact_verification_normalizations_snapshot_deferred
+  AFTER INSERT OR UPDATE OR DELETE ON clinical_fact_verification_normalizations
+  DEFERRABLE INITIALLY DEFERRED
+  FOR EACH ROW
+  EXECUTE FUNCTION ehas2_fact_verification_deferred_from_child();
+
+DROP TRIGGER IF EXISTS clinical_fact_normalizations_verification_snapshot_deferred
+  ON clinical_fact_normalizations;
+CREATE CONSTRAINT TRIGGER clinical_fact_normalizations_verification_snapshot_deferred
+  AFTER INSERT OR UPDATE OR DELETE ON clinical_fact_normalizations
+  DEFERRABLE INITIALLY DEFERRED
+  FOR EACH ROW
+  EXECUTE FUNCTION ehas2_fact_verification_deferred_from_norm();
+
+DROP TRIGGER IF EXISTS clinical_fact_candidates_verification_snapshot_deferred
+  ON clinical_fact_candidates;
+CREATE CONSTRAINT TRIGGER clinical_fact_candidates_verification_snapshot_deferred
+  AFTER UPDATE OR DELETE ON clinical_fact_candidates
+  DEFERRABLE INITIALLY DEFERRED
+  FOR EACH ROW
+  EXECUTE FUNCTION ehas2_fact_verification_deferred_from_fact();

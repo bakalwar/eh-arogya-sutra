@@ -11,6 +11,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SCOPED = [
   'packages/database/src/services/factVerificationService.ts',
   'packages/database/src/repositories/factVerification.ts',
+  'packages/database/src/factVerificationSnapshot.ts',
   'packages/database/migrations/017_f3d2d5_clinical_fact_verification.sql',
   'packages/evidence-extract/src/factVerificationTypes.ts',
 ];
@@ -45,6 +46,14 @@ function scanFile(rel) {
   }
   if (rel.endsWith('.sql') && /ON DELETE CASCADE/i.test(text)) {
     hits.push('on-delete-cascade');
+  }
+  if (
+    rel.endsWith('.sql') &&
+    (!/DEFERRABLE INITIALLY DEFERRED/.test(text) ||
+      !/ehas2_fact_verification_snapshot_fingerprint/.test(text) ||
+      !/FACT_VERIFICATION_SNAPSHOT_INVALID/.test(text))
+  ) {
+    hits.push('missing-deferred-snapshot-binding');
   }
   return hits;
 }

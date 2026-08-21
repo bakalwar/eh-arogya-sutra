@@ -28,6 +28,7 @@ import { PgFactVerificationRepository } from '../repositories/factVerification.j
 import { PgIdempotencyRepository } from '../repositories/idempotency.js';
 import { assertTenantContext, type TenantContext } from '../tenantContext.js';
 import { assertUuid, hashPayload } from '../validation.js';
+import { buildNormalizationSnapshotFingerprint } from '../factVerificationSnapshot.js';
 import { CueEligibleSourceService } from './cueEligibleSourceService.js';
 import {
   deriveEffectiveReviewedCueText,
@@ -103,19 +104,6 @@ function assertActionReason(
   }
 }
 
-export function buildNormalizationSnapshotFingerprint(
-  norms: readonly { id: string; normalizationIdentityFingerprint: string }[],
-): string {
-  const sorted = [...norms].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
-  return hashPayload({
-    v: 1,
-    items: sorted.map((n) => ({
-      id: n.id,
-      identity: n.normalizationIdentityFingerprint,
-    })),
-  });
-}
-
 export type ReviewSourceLinkedFactInput = {
   factCandidateId: string;
   action: string;
@@ -136,7 +124,7 @@ export class FactVerificationService {
   }
 
   private metric(code: string): void {
-    this.deps.onSafeMetric?.({ name: 'fact_candidate_result', code });
+    this.deps.onSafeMetric?.({ name: 'fact_verification_result', code });
   }
 
   async reviewSourceLinkedFact(
@@ -297,10 +285,16 @@ export class FactVerificationService {
           if (
             f3cBinding.candidateId !== parent.extractionCandidateId ||
             f3cBinding.reviewEventId !== parent.reviewEventId ||
-            f3cBinding.sourceIdentityFingerprint !== parent.sourceIdentityFingerprint
+            f3cBinding.evidenceItemId !== parent.evidenceItemId ||
+            f3cBinding.consultationId !== parent.consultationId ||
+            f3cBinding.patientId !== parent.patientId ||
+            f3cBinding.organizationId !== parent.organizationId ||
+            f3cBinding.clinicId !== parent.clinicId
           ) {
             throw new ValidationError('SOURCE_MUTATED');
           }
+          // Parent fact identity uses F3D-1 identityFingerprint; F3C cue adapter uses a
+          // distinct bindF3cReviewedSourceIdentity. Live eligibility is review + effective text.
           const activeReview = await reviews.findActiveForCandidate(
             tenant,
             tx,
@@ -355,14 +349,6 @@ export class FactVerificationService {
             normalizationIdentityFingerprint: n.normalizationIdentityFingerprint,
           })),
         );
-        const sortedNorms = [...lockedNorms].sort((a, b) =>
-          a.id < b.id ? -1 : a.id > b.id ? 1 : 0,
-        );
-        const snapshot = sortedNorms.map((n, i) => ({
-          normalizationId: n.id,
-          normalizationIdentityFingerprint: n.normalizationIdentityFingerprint,
-          snapshotOrdinal: i,
-        }));
 
         await verifications.lockSubject(tx, parent.id);
         const active = await verifications.findActiveByFactId(tenant, tx, parent.id);
@@ -375,7 +361,7 @@ export class FactVerificationService {
           sourceIdentityFingerprint: parent.sourceIdentityFingerprint,
           contentFingerprint: parent.contentFingerprint,
           normalizationSnapshotFingerprint: snapshotFingerprint,
-          normalizationCount: snapshot.length,
+          normalizationCount: lockedNorms.length,
           action,
           reasonCode,
           supersedesVerificationId: input.supersedesVerificationId ?? null,
@@ -431,14 +417,17 @@ export class FactVerificationService {
           sourceField: parent.sourceField,
           sourceIdentityFingerprint: parent.sourceIdentityFingerprint,
           contentFingerprint: parent.contentFingerprint,
-          normalizationSnapshotFingerprint: snapshotFingerprint,
-          normalizationCount: snapshot.length,
           action,
           reasonCode,
           supersedesVerificationId: supersedesId,
           actorId: tenant.actorId,
-          snapshot,
         });
+        if (
+          created.normalizationSnapshotFingerprint !== snapshotFingerprint ||
+          created.normalizationCount !== lockedNorms.length
+        ) {
+          throw new FactConflictError();
+        }
 
         await idempotency.insert(tenant, tx, {
           operation: FACT_VERIFICATION_OPERATION,
@@ -476,3 +465,8 @@ export class FactVerificationService {
 }
 
 export const factVerificationService = new FactVerificationService();
+
+export {
+  buildNormalizationSnapshotFingerprint,
+  EMPTY_FACT_VERIFICATION_SNAPSHOT_FINGERPRINT,
+} from '../factVerificationSnapshot.js';

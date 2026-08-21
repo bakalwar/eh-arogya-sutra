@@ -34,7 +34,7 @@ describe('F3D-2D5 clinical fact-verification contract', () => {
     expect(fs.existsSync(path.join(root, DOWN))).toBe(true);
   });
 
-  it('migration SQL enforces review-only authority, Doctor actor, four actions, FORCE RLS, append-only, no CASCADE', () => {
+  it('migration SQL enforces review-only authority, Doctor actor, four actions, FORCE RLS, append-only, deferred snapshot binding, no CASCADE', () => {
     const sql = read(UP);
     expect(sql).toMatch(/SOURCE_LINKED_FACT_CLINICAL_REVIEW_ONLY/);
     expect(sql).toMatch(
@@ -51,10 +51,17 @@ describe('F3D-2D5 clinical fact-verification contract', () => {
     expect(sql).toMatch(/clinical_fact_verification_events_append_only/);
     expect(sql).toMatch(/clinical_fact_verification_normalizations_append_only/);
     expect(sql).toMatch(/REVOKE DELETE ON clinical_fact_verification_events FROM ehas2_app/);
+    expect(sql).toMatch(/ehas2_fact_verification_snapshot_fingerprint/);
+    expect(sql).toMatch(/FACT_VERIFICATION_SNAPSHOT_INVALID/);
+    expect(sql).toMatch(/DEFERRABLE INITIALLY DEFERRED/);
+    expect(sql).toMatch(/clinical_fact_verification_events_snapshot_deferred/);
+    expect(sql).toMatch(/clinical_fact_verification_normalizations_snapshot_deferred/);
+    expect(sql).toMatch(/clinical_fact_normalizations_verification_snapshot_deferred/);
+    expect(sql).toMatch(/clinical_fact_candidates_verification_snapshot_deferred/);
     expect(sql).not.toMatch(/ON DELETE CASCADE/);
   });
 
-  it('down drops 017-owned verification tables and indexes only', () => {
+  it('down drops 017-owned verification tables, indexes, and deferred snapshot functions only', () => {
     const down = read(DOWN);
     expect(down).toMatch(/DROP TABLE IF EXISTS clinical_fact_verification_normalizations/);
     expect(down).toMatch(/DROP TABLE IF EXISTS clinical_fact_verification_events/);
@@ -69,6 +76,11 @@ describe('F3D-2D5 clinical fact-verification contract', () => {
     );
     expect(down).toMatch(/DROP FUNCTION IF EXISTS ehas2_fact_verification_event_append_only/);
     expect(down).toMatch(/DROP FUNCTION IF EXISTS ehas2_fact_verification_norm_append_only/);
+    expect(down).toMatch(/DROP FUNCTION IF EXISTS ehas2_fact_verification_validate_event/);
+    expect(down).toMatch(/DROP FUNCTION IF EXISTS ehas2_fact_verification_snapshot_fingerprint/);
+    expect(down).toMatch(
+      /DROP TRIGGER IF EXISTS clinical_fact_candidates_verification_snapshot_deferred/,
+    );
     expect(down).not.toMatch(/DROP TABLE IF EXISTS clinical_fact_candidates/);
     expect(down).not.toMatch(/DROP TABLE IF EXISTS clinical_fact_normalizations;/);
     expect(down).not.toMatch(/DROP TABLE IF EXISTS organizations/);
