@@ -789,7 +789,8 @@ describe('Phase 4A authentication core', () => {
     const downId = await migrateDownLastForIsolatedTest(env);
     expect(downId).toBe('017_f3d2d5_clinical_fact_verification');
     const up = await migrateUp(env);
-    expect(up.applied).toContain('016_f3d2_fact_normalizations');
+    expect(up.applied).toContain('017_f3d2d5_clinical_fact_verification');
+    expect(getOrderedMigrationIds()).toContain('017_f3d2d5_clinical_fact_verification');
     expect(getOrderedMigrationIds()).toContain('016_f3d2_fact_normalizations');
   }, 120_000);
 
