@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|--------|
-| **Authority** | Owner row review — **no rows auto-approved** |
+| **Authority** | Owner row review — **Bilious Batch 1 approved** (8/37); remaining batches pending |
 | **Legacy source** | `bakalwar/eh-arogya-sutra` @ `b9ec3f6986c402afee13241673b954fe3564f169` |
 | **Legacy symbol** | `PRAKRITI_KEYWORDS` in `eh-api/core/clinical_engines.py` |
 | **Row count** | **37** (verified) |
@@ -10,7 +10,7 @@
 | **Verified legacy weight (Rule 1 path)** | **+2** per hit in `detect_prakriti` — see [rule-01-legacy-scoring-evidence-resolution.md](./rule-01-legacy-scoring-evidence-resolution.md) |
 | **Runtime activation** | **NONE** |
 
-Owner decision columns in the CSV are **intentionally blank**. Allowed owner actions when reviewing: `APPROVE` · `APPROVE_AFTER_NORMALIZATION` · `MODIFY` · `MOVE_TO_R2` · `MOVE_TO_R3` · `CONTEXT_ONLY` · `REJECT` · `QUARANTINE`.
+Owner decision columns: **Bilious Batch 1 (8 rows) owner-approved** — see [rule-01-bilious-batch1-owner-approval-freeze.md](./rule-01-bilious-batch1-owner-approval-freeze.md). **29 rows remain blank.** Allowed owner actions when reviewing remaining batches: `APPROVE` · `APPROVE_AFTER_NORMALIZATION` · `MODIFY` · `MOVE_TO_R2` · `MOVE_TO_R3` · `CONTEXT_ONLY` · `REJECT` · `QUARANTINE` · `SPLIT`.
 
 ---
 
@@ -29,7 +29,7 @@ Owner decision columns in the CSV are **intentionally blank**. Allowed owner act
 | R1-KW-0007 | pitta | **Constitution-system term** (Tridosha cross-domain) |
 | R1-KW-0008 | yellow | **Color term** vs icteric context |
 
-**Status:** Prepared for owner review — **0 approved**.
+**Status:** **Owner approved** — see [rule-01-bilious-batch1-owner-approval-freeze.md](./rule-01-bilious-batch1-owner-approval-freeze.md) · token `OWNER-FREEZE-R1-BILIOUS-BATCH1-v1`
 
 ### Batch 2 — Sanguine (10 rows)
 
@@ -115,10 +115,12 @@ Owner decision columns in the CSV are **intentionally blank**. Allowed owner act
 | Check | Result |
 |-------|--------|
 | CSV data rows | **37** |
+| Bilious rows owner-approved | **8** (`R1-KW-0001` … `R1-KW-0008`) |
+| Remaining rows unapproved | **29** |
 | Unique row IDs | **37** (`R1-KW-0001` … `R1-KW-0037`) |
-| Owner decision fields populated | **0** (all blank) |
-| Auto-approved rows | **0** |
 | Legacy keyword parity | Matches verified `PRAKRITI_KEYWORDS` @ `b9ec3f6` |
+| `verified_legacy_weight` | Preserved separately (forensic **2** on all legacy rows) |
+| `owner_approved_weight` | Populated on **8** Bilious rows only |
 
 ---
 
@@ -133,6 +135,6 @@ Owner decision columns in the CSV are **intentionally blank**. Allowed owner act
 ## Status tokens
 
 - `RULE1_37_ROW_DOCKET_PREPARED`
-- `RULE1_ROW_OWNER_DECISIONS_BLANK`
-- `RULE1_NO_ROWS_AUTO_APPROVED`
+- `RULE1_BILIOUS_BATCH1_OWNER_APPROVED_DOCUMENTATION_ONLY`
+- `RULE1_ROW_OWNER_DECISIONS_8_OF_37`
 - `RULE1_CLINICAL_ACTIVATION_NONE`
