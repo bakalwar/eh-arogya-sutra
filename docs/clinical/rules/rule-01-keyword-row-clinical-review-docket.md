@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|--------|
-| **Authority** | Owner row review — **Bilious Batch 1 approved** (8/37); remaining batches pending |
+| **Authority** | Owner row review — **Bilious Batch 1 (8) + Sanguine Batch 2 (10) approved** (18/37); Lymphatic/Nervous pending |
 | **Legacy source** | `bakalwar/eh-arogya-sutra` @ `b9ec3f6986c402afee13241673b954fe3564f169` |
 | **Legacy symbol** | `PRAKRITI_KEYWORDS` in `eh-api/core/clinical_engines.py` |
 | **Row count** | **37** (verified) |
@@ -10,7 +10,7 @@
 | **Verified legacy weight (Rule 1 path)** | **+2** per hit in `detect_prakriti` — see [rule-01-legacy-scoring-evidence-resolution.md](./rule-01-legacy-scoring-evidence-resolution.md) |
 | **Runtime activation** | **NONE** |
 
-Owner decision columns: **Bilious Batch 1 (8 rows) owner-approved** — see [rule-01-bilious-batch1-owner-approval-freeze.md](./rule-01-bilious-batch1-owner-approval-freeze.md). **29 rows remain blank.** Allowed owner actions when reviewing remaining batches: `APPROVE` · `APPROVE_AFTER_NORMALIZATION` · `MODIFY` · `MOVE_TO_R2` · `MOVE_TO_R3` · `CONTEXT_ONLY` · `REJECT` · `QUARANTINE` · `SPLIT`.
+Owner decision columns: **Bilious Batch 1 (8) + Sanguine Batch 2 (10) owner-approved** — see [rule-01-bilious-batch1-owner-approval-freeze.md](./rule-01-bilious-batch1-owner-approval-freeze.md) · [rule-01-sanguine-batch2-owner-approval-freeze.md](./rule-01-sanguine-batch2-owner-approval-freeze.md). **19 rows remain blank** (Lymphatic 11 + Nervous 8). Allowed owner actions when reviewing remaining batches: `APPROVE` · `APPROVE_AFTER_NORMALIZATION` · `MODIFY` · `MOVE_TO_R2` · `MOVE_TO_R3` · `CONTEXT_ONLY` · `REJECT` · `QUARANTINE` · `SPLIT`.
 
 ---
 
@@ -46,7 +46,7 @@ Owner decision columns: **Bilious Batch 1 (8 rows) owner-approved** — see [rul
 | R1-KW-0036 | khoon | HI blood colloquial |
 | R1-KW-0037 | rakt | HI-SA blood term; **synonym double-score** |
 
-**Status:** Prepared for owner review — **0 approved**.
+**Status:** **Owner approved** — see [rule-01-sanguine-batch2-owner-approval-freeze.md](./rule-01-sanguine-batch2-owner-approval-freeze.md) · token `OWNER-FREEZE-R1-SANGUINE-BATCH2-v1`
 
 ### Batch 3 — Lymphatic (11 rows)
 
@@ -116,11 +116,12 @@ Owner decision columns: **Bilious Batch 1 (8 rows) owner-approved** — see [rul
 |-------|--------|
 | CSV data rows | **37** |
 | Bilious rows owner-approved | **8** (`R1-KW-0001` … `R1-KW-0008`) |
-| Remaining rows unapproved | **29** |
+| Sanguine rows owner-approved | **10** (`R1-KW-0028` … `R1-KW-0037`; raw weights **0**) |
+| Remaining rows unapproved | **19** (Lymphatic 11 + Nervous 8) |
 | Unique row IDs | **37** (`R1-KW-0001` … `R1-KW-0037`) |
 | Legacy keyword parity | Matches verified `PRAKRITI_KEYWORDS` @ `b9ec3f6` |
 | `verified_legacy_weight` | Preserved separately (forensic **2** on all legacy rows) |
-| `owner_approved_weight` | Populated on **8** Bilious rows only |
+| `owner_approved_weight` | Populated on **18** approved rows (Bilious + Sanguine) |
 
 ---
 
@@ -136,5 +137,6 @@ Owner decision columns: **Bilious Batch 1 (8 rows) owner-approved** — see [rul
 
 - `RULE1_37_ROW_DOCKET_PREPARED`
 - `RULE1_BILIOUS_BATCH1_OWNER_APPROVED_DOCUMENTATION_ONLY`
-- `RULE1_ROW_OWNER_DECISIONS_8_OF_37`
+- `RULE1_SANGUINE_BATCH2_OWNER_APPROVED_DOCUMENTATION_ONLY`
+- `RULE1_ROW_OWNER_DECISIONS_18_OF_37`
 - `RULE1_CLINICAL_ACTIVATION_NONE`
