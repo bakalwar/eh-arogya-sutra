@@ -35,9 +35,7 @@ function scan(rel) {
     if (!/CLOSED_INPUT_KEYS = new Set\(\['consultationId'\]\)/.test(text))
       hits.push('closed-input');
     if (!/listActiveByConsultation/.test(text)) hits.push('e1-only');
-    if (
-      !/acquireRulesShadowInputLockPlan|acquireCanonicalSourceLocks/.test(text)
-    ) {
+    if (!/acquireRulesShadowInputLockPlan|acquireCanonicalSourceLocks/.test(text)) {
       hits.push('lock-order');
     }
     if (/INSERT INTO|UPDATE |DELETE FROM/i.test(text)) hits.push('writes');

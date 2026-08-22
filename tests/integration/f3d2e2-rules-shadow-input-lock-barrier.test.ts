@@ -79,7 +79,8 @@ afterAll(async () => {
 });
 
 function requireDb(): void {
-  if (!dbReady) throw new Error('BLOCKED: isolated PostgreSQL unavailable for F3D-2E2 barrier tests');
+  if (!dbReady)
+    throw new Error('BLOCKED: isolated PostgreSQL unavailable for F3D-2E2 barrier tests');
 }
 
 async function seedDoctor(): Promise<{ doctor: TenantContext }> {
@@ -123,8 +124,7 @@ async function seedDoctor(): Promise<{ doctor: TenantContext }> {
     );
     await memberships.assignRole(
       { query },
-      { membershipId: treatingMembership.id,
-        roleCode: 'Doctor' },
+      { membershipId: treatingMembership.id, roleCode: 'Doctor' },
     );
     return {
       doctor: {
@@ -201,7 +201,9 @@ async function prepareChiefAndVitalAccepted(
 
   const materialize = async (sourceField: 'CHIEF_COMPLAINT' | 'VITAL_PULSE' | 'VITAL_SPO2') => {
     const channel =
-      sourceField === 'CHIEF_COMPLAINT' ? ('DOCTOR_DECLARED' as const) : ('STRUCTURED_INTAKE' as const);
+      sourceField === 'CHIEF_COMPLAINT'
+        ? ('DOCTOR_DECLARED' as const)
+        : ('STRUCTURED_INTAKE' as const);
     const fact = await factService().materialize(
       doctor,
       consultation.id,
@@ -220,7 +222,12 @@ async function prepareChiefAndVitalAccepted(
       },
       env,
     );
-    const acceptance = await acceptFactPipeline(doctor, consultation.id, fact.id, `${label}-${sourceField}`);
+    const acceptance = await acceptFactPipeline(
+      doctor,
+      consultation.id,
+      fact.id,
+      `${label}-${sourceField}`,
+    );
     return { fact, acceptance };
   };
 
@@ -409,7 +416,10 @@ describe('F3D-2E2 multi-fact global lock-order barriers (isolated PG)', () => {
       ),
       buildRulesShadowInput(doctor, { consultationId: bundle.consultation.id }, env),
     ]);
-    assertNoTornDto(results.filter((r) => typeof r === 'object' && 'ok' in r), 3);
+    assertNoTornDto(
+      results.filter((r) => typeof r === 'object' && 'ok' in r),
+      3,
+    );
   }, 120_000);
 
   it('6 fact lifecycle concurrency — supersession cannot produce torn DTO', async () => {
@@ -589,8 +599,12 @@ describe('F3D-2E2 multi-fact global lock-order barriers (isolated PG)', () => {
   it('12 unrelated consultation is not blocked by another consultation lock barrier', async () => {
     requireDb();
     const { doctor } = await seedDoctor();
-    const a = await prepareChiefAndVitalAccepted(doctor, 'iso-a', { materializeOrder: 'vital-first' });
-    const b = await prepareChiefAndVitalAccepted(doctor, 'iso-b', { materializeOrder: 'chief-first' });
+    const a = await prepareChiefAndVitalAccepted(doctor, 'iso-a', {
+      materializeOrder: 'vital-first',
+    });
+    const b = await prepareChiefAndVitalAccepted(doctor, 'iso-b', {
+      materializeOrder: 'chief-first',
+    });
 
     let releaseHold!: () => void;
     const holdGate = new Promise<void>((resolve) => {
@@ -619,7 +633,11 @@ describe('F3D-2E2 multi-fact global lock-order barriers (isolated PG)', () => {
     );
     await held;
 
-    const unrelated = await buildRulesShadowInput(doctor, { consultationId: b.consultation.id }, env);
+    const unrelated = await buildRulesShadowInput(
+      doctor,
+      { consultationId: b.consultation.id },
+      env,
+    );
     expect(unrelated.ok).toBe(true);
     releaseHold();
     await holder;

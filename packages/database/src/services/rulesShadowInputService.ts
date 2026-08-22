@@ -125,7 +125,10 @@ function isSupportedSourceBinding(fact: {
   ) {
     return true;
   }
-  if (fact.sourceChannel === 'STRUCTURED_INTAKE' && isStructuredVitalSourceField(fact.sourceField)) {
+  if (
+    fact.sourceChannel === 'STRUCTURED_INTAKE' &&
+    isStructuredVitalSourceField(fact.sourceField)
+  ) {
     return true;
   }
   return false;
