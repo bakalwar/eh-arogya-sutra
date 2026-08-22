@@ -1,0 +1,38 @@
+row_id,exact_keyword,language,controlled_concept_candidate,legacy_temperament,verified_legacy_weight,clinical_feature_type,disease_name_flag,organ_system_flag,symptom_sign_flag,constitution_flag,r2_overlap,r3_overlap,synonym_group,negation_risk,intensity_context_requirement,proposed_action,owner_decision,owner_corrected_temperament,owner_approved_weight,owner_clinical_note,approval_token,review_batch
+R1-KW-0001,acidity,EN,GASTRIC_ACIDITY_OR_DYSPEPSIA,Bilious,2,DIGESTIVE_SYMPTOM,N,N,Y,N,N,N,,MEDIUM,Severity/context not modeled in legacy substring match,OWNER_ROW_REVIEW_PENDING,,,,,,Batch1-Bilious
+R1-KW-0002,bile,EN,BILE_OR_BILIARY_FLUID_REFERENCE,Bilious,2,HEPATIC_BILIARY_SIGN,N,Y,Y,N,N,N,,LOW,Ambiguous alone; may be organ-fluid not temperament,OWNER_ROW_REVIEW_PENDING,,,,,,Batch1-Bilious
+R1-KW-0003,jaundice,EN,JAUNDICE_ICTERUS,Bilious,2,DISEASE_NAME,Y,Y,Y,N,N,N,,MEDIUM,R1-OD-04: disease label must not auto-map; legacy substring violates,OWNER_ROW_REVIEW_PENDING,,,,,,Batch1-Bilious
+R1-KW-0004,liver,EN,LIVER_ORGAN_REFERENCE,Bilious,2,ORGAN_NAME,N,Y,N,N,N,N,,MEDIUM,Organ name not patient feature unless clinically accepted,OWNER_ROW_REVIEW_PENDING,,,,,,Batch1-Bilious
+R1-KW-0005,liver dard,HI-EN,LIVER_PAIN_COMPOUND,Bilious,2,COMPOUND_PHRASE,N,Y,Y,N,N,N,,MEDIUM,Compound hepatic pain phrase; Hindi dard,OWNER_ROW_REVIEW_PENDING,,,,,,Batch1-Bilious
+R1-KW-0006,pila,HI,BILE_OR_PITTA_COLOQUIAL,Bilious,2,CONSTITUTION_COLOQUIAL,N,N,Y,Y,N,N,pitta-pila,MEDIUM,Cross-domain Ayurvedic colloquial; not EH token alone,OWNER_ROW_REVIEW_PENDING,,,,,,Batch1-Bilious
+R1-KW-0007,pitta,HI-SA,PITTA_DOSHA_TERM,Bilious,2,CONSTITUTION_SYSTEM_TERM,N,N,Y,Y,N,N,pitta-pila,HIGH,Tridosha term; R1-OD-04 separation required,OWNER_ROW_REVIEW_PENDING,,,,,,Batch1-Bilious
+R1-KW-0008,yellow,EN,YELLOW_COLOR_OR_ICTERIC_HUE,Bilious,2,COLOR_TERM,N,N,Y,N,N,N,jaundice-yellow,MEDIUM,Color sign vs disease name context,OWNER_ROW_REVIEW_PENDING,,,,,,Batch1-Bilious
+R1-KW-0028,arterial,EN,ARTERIAL_OR_VASCULAR_TONE,Sanguine,2,CIRCULATORY_SIGN,N,Y,Y,N,N,N,,LOW,Vascular descriptor; needs clinical acceptance,OWNER_ROW_REVIEW_PENDING,,,,,,Batch2-Sanguine
+R1-KW-0029,bleeding,EN,HEMORRHAGE_OR_BLEEDING,Sanguine,2,SYMPTOM_SIGN,N,N,Y,N,Y,N,,MEDIUM,R2 pos_terms overlap (bleeding),OWNER_ROW_REVIEW_PENDING,,,,,,Batch2-Sanguine
+R1-KW-0030,circulation,EN,CIRCULATION_OR_PERFUSION,Sanguine,2,CIRCULATORY_SIGN,N,Y,Y,N,N,N,,LOW,Generic circulation term,OWNER_ROW_REVIEW_PENDING,,,,,,Batch2-Sanguine
+R1-KW-0031,fast heartbeat,EN,TACHYCARDIA_OR_PALPITATION,Sanguine,2,VITAL_OR_CARDIAC_SIGN,N,N,Y,N,Y,N,,MEDIUM,R2 pos_terms overlap; overlaps BP/cardiac domain,OWNER_ROW_REVIEW_PENDING,,,,,,Batch2-Sanguine
+R1-KW-0032,flushing,EN,CUTANEOUS_FLUSHING,Sanguine,2,SYMPTOM_SIGN,N,N,Y,N,N,N,hot-garam-flushing,MEDIUM,Heat/flush cluster,OWNER_ROW_REVIEW_PENDING,,,,,,Batch2-Sanguine
+R1-KW-0033,garam,HI,HEAT_OR_HOTNESS,Sanguine,2,CONSTITUTION_COLOQUIAL,N,N,Y,N,N,N,hot-garam-flushing,MEDIUM,Hindi heat descriptor; synonym risk with hot,OWNER_ROW_REVIEW_PENDING,,,,,,Batch2-Sanguine
+R1-KW-0034,high bp,EN,HYPERTENSION_LABEL,Sanguine,2,VITAL_OR_DISEASE_LABEL,Y,N,Y,N,Y,N,,HIGH,R2 pos_terms + BP path; disease-label risk (R1-OD-04),OWNER_ROW_REVIEW_PENDING,,,,,,Batch2-Sanguine
+R1-KW-0035,hot,EN,HEAT_OR_FEVERISHNESS,Sanguine,2,SYMPTOM_SIGN,N,N,Y,N,N,N,hot-garam-flushing,MEDIUM,Synonym cluster with garam/flushing,OWNER_ROW_REVIEW_PENDING,,,,,,Batch2-Sanguine
+R1-KW-0036,khoon,HI,BLOOD_COLOQUIAL,Sanguine,2,CONSTITUTION_COLOQUIAL,N,N,Y,N,N,N,rakt-khoon,MEDIUM,Hindi blood term; pairs with rakt,OWNER_ROW_REVIEW_PENDING,,,,,,Batch2-Sanguine
+R1-KW-0037,rakt,HI-SA,BLOOD_OR_RAKTA,Sanguine,2,CONSTITUTION_COLOQUIAL,N,N,Y,N,N,N,rakt-khoon,MEDIUM,Synonym pair with khoon; double-score risk,OWNER_ROW_REVIEW_PENDING,,,,,,Batch2-Sanguine
+R1-KW-0009,cold,EN,COLDNESS_OR_CHILLINESS,Lymphatic,2,CONSTITUTION_OR_SYMPTOM,N,N,Y,N,Y,N,cold-thanda,MEDIUM,R2 neg_terms overlap; synonym with thanda,OWNER_ROW_REVIEW_PENDING,,,,,,Batch3-Lymphatic
+R1-KW-0010,constipation,EN,CONSTIPATION,Lymphatic,2,DIGESTIVE_SYMPTOM,N,N,Y,N,Y,N,constipation-kabz,MEDIUM,R2 neg_terms overlap; synonym with kabz,OWNER_ROW_REVIEW_PENDING,,,,,,Batch3-Lymphatic
+R1-KW-0011,kabz,HI,CONSTIPATION_COLOQUIAL,Lymphatic,2,DIGESTIVE_SYMPTOM,N,N,Y,N,Y,N,constipation-kabz,MEDIUM,R2 neg_terms overlap; double-score with constipation,OWNER_ROW_REVIEW_PENDING,,,,,,Batch3-Lymphatic
+R1-KW-0012,lymph,EN,LYMPH_OR_LYMPHATIC_REFERENCE,Lymphatic,2,ORGAN_SYSTEM_SIGN,N,Y,Y,N,N,N,,LOW,System name as substring,OWNER_ROW_REVIEW_PENDING,,,,,,Batch3-Lymphatic
+R1-KW-0013,motapa,HI,OBESITY_COLOQUIAL,Lymphatic,2,CONSTITUTION_OR_BUILD,N,N,Y,N,N,N,obesity-motapa,MEDIUM,Synonym with obesity,OWNER_ROW_REVIEW_PENDING,,,,,,Batch3-Lymphatic
+R1-KW-0014,obesity,EN,OBESITY_OR_ADIPOSITY,Lymphatic,2,CONSTITUTION_OR_BUILD,N,N,Y,N,N,N,obesity-motapa,MEDIUM,Synonym with motapa; double-score risk,OWNER_ROW_REVIEW_PENDING,,,,,,Batch3-Lymphatic
+R1-KW-0015,sluggish,EN,SLOWNESS_OR_TORPOR,Lymphatic,2,CONSTITUTION_OR_SYMPTOM,N,N,Y,N,N,N,,MEDIUM,Constitutional sluggishness,OWNER_ROW_REVIEW_PENDING,,,,,,Batch3-Lymphatic
+R1-KW-0016,sujan,HI,SWELLING_OR_EDEMA,Lymphatic,2,SYMPTOM_SIGN,N,N,Y,N,Y,N,swelling-sujan,MEDIUM,R2 pos_terms overlap; pairs with swelling,OWNER_ROW_REVIEW_PENDING,,,,,,Batch3-Lymphatic
+R1-KW-0017,swelling,EN,EDEMA_OR_SWELLING,Lymphatic,2,SYMPTOM_SIGN,N,N,Y,N,Y,N,swelling-sujan,MEDIUM,R2 pos_terms overlap; pairs with sujan,OWNER_ROW_REVIEW_PENDING,,,,,,Batch3-Lymphatic
+R1-KW-0018,thanda,HI,COLDNESS_COLOQUIAL,Lymphatic,2,CONSTITUTION_OR_SYMPTOM,N,N,Y,N,Y,N,cold-thanda,MEDIUM,R2 neg_terms overlap; pairs with cold,OWNER_ROW_REVIEW_PENDING,,,,,,Batch3-Lymphatic
+R1-KW-0019,white discharge,EN,LEUCORRHEA_OR_WHITE_DISCHARGE,Lymphatic,2,SYMPTOM_SIGN,N,N,Y,N,Y,N,,MEDIUM,R2 neg_terms (safed pani/leucorrhoea cluster),OWNER_ROW_REVIEW_PENDING,,,,,,Batch3-Lymphatic
+R1-KW-0020,anxiety,EN,ANXIETY_OR_APPREHENSION,Nervous,2,SYMPTOM_SIGN,N,N,Y,N,N,N,,MEDIUM,Psychological/neurological symptom,OWNER_ROW_REVIEW_PENDING,,,,,,Batch4-Nervous
+R1-KW-0021,bechaini,HI,RESTLESSNESS_OR_ANXIETY,Nervous,2,SYMPTOM_SIGN,N,N,Y,N,N,N,anxiety-bechaini,MEDIUM,Hindi restlessness; partial overlap anxiety cluster,OWNER_ROW_REVIEW_PENDING,,,,,,Batch4-Nervous
+R1-KW-0022,nas,HI,NASAL_OR_NERVE_AMBIGUOUS,Nervous,2,AMBIGUOUS_SHORT_TOKEN,N,N,Y,N,N,N,,HIGH,Short token; nasal vs nerve ambiguity; high false-positive risk,OWNER_ROW_REVIEW_PENDING,,,,,,Batch4-Nervous
+R1-KW-0023,nerve pain,EN,NEURALGIA_OR_NERVE_PAIN,Nervous,2,SYMPTOM_SIGN,N,N,Y,N,N,N,,LOW,Direct neural symptom phrase,OWNER_ROW_REVIEW_PENDING,,,,,,Batch4-Nervous
+R1-KW-0024,nervous,EN,NERVOUSNESS_OR_NEUROLOGIC,Nervous,2,CONSTITUTION_OR_SYMPTOM,N,N,Y,N,N,N,,MEDIUM,Temperament label reused as keyword,OWNER_ROW_REVIEW_PENDING,,,,,,Batch4-Nervous
+R1-KW-0025,sciatica,EN,SCIATICA_DISEASE_NAME,Nervous,2,DISEASE_NAME,Y,N,Y,N,N,N,,HIGH,R1-OD-04: disease label must not auto-map,OWNER_ROW_REVIEW_PENDING,,,,,,Batch4-Nervous
+R1-KW-0026,shooting,EN,SHOOTING_PAIN_DESCRIPTOR,Nervous,2,PAIN_DESCRIPTOR,N,N,Y,N,N,N,shooting-tingling,MEDIUM,Pain quality; pairs with tingling,OWNER_ROW_REVIEW_PENDING,,,,,,Batch4-Nervous
+R1-KW-0027,tingling,EN,PARESTHESIA_OR_TINGLING,Nervous,2,SYMPTOM_SIGN,N,N,Y,N,N,N,shooting-tingling,MEDIUM,Neurological paresthesia,OWNER_ROW_REVIEW_PENDING,,,,,,Batch4-Nervous
