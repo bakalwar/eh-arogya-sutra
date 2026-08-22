@@ -161,6 +161,19 @@ describe('F3D-2E2 rules-shadow-input contract', () => {
     const b = buildRulesShadowInputFingerprint(draft);
     expect(a).toMatch(/^[a-f0-9]{64}$/);
     expect(a).toBe(b);
+    expect(a).toBe('a2af34503ea254af73d908f8fd5694348726e0654cf01d6d4011931ec6bcb4a9');
+  });
+
+  it('pins canonical cross-family source lock order', () => {
+    const plan = read('packages/database/src/services/cueSourceLockPlan.ts');
+    expect(plan).toMatch(/CHIEF_COMPLAINT.*F3C_REVIEWED.*STRUCTURED_VITAL/s);
+    expect(plan).toMatch(/compareCanonicalSourceLockSubjects/);
+    expect(plan).toMatch(/acquireCanonicalSourceLocks/);
+    const service = read('packages/database/src/services/rulesShadowInputService.ts');
+    expect(service).toMatch(/buildRulesShadowInputLockPlan/);
+    expect(service).toMatch(/acquireRulesShadowInputLockPlan/);
+    expect(service).toMatch(/planMatchesFinalFactIds/);
+    expect(service).not.toMatch(/lockSourceForFact/);
   });
 
   it('firewall script exists and is wired in CI', () => {

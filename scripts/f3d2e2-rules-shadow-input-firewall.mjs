@@ -36,9 +36,7 @@ function scan(rel) {
       hits.push('closed-input');
     if (!/listActiveByConsultation/.test(text)) hits.push('e1-only');
     if (
-      !/lockChiefComplaintCueSource|lockF3cReviewedCueSource|lockStructuredVitalSourceFields/.test(
-        text,
-      )
+      !/acquireRulesShadowInputLockPlan|acquireCanonicalSourceLocks/.test(text)
     ) {
       hits.push('lock-order');
     }

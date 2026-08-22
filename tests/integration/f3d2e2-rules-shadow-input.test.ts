@@ -811,12 +811,12 @@ describe('F3D-2E2 rules-shadow-input builder (isolated PG)', () => {
     expect(overflow).toEqual({ ok: false, reasonCode: 'FACT_CAP_OVERFLOW' });
   }, 180_000);
 
-  it('22-23 32 norms/fact accepted path via empty; 33 norms fail closed', async () => {
+  it('22-23 32 norms/fact accepted path; 33 norms fail closed', async () => {
     requireDb();
     const { doctor } = await seedDoctor();
     const p = await prepareEmptyAccepted(doctor, 'norm33');
     await withTriggerBypass(doctor, async (query) => {
-      for (let i = 0; i < 33; i++) {
+      for (let i = 0; i < 32; i++) {
         await query(
           `INSERT INTO clinical_fact_normalizations (
              organization_id, clinic_id, patient_id, consultation_id, source_fact_candidate_id,
@@ -842,15 +842,55 @@ describe('F3D-2E2 rules-shadow-input builder (isolated PG)', () => {
             p.consultation.id,
             p.fact.id,
             p.fact.sourceIdentityFingerprint,
-            fp(`n33-${i}`),
+            fp(`n32-${i}`),
             `u${i}`,
-            fp('pack33'),
-            fp('parser33'),
-            fp('normer33'),
+            fp('pack32'),
+            fp('parser32'),
+            fp('normer32'),
             doctor.actorId,
           ],
         );
       }
+    });
+    const ok32 = await buildRulesShadowInput(doctor, { consultationId: p.consultation.id }, env);
+    expect(ok32.ok).toBe(true);
+    if (!ok32.ok) return;
+    expect(ok32.dto.facts[0]?.normalizedSignals).toHaveLength(32);
+
+    await withTriggerBypass(doctor, async (query) => {
+      await query(
+        `INSERT INTO clinical_fact_normalizations (
+           organization_id, clinic_id, patient_id, consultation_id, source_fact_candidate_id,
+           source_identity_fingerprint, normalization_identity_fingerprint,
+           source_channel, source_field, normalization_kind, canonical_label, negation_scope,
+           cue_entry_ids, pack_id, pack_version, pack_content_checksum,
+           parser_version, parser_fingerprint, normalizer_method, normalizer_version,
+           normalizer_fingerprint, authority_scope, decision_status, supersedes_normalization_id,
+           limitation_codes, clinically_used, actor_id, actor_role
+         ) VALUES (
+           $1,$2,$3,$4,$5,$6,$7,
+           'DOCTOR_DECLARED','CHIEF_COMPLAINT','UNIT_ALIAS',$8,NULL,
+           ARRAY[]::text[],'pack','1',$9,'none',$10,
+           'OWNER_FROZEN_SOURCE_PRESERVING_V1','f3d2d2-src-norm-v1',$11,
+           'FACT_NORMALIZED_SOURCE_LINKED','ACTIVE',NULL,
+           ARRAY['NOT_AUTHORITATIVE','NO_CLINICAL_VERIFICATION','SOURCE_LINKED_NORMALIZATION_ONLY','NO_UNIT_CONVERSION']::text[],
+           false,$12,'Doctor'
+         )`,
+        [
+          doctor.organizationId,
+          doctor.clinicId,
+          p.patient.id,
+          p.consultation.id,
+          p.fact.id,
+          p.fact.sourceIdentityFingerprint,
+          fp('n33-extra'),
+          'u33',
+          fp('pack33'),
+          fp('parser33'),
+          fp('normer33'),
+          doctor.actorId,
+        ],
+      );
     });
     const result = await buildRulesShadowInput(doctor, { consultationId: p.consultation.id }, env);
     expect(result).toEqual({ ok: false, reasonCode: 'NORM_PER_FACT_OVERFLOW' });
@@ -946,6 +986,17 @@ describe('F3D-2E2 rules-shadow-input builder (isolated PG)', () => {
     await buildRulesShadowInput(doctor, { consultationId: p.consultation.id }, env);
     const after = await countWrites(doctor, p.consultation.id);
     expect(after).toEqual(before);
+  });
+
+  it('32 final treating Doctor re-read after full lock set', async () => {
+    requireDb();
+    const { doctor } = await seedDoctor();
+    const p = await prepareAccepted(doctor, 'treatdoc');
+    const result = await buildRulesShadowInput(doctor, { consultationId: p.consultation.id }, env);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.dto.treatingDoctorId).toBe(doctor.actorId);
+    expect(result.dto.consultationId).toBe(p.consultation.id);
   });
 
   it('31 concurrent supersession cannot produce torn mixed DTO', async () => {

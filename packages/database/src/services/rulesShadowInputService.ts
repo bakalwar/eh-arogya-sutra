@@ -36,12 +36,13 @@ import {
 } from '../rulesShadowInputCanonical.js';
 import { assertTenantContext, type TenantContext } from '../tenantContext.js';
 import { assertUuid } from '../validation.js';
-import {
-  lockChiefComplaintCueSource,
-  lockF3cReviewedCueSource,
-  lockStructuredVitalSourceFields,
-} from './cueSourceLock.js';
 import { isStructuredVitalSourceField } from './structuredVitalSource.js';
+import {
+  acquireRulesShadowInputLockPlan,
+  buildRulesShadowInputLockPlan,
+  planMatchesFinalFactIds,
+  type RulesShadowInputPreflightFact,
+} from './rulesShadowInputLockPlan.js';
 
 export const RULES_SHADOW_INPUT_OPERATION = 'clinical.rules_shadow_input_v1' as const;
 
@@ -109,32 +110,25 @@ function toSignal(
   };
 }
 
-async function lockSourceForFact(
-  tenant: TenantContext,
-  tx: Parameters<Parameters<typeof withTenantTransaction>[1]>[0],
-  fact: {
-    sourceChannel: string;
-    sourceField: string;
-    consultationId: string;
-    extractionCandidateId: string | null;
-  },
-): Promise<void> {
+function isSupportedSourceBinding(fact: {
+  sourceChannel: string;
+  sourceField: string;
+  extractionCandidateId: string | null;
+}): boolean {
   if (fact.sourceChannel === 'DOCTOR_DECLARED' && fact.sourceField === 'CHIEF_COMPLAINT') {
-    await lockChiefComplaintCueSource(tx, tenant, fact.consultationId);
-  } else if (
+    return true;
+  }
+  if (
     fact.sourceChannel === 'REVIEWED_REPORT_TEXT' &&
     fact.sourceField === 'REVIEWED_EXTRACTION_CANDIDATE' &&
     fact.extractionCandidateId
   ) {
-    await lockF3cReviewedCueSource(tx, tenant, fact.extractionCandidateId);
-  } else if (
-    fact.sourceChannel === 'STRUCTURED_INTAKE' &&
-    isStructuredVitalSourceField(fact.sourceField)
-  ) {
-    await lockStructuredVitalSourceFields(tx, tenant, fact.consultationId, [fact.sourceField]);
-  } else {
-    throw new ValidationError('INPUT_BINDING_INVALID');
+    return true;
   }
+  if (fact.sourceChannel === 'STRUCTURED_INTAKE' && isStructuredVitalSourceField(fact.sourceField)) {
+    return true;
+  }
+  return false;
 }
 
 export class RulesShadowInputService {
@@ -184,20 +178,9 @@ export class RulesShadowInputService {
           return fail('CONTRADICTORY_INPUT');
         }
 
+        const preflightFacts: RulesShadowInputPreflightFact[] = [];
+        const normFingerprintsByFactId = new Map<string, string[]>();
         let projectedNorms = 0;
-        for (const factId of factIds) {
-          const peekNorms = await norms.listActiveByParentFact(tenant, tx, factId);
-          if (peekNorms.length > MAX_RULES_SHADOW_INPUT_NORMS_PER_FACT) {
-            return fail('NORM_PER_FACT_OVERFLOW');
-          }
-          projectedNorms += peekNorms.length;
-          if (projectedNorms > MAX_RULES_SHADOW_INPUT_TOTAL_NORMS) {
-            return fail('TOTAL_NORM_CAP_OVERFLOW');
-          }
-        }
-
-        const envelopes: RulesShadowInputFactEnvelope[] = [];
-        let totalNorms = 0;
 
         for (const factId of factIds) {
           const peek = await facts.findById(tenant, tx, factId);
@@ -207,42 +190,108 @@ export class RulesShadowInputService {
           if (peek.patientId !== consultation.patientId) {
             return fail('INPUT_BINDING_INVALID');
           }
-
-          try {
-            await lockSourceForFact(tenant, tx, peek);
-          } catch (err) {
-            if (err instanceof ValidationError && err.message === 'INPUT_BINDING_INVALID') {
-              return fail('INPUT_BINDING_INVALID');
-            }
-            throw err;
+          if (!isSupportedSourceBinding(peek)) {
+            return fail('INPUT_BINDING_INVALID');
           }
-          await facts.lockIdentity(tx, peek.sourceIdentityFingerprint);
+
+          const peekNorms = await norms.listActiveByParentFact(tenant, tx, factId);
+          if (peekNorms.length > MAX_RULES_SHADOW_INPUT_NORMS_PER_FACT) {
+            return fail('NORM_PER_FACT_OVERFLOW');
+          }
+          projectedNorms += peekNorms.length;
+          if (projectedNorms > MAX_RULES_SHADOW_INPUT_TOTAL_NORMS) {
+            return fail('TOTAL_NORM_CAP_OVERFLOW');
+          }
+
+          preflightFacts.push({
+            id: peek.id,
+            sourceChannel: peek.sourceChannel,
+            sourceField: peek.sourceField,
+            extractionCandidateId: peek.extractionCandidateId,
+            sourceIdentityFingerprint: peek.sourceIdentityFingerprint,
+          });
+          normFingerprintsByFactId.set(
+            factId,
+            peekNorms.map((n) => n.normalizationIdentityFingerprint),
+          );
+        }
+
+        const lockPlan = buildRulesShadowInputLockPlan(
+          consultation.id,
+          preflightFacts,
+          normFingerprintsByFactId,
+        );
+
+        try {
+          await acquireRulesShadowInputLockPlan(tenant, tx, lockPlan, {
+            facts,
+            norms,
+            verifications,
+            acceptances,
+          });
+        } catch (err) {
+          if (err instanceof ValidationError && err.message === 'INPUT_BINDING_INVALID') {
+            return fail('INPUT_BINDING_INVALID');
+          }
+          throw err;
+        }
+
+        const lockedConsultation = await consultations.findById(tenant, tx, consultation.id);
+        if (
+          !lockedConsultation ||
+          lockedConsultation.doctorUserId !== tenant.actorId ||
+          lockedConsultation.patientId !== consultation.patientId
+        ) {
+          return fail('STALE_INPUT');
+        }
+
+        const finalAcceptances = await acceptances.listActiveByConsultation(
+          tenant,
+          tx,
+          lockedConsultation.id,
+        );
+        if (finalAcceptances.length === 0) {
+          return fail('NO_ELIGIBLE_FACTS');
+        }
+        if (finalAcceptances.length > MAX_RULES_SHADOW_INPUT_FACTS) {
+          return fail('FACT_CAP_OVERFLOW');
+        }
+
+        const finalFactIds = [...new Set(finalAcceptances.map((a) => a.factCandidateId))].sort(
+          (a, b) => (a < b ? -1 : a > b ? 1 : 0),
+        );
+        if (finalFactIds.length !== finalAcceptances.length) {
+          return fail('CONTRADICTORY_INPUT');
+        }
+        if (!planMatchesFinalFactIds(lockPlan, finalFactIds)) {
+          return fail('STALE_INPUT');
+        }
+
+        const envelopes: RulesShadowInputFactEnvelope[] = [];
+        let totalNorms = 0;
+
+        for (const factId of finalFactIds) {
           const parent = await facts.findById(tenant, tx, factId);
           if (
             !parent ||
             parent.decisionStatus !== 'ACTIVE' ||
             parent.authorityStatus !== FACT_CANDIDATE_F3D1_AUTHORITY ||
             parent.clinicallyUsed !== false ||
-            parent.consultationId !== consultation.id ||
-            parent.patientId !== consultation.patientId
+            parent.consultationId !== lockedConsultation.id ||
+            parent.patientId !== lockedConsultation.patientId
           ) {
             return fail('STALE_INPUT');
           }
+          if (!isSupportedSourceBinding(parent)) {
+            return fail('INPUT_BINDING_INVALID');
+          }
 
-          const activeNorms = await norms.listActiveByParentFact(tenant, tx, parent.id);
-          if (activeNorms.length > MAX_RULES_SHADOW_INPUT_NORMS_PER_FACT) {
+          const lockedNorms = await norms.listActiveByParentFact(tenant, tx, parent.id);
+          if (lockedNorms.length > MAX_RULES_SHADOW_INPUT_NORMS_PER_FACT) {
             return fail('NORM_PER_FACT_OVERFLOW');
           }
-          if (totalNorms + activeNorms.length > MAX_RULES_SHADOW_INPUT_TOTAL_NORMS) {
+          if (totalNorms + lockedNorms.length > MAX_RULES_SHADOW_INPUT_TOTAL_NORMS) {
             return fail('TOTAL_NORM_CAP_OVERFLOW');
-          }
-          await norms.lockIdentitiesSorted(
-            tx,
-            activeNorms.map((n) => n.normalizationIdentityFingerprint),
-          );
-          const lockedNorms = await norms.listActiveByParentFact(tenant, tx, parent.id);
-          if (lockedNorms.length !== activeNorms.length) {
-            return fail('STALE_INPUT');
           }
           for (const n of lockedNorms) {
             if (
@@ -254,12 +303,21 @@ export class RulesShadowInputService {
               return fail('STALE_INPUT');
             }
           }
-          if (lockedNorms.length > MAX_RULES_SHADOW_INPUT_NORMS_PER_FACT) {
-            return fail('NORM_PER_FACT_OVERFLOW');
+
+          const plannedNorms = normFingerprintsByFactId.get(parent.id) ?? [];
+          const liveNormFingerprints = lockedNorms
+            .map((n) => n.normalizationIdentityFingerprint)
+            .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+          const plannedNormFingerprints = [...plannedNorms].sort((a, b) =>
+            a < b ? -1 : a > b ? 1 : 0,
+          );
+          if (
+            liveNormFingerprints.length !== plannedNormFingerprints.length ||
+            liveNormFingerprints.some((fp, i) => fp !== plannedNormFingerprints[i])
+          ) {
+            return fail('STALE_INPUT');
           }
-          if (totalNorms + lockedNorms.length > MAX_RULES_SHADOW_INPUT_TOTAL_NORMS) {
-            return fail('TOTAL_NORM_CAP_OVERFLOW');
-          }
+
           const liveSnapshot = buildNormalizationSnapshotFingerprint(
             lockedNorms.map((n) => ({
               id: n.id,
@@ -267,7 +325,6 @@ export class RulesShadowInputService {
             })),
           );
 
-          await verifications.lockSubject(tenant, tx, parent.id);
           const verification = await verifications.findActiveByFactId(tenant, tx, parent.id);
           if (
             !verification ||
@@ -297,7 +354,6 @@ export class RulesShadowInputService {
             return fail('INPUT_BINDING_INVALID');
           }
 
-          await acceptances.lockSubject(tenant, tx, parent.id);
           const acceptance = await acceptances.findActiveByFactId(tenant, tx, parent.id);
           if (
             !acceptance ||
@@ -306,8 +362,8 @@ export class RulesShadowInputService {
             acceptance.authorityScope !== FACT_ANALYSIS_ACCEPTANCE_AUTHORITY ||
             acceptance.clinicallyUsed !== false ||
             acceptance.acceptanceContractVersion !== FACT_ANALYSIS_ACCEPTANCE_CONTRACT_VERSION ||
-            acceptance.consultationId !== consultation.id ||
-            acceptance.patientId !== consultation.patientId ||
+            acceptance.consultationId !== lockedConsultation.id ||
+            acceptance.patientId !== lockedConsultation.patientId ||
             acceptance.factCandidateId !== parent.id
           ) {
             return fail('STALE_INPUT');
@@ -404,7 +460,7 @@ export class RulesShadowInputService {
           byContent.set(envFact.sourceContentFingerprint, envFact);
         }
 
-        const patientId = consultation.patientId;
+        const patientId = lockedConsultation.patientId;
         for (const envFact of envelopes) {
           for (const field of [
             envFact.sourceChannel,
@@ -436,8 +492,8 @@ export class RulesShadowInputService {
           organizationId: tenant.organizationId,
           clinicId: tenant.clinicId,
           patientId,
-          consultationId: consultation.id,
-          treatingDoctorId: consultation.doctorUserId,
+          consultationId: lockedConsultation.id,
+          treatingDoctorId: lockedConsultation.doctorUserId,
           createdFromContractVersion: RULES_SHADOW_INPUT_CREATED_FROM_CONTRACT_VERSION,
           limitationCodes: envelopeLimitations,
           facts: envelopes,
