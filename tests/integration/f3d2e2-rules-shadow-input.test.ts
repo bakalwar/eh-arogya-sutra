@@ -578,8 +578,8 @@ describe('F3D-2E2 rules-shadow-input builder (isolated PG)', () => {
       path.resolve(process.cwd(), 'packages/database/src/services/rulesShadowInputService.ts'),
       'utf8',
     );
-    expect(service).toMatch(/parent\.patientId !== consultation\.patientId/);
-    expect(service).toMatch(/acceptance\.patientId !== consultation\.patientId/);
+    expect(service).toMatch(/parent\.patientId !== lockedConsultation\.patientId/);
+    expect(service).toMatch(/acceptance\.patientId !== lockedConsultation\.patientId/);
   });
 
   it('12 zero eligible facts → NO_ELIGIBLE_FACTS', async () => {
