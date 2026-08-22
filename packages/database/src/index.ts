@@ -226,6 +226,19 @@ export {
   buildNormalizationSnapshotFingerprint as buildFactAnalysisAcceptanceSnapshotFingerprint,
   EMPTY_FACT_ANALYSIS_ACCEPTANCE_SNAPSHOT_FINGERPRINT,
 } from './factAnalysisAcceptanceSnapshot.js';
+export {
+  RulesShadowInputService,
+  rulesShadowInputService,
+  buildRulesShadowInput,
+  RULES_SHADOW_INPUT_OPERATION,
+} from './services/rulesShadowInputService.js';
+export type { BuildRulesShadowInputArgs } from './services/rulesShadowInputService.js';
+export {
+  buildRulesShadowInputFingerprint,
+  compareRulesShadowFactOrder,
+  compareRulesShadowNormOrder,
+  assertRulesShadowInputNfcString,
+} from './rulesShadowInputCanonical.js';
 export { PgConsultationIntakeRepository } from './repositories/consultationIntake.js';
 export type {
   ConsultationIntakeBundle,

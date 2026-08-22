@@ -170,6 +170,22 @@ export class PgFactAnalysisAcceptanceRepository {
     return r.rows[0] ? mapEvent(r.rows[0] as Record<string, unknown>) : null;
   }
 
+  /** Read-only: ACTIVE E1 acceptances for a consultation (deterministic id order). */
+  async listActiveByConsultation(
+    tenant: TenantContext,
+    tx: TransactionContext,
+    consultationId: string,
+  ): Promise<FactAnalysisAcceptanceEventDto[]> {
+    const r = await tx.query(
+      `SELECT * FROM clinical_fact_analysis_acceptance_events
+       WHERE organization_id = $1 AND clinic_id = $2 AND consultation_id = $3
+         AND decision_status = 'ACTIVE'
+       ORDER BY fact_candidate_id ASC, id ASC`,
+      [tenant.organizationId, tenant.clinicId, consultationId],
+    );
+    return (r.rows as Record<string, unknown>[]).map(mapEvent);
+  }
+
   async listSnapshotByEventId(
     tenant: TenantContext,
     tx: TransactionContext,
