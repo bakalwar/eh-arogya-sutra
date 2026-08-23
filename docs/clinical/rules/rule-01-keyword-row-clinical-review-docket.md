@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|--------|
-| **Authority** | Owner row review — **Bilious 8 + Sanguine 10 + Lymphatic 11 approved** (29/37); Nervous pending |
+| **Authority** | Owner row review — **all 37 legacy keyword rows owner-approved** (Bilious 8 + Sanguine 10 + Lymphatic 11 + Nervous 8) |
 | **Legacy source** | `bakalwar/eh-arogya-sutra` @ `b9ec3f6986c402afee13241673b954fe3564f169` |
 | **Legacy symbol** | `PRAKRITI_KEYWORDS` in `eh-api/core/clinical_engines.py` |
 | **Row count** | **37** (verified) |
@@ -10,7 +10,7 @@
 | **Verified legacy weight (Rule 1 path)** | **+2** per hit in `detect_prakriti` — see [rule-01-legacy-scoring-evidence-resolution.md](./rule-01-legacy-scoring-evidence-resolution.md) |
 | **Runtime activation** | **NONE** |
 
-Owner decision columns: **Bilious Batch 1 (8) + Sanguine Batch 2 (10) + Lymphatic Batch 3 (11) owner-approved** — see [rule-01-bilious-batch1-owner-approval-freeze.md](./rule-01-bilious-batch1-owner-approval-freeze.md) · [rule-01-sanguine-batch2-owner-approval-freeze.md](./rule-01-sanguine-batch2-owner-approval-freeze.md) · [rule-01-lymphatic-batch3-owner-approval-freeze.md](./rule-01-lymphatic-batch3-owner-approval-freeze.md). **8 rows remain blank** (Nervous). Allowed owner actions when reviewing remaining batches: `APPROVE` · `APPROVE_AFTER_NORMALIZATION` · `MODIFY` · `MOVE_TO_R2` · `MOVE_TO_R3` · `CONTEXT_ONLY` · `REJECT` · `QUARANTINE` · `SPLIT`.
+Owner decision columns: **Bilious Batch 1 (8) + Sanguine Batch 2 (10) + Lymphatic Batch 3 (11) + Nervous Batch 4 (8) owner-approved** — see [rule-01-bilious-batch1-owner-approval-freeze.md](./rule-01-bilious-batch1-owner-approval-freeze.md) · [rule-01-sanguine-batch2-owner-approval-freeze.md](./rule-01-sanguine-batch2-owner-approval-freeze.md) · [rule-01-lymphatic-batch3-owner-approval-freeze.md](./rule-01-lymphatic-batch3-owner-approval-freeze.md) · [rule-01-nervous-batch4-owner-approval-freeze.md](./rule-01-nervous-batch4-owner-approval-freeze.md). **0 rows remain blank.** Documentation approval is **not** runtime activation.
 
 ---
 
@@ -79,7 +79,7 @@ Owner decision columns: **Bilious Batch 1 (8) + Sanguine Batch 2 (10) + Lymphati
 | R1-KW-0026 | shooting | Pain descriptor |
 | R1-KW-0027 | tingling | Paresthesia sign |
 
-**Status:** Prepared for owner review — **0 approved**.
+**Status:** **Owner approved** — see [rule-01-nervous-batch4-owner-approval-freeze.md](./rule-01-nervous-batch4-owner-approval-freeze.md) · token `OWNER-FREEZE-R1-NERVOUS-BATCH4-v1` · all eight raw weights **0**
 
 ### Batch 5 — Conflicts and missing coverage
 
@@ -91,7 +91,7 @@ Owner decision columns: **Bilious Batch 1 (8) + Sanguine Batch 2 (10) + Lymphati
 | Mixed temperament handling | Governed by R1-OD-03 — percentage model pending row weights |
 | Unmapped-feature process | `UNMAPPED_FEATURE` fail-closed per completeness contract below |
 
-**Status:** Documented — Bilious/Sanguine/Lymphatic batches owner-approved; **Nervous Batch 4 pending**.
+**Status:** Documented — all four temperament keyword batches owner-approved at documentation level; coverage gaps remain for later owner/evidence review.
 
 ---
 
@@ -118,11 +118,12 @@ Owner decision columns: **Bilious Batch 1 (8) + Sanguine Batch 2 (10) + Lymphati
 | Bilious rows owner-approved | **8** (`R1-KW-0001` … `R1-KW-0008`) |
 | Sanguine rows owner-approved | **10** (`R1-KW-0028` … `R1-KW-0037`; raw weights **0**) |
 | Lymphatic rows owner-approved | **11** (`R1-KW-0009` … `R1-KW-0019`; raw weights **0**) |
-| Remaining rows unapproved | **8** (Nervous) |
+| Nervous rows owner-approved | **8** (`R1-KW-0020` … `R1-KW-0027`; raw weights **0**) |
+| Remaining rows unapproved | **0** |
 | Unique row IDs | **37** (`R1-KW-0001` … `R1-KW-0037`) |
 | Legacy keyword parity | Matches verified `PRAKRITI_KEYWORDS` @ `b9ec3f6` |
 | `verified_legacy_weight` | Preserved separately (forensic **2** on all legacy rows) |
-| `owner_approved_weight` | Populated on **29** approved rows (Bilious + Sanguine + Lymphatic) |
+| `owner_approved_weight` | Populated on **37** approved rows (all batches; many raw weights are **0**) |
 
 ---
 
@@ -140,5 +141,6 @@ Owner decision columns: **Bilious Batch 1 (8) + Sanguine Batch 2 (10) + Lymphati
 - `RULE1_BILIOUS_BATCH1_OWNER_APPROVED_DOCUMENTATION_ONLY`
 - `RULE1_SANGUINE_BATCH2_OWNER_APPROVED_DOCUMENTATION_ONLY`
 - `RULE1_LYMPHATIC_BATCH3_OWNER_APPROVED_DOCUMENTATION_ONLY`
-- `RULE1_ROW_OWNER_DECISIONS_29_OF_37`
+- `RULE1_NERVOUS_BATCH4_OWNER_APPROVED_DOCUMENTATION_ONLY`
+- `RULE1_ROW_OWNER_DECISIONS_37_OF_37`
 - `RULE1_CLINICAL_ACTIVATION_NONE`
