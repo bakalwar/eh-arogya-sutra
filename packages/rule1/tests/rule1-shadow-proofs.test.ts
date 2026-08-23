@@ -1,485 +1,544 @@
-import { readFileSync, readdirSync } from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { createHash } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import {
-  RULE1_FAILURE_CODES,
-  RULE1_INPUT_CONTRACT_VERSION,
-  RULE1_INPUT_KEY_ORDER,
-  RULE1_ORCHESTRATION_STATUS,
-  RULE1_OUTCOMES,
-  RULE1_OUTPUT_CONTRACT_VERSION,
-  RULE1_OUTPUT_KEY_ORDER,
-  RULE1_PRESCRIPTION_EFFECT,
+  RULE1_FORBIDDEN_OUTPUT_TOKENS,
+  RULE1_OWNER_APPROVED_FEATURE_CATALOG,
+  RULE1_PRIMARY_TEMPERAMENTS,
   RULE1_PRODUCTION_MAPPING_REGISTRY,
-  RULE1_RULE_IDENTITY,
-  RULE1_RULE_NUMBER,
-  RULE1_RUNTIME_STATUS,
-  RULE1_NOT_CLINICALLY_ACTIVATED_PRESCRIPTION,
-  RULE1_SYNTHETIC_TEST_CLASSIFICATION,
-  RULE1_TEMPERAMENT_TOKENS,
-  Rule1EvaluationError,
+  RULE1_REPRESENTATION_ORDER,
+  computeCatalogFingerprint,
+  computeHamiltonPercentages,
+  countCatalogByTemperament,
   evaluateRule1Shadow,
-  type Rule1TemperamentEvidenceEntry,
-} from '../src/index.ts';
+  sumPercentages,
+  type Rule1Input,
+  type Rule1ScoreMap,
+  Rule1EvaluationError,
+} from '../src/index.js';
+import { RULE1_INPUT_SCHEMA_VERSION, RULE1_RULE_CONTRACT_VERSION } from '../src/version.js';
 
-const PKG_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-
-function baseEntry(
-  over: Partial<Rule1TemperamentEvidenceEntry> &
-    Pick<Rule1TemperamentEvidenceEntry, 'entryId' | 'temperamentToken'>,
-): Rule1TemperamentEvidenceEntry {
+function baseInput(over: Partial<Rule1Input> & { evidence: Rule1Input['evidence'] }): Rule1Input {
   return {
-    evidenceKind: 'SYMPTOM_OR_OBSERVATION',
-    supportUnits: 1,
-    contradictionMarkers: [],
-    evidenceSourceId: 'EVID_SYN_R1_1',
-    evidenceValidationStatus: 'validated',
-    ownerClinicalApprovalStatus: 'approved',
-    version: 'entry-v1',
-    effectiveStatus: 'APPROVED_AND_ACTIVE',
-    supersessionMetadata: null,
-    testClassification: RULE1_SYNTHETIC_TEST_CLASSIFICATION,
-    biliousSecondaryRequired: false,
+    inputSchemaVersion: RULE1_INPUT_SCHEMA_VERSION,
+    ruleContractVersion: RULE1_RULE_CONTRACT_VERSION,
+    consultationId: 'consult-1',
+    episodeId: 'episode-1',
     ...over,
   };
 }
 
-function baseInput(over: Record<string, unknown> = {}): Record<string, unknown> {
-  const base: Record<string, unknown> = {
-    contractVersion: RULE1_INPUT_CONTRACT_VERSION,
-    requestId: 'CASE_SYN_R1_001',
-    caseTemperamentEvidenceRegistry: {
-      registryVersion: 'reg-r1-v1',
-      entries: [
-        baseEntry({
-          entryId: 'R1MAP_SYN_1',
-          temperamentToken: 'SANGUINE',
-        }),
-      ],
-    },
-    doctorSuppliedEvidenceItems: [
-      { itemId: 'EVID_SYN_ITEM_1', evidenceClass: 'DOCTOR_RECORDED_SYMPTOM' },
-    ],
-    bloodPressureEvidence: { status: 'NOT_SUPPLIED' },
-    photoEvidenceRef: { status: 'NOT_SUPPLIED' },
-    bloodLymphAxisContext: { status: 'NOT_SUPPLIED' },
-    rule8ComparisonRef: { status: 'NOT_SUPPLIED' },
-    evidenceDataVersions: {
-      evidenceDataVersion: 'ev-v1',
-      temperamentRegistryVersion: 'reg-r1-v1',
-      contractVersion: RULE1_INPUT_CONTRACT_VERSION,
-      governanceVersion: 'gov-v1',
-    },
-    upstreamApplicability: { status: 'APPLICABLE', notes: [] },
+function ev(
+  conceptId: string,
+  fp: string,
+  extra?: Partial<{
+    temporalPosture: 'CURRENT' | 'HISTORICAL';
+    negationPosture: 'ASSERTED' | 'NEGATED';
+    acceptancePosture: 'ACCEPTED' | 'UNACCEPTED';
+  }>,
+) {
+  return {
+    conceptId,
+    sourceFactFingerprint: fp,
+    temporalPosture: extra?.temporalPosture ?? 'CURRENT',
+    negationPosture: extra?.negationPosture ?? 'ASSERTED',
+    acceptancePosture: extra?.acceptancePosture ?? 'ACCEPTED',
   };
-  return { ...base, ...over };
 }
 
-function expectFail(fn: () => void, code: (typeof RULE1_FAILURE_CODES)[number]): void {
-  try {
-    fn();
-    expect.fail('expected Rule1EvaluationError');
-  } catch (e) {
-    expect(e).toBeInstanceOf(Rule1EvaluationError);
-    const err = e as Rule1EvaluationError;
-    expect(err.failureCode).toBe(code);
-    expect(err.message).toBe(code);
-  }
-}
-
-function outputKeys(out: Record<string, unknown>): string[] {
-  return Object.keys(out);
-}
-
-describe('Rule 1 Temperament Engine shadow proofs P01–P18', () => {
-  it('P01 strict input schema and unknown keys', () => {
-    expectFail(() => evaluateRule1Shadow({ ...baseInput(), extra: 1 }), 'INVALID_INPUT');
-    expectFail(() => evaluateRule1Shadow('x'), 'INVALID_INPUT');
-    expect(RULE1_INPUT_KEY_ORDER).toHaveLength(10);
-    expect(RULE1_OUTPUT_KEY_ORDER).toHaveLength(20);
-  });
-
-  it('P02 empty production registry / mappings 0', () => {
-    expect(RULE1_PRODUCTION_MAPPING_REGISTRY.entries).toEqual([]);
-    expect(RULE1_PRODUCTION_MAPPING_REGISTRY.activeRealMappingCount).toBe(0);
-    expect(Object.isFrozen(RULE1_PRODUCTION_MAPPING_REGISTRY)).toBe(true);
-  });
-
-  it('P03 no evidence → UNKNOWN + ADDITIONAL_INFORMATION_REQUIRED', () => {
-    const out = evaluateRule1Shadow(
-      baseInput({
-        caseTemperamentEvidenceRegistry: { registryVersion: 'reg-r1-v1', entries: [] },
-        doctorSuppliedEvidenceItems: [],
-      }),
-    );
-    expect(out.status).toBe('ADDITIONAL_INFORMATION_REQUIRED');
-    expect(out.primaryTemperament).toBe('UNKNOWN');
-    expect(out.resolutionState).toBe('ADDITIONAL_INFORMATION_REQUIRED');
-  });
-
-  it('P04 no default LYMPHATIC / MIXED / Balanced on empty', () => {
-    const out = evaluateRule1Shadow(
-      baseInput({
-        caseTemperamentEvidenceRegistry: { registryVersion: 'reg-r1-v1', entries: [] },
-        doctorSuppliedEvidenceItems: [],
-      }),
-    );
-    expect(out.primaryTemperament).not.toBe('LYMPHATIC');
-    expect(out.primaryTemperament).not.toBe('MIXED');
-    expect(out.primaryTemperament).toBe('UNKNOWN');
-  });
-
-  it('P05 BP alone and photo alone insufficient', () => {
-    const bpAlone = evaluateRule1Shadow(
-      baseInput({
-        caseTemperamentEvidenceRegistry: { registryVersion: 'reg-r1-v1', entries: [] },
-        doctorSuppliedEvidenceItems: [],
-        bloodPressureEvidence: { status: 'SUPPLIED', systolicMmHg: 150, unit: 'mmHg' },
-      }),
-    );
-    expect(bpAlone.status).toBe('ADDITIONAL_INFORMATION_REQUIRED');
-    expect(bpAlone.primaryTemperament).toBe('UNKNOWN');
-
-    const photoAlone = evaluateRule1Shadow(
-      baseInput({
-        caseTemperamentEvidenceRegistry: { registryVersion: 'reg-r1-v1', entries: [] },
-        doctorSuppliedEvidenceItems: [],
-        photoEvidenceRef: { status: 'SUPPLIED', mediaRefId: 'MEDIA_SYN_1' },
-      }),
-    );
-    expect(photoAlone.status).toBe('ADDITIONAL_INFORMATION_REQUIRED');
-    expect(photoAlone.primaryTemperament).toBe('UNKNOWN');
-  });
-
-  it('P06 Q3 evidence lifecycle non-activating classes respected', () => {
-    const out = evaluateRule1Shadow(
-      baseInput({
-        caseTemperamentEvidenceRegistry: {
-          registryVersion: 'reg-r1-v1',
-          entries: [
-            baseEntry({
-              entryId: 'R1MAP_SYN_STALE',
-              temperamentToken: 'NERVOUS',
-              effectiveStatus: 'STALE',
-            }),
-          ],
-        },
-      }),
-    );
-    expect(out.status).toBe('UNRESOLVED_EVIDENCE');
-    expect(out.primaryTemperament).toBeNull();
-  });
-
-  it('P07 exact tie → UNRESOLVED_TIE; Q3G no question bank', () => {
-    const out = evaluateRule1Shadow(
-      baseInput({
-        caseTemperamentEvidenceRegistry: {
-          registryVersion: 'reg-r1-v1',
-          entries: [
-            baseEntry({ entryId: 'R1MAP_SYN_A', temperamentToken: 'SANGUINE', supportUnits: 2 }),
-            baseEntry({
-              entryId: 'R1MAP_SYN_B',
-              temperamentToken: 'NERVOUS',
-              supportUnits: 2,
-              evidenceSourceId: 'EVID_SYN_R1_2',
-            }),
-          ],
-        },
-      }),
-    );
-    expect(out.status).toBe('UNRESOLVED_TIE');
-    expect(out.resolutionState).toBe('UNRESOLVED_TIE');
-    expect(out.primaryTemperament).toBeNull();
-    expect(out.mixedComponents).toEqual(['NERVOUS', 'SANGUINE']);
-    expect(out.reasonCodes).toContain('R1_NO_QUESTION_BANK');
-  });
-
-  it('P08 Bilious unresolved secondary fail-closed', () => {
-    const out = evaluateRule1Shadow(
-      baseInput({
-        caseTemperamentEvidenceRegistry: {
-          registryVersion: 'reg-r1-v1',
-          entries: [
-            baseEntry({
-              entryId: 'R1MAP_SYN_BIL',
-              temperamentToken: 'BILIOUS_HEPATIC',
-              biliousSecondaryRequired: true,
-            }),
-          ],
-        },
-      }),
-    );
-    expect(out.status).toBe('UNRESOLVED_EVIDENCE');
-    expect(out.primaryTemperament).toBeNull();
-    expect(out.blockersOrUnresolvedEvidence).toContain('R1_BILIOUS_SECONDARY_UNRESOLVED');
-  });
-
-  it('P09 Rule 8 separation — no overwrite / silent merge', () => {
-    const out = evaluateRule1Shadow(
-      baseInput({
-        rule8ComparisonRef: {
-          status: 'CONSISTENT',
-          refId: 'R8REF_SYN_1',
-          version: 'r8-v1',
-        },
-      }),
-    );
-    expect(out.status).toBe('SHADOW_TEMPERAMENT_INDICATION_PROPOSED');
-    expect(out.rule8ComparisonState).toBe('CONSISTENT');
-    expect(out.primaryTemperament).toBe('SANGUINE');
-    expect(Object.prototype.hasOwnProperty.call(out, 'prakriti')).toBe(false);
-  });
-
-  it('P10 Rule 8 CONFLICT → BLOCKED_BY_RULE8_CONTRADICTION', () => {
-    const out = evaluateRule1Shadow(
-      baseInput({
-        rule8ComparisonRef: {
-          status: 'CONFLICT',
-          refId: 'R8REF_SYN_CONFLICT',
-          version: 'r8-v1',
-        },
-      }),
-    );
-    expect(out.status).toBe('BLOCKED_BY_RULE8_CONTRADICTION');
-    expect(out.primaryTemperament).toBeNull();
-  });
-
-  it('P11 no medicine / formula / Rx fields', () => {
-    const out = evaluateRule1Shadow(baseInput()) as unknown as Record<string, unknown>;
-    for (const k of [
-      'medicineId',
-      'formulaId',
-      'potency',
-      'dosage',
-      'electricity',
-      'tabletA',
-      'mixtureCount',
-      'prescription',
-    ]) {
-      expect(out[k]).toBeUndefined();
-    }
-  });
-
-  it('P12 medicine influence / activation / Rx NONE; shadowOnly true', () => {
-    const out = evaluateRule1Shadow(baseInput());
-    expect(out.shadowOnly).toBe(true);
-    expect(out.medicineSelectionInfluence).toBe('NONE');
-    expect(out.clinicalActivation).toBe('NONE');
-    expect(out.prescriptionEffect).toBe('NONE');
-  });
-
-  it('P13 input non-mutation', () => {
-    const input = baseInput();
-    const snap = JSON.stringify(input);
-    evaluateRule1Shadow(input);
-    expect(JSON.stringify(input)).toBe(snap);
-  });
-
-  it('P14 deep-freeze output', () => {
-    const out = evaluateRule1Shadow(baseInput());
-    expect(Object.isFrozen(out)).toBe(true);
-    expect(Object.isFrozen(out.reasonCodes)).toBe(true);
-    expect(() => {
-      (out as { status: string }).status = 'NOT_EVALUABLE';
-    }).toThrow();
-  });
-
-  it('P15 deterministic key order / fingerprint', () => {
-    const a = evaluateRule1Shadow(baseInput());
-    const b = evaluateRule1Shadow(baseInput());
-    expect(outputKeys(a as unknown as Record<string, unknown>)).toEqual([
-      ...RULE1_OUTPUT_KEY_ORDER,
+describe('Rule1 v1 identity and catalog', () => {
+  it('canonical four tokens and representation order', () => {
+    expect([...RULE1_PRIMARY_TEMPERAMENTS]).toEqual([
+      'BILIOUS',
+      'SANGUINE',
+      'LYMPHATIC',
+      'NERVOUS',
     ]);
-    expect(a.deterministicFingerprint).toBe(b.deterministicFingerprint);
-    expect(a.contractVersion).toBe(RULE1_OUTPUT_CONTRACT_VERSION);
+    expect([...RULE1_REPRESENTATION_ORDER]).toEqual([
+      'BILIOUS',
+      'SANGUINE',
+      'LYMPHATIC',
+      'NERVOUS',
+    ]);
+    expect(RULE1_FORBIDDEN_OUTPUT_TOKENS).toContain('BILIOUS_HEPATIC');
+    expect(RULE1_FORBIDDEN_OUTPUT_TOKENS).toContain('UNRESOLVED_TIE');
   });
 
-  it('P16 fixed errors / closed vocabularies', () => {
-    expectFail(
-      () => evaluateRule1Shadow(baseInput({ contractVersion: 'wrong' })),
-      'UNSUPPORTED_CONTRACT_VERSION',
-    );
-    expect(RULE1_OUTCOMES).toHaveLength(7);
-    expect(RULE1_FAILURE_CODES).toHaveLength(5);
-    expect(RULE1_TEMPERAMENT_TOKENS).toHaveLength(6);
+  it('catalog counts and pinned fingerprint', () => {
+    const counts = countCatalogByTemperament();
+    expect(counts).toEqual({ BILIOUS: 4, SANGUINE: 8, LYMPHATIC: 9, NERVOUS: 5 });
+    expect(RULE1_OWNER_APPROVED_FEATURE_CATALOG).toHaveLength(26);
+    expect(RULE1_PRODUCTION_MAPPING_REGISTRY.activeRealMappingCount).toBe(0);
+    const fp = computeCatalogFingerprint();
+    expect(fp).toBe('b1eacac787cf533a5260259a98a0fd2472bc557d49e014e96aa95ea936d05879');
+    expect(computeCatalogFingerprint()).toBe(fp);
   });
 
-  it('P17 PHI / protected-path / raw image rejection', () => {
-    expectFail(() => evaluateRule1Shadow(baseInput({ patientName: 'x' })), 'INVALID_INPUT');
-    expectFail(
-      () =>
-        evaluateRule1Shadow(
-          baseInput({
-            photoEvidenceRef: { status: 'SUPPLIED', mediaRefId: 'C:/secrets/img.png' },
-          }),
-        ),
-      'INVALID_INPUT',
-    );
-  });
-
-  it('P18 no orchestration / runtime wiring; package invariants', () => {
-    expect(RULE1_ORCHESTRATION_STATUS).toBe('NOT_CONNECTED');
-    expect(RULE1_RUNTIME_STATUS).toBe('NOT_CONNECTED');
-    expect(RULE1_PRESCRIPTION_EFFECT).toBe('NONE');
-    expect(RULE1_NOT_CLINICALLY_ACTIVATED_PRESCRIPTION).toBe(true);
-    expect(RULE1_RULE_NUMBER).toBe(1);
-    expect(RULE1_RULE_IDENTITY).toBe('TEMPERAMENT_ENGINE');
-    const srcFiles = readdirSync(path.join(PKG_ROOT, 'src'));
-    const blob = srcFiles
-      .map((f) => readFileSync(path.join(PKG_ROOT, 'src', f), 'utf8'))
-      .join('\n');
-    expect(blob).not.toMatch(/analyzeComplete|ORCHESTRATION_CONNECT|fs\.readFile|fetch\(/);
+  it('Nervous features are exactly five weight-2', () => {
+    const n = RULE1_OWNER_APPROVED_FEATURE_CATALOG.filter((c) => c.temperament === 'NERVOUS');
+    expect(n).toHaveLength(5);
+    expect(n.every((c) => c.weight === 2)).toBe(true);
   });
 });
 
-describe('Rule 1 focused regressions', () => {
-  it('Proxy / getter rejection', () => {
-    const proxy = new Proxy(baseInput(), {
-      get(t, p, r) {
-        return Reflect.get(t, p, r);
-      },
-    });
-    expectFail(() => evaluateRule1Shadow(proxy), 'INVALID_INPUT');
-
-    const withGetter = baseInput();
-    Object.defineProperty(withGetter, 'requestId', {
-      get() {
-        return 'CASE_SYN_BAD';
-      },
-      enumerable: true,
-    });
-    expectFail(() => evaluateRule1Shadow(withGetter), 'INVALID_INPUT');
-  });
-
-  it('sparse array / cycle / symbol rejection', () => {
-    const sparse = baseInput();
-    const arr: unknown[] = [];
-    arr[1] = { itemId: 'EVID_SYN_X', evidenceClass: 'DOCTOR_RECORDED_SYMPTOM' };
-    sparse.doctorSuppliedEvidenceItems = arr;
-    expectFail(() => evaluateRule1Shadow(sparse), 'INVALID_INPUT');
-
-    const cyclic: Record<string, unknown> = baseInput();
-    (cyclic as { self?: unknown }).self = cyclic;
-    // cycle via unknown key already fails key count; build cycle inside notes
-    const c2 = baseInput({
-      upstreamApplicability: { status: 'APPLICABLE', notes: [] },
-    });
-    const node: Record<string, unknown> = { a: 1 };
-    node.b = node;
-    // notes must be strings — invalid type / cycle
-    (c2.upstreamApplicability as { notes: unknown }).notes = [node];
-    expectFail(() => evaluateRule1Shadow(c2), 'INVALID_INPUT');
-
-    const sym = baseInput();
-    Object.defineProperty(sym, Symbol('x'), { value: 1, enumerable: true });
-    // symbols on own keys fail accessors/symbol check during assertNoAccessors
-    expectFail(() => evaluateRule1Shadow(sym), 'INVALID_INPUT');
-  });
-
-  it('duplicate evidence IDs / unsupported version / unknown nested keys', () => {
-    expectFail(
-      () =>
-        evaluateRule1Shadow(
-          baseInput({
-            caseTemperamentEvidenceRegistry: {
-              registryVersion: 'reg-r1-v1',
-              entries: [
-                baseEntry({ entryId: 'R1MAP_SYN_DUP', temperamentToken: 'SANGUINE' }),
-                baseEntry({ entryId: 'R1MAP_SYN_DUP', temperamentToken: 'NERVOUS' }),
-              ],
-            },
-          }),
-        ),
-      'INVALID_EVIDENCE_REGISTRY',
-    );
-    expectFail(
-      () => evaluateRule1Shadow(baseInput({ contractVersion: 'ehas2-rule1-input-v0' })),
-      'UNSUPPORTED_CONTRACT_VERSION',
-    );
-  });
-
-  it('BP boundary values and order independence on equal scores', () => {
-    const withBp = evaluateRule1Shadow(
-      baseInput({
-        bloodPressureEvidence: { status: 'SUPPLIED', systolicMmHg: 140, unit: 'mmHg' },
+describe('Rule1 v1 closed input', () => {
+  it('rejects unknown keys and raw text', () => {
+    expect(() =>
+      evaluateRule1Shadow({
+        ...baseInput({ evidence: [] }),
+        rawText: 'x',
       }),
-    );
-    expect(withBp.status).toBe('SHADOW_TEMPERAMENT_INDICATION_PROPOSED');
-    expect(withBp.primaryTemperament).toBe('SANGUINE');
-
-    const lymphBp = evaluateRule1Shadow(
-      baseInput({
-        caseTemperamentEvidenceRegistry: {
-          registryVersion: 'reg-r1-v1',
-          entries: [
-            baseEntry({ entryId: 'R1MAP_SYN_L', temperamentToken: 'LYMPHATIC', supportUnits: 1 }),
-          ],
-        },
-        bloodPressureEvidence: { status: 'SUPPLIED', systolicMmHg: 99, unit: 'mmHg' },
+    ).toThrow(Rule1EvaluationError);
+    expect(() =>
+      evaluateRule1Shadow({
+        ...baseInput({ evidence: [] }),
+        weight: 2,
       }),
-    );
-    expect(lymphBp.primaryTemperament).toBe('LYMPHATIC');
-
-    const orderA = evaluateRule1Shadow(
-      baseInput({
-        caseTemperamentEvidenceRegistry: {
-          registryVersion: 'reg-r1-v1',
-          entries: [
-            baseEntry({ entryId: 'R1MAP_SYN_Z', temperamentToken: 'NERVOUS', supportUnits: 1 }),
-            baseEntry({
-              entryId: 'R1MAP_SYN_Y',
-              temperamentToken: 'SANGUINE',
-              supportUnits: 1,
-              evidenceSourceId: 'EVID_SYN_R1_2',
-            }),
-          ],
-        },
-      }),
-    );
-    const orderB = evaluateRule1Shadow(
-      baseInput({
-        caseTemperamentEvidenceRegistry: {
-          registryVersion: 'reg-r1-v1',
-          entries: [
-            baseEntry({
-              entryId: 'R1MAP_SYN_Y',
-              temperamentToken: 'SANGUINE',
-              supportUnits: 1,
-              evidenceSourceId: 'EVID_SYN_R1_2',
-            }),
-            baseEntry({ entryId: 'R1MAP_SYN_Z', temperamentToken: 'NERVOUS', supportUnits: 1 }),
-          ],
-        },
-      }),
-    );
-    expect(orderA.status).toBe('UNRESOLVED_TIE');
-    expect(orderB.status).toBe('UNRESOLVED_TIE');
-    expect(orderA.mixedComponents).toEqual(orderB.mixedComponents);
+    ).toThrow(Rule1EvaluationError);
   });
 
-  it('post-evaluation caller mutation cannot alter output; export surface', () => {
-    const input = baseInput();
-    const out = evaluateRule1Shadow(input);
-    (
-      (input.caseTemperamentEvidenceRegistry as { entries: Rule1TemperamentEvidenceEntry[] })
-        .entries as Rule1TemperamentEvidenceEntry[]
-    ).push(baseEntry({ entryId: 'R1MAP_SYN_MUT', temperamentToken: 'NERVOUS' }));
-    expect(out.primaryTemperament).toBe('SANGUINE');
-    expect(() => {
-      (out.reasonCodes as string[]).push('x');
-    }).toThrow();
-    expect(() => {
-      (out as { medicineSelectionInfluence: string }).medicineSelectionInfluence = 'RANK';
-    }).toThrow();
+  it('rejects unknown concept and malformed fingerprint', () => {
+    expect(() =>
+      evaluateRule1Shadow(
+        baseInput({
+          evidence: [ev('NOT_A_REAL_CONCEPT', 'fp1')],
+        }),
+      ),
+    ).toThrow(/unknown conceptId|UNKNOWN_CONCEPT/);
+    expect(() =>
+      evaluateRule1Shadow(
+        baseInput({
+          evidence: [ev('R1_FEAT_NERVOUS_CURRENT_ANXIETY', 'bad fp with spaces')],
+        }),
+      ),
+    ).toThrow(Rule1EvaluationError);
   });
 
-  it('NOT_APPLICABLE upstream', () => {
+  it('treats numeric zero BP as supplied value (not absent)', () => {
     const out = evaluateRule1Shadow(
       baseInput({
-        upstreamApplicability: { status: 'NOT_APPLICABLE', notes: ['n/a'] },
+        evidence: [
+          ev('R1_FEAT_LYMPHATIC_CURRENT_CONSTIPATION', 'c1'),
+          ev('R1_FEAT_LYMPHATIC_SUBJECTIVE_COLD_TENDENCY', 'c2'),
+        ],
+        structuredVitals: {
+          systolicBpMmHg: { value: 0, unit: 'mmHg', validationPosture: 'VALIDATED' },
+        },
       }),
     );
-    expect(out.status).toBe('NOT_APPLICABLE');
+    expect(out.status).not.toBe('RULE1_INPUT_REJECTED');
+    expect(out.scores.LYMPHATIC).toBeGreaterThan(0);
+  });
+});
+
+describe('Rule1 v1 dedupe', () => {
+  it('same concept / fingerprint does not multiply', () => {
+    const out = evaluateRule1Shadow(
+      baseInput({
+        evidence: [
+          ev('R1_FEAT_NERVOUS_CURRENT_ANXIETY', 'fpA'),
+          ev('R1_FEAT_NERVOUS_CURRENT_ANXIETY', 'fpA'),
+          ev('R1_FEAT_NERVOUS_CURRENT_RESTLESSNESS', 'fpB'),
+        ],
+      }),
+    );
+    expect(out.scores.NERVOUS).toBe(4);
+    expect(out.acceptedContributions).toHaveLength(2);
+  });
+
+  it('same fingerprint across distinct concepts fails closed', () => {
+    expect(() =>
+      evaluateRule1Shadow(
+        baseInput({
+          evidence: [
+            ev('R1_FEAT_NERVOUS_CURRENT_ANXIETY', 'same'),
+            ev('R1_FEAT_NERVOUS_CURRENT_RESTLESSNESS', 'same'),
+          ],
+        }),
+      ),
+    ).toThrow(Rule1EvaluationError);
+  });
+
+  it('input ordering does not change output', () => {
+    const a = evaluateRule1Shadow(
+      baseInput({
+        evidence: [
+          ev('R1_FEAT_BILIOUS_GASTRIC_HYPERACIDITY', 'b1'),
+          ev('R1_FEAT_SANGUINE_PALPITATION', 's1'),
+        ],
+      }),
+    );
+    const b = evaluateRule1Shadow(
+      baseInput({
+        evidence: [
+          ev('R1_FEAT_SANGUINE_PALPITATION', 's1'),
+          ev('R1_FEAT_BILIOUS_GASTRIC_HYPERACIDITY', 'b1'),
+        ],
+      }),
+    );
+    expect(a).toEqual(b);
+  });
+});
+
+describe('Rule1 v1 insufficient and BP', () => {
+  it('zero / one concept → insufficient', () => {
+    expect(evaluateRule1Shadow(baseInput({ evidence: [] })).status).toBe(
+      'TEMPERAMENT_INSUFFICIENT_EVIDENCE',
+    );
+    expect(
+      evaluateRule1Shadow(baseInput({ evidence: [ev('R1_FEAT_NERVOUS_CURRENT_ANXIETY', 'a')] }))
+        .status,
+    ).toBe('TEMPERAMENT_INSUFFICIENT_EVIDENCE');
+  });
+
+  it('Sanguine BP >=140 alone is insufficient (one concept)', () => {
+    const out = evaluateRule1Shadow(
+      baseInput({
+        evidence: [],
+        structuredVitals: {
+          systolicBpMmHg: { value: 140, unit: 'mmHg', validationPosture: 'VALIDATED' },
+        },
+      }),
+    );
+    expect(out.status).toBe('TEMPERAMENT_INSUFFICIENT_EVIDENCE');
+  });
+
+  it('Sanguine BP with independent feature resolves', () => {
+    const out = evaluateRule1Shadow(
+      baseInput({
+        evidence: [ev('R1_FEAT_SANGUINE_PALPITATION', 'p1')],
+        structuredVitals: {
+          systolicBpMmHg: { value: 150, unit: 'mmHg', validationPosture: 'VALIDATED' },
+        },
+      }),
+    );
+    expect(out.status).toBe('TEMPERAMENT_PROFILE_RESOLVED');
+    expect(out.primaryTemperament).toBe('SANGUINE');
+    expect(out.scores.SANGUINE).toBe(5);
+  });
+
+  it('Lymphatic BP <100 without non-BP support does not apply', () => {
+    const out = evaluateRule1Shadow(
+      baseInput({
+        evidence: [
+          ev('R1_FEAT_SANGUINE_PALPITATION', 'p1'),
+          ev('R1_FEAT_SANGUINE_FACIAL_FLUSHING', 'f1'),
+        ],
+        structuredVitals: {
+          systolicBpMmHg: { value: 90, unit: 'mmHg', validationPosture: 'VALIDATED' },
+        },
+      }),
+    );
+    expect(out.scores.LYMPHATIC).toBe(0);
+    expect(out.reasonCodes).toContain('R1_BP_LYMPHATIC_LACKS_NON_BP_SUPPORT');
+  });
+
+  it('Lymphatic BP <100 with non-BP Lymphatic support applies once', () => {
+    const out = evaluateRule1Shadow(
+      baseInput({
+        evidence: [ev('R1_FEAT_LYMPHATIC_CURRENT_CONSTIPATION', 'c1')],
+        structuredVitals: {
+          systolicBpMmHg: { value: 99, unit: 'mmHg', validationPosture: 'VALIDATED' },
+        },
+      }),
+    );
+    expect(out.scores.LYMPHATIC).toBe(4);
+    expect(out.primaryTemperament).toBe('LYMPHATIC');
+  });
+
+  it('wrong BP unit fails closed', () => {
+    expect(() =>
+      evaluateRule1Shadow(
+        baseInput({
+          evidence: [ev('R1_FEAT_SANGUINE_PALPITATION', 'p1')],
+          structuredVitals: {
+            // @ts-expect-error intentional bad unit
+            systolicBpMmHg: { value: 150, unit: 'kPa', validationPosture: 'VALIDATED' },
+          },
+        }),
+      ),
+    ).toThrow(Rule1EvaluationError);
+  });
+});
+
+describe('Rule1 v1 Hamilton percentages', () => {
+  /** Score tuple order explicitly: SANGUINE, LYMPHATIC, NERVOUS, BILIOUS */
+  function scoresSLNB(s: number, l: number, n: number, b: number): Rule1ScoreMap {
+    return { SANGUINE: s, LYMPHATIC: l, NERVOUS: n, BILIOUS: b };
+  }
+
+  const cases: Array<{
+    slnb: [number, number, number, number];
+    pct: [number, number, number, number];
+  }> = [
+    { slnb: [2, 2, 0, 0], pct: [50.0, 50.0, 0.0, 0.0] },
+    { slnb: [3, 2, 1, 0], pct: [50.0, 33.3, 16.7, 0.0] },
+    { slnb: [2, 1, 1, 0], pct: [50.0, 25.0, 25.0, 0.0] },
+    { slnb: [1, 1, 1, 0], pct: [33.4, 33.3, 33.3, 0.0] },
+    { slnb: [3, 3, 2, 1], pct: [33.4, 33.3, 22.2, 11.1] },
+    { slnb: [3, 2, 1, 1], pct: [42.8, 28.6, 14.3, 14.3] },
+    { slnb: [1, 1, 1, 1], pct: [25.0, 25.0, 25.0, 25.0] },
+  ];
+
+  for (const c of cases) {
+    it(`Hamilton SLNB ${c.slnb.join(',')}`, () => {
+      const scores = scoresSLNB(...c.slnb);
+      const pct = computeHamiltonPercentages(scores);
+      expect(sumPercentages(pct)).toBe(100);
+      expect([pct.SANGUINE, pct.LYMPHATIC, pct.NERVOUS, pct.BILIOUS]).toEqual(c.pct);
+      expect(pct.BILIOUS === 0 || pct.BILIOUS > 0).toBe(true);
+    });
+  }
+});
+
+describe('Rule1 v1 Mixed / resolved / contradiction', () => {
+  it('unique max → resolved; never emits forbidden tokens/fields', () => {
+    const out = evaluateRule1Shadow(
+      baseInput({
+        evidence: [
+          ev('R1_FEAT_SANGUINE_PALPITATION', 'p1'),
+          ev('R1_FEAT_SANGUINE_FACIAL_FLUSHING', 'f1'),
+          ev('R1_FEAT_NERVOUS_CURRENT_ANXIETY', 'a1'),
+        ],
+      }),
+    );
+    expect(out.status).toBe('TEMPERAMENT_PROFILE_RESOLVED');
+    expect(out.primaryTemperament).toBe('SANGUINE');
+    expect(out.mixedSubtype).toBeNull();
+    expect(out.dominantTemperaments).toBeNull();
+    expect(JSON.stringify(out)).not.toContain('BILIOUS_HEPATIC');
+    expect(JSON.stringify(out)).not.toContain('UNRESOLVED_TIE');
+    expect(JSON.stringify(out)).not.toContain('secondaryTemperament');
+  });
+
+  it('two-way equal top → MIXED/DUAL', () => {
+    const out = evaluateRule1Shadow(
+      baseInput({
+        evidence: [
+          ev('R1_FEAT_SANGUINE_PALPITATION', 'p1'),
+          ev('R1_FEAT_LYMPHATIC_CURRENT_CONSTIPATION', 'c1'),
+        ],
+      }),
+    );
+    // both weight 2 → equal
+    expect(out.scores.SANGUINE).toBe(2);
+    expect(out.scores.LYMPHATIC).toBe(2);
+    expect(out.status).toBe('MIXED_TEMPERAMENT');
+    expect(out.mixedSubtype).toBe('DUAL_TEMPERAMENT');
+    expect(out.primaryTemperament).toBeNull();
+    expect(out.dominantTemperaments).toEqual(['SANGUINE', 'LYMPHATIC']);
+    expect(out.percentages && sumPercentages(out.percentages)).toBe(100);
+  });
+
+  it('four-way equal → MULTI', () => {
+    const out = evaluateRule1Shadow(
+      baseInput({
+        evidence: [
+          ev('R1_FEAT_BILIOUS_GASTRIC_HYPERACIDITY', 'b1'),
+          ev('R1_FEAT_SANGUINE_PALPITATION', 's1'),
+          ev('R1_FEAT_LYMPHATIC_CURRENT_CONSTIPATION', 'l1'),
+          ev('R1_FEAT_NERVOUS_CURRENT_ANXIETY', 'n1'),
+        ],
+      }),
+    );
+    expect(out.status).toBe('MIXED_TEMPERAMENT');
+    expect(out.mixedSubtype).toBe('MULTI_TEMPERAMENT');
+    expect(out.dominantTemperaments).toEqual(['BILIOUS', 'SANGUINE', 'LYMPHATIC', 'NERVOUS']);
+  });
+
+  it('three-way equal top → MIXED/MULTI; lower score stays out of dominant', () => {
+    const out = evaluateRule1Shadow(
+      baseInput({
+        evidence: [
+          ev('R1_FEAT_BILIOUS_GASTRIC_HYPERACIDITY', 'b1'),
+          ev('R1_FEAT_SANGUINE_PALPITATION', 's1'),
+          ev('R1_FEAT_LYMPHATIC_CURRENT_CONSTIPATION', 'l1'),
+          ev('R1_FEAT_NERVOUS_CURRENT_ANXIETY', 'n1'),
+          ev('R1_FEAT_NERVOUS_CURRENT_RESTLESSNESS', 'n2'),
+        ],
+      }),
+    );
+    // B=2,S=2,L=2,N=4 → unique N resolved, not multi
+    expect(out.status).toBe('TEMPERAMENT_PROFILE_RESOLVED');
+    expect(out.primaryTemperament).toBe('NERVOUS');
+
+    const three = evaluateRule1Shadow(
+      baseInput({
+        evidence: [
+          ev('R1_FEAT_BILIOUS_GASTRIC_HYPERACIDITY', 'b1'),
+          ev('R1_FEAT_SANGUINE_PALPITATION', 's1'),
+          ev('R1_FEAT_LYMPHATIC_CURRENT_CONSTIPATION', 'l1'),
+        ],
+      }),
+    );
+    expect(three.status).toBe('MIXED_TEMPERAMENT');
+    expect(three.mixedSubtype).toBe('MULTI_TEMPERAMENT');
+    expect(three.dominantTemperaments).toEqual(['BILIOUS', 'SANGUINE', 'LYMPHATIC']);
+    expect(three.scores.NERVOUS).toBe(0);
+  });
+
+  it('BP boundaries: 140 applies Sanguine; 139 does not; 100 not Lymphatic; 99 does with support', () => {
+    const at140 = evaluateRule1Shadow(
+      baseInput({
+        evidence: [ev('R1_FEAT_SANGUINE_PALPITATION', 'p1')],
+        structuredVitals: {
+          systolicBpMmHg: { value: 140, unit: 'mmHg', validationPosture: 'VALIDATED' },
+        },
+      }),
+    );
+    expect(at140.scores.SANGUINE).toBe(5); // 2+3
+
+    const at139 = evaluateRule1Shadow(
+      baseInput({
+        evidence: [
+          ev('R1_FEAT_SANGUINE_PALPITATION', 'p1'),
+          ev('R1_FEAT_SANGUINE_FACIAL_FLUSHING', 'f1'),
+        ],
+        structuredVitals: {
+          systolicBpMmHg: { value: 139, unit: 'mmHg', validationPosture: 'VALIDATED' },
+        },
+      }),
+    );
+    expect(at139.scores.SANGUINE).toBe(4); // no BP weight
+
+    const at100 = evaluateRule1Shadow(
+      baseInput({
+        evidence: [
+          ev('R1_FEAT_LYMPHATIC_CURRENT_CONSTIPATION', 'c1'),
+          ev('R1_FEAT_LYMPHATIC_SITE_BOUND_EDEMA', 'e1'),
+        ],
+        structuredVitals: {
+          systolicBpMmHg: { value: 100, unit: 'mmHg', validationPosture: 'VALIDATED' },
+        },
+      }),
+    );
+    expect(at100.scores.LYMPHATIC).toBe(4); // 2+2, no BP at exactly 100
+
+    const at99 = evaluateRule1Shadow(
+      baseInput({
+        evidence: [
+          ev('R1_FEAT_LYMPHATIC_CURRENT_CONSTIPATION', 'c1'),
+          ev('R1_FEAT_LYMPHATIC_SITE_BOUND_EDEMA', 'e1'),
+        ],
+        structuredVitals: {
+          systolicBpMmHg: { value: 99, unit: 'mmHg', validationPosture: 'VALIDATED' },
+        },
+      }),
+    );
+    expect(at99.scores.LYMPHATIC).toBe(6); // 2+2+2
+  });
+
+  it('systemic heat + cold same episode → contradictory not Mixed', () => {
+    const out = evaluateRule1Shadow(
+      baseInput({
+        evidence: [
+          ev('R1_FEAT_SANGUINE_SUBJECTIVE_HEAT_TENDENCY', 'h1'),
+          ev('R1_FEAT_LYMPHATIC_SUBJECTIVE_COLD_TENDENCY', 'c1'),
+        ],
+      }),
+    );
+    expect(out.status).toBe('TEMPERAMENT_CONTRADICTORY');
+    expect(out.mixedSubtype).toBeNull();
+    expect(out.primaryTemperament).toBeNull();
+    expect(out.percentages && sumPercentages(out.percentages)).toBe(100);
+  });
+
+  it('historical cold does not form contradiction with current heat', () => {
+    const out = evaluateRule1Shadow(
+      baseInput({
+        evidence: [
+          ev('R1_FEAT_SANGUINE_SUBJECTIVE_HEAT_TENDENCY', 'h1'),
+          ev('R1_FEAT_LYMPHATIC_SUBJECTIVE_COLD_TENDENCY', 'c1', {
+            temporalPosture: 'HISTORICAL',
+          }),
+          ev('R1_FEAT_SANGUINE_PALPITATION', 'p1'),
+        ],
+      }),
+    );
+    expect(out.status).not.toBe('TEMPERAMENT_CONTRADICTORY');
+    expect(out.primaryTemperament).toBe('SANGUINE');
+  });
+
+  it('non-thermal site concepts alone never contradict; heat+cold overrides equal Mixed', () => {
+    const local = evaluateRule1Shadow(
+      baseInput({
+        evidence: [
+          ev('R1_FEAT_NERVOUS_SITE_BOUND_SHOOTING_PAIN', 'p1'),
+          ev('R1_FEAT_LYMPHATIC_SITE_BOUND_EDEMA', 'e1'),
+        ],
+      }),
+    );
+    expect(local.status).not.toBe('TEMPERAMENT_CONTRADICTORY');
+
+    const override = evaluateRule1Shadow(
+      baseInput({
+        evidence: [
+          ev('R1_FEAT_SANGUINE_SUBJECTIVE_HEAT_TENDENCY', 'h1'),
+          ev('R1_FEAT_LYMPHATIC_SUBJECTIVE_COLD_TENDENCY', 'c1'),
+        ],
+      }),
+    );
+    expect(override.scores.SANGUINE).toBe(override.scores.LYMPHATIC);
+    expect(override.status).toBe('TEMPERAMENT_CONTRADICTORY');
+    expect(override.mixedSubtype).toBeNull();
+  });
+
+  it('negated evidence is excluded and does not score', () => {
+    const out = evaluateRule1Shadow(
+      baseInput({
+        evidence: [
+          ev('R1_FEAT_SANGUINE_PALPITATION', 'p1', { negationPosture: 'NEGATED' }),
+          ev('R1_FEAT_SANGUINE_FACIAL_FLUSHING', 'f1'),
+          ev('R1_FEAT_NERVOUS_CURRENT_ANXIETY', 'a1'),
+        ],
+      }),
+    );
+    expect(out.scores.SANGUINE).toBe(2);
+    expect(
+      out.excludedEvidence.some(
+        (e) => e.reasonCode.includes('NEGATED') || e.conceptId === 'R1_FEAT_SANGUINE_PALPITATION',
+      ),
+    ).toBe(true);
+  });
+});
+
+describe('Rule1 v1 determinism and firewall posture', () => {
+  it('deep-equal replay and stable fingerprints', () => {
+    const input = baseInput({
+      evidence: [
+        ev('R1_FEAT_BILIOUS_SCLERAL_CUTANEOUS_ICTERUS', 'i1'),
+        ev('R1_FEAT_BILIOUS_HEPATIC_RUQ_PAIN', 'r1'),
+      ],
+    });
+    const a = evaluateRule1Shadow(input);
+    const b = evaluateRule1Shadow(input);
+    expect(a).toEqual(b);
+    expect(a.inputFingerprint).toBe(b.inputFingerprint);
+    expect(a.catalogFingerprint).toBe(computeCatalogFingerprint());
+    expect(a.clinicallyUsed).toBe(false);
+    expect(a.medicineSelectionInfluence).toBe('NONE');
+    expect(a.orchestrationStatus).toBe('NOT_CONNECTED');
+  });
+
+  it('does not use Date.now in fingerprint material path', () => {
+    const out = evaluateRule1Shadow(
+      baseInput({
+        evidence: [
+          ev('R1_FEAT_NERVOUS_CURRENT_ANXIETY', 'a1'),
+          ev('R1_FEAT_NERVOUS_CURRENT_RESTLESSNESS', 'r1'),
+        ],
+      }),
+    );
+    expect(out.inputFingerprint).toMatch(/^[a-f0-9]{64}$/);
+    // Ensure fingerprint is pure hash of synthetic bindings
+    const material = [
+      RULE1_INPUT_SCHEMA_VERSION,
+      RULE1_RULE_CONTRACT_VERSION,
+      'consult-1',
+      'episode-1',
+      'R1_FEAT_NERVOUS_CURRENT_ANXIETY|a1|CURRENT|ASSERTED|ACCEPTED',
+      'R1_FEAT_NERVOUS_CURRENT_RESTLESSNESS|r1|CURRENT|ASSERTED|ACCEPTED',
+      'bp:none',
+    ].join('\n');
+    expect(out.inputFingerprint).toBe(createHash('sha256').update(material, 'utf8').digest('hex'));
   });
 });

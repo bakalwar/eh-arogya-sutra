@@ -1,112 +1,104 @@
 import type {
-  Rule1EvidenceKind,
-  Rule1Outcome,
-  Rule1ResolutionState,
-  Rule1Rule8ComparisonState,
-  Rule1TemperamentToken,
+  Rule1MixedSubtype,
+  Rule1PrimaryTemperament,
+  Rule1ProfileStatus,
 } from './constants.js';
 import {
-  RULE1_INPUT_CONTRACT_VERSION,
+  RULE1_INPUT_SCHEMA_VERSION,
   RULE1_OUTPUT_CONTRACT_VERSION,
-  RULE1_RULE_IDENTITY,
-  RULE1_RULE_NUMBER,
+  RULE1_PERCENTAGE_ALGORITHM,
+  RULE1_RULE_CONTRACT_VERSION,
 } from './version.js';
 
-export type Rule1StatusRef =
-  | { readonly status: 'NOT_SUPPLIED' }
-  | { readonly status: 'UNAVAILABLE' }
-  | { readonly status: 'CONSISTENT'; readonly refId: string; readonly version: string }
-  | { readonly status: 'CONFLICT'; readonly refId: string; readonly version: string }
-  | { readonly status: 'UNRESOLVED'; readonly refId: string; readonly version: string };
+export type Rule1TemporalPosture = 'CURRENT' | 'HISTORICAL';
+export type Rule1NegationPosture = 'ASSERTED' | 'NEGATED';
+export type Rule1AcceptancePosture = 'ACCEPTED' | 'UNACCEPTED';
 
-export type Rule1BloodPressureEvidence =
-  | { readonly status: 'NOT_SUPPLIED' }
-  | { readonly status: 'SUPPLIED'; readonly systolicMmHg: number; readonly unit: 'mmHg' };
-
-export type Rule1PhotoEvidenceRef =
-  | { readonly status: 'NOT_SUPPLIED' }
-  | { readonly status: 'SUPPLIED'; readonly mediaRefId: string };
-
-export type Rule1BloodLymphAxisContext =
-  | { readonly status: 'NOT_SUPPLIED' }
-  | { readonly status: 'SUPPLIED'; readonly axisRefs: readonly string[] };
-
-export type Rule1EvidenceDataVersions = {
-  readonly evidenceDataVersion: string;
-  readonly temperamentRegistryVersion: string;
-  readonly contractVersion: string;
-  readonly governanceVersion: string;
+export type Rule1EvidenceBinding = {
+  readonly conceptId: string;
+  readonly sourceFactFingerprint: string;
+  readonly temporalPosture: Rule1TemporalPosture;
+  readonly negationPosture: Rule1NegationPosture;
+  readonly acceptancePosture: Rule1AcceptancePosture;
 };
 
-export type Rule1UpstreamApplicability = {
-  readonly status: string;
-  readonly notes: readonly string[];
+export type Rule1SystolicBpVital = {
+  readonly value: number;
+  readonly unit: 'mmHg';
+  readonly validationPosture: 'VALIDATED' | 'INVALID';
 };
 
-export type Rule1DoctorSuppliedEvidenceItem = {
-  readonly itemId: string;
-  readonly evidenceClass: string;
-};
-
-export type Rule1TemperamentEvidenceEntry = {
-  readonly entryId: string;
-  readonly temperamentToken: Rule1TemperamentToken;
-  readonly evidenceKind: Rule1EvidenceKind;
-  readonly supportUnits: number;
-  readonly contradictionMarkers: readonly string[];
-  readonly evidenceSourceId: string;
-  readonly evidenceValidationStatus: string;
-  readonly ownerClinicalApprovalStatus: string;
-  readonly version: string;
-  readonly effectiveStatus: string;
-  readonly supersessionMetadata: string | null;
-  readonly testClassification: string;
-  readonly biliousSecondaryRequired: boolean;
-};
-
-export type Rule1CaseTemperamentEvidenceRegistry = {
-  readonly registryVersion: string;
-  readonly entries: readonly Rule1TemperamentEvidenceEntry[];
+export type Rule1StructuredVitals = {
+  readonly systolicBpMmHg?: Rule1SystolicBpVital;
 };
 
 export type Rule1Input = {
-  readonly contractVersion: typeof RULE1_INPUT_CONTRACT_VERSION;
-  readonly requestId: string;
-  readonly caseTemperamentEvidenceRegistry: Rule1CaseTemperamentEvidenceRegistry;
-  readonly doctorSuppliedEvidenceItems: readonly Rule1DoctorSuppliedEvidenceItem[];
-  readonly bloodPressureEvidence: Rule1BloodPressureEvidence;
-  readonly photoEvidenceRef: Rule1PhotoEvidenceRef;
-  readonly bloodLymphAxisContext: Rule1BloodLymphAxisContext;
-  readonly rule8ComparisonRef: Rule1StatusRef;
-  readonly evidenceDataVersions: Rule1EvidenceDataVersions;
-  readonly upstreamApplicability: Rule1UpstreamApplicability;
+  readonly inputSchemaVersion: typeof RULE1_INPUT_SCHEMA_VERSION;
+  readonly ruleContractVersion: typeof RULE1_RULE_CONTRACT_VERSION;
+  readonly consultationId: string;
+  readonly episodeId: string;
+  readonly evidence: readonly Rule1EvidenceBinding[];
+  readonly structuredVitals?: Rule1StructuredVitals;
 };
 
-export type Rule1DoshaMapping = {
-  readonly doshaPrimary: string | null;
-  readonly doshaSecondary: string | null;
-  readonly doshaClassification: string | null;
+export type Rule1ScoreMap = {
+  readonly BILIOUS: number;
+  readonly SANGUINE: number;
+  readonly LYMPHATIC: number;
+  readonly NERVOUS: number;
+};
+
+export type Rule1PercentageMap = {
+  readonly BILIOUS: number;
+  readonly SANGUINE: number;
+  readonly LYMPHATIC: number;
+  readonly NERVOUS: number;
+};
+
+export type Rule1RankedPercentageEntry = {
+  readonly temperament: Rule1PrimaryTemperament;
+  readonly percentage: number;
+  readonly score: number;
+};
+
+export type Rule1AcceptedContribution = {
+  readonly conceptId: string;
+  readonly sourceFactFingerprint: string;
+  readonly temperament: Rule1PrimaryTemperament;
+  readonly weight: number;
+  readonly reasonCode: string;
+};
+
+export type Rule1ExcludedEvidence = {
+  readonly conceptId: string;
+  readonly sourceFactFingerprint: string;
+  readonly reasonCode: string;
 };
 
 export type Rule1Output = {
-  readonly contractVersion: typeof RULE1_OUTPUT_CONTRACT_VERSION;
-  readonly ruleNumber: typeof RULE1_RULE_NUMBER;
-  readonly ruleIdentity: typeof RULE1_RULE_IDENTITY;
-  readonly requestId: string;
-  readonly status: Rule1Outcome;
-  readonly applicability: string;
-  readonly primaryTemperament: Rule1TemperamentToken | null;
-  readonly secondaryTemperament: Rule1TemperamentToken | null;
-  readonly mixedComponents: readonly Rule1TemperamentToken[];
-  readonly resolutionState: Rule1ResolutionState;
-  readonly doshaMapping: Rule1DoshaMapping | null;
-  readonly evidenceGaps: readonly string[];
+  readonly inputSchemaVersion: typeof RULE1_INPUT_SCHEMA_VERSION;
+  readonly ruleContractVersion: typeof RULE1_RULE_CONTRACT_VERSION;
+  readonly outputSchemaVersion: typeof RULE1_OUTPUT_CONTRACT_VERSION;
+  readonly percentageAlgorithm: typeof RULE1_PERCENTAGE_ALGORITHM;
+  readonly catalogVersion: string;
+  readonly scoringAlgorithmVersion: string;
+  readonly catalogFingerprint: string;
+  readonly inputFingerprint: string;
+  readonly status: Rule1ProfileStatus;
+  readonly mixedSubtype: Rule1MixedSubtype | null;
+  readonly primaryTemperament: Rule1PrimaryTemperament | null;
+  readonly dominantTemperaments: readonly Rule1PrimaryTemperament[] | null;
+  readonly scores: Rule1ScoreMap;
+  readonly percentages: Rule1PercentageMap | null;
+  readonly rankedPercentageProfile: readonly Rule1RankedPercentageEntry[] | null;
+  readonly acceptedContributions: readonly Rule1AcceptedContribution[];
+  readonly excludedEvidence: readonly Rule1ExcludedEvidence[];
   readonly reasonCodes: readonly string[];
-  readonly blockersOrUnresolvedEvidence: readonly string[];
-  readonly rule8ComparisonState: Rule1Rule8ComparisonState;
-  readonly deterministicFingerprint: string | null;
+  readonly clinicallyUsed: false;
   readonly shadowOnly: true;
   readonly clinicalActivation: 'NONE';
   readonly medicineSelectionInfluence: 'NONE';
   readonly prescriptionEffect: 'NONE';
+  readonly orchestrationStatus: 'NOT_CONNECTED';
+  readonly runtimeStatus: 'NOT_CONNECTED';
 };
