@@ -24,8 +24,8 @@ Tests must not be treated as clinical proof until owner accepts scenarios.
 | R1-T08 | Systolic ≥ 140 **with** approved symptom evidence | SANGUINE supporting +3 contributes to resolved result |
 | R1-T09 | Systolic < 100 with approved non-BP evidence | LYMPHATIC supporting +2 contributes |
 | R1-T10 | Equal scores and equal evidence strength after **all available authorized evidence** evaluated first | Deterministic owner-approved tie rules only; **no** random order; **no** dictionary/first-key fallback; **no** hidden default temperament |
-| R1-T11 | Exact material temperament tie remains after full evidence pass (Q3G-TIE future impl) | `temperamentResolution` = **UNRESOLVED_TIE**; **no** interactive follow-up question; **no** popup/chatbot/question bank; structured `missingEvidenceRequirements`; `ADDITIONAL_INFORMATION_REQUIRED` and/or `DOCTOR_REVIEW_REQUIRED` as applicable; **no** automatic medicine candidate; **no** auto-prescription |
-| R1-T12 | Verified evidence genuinely supports multiple temperaments (not tie fallback) | **MIXED** / **BALANCED_MIXED** only when multi-temperament support is evidence-backed; **not** unresolved equal-tie fallback; exact equal tie remains **UNRESOLVED_TIE**; doctor may add information via ordinary workflow; system reruns **complete versioned reassessment**; system asks **no** clinical question |
+| R1-T11 | Exact equal highest temperament scores after full evidence pass (eligibility met; no contradiction) | status **`MIXED_TEMPERAMENT`** with subtype `DUAL_TEMPERAMENT` or `MULTI_TEMPERAMENT` per `OWNER-FREEZE-OD-R1-IMPL-07-MIXED-TEMPERAMENT-v1`; `primaryTemperament = null`; `dominantTemperaments` co-dominant; **no** interactive follow-up question; **no** popup/chatbot/question bank; **no** automatic medicine candidate; **no** auto-prescription. (Prior expectation `UNRESOLVED_TIE` for this profile case is **superseded**.) |
+| R1-T12 | Verified evidence genuinely supports multiple temperaments / co-dominant equal-top profile | **`MIXED_TEMPERAMENT`** when equal highest scores after eligibility (IMPL-07); **not** an unresolved programming-tie fallback; doctor may add information via ordinary workflow; system reruns **complete versioned reassessment**; system asks **no** clinical question |
 | R1-T13 | Three+ way tie | TRIDOSHAJA path; mixed_components |
 | R1-T14 | Determinism — repeat same input | Identical fingerprint + outputs |
 | R1-T15 | Contract fields present when implemented | All frozen contract keys populated or explicitly null |
@@ -55,7 +55,7 @@ Tests must not be treated as clinical proof until owner accepts scenarios.
 
 Historical [rule-01-temperament-engine.md](./rule-01-temperament-engine.md) equal-tie body (follow-up question; MIXED if no answer) remains **frozen and preserved**.
 
-**Future EHAS2 implementation** is governed by [rule-01-q3-evidence-workflow-owner-decisions.md](./rule-01-q3-evidence-workflow-owner-decisions.md) (**Q3G revised final**, **Q3G-TIE**) and [rule-01-q3-precontract-owner-decisions.md](./rule-01-q3-precontract-owner-decisions.md).
+**Future EHAS2 implementation** is governed by [rule-01-q3-evidence-workflow-owner-decisions.md](./rule-01-q3-evidence-workflow-owner-decisions.md) (**Q3G revised final**, **Q3G-TIE**) and [rule-01-q3-precontract-owner-decisions.md](./rule-01-q3-precontract-owner-decisions.md), as clarified by **`OWNER-FREEZE-OD-R1-IMPL-07-MIXED-TEMPERAMENT-v1`** for Rule 1 v1 equal-top **profile** outcomes (`MIXED_TEMPERAMENT`, not `UNRESOLVED_TIE`).
 
 **R1-T10–R1-T12** above describe **future** test expectations under that authority — not legacy interactive tie resolution.
 

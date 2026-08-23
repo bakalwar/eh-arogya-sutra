@@ -88,7 +88,7 @@ Owner decision columns: **Bilious Batch 1 (8) + Sanguine Batch 2 (10) + Lymphati
 | Cross-rule overlaps | R2 `detect_polarity` pos/neg term lists overlap 12+ Rule 1 keywords — owner must decide MOVE_TO_R2 / CONTEXT_ONLY / normalized single-score |
 | Duplicated synonyms | 7 synonym groups identified in CSV — owner must prevent double-score per R1-OD-05 |
 | Missing symptom domains | **37 keywords do not provide universal disease coverage** — no silent expansion from 116,284-row disease DB (license/provenance unresolved) |
-| Mixed temperament handling | Governed by R1-OD-03 — percentage model pending row weights |
+| Mixed temperament handling | Governed by R1-OD-03 · Hamilton `OWNER-FREEZE-OD-R1-IMPL-01-CORR-v1` · equal top → **`MIXED_TEMPERAMENT`** (`OWNER-FREEZE-OD-R1-IMPL-07-MIXED-TEMPERAMENT-v1`; prior `UNRESOLVED_TIE` **superseded** for v1) · thermal `OWNER-FREEZE-OD-R1-IMPL-05-CORR-v1` · no singular secondary — see [rule-01-implementation-boundary-owner-freeze-OD-R1-IMPL-01-06.md](./rule-01-implementation-boundary-owner-freeze-OD-R1-IMPL-01-06.md) |
 | Unmapped-feature process | `UNMAPPED_FEATURE` fail-closed per completeness contract below |
 
 **Status:** Documented — all four temperament keyword batches owner-approved at documentation level; coverage gaps remain for later owner/evidence review.

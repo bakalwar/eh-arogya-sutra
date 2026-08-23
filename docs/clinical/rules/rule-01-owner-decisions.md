@@ -183,3 +183,56 @@ Phase 5R-1 audit owner questions (interpreter bypass, Mixed vs UNKNOWN, etc.) ar
 | Nervous Batch 4 (8 rows) | [rule-01-nervous-batch4-owner-approval-freeze.md](./rule-01-nervous-batch4-owner-approval-freeze.md) · [rule-01-keyword-row-clinical-review-docket.csv](./rule-01-keyword-row-clinical-review-docket.csv) | `OWNER-FREEZE-R1-NERVOUS-BATCH4-v1` · `OWNER-APPROVE-R1-KW-0020-v1` … `0027-v1` |
 
 **Posture:** All eight raw Nervous keywords `owner_approved_weight=0` · accepted current anxiety / restlessness / neuropathic pain / site-bound shooting pain / site-bound tingling each weight **2** with one-concept-once dedupe · `nas` and `nervous` **QUARANTINE** · `sciatica` **MOVE_TO_R3** · psychomotor agitation / objective neuro signs / new thresholds **not** included · no second weight-scale token · `clinically_used=false` · medicine-selection influence **none** · migration tip **018** / no **019**
+
+---
+
+## Append — Implementation-boundary freezes OD-R1-IMPL-01 … 06 (@ `b7855c9`)
+
+**Authority:** Dr. Ghanshyam Bakalwar — APPROVED_OWNER_FREEZE (documentation only; **no runtime activation**)
+
+| Tranche | Document | Tokens |
+|---------|----------|--------|
+| Implementation boundary (percentage, Bilious token, synthetic-shadow scope, dedupe, thermal contradiction, secondary-dosha exclusion) | [rule-01-implementation-boundary-owner-freeze-OD-R1-IMPL-01-06.md](./rule-01-implementation-boundary-owner-freeze-OD-R1-IMPL-01-06.md) | `OWNER-FREEZE-R1-IMPL-BOUNDARY-01-06-v1` · `OWNER-FREEZE-OD-R1-IMPL-01-v1` … `OWNER-FREEZE-OD-R1-IMPL-06-v1` |
+
+**Posture (summary):**
+
+| ID | Decision |
+|----|----------|
+| OD-R1-IMPL-01 | Percentages from **deduped** scores; deterministic; sum **100.0**; ≥**2** independent accepted normalized concepts; zero evidence → **INSUFFICIENT**; equal top → **`MIXED_TEMPERAMENT`** (`OWNER-FREEZE-OD-R1-IMPL-07-MIXED-TEMPERAMENT-v1`; prior `UNRESOLVED_TIE` **superseded** for v1 equal-top) |
+| OD-R1-IMPL-02 | Canonical token **`BILIOUS` only**; `BILIOUS_HEPATIC` superseded for Rule 1 v1 primary output |
+| OD-R1-IMPL-03 | First implementation = **pure non-persistent synthetic shadow** only; no raw-text parse, E2 production binding, migration **019**, API, readiness, medicine, or Rx |
+| OD-R1-IMPL-04 | Dedupe on **concept ID** and **source-fact/content fingerprint** (either match → one contribution) |
+| OD-R1-IMPL-05 | Heat–cold contradiction: **both** evidence visible; **no** primary temperament |
+| OD-R1-IMPL-06 | Bilious **secondary-dosha** logic **excluded / superseded** for Rule 1 v1 |
+
+**Still true:** `clinically_used=false` · medicine-selection influence **none** · migration tip **018** / no **019** · 37-row batch freezes unchanged
+
+---
+
+## Append — OD-R1-IMPL-01/05 correction A+B (@ PR #138 head follow-up)
+
+**Authority:** Dr. Ghanshyam Bakalwar — APPROVED_OWNER_FREEZE (documentation only; **no runtime activation**)
+
+| Tranche | Document | Tokens |
+|---------|----------|--------|
+| Percentage Hamilton residual + primary ranking; thermal contradiction scope | [rule-01-implementation-boundary-owner-freeze-OD-R1-IMPL-01-06.md](./rule-01-implementation-boundary-owner-freeze-OD-R1-IMPL-01-06.md) (Append Correction A / B) | `OWNER-FREEZE-OD-R1-IMPL-01-CORR-v1` · `OWNER-FREEZE-OD-R1-IMPL-01-PRIMARY-RANK-v1` · `OWNER-FREEZE-OD-R1-IMPL-05-CORR-v1` |
+
+**Posture:**
+
+- `RULE1_PERCENTAGE_ROUNDING_V1` (half-even residual) **superseded** by `RULE1_PERCENTAGE_HAMILTON_V1` (0.1%-unit floor + largest remainder; equal-remainder representation order `BILIOUS → SANGUINE → LYMPHATIC → NERVOUS`; **not** a clinical tie-breaker; zeros stay `0.0`; sum **100.0**)
+- Primary only on **unique** highest score → `TEMPERAMENT_PROFILE_RESOLVED`; equal top → **`MIXED_TEMPERAMENT`** (`DUAL_TEMPERAMENT` / `MULTI_TEMPERAMENT` per `OWNER-FREEZE-OD-R1-IMPL-07-MIXED-TEMPERAMENT-v1`; prior `UNRESOLVED_TIE` **superseded**); **no** singular `secondaryTemperament` field — ranked percentages only
+- Thermal contradiction only for accepted non-negated **current same-consultation/episode systemic** heat+cold; historical-only and unrelated local-site do **not** pair; opposing subjective/objective systemic **do** contradict; both visible; primary null; contradiction **outranks** Mixed
+
+**Still true:** Draft PR documentation only · no runtime / E2 / migration **019** / API / medicine / Rx / readiness
+
+---
+
+## Append — OD-R1-IMPL-07 Mixed / Dual Temperament (@ PR #138 Correction C)
+
+**Authority:** Dr. Ghanshyam Bakalwar — APPROVED_OWNER_FREEZE (documentation only; **no runtime activation**)
+
+| Tranche | Document | Tokens |
+|---------|----------|--------|
+| Mixed / Dual / Multi temperament equal-top outcome | [rule-01-implementation-boundary-owner-freeze-OD-R1-IMPL-01-06.md](./rule-01-implementation-boundary-owner-freeze-OD-R1-IMPL-01-06.md) (Append Correction C) | `OWNER-FREEZE-OD-R1-IMPL-07-MIXED-TEMPERAMENT-v1` |
+
+**Posture:** Equal highest scores after eligibility → valid **`MIXED_TEMPERAMENT`** (`DUAL_TEMPERAMENT` if 2; `MULTI_TEMPERAMENT` if 3–4); `dominantTemperaments` co-dominant; representation order stable-only; unique max → `TEMPERAMENT_PROFILE_RESOLVED`; `TEMPERAMENT_CONTRADICTORY` higher precedence than Mixed; `UNRESOLVED_TIE` **superseded** for Rule 1 v1 equal-top profile outcomes; Hamilton / dedupe / BP / 37-row unchanged; no medicine / Rx / `clinically_used`
