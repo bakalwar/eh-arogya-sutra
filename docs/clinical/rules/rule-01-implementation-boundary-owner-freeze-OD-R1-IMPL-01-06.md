@@ -194,3 +194,167 @@ RULE1_V1_BILIOUS_SECONDARY_DOSHA_LOGIC =
 - `RULE1_MEDICINE_INFLUENCE_NONE`
 - `RULE1_MIGRATION_019_NOT_AUTHORIZED`
 - `RULE1_V1_PURE_SYNTHETIC_SHADOW_SCOPE_ONLY`
+
+---
+
+## Append — Correction A: percentage residual + primary ranking (docs only)
+
+| Field | Value |
+|-------|--------|
+| **Authority** | Dr. Ghanshyam Bakalwar — APPROVED_OWNER_FREEZE |
+| **Document class** | Append-only correction |
+| **Closes** | `BLOCKING_PERCENTAGE_ALGORITHM_UNDERSPECIFIED` |
+| **Runtime activation** | **NONE** |
+
+**Approval token:** `OWNER-FREEZE-OD-R1-IMPL-01-CORR-v1`
+
+### Supersession
+
+The block labeled `RULE1_PERCENTAGE_ROUNDING_V1` in OD-R1-IMPL-01 above (half-even + underspecified residual) is **SUPERSEDED** for Rule 1 **v1**. Do **not** implement that wording.
+
+Eligibility (`RULE1_PERCENTAGE_ELIGIBILITY_V1`), sum contract (`RULE1_PERCENTAGE_SUM_CONTRACT_V1`), insufficient / equal-top outcomes, and four-temperament score inputs remain in force.
+
+### Frozen algorithm — 0.1%-unit Hamilton / largest-remainder
+
+After owner-approved caps and dedupe, when percentage eligibility is met:
+
+```text
+RULE1_PERCENTAGE_HAMILTON_V1 =
+
+  TEMPERAMENTS = { BILIOUS, SANGUINE, LYMPHATIC, NERVOUS }
+
+  S_t = deduped accepted weight sum for temperament t
+  T   = S_BILIOUS + S_SANGUINE + S_LYMPHATIC + S_NERVOUS   # T > 0 by eligibility
+
+  REPRESENTATION_ORDER_EQUAL_REMAINDER =
+    BILIOUS → SANGUINE → LYMPHATIC → NERVOUS
+  // Representation / residual tie-break ONLY.
+  // NEVER a clinical primary/secondary tie-breaker.
+
+  For each t in TEMPERAMENTS:
+    if S_t == 0:
+      units_t = 0
+      // published pct_t = 0.0
+    else:
+      exact_quota_t = (S_t / T) * 1000
+      // 1000 units ≡ 100.0% at 0.1% resolution
+      floor_t = floor(exact_quota_t)          // integer 0.1%-units
+      frac_t  = exact_quota_t - floor_t       // in [0, 1)
+
+  units_t := floor_t for each t (zeros stay 0)
+  remaining_units = 1000 - sum(units_t)      // in 0..3 for four temperaments
+
+  Award the remaining_units residual +1 awards by selecting temperaments with
+  S_t > 0, ordered by:
+      1. descending frac_t
+      2. if frac_t equal: REPRESENTATION_ORDER_EQUAL_REMAINDER
+         (BILIOUS before SANGUINE before LYMPHATIC before NERVOUS)
+  Give +1 unit to each of the first remaining_units temperaments in that order.
+  Each temperament receives at most one residual unit per evaluation.
+
+  pct_t = units_t / 10.0
+  // one decimal place; sum(pct_t) == 100.0 exactly when eligibility met
+```
+
+```text
+RULE1_PERCENTAGE_ZERO_SCORE_V1 =
+  S_t == 0 → pct_t == 0.0 always (no residual award).
+```
+
+```text
+RULE1_PERCENTAGE_SUM_CONTRACT_V1 =
+  When eligibility is met: sum(pct) == 100.0 always.
+  (Unchanged; now satisfied by Hamilton units totaling 1000.)
+```
+
+### Primary ranking (no singular secondary field)
+
+**Approval token:** `OWNER-FREEZE-OD-R1-IMPL-01-PRIMARY-RANK-v1`
+
+```text
+RULE1_V1_PRIMARY_SELECTION =
+  if unique temperament has strictly highest S_t (S_max unique, S_max > 0):
+    primaryTemperament = that temperament
+  else if two or more temperaments share S_max > 0:
+    primaryTemperament = null
+    status = UNRESOLVED_TIE
+  // REPRESENTATION_ORDER_EQUAL_REMAINDER must NOT break clinical ties.
+```
+
+```text
+RULE1_V1_NO_SINGULAR_SECONDARY_FIELD =
+  Do not emit a singular secondaryTemperament winner field for Rule 1 v1.
+  Positive temperaments (pct_t > 0, or S_t > 0) are shown as a deterministic
+  ranked percentage list:
+    1. descending pct_t
+    2. if pct_t tied: REPRESENTATION_ORDER_EQUAL_REMAINDER
+  Zero-score temperaments remain visible at 0.0 when percentages are emitted.
+```
+
+This clarifies R1-OD-03 “identify leading temperament / show secondary tendencies” without a singular secondary slot.
+
+**Status:** `RULE1_PERCENTAGE_HAMILTON_V1_OWNER_FROZEN` · `RULE1_V1_PRIMARY_RANK_OWNER_FROZEN`
+
+---
+
+## Append — Correction B: thermal contradiction scope (docs only)
+
+| Field | Value |
+|-------|--------|
+| **Authority** | Dr. Ghanshyam Bakalwar — APPROVED_OWNER_FREEZE |
+| **Document class** | Append-only correction |
+| **Closes** | `BLOCKING_THERMAL_CONTRADICTION_SCOPE_UNDERSPECIFIED` |
+| **Runtime activation** | **NONE** |
+
+**Approval token:** `OWNER-FREEZE-OD-R1-IMPL-05-CORR-v1`
+
+### Supersession / narrowing of OD-R1-IMPL-05
+
+The outcome tokens in OD-R1-IMPL-05 (`TEMPERAMENT_CONTRADICTORY`, both evidence visible, no primary, no net-cancel) remain in force. The **trigger scope** is now frozen as follows (narrowing any broader reading):
+
+```text
+RULE1_THERMAL_CONTRADICTION_SCOPE_V1 =
+
+  TRIGGER only when ALL are true after dedupe:
+  1. Accepted Sanguine heat-tendency evidence AND accepted Lymphatic
+     cold-tendency evidence are both present.
+  2. Each side is non-negated.
+  3. Each side is current (not historical-only).
+  4. Both sides belong to the same consultation / same clinical episode.
+  5. Both sides are systemic thermal tendency evidence
+     (not unrelated local-site findings).
+
+  DOES form contradiction:
+  - Opposing subjective vs objective systemic heat vs cold evidence
+    in the same consultation/episode (both remain visible).
+
+  DOES NOT form a contradiction pair:
+  - Historical-only heat or historical-only cold (alone or vs current opposite)
+  - Unrelated local-site findings (e.g. local warm limb vs unrelated cold
+    extremity without systemic thermal-tendency acceptance)
+  - Negated evidence on either side
+```
+
+```text
+RULE1_THERMAL_CONTRADICTION_OUTCOME_V1 =
+  When TRIGGER fires:
+  1. Retain and expose BOTH heat and cold evidence in the explanation trace.
+  2. primaryTemperament = null
+  3. status = TEMPERAMENT_CONTRADICTORY
+  4. Do NOT cancel, net, or silently drop either contribution.
+  5. Percentage emission still follows OD-R1-IMPL-01 eligibility + Hamilton;
+     percentages are evidence-distribution only while primary remains null.
+```
+
+**Status:** `RULE1_THERMAL_CONTRADICTION_SCOPE_V1_OWNER_FROZEN`
+
+---
+
+## Correction status tokens
+
+- `OWNER-FREEZE-OD-R1-IMPL-01-CORR-v1`
+- `OWNER-FREEZE-OD-R1-IMPL-01-PRIMARY-RANK-v1`
+- `OWNER-FREEZE-OD-R1-IMPL-05-CORR-v1`
+- `RULE1_IMPL_BOUNDARY_CORRECTION_A_B_DOCUMENTATION_ONLY`
+- `RULE1_CLINICAL_ACTIVATION_NONE`
+- `RULE1_MIGRATION_019_NOT_AUTHORIZED`

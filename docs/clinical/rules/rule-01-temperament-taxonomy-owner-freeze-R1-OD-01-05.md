@@ -137,3 +137,14 @@ The percentage **intent** under `OWNER-FREEZE-R1-OD-03-v1` remains in force. The
 | Canonical primary token **`BILIOUS` only** (`BILIOUS_HEPATIC` superseded for v1 output) | `OWNER-FREEZE-OD-R1-IMPL-02-v1` |
 
 Do **not** treat this append as runtime activation.
+
+---
+
+## Append — R1-OD-03 / thermal scope correction pointer (documentation only)
+
+**Authority:** Dr. Ghanshyam Bakalwar — APPROVED_OWNER_FREEZE  
+**Runtime activation:** **NONE**
+
+Percentage **residual** under OD-R1-IMPL-01 is completed by correction token `OWNER-FREEZE-OD-R1-IMPL-01-CORR-v1` (`RULE1_PERCENTAGE_HAMILTON_V1`). Primary ranking / no singular secondary: `OWNER-FREEZE-OD-R1-IMPL-01-PRIMARY-RANK-v1`. Thermal contradiction scope: `OWNER-FREEZE-OD-R1-IMPL-05-CORR-v1`.
+
+See append Correction A / B in [rule-01-implementation-boundary-owner-freeze-OD-R1-IMPL-01-06.md](./rule-01-implementation-boundary-owner-freeze-OD-R1-IMPL-01-06.md).

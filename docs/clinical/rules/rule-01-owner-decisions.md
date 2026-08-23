@@ -206,3 +206,21 @@ Phase 5R-1 audit owner questions (interpreter bypass, Mixed vs UNKNOWN, etc.) ar
 | OD-R1-IMPL-06 | Bilious **secondary-dosha** logic **excluded / superseded** for Rule 1 v1 |
 
 **Still true:** `clinically_used=false` · medicine-selection influence **none** · migration tip **018** / no **019** · 37-row batch freezes unchanged
+
+---
+
+## Append — OD-R1-IMPL-01/05 correction A+B (@ PR #138 head follow-up)
+
+**Authority:** Dr. Ghanshyam Bakalwar — APPROVED_OWNER_FREEZE (documentation only; **no runtime activation**)
+
+| Tranche | Document | Tokens |
+|---------|----------|--------|
+| Percentage Hamilton residual + primary ranking; thermal contradiction scope | [rule-01-implementation-boundary-owner-freeze-OD-R1-IMPL-01-06.md](./rule-01-implementation-boundary-owner-freeze-OD-R1-IMPL-01-06.md) (Append Correction A / B) | `OWNER-FREEZE-OD-R1-IMPL-01-CORR-v1` · `OWNER-FREEZE-OD-R1-IMPL-01-PRIMARY-RANK-v1` · `OWNER-FREEZE-OD-R1-IMPL-05-CORR-v1` |
+
+**Posture:**
+
+- `RULE1_PERCENTAGE_ROUNDING_V1` (half-even residual) **superseded** by `RULE1_PERCENTAGE_HAMILTON_V1` (0.1%-unit floor + largest remainder; equal-remainder representation order `BILIOUS → SANGUINE → LYMPHATIC → NERVOUS`; **not** a clinical tie-breaker; zeros stay `0.0`; sum **100.0**)
+- Primary only on **unique** highest score; equal top → `UNRESOLVED_TIE`; **no** singular `secondaryTemperament` field — ranked percentages only
+- Thermal contradiction only for accepted non-negated **current same-consultation/episode systemic** heat+cold; historical-only and unrelated local-site do **not** pair; opposing subjective/objective systemic **do** contradict; both visible; primary null
+
+**Still true:** Draft PR documentation only · no runtime / E2 / migration **019** / API / medicine / Rx / readiness
