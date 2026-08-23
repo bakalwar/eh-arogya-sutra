@@ -1,4 +1,9 @@
-import { RULE1_EVIDENCE_KEY_ORDER, RULE1_INPUT_KEY_ORDER } from './constants.js';
+import {
+  MAX_EVIDENCE_COUNT,
+  MAX_SYNTHETIC_ID_LENGTH,
+  RULE1_EVIDENCE_KEY_ORDER,
+  RULE1_INPUT_KEY_ORDER,
+} from './constants.js';
 import { Rule1EvaluationError } from './errors.js';
 import { assertNfc } from './fingerprint.js';
 import { RULE1_INPUT_SCHEMA_VERSION, RULE1_RULE_CONTRACT_VERSION } from './version.js';
@@ -51,6 +56,14 @@ function assertExactKeys(
       throw new Rule1EvaluationError('INVALID_INPUT', `${label}: missing key ${a}`);
     }
   }
+}
+
+function assertSyntheticId(raw: unknown, label: string): string {
+  const id = assertNfc(String(raw), label);
+  if (id.length > MAX_SYNTHETIC_ID_LENGTH) {
+    throw new Rule1EvaluationError('INVALID_INPUT', `${label} exceeds maximum length`);
+  }
+  return id;
 }
 
 function parseEvidence(raw: unknown): Rule1EvidenceBinding {
@@ -108,10 +121,12 @@ function parseVitals(raw: unknown): Rule1StructuredVitals | undefined {
       throw new Rule1EvaluationError('MALFORMED_VITAL', `bp unknown key ${k}`);
     }
   }
-  if (typeof bp.value !== 'number' || !Number.isFinite(bp.value)) {
+  if (typeof bp.value !== 'number') {
     throw new Rule1EvaluationError('MALFORMED_VITAL', 'bp value must be finite number');
   }
-  // Zero is a valid supplied numeric value (fail only non-finite).
+  if (!Number.isFinite(bp.value) || bp.value <= 0) {
+    throw new Rule1EvaluationError('MALFORMED_VITAL', 'bp value must be finite number');
+  }
   if (bp.unit !== 'mmHg') {
     throw new Rule1EvaluationError('MALFORMED_VITAL', 'bp unit must be mmHg');
   }
@@ -140,10 +155,13 @@ export function validateRule1Input(raw: unknown): Rule1Input {
     throw new Rule1EvaluationError('UNSUPPORTED_CONTRACT_VERSION', 'ruleContractVersion mismatch');
   }
 
-  const consultationId = assertNfc(String(raw.consultationId), 'consultationId');
-  const episodeId = assertNfc(String(raw.episodeId), 'episodeId');
+  const consultationId = assertSyntheticId(raw.consultationId, 'consultationId');
+  const episodeId = assertSyntheticId(raw.episodeId, 'episodeId');
   if (!Array.isArray(raw.evidence)) {
     throw new Rule1EvaluationError('INVALID_INPUT', 'evidence must be array');
+  }
+  if (raw.evidence.length > MAX_EVIDENCE_COUNT) {
+    throw new Rule1EvaluationError('INVALID_INPUT', 'evidence exceeds maximum count');
   }
   const evidence = raw.evidence.map(parseEvidence);
   const structuredVitals = parseVitals(raw.structuredVitals);

@@ -76,6 +76,10 @@ export const RULE1_BP_SANGUINE_WEIGHT = 3 as const;
 export const RULE1_BP_LYMPHATIC_SYSTOLIC_MAX_EXCLUSIVE = 100 as const;
 export const RULE1_BP_LYMPHATIC_WEIGHT = 2 as const;
 
+/** Synthetic-shadow input bounds (fail-closed before scoring). */
+export const MAX_EVIDENCE_COUNT = 128 as const;
+export const MAX_SYNTHETIC_ID_LENGTH = 128 as const;
+
 /** Production real mapping registry remains empty (fail-closed). */
 export const RULE1_PRODUCTION_MAPPING_REGISTRY = Object.freeze({
   registryVersion: 'production-empty-v0',

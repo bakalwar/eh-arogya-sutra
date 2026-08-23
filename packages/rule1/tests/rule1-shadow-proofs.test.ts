@@ -113,20 +113,209 @@ describe('Rule1 v1 closed input', () => {
     ).toThrow(Rule1EvaluationError);
   });
 
-  it('treats numeric zero BP as supplied value (not absent)', () => {
-    const out = evaluateRule1Shadow(
-      baseInput({
-        evidence: [
-          ev('R1_FEAT_LYMPHATIC_CURRENT_CONSTIPATION', 'c1'),
-          ev('R1_FEAT_LYMPHATIC_SUBJECTIVE_COLD_TENDENCY', 'c2'),
-        ],
-        structuredVitals: {
-          systolicBpMmHg: { value: 0, unit: 'mmHg', validationPosture: 'VALIDATED' },
+  it('rejects zero BP as explicitly supplied invalid vital (not omission)', () => {
+    expect(() =>
+      evaluateRule1Shadow(
+        baseInput({
+          evidence: [
+            ev('R1_FEAT_LYMPHATIC_CURRENT_CONSTIPATION', 'c1'),
+            ev('R1_FEAT_LYMPHATIC_SUBJECTIVE_COLD_TENDENCY', 'c2'),
+          ],
+          structuredVitals: {
+            systolicBpMmHg: { value: 0, unit: 'mmHg', validationPosture: 'VALIDATED' },
+          },
+        }),
+      ),
+    ).toThrow(Rule1EvaluationError);
+  });
+});
+
+describe('Rule1 v1 pre-merge hardening — structured BP validation', () => {
+  const lymphSupport = [
+    ev('R1_FEAT_LYMPHATIC_CURRENT_CONSTIPATION', 'c1'),
+    ev('R1_FEAT_LYMPHATIC_SITE_BOUND_EDEMA', 'c2'),
+  ];
+  const sanguineSupport = [
+    ev('R1_FEAT_SANGUINE_PALPITATION', 'p1'),
+    ev('R1_FEAT_SANGUINE_FACIAL_FLUSHING', 'f1'),
+  ];
+
+  function bpInput(
+    value: unknown,
+    unit: string = 'mmHg',
+    validationPosture: 'VALIDATED' | 'INVALID' = 'VALIDATED',
+    evidence = lymphSupport,
+  ) {
+    return baseInput({
+      evidence,
+      structuredVitals: {
+        systolicBpMmHg: { value, unit, validationPosture } as {
+          value: number;
+          unit: 'mmHg';
+          validationPosture: 'VALIDATED' | 'INVALID';
         },
-      }),
+      },
+    });
+  }
+
+  it('omitted BP remains absent and does not score BP features', () => {
+    const out = evaluateRule1Shadow(baseInput({ evidence: lymphSupport }));
+    expect(out.reasonCodes.filter((r) => r.includes('BP'))).toHaveLength(0);
+    expect(out.scores.LYMPHATIC).toBe(4);
+  });
+
+  it('rejects zero, negative, NaN, and non-finite BP without partial output', () => {
+    for (const value of [0, -5, Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY]) {
+      expect(() => evaluateRule1Shadow(bpInput(value))).toThrow(Rule1EvaluationError);
+    }
+  });
+
+  it('rejects numeric string BP and wrong unit', () => {
+    expect(() =>
+      evaluateRule1Shadow(
+        baseInput({
+          evidence: lymphSupport,
+          structuredVitals: {
+            systolicBpMmHg: {
+              value: '140' as unknown as number,
+              unit: 'mmHg',
+              validationPosture: 'VALIDATED',
+            },
+          },
+        }),
+      ),
+    ).toThrow(Rule1EvaluationError);
+    expect(() => evaluateRule1Shadow(bpInput(120, 'kPa'))).toThrow(Rule1EvaluationError);
+  });
+
+  it('accepts positive boundary values without inventing upper clinical threshold', () => {
+    const at99 = evaluateRule1Shadow(bpInput(99));
+    expect(at99.scores.LYMPHATIC).toBe(6);
+    expect(at99.reasonCodes).toContain('R1_BP_LYMPHATIC_APPLIED');
+
+    const at100 = evaluateRule1Shadow(bpInput(100));
+    expect(at100.scores.LYMPHATIC).toBe(4);
+    expect(at100.reasonCodes).not.toContain('R1_BP_LYMPHATIC_APPLIED');
+
+    const at139 = evaluateRule1Shadow(bpInput(139, 'mmHg', 'VALIDATED', sanguineSupport));
+    expect(at139.scores.SANGUINE).toBe(4);
+    expect(at139.reasonCodes).not.toContain('R1_BP_SANGUINE_APPLIED');
+
+    const at140 = evaluateRule1Shadow(bpInput(140, 'mmHg', 'VALIDATED', sanguineSupport));
+    expect(at140.scores.SANGUINE).toBe(7);
+    expect(at140.reasonCodes).toContain('R1_BP_SANGUINE_APPLIED');
+  });
+});
+
+describe('Rule1 v1 pre-merge hardening — synthetic input caps', () => {
+  it('exports bounded cap constants', async () => {
+    const mod = await import('../src/constants.js');
+    expect(mod.MAX_EVIDENCE_COUNT).toBe(128);
+    expect(mod.MAX_SYNTHETIC_ID_LENGTH).toBe(128);
+  });
+
+  it('rejects empty consultationId or episodeId', () => {
+    expect(() => evaluateRule1Shadow(baseInput({ evidence: [], consultationId: '' }))).toThrow(
+      Rule1EvaluationError,
     );
-    expect(out.status).not.toBe('RULE1_INPUT_REJECTED');
-    expect(out.scores.LYMPHATIC).toBeGreaterThan(0);
+    expect(() => evaluateRule1Shadow(baseInput({ evidence: [], episodeId: '' }))).toThrow(
+      Rule1EvaluationError,
+    );
+  });
+
+  it('accepts ID length 1 and 128; rejects length 129', () => {
+    const one = 'a';
+    const max = 'b'.repeat(128);
+    const over = 'c'.repeat(129);
+    expect(() =>
+      evaluateRule1Shadow(
+        baseInput({
+          evidence: [
+            ev('R1_FEAT_NERVOUS_CURRENT_ANXIETY', 'a1'),
+            ev('R1_FEAT_NERVOUS_CURRENT_RESTLESSNESS', 'a2'),
+          ],
+          consultationId: one,
+          episodeId: one,
+        }),
+      ),
+    ).not.toThrow();
+    expect(() =>
+      evaluateRule1Shadow(
+        baseInput({
+          evidence: [
+            ev('R1_FEAT_NERVOUS_CURRENT_ANXIETY', 'a1'),
+            ev('R1_FEAT_NERVOUS_CURRENT_RESTLESSNESS', 'a2'),
+          ],
+          consultationId: max,
+          episodeId: max,
+        }),
+      ),
+    ).not.toThrow();
+    expect(() => evaluateRule1Shadow(baseInput({ evidence: [], consultationId: over }))).toThrow(
+      Rule1EvaluationError,
+    );
+    expect(() => evaluateRule1Shadow(baseInput({ evidence: [], episodeId: over }))).toThrow(
+      Rule1EvaluationError,
+    );
+  });
+
+  it('preserves NFC fail-closed behavior', () => {
+    const nonNfc = 'e\u0301pisode';
+    expect(() =>
+      evaluateRule1Shadow(
+        baseInput({
+          evidence: [
+            ev('R1_FEAT_NERVOUS_CURRENT_ANXIETY', 'a1'),
+            ev('R1_FEAT_NERVOUS_CURRENT_RESTLESSNESS', 'a2'),
+          ],
+          episodeId: nonNfc,
+        }),
+      ),
+    ).toThrow(Rule1EvaluationError);
+  });
+
+  it('empty evidence retains insufficient outcome; 128 accepted; 129 fails before scoring', () => {
+    expect(evaluateRule1Shadow(baseInput({ evidence: [] })).status).toBe(
+      'TEMPERAMENT_INSUFFICIENT_EVIDENCE',
+    );
+
+    const evidence128 = Array.from({ length: 128 }, (_, i) =>
+      ev('R1_FEAT_NERVOUS_CURRENT_ANXIETY', `fp${i}`),
+    );
+    const out128 = evaluateRule1Shadow(baseInput({ evidence: evidence128 }));
+    expect(out128.status).toBeDefined();
+    expect(out128.scores.NERVOUS).toBeGreaterThanOrEqual(0);
+
+    const evidence129 = Array.from({ length: 129 }, (_, i) =>
+      ev('R1_FEAT_NERVOUS_CURRENT_ANXIETY', `fp${i}`),
+    );
+    expect(() => evaluateRule1Shadow(baseInput({ evidence: evidence129 }))).toThrow(
+      Rule1EvaluationError,
+    );
+  });
+
+  it('sparse/malformed evidence arrays fail closed', () => {
+    const sparse = Array.from({ length: 3 });
+    sparse[0] = ev('R1_FEAT_NERVOUS_CURRENT_ANXIETY', 'a1');
+    expect(() =>
+      evaluateRule1Shadow({
+        inputSchemaVersion: RULE1_INPUT_SCHEMA_VERSION,
+        ruleContractVersion: RULE1_RULE_CONTRACT_VERSION,
+        consultationId: 'c1',
+        episodeId: 'e1',
+        evidence: sparse,
+      }),
+    ).toThrow(Rule1EvaluationError);
+  });
+
+  it('evidence cap enforced before catalog/dedupe regardless of caller order', () => {
+    const evidence129 = Array.from({ length: 129 }, (_, i) =>
+      ev('R1_FEAT_NERVOUS_CURRENT_RESTLESSNESS', `z${i}`),
+    );
+    evidence129.reverse();
+    expect(() => evaluateRule1Shadow(baseInput({ evidence: evidence129 }))).toThrow(
+      Rule1EvaluationError,
+    );
   });
 });
 
