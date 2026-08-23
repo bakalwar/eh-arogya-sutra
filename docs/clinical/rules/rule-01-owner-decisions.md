@@ -131,7 +131,7 @@ Phase 5R-1 audit owner questions (interpreter bypass, Mixed vs UNKNOWN, etc.) ar
 | Medicine identity + C11 + routes | [../legacy-adoption/owner-freeze-od-ext006-007-medicine-route-architecture.md](../legacy-adoption/owner-freeze-od-ext006-007-medicine-route-architecture.md) | `OWNER-FREEZE-OD-EXT-006-v1` · `OWNER-FREEZE-OD-EXT-007-v1` · `OWNER-FREEZE-EH-MEDICINE-ROUTE-ARCHITECTURE-v1` |
 | Rule 1 temperament taxonomy Q1–Q5 | [rule-01-temperament-taxonomy-owner-freeze-R1-OD-01-05.md](./rule-01-temperament-taxonomy-owner-freeze-R1-OD-01-05.md) | `OWNER-FREEZE-R1-OD-01-v1` … `OWNER-FREEZE-R1-OD-05-v1` |
 | Legacy scoring +1/+2 resolution | [rule-01-legacy-scoring-evidence-resolution.md](./rule-01-legacy-scoring-evidence-resolution.md) | `LEGACY_RUNTIME_KEYWORD_HIT_WEIGHT = 2` (Rule 1 path) · `LEGACY_SCORING_IMPLEMENTATION_CONFLICT` |
-| Rule 1 keyword row docket (37 rows) | [rule-01-keyword-row-clinical-review-docket.md](./rule-01-keyword-row-clinical-review-docket.md) | Bilious Batch 1 **approved** (8) · Sanguine Batch 2 **approved** (10); Lymphatic/Nervous pending |
+| Rule 1 keyword row docket (37 rows) | [rule-01-keyword-row-clinical-review-docket.md](./rule-01-keyword-row-clinical-review-docket.md) | Bilious Batch 1 **approved** (8) · Sanguine Batch 2 **approved** (10) · Lymphatic Batch 3 **approved** (11); Nervous pending |
 
 **Note:** R1-OD-01…05 partially clarifies/supersedes tokens above (e.g. four-primary `BILIOUS` vs `BILIOUS_HEPATIC`, disease-name keyword posture). Phase 5R-1F body preserved; future implementation follows the append tranche.
 
@@ -146,7 +146,7 @@ Phase 5R-1 audit owner questions (interpreter bypass, Mixed vs UNKNOWN, etc.) ar
 | Common weight scale v1 | [rule-01-bilious-batch1-owner-approval-freeze.md](./rule-01-bilious-batch1-owner-approval-freeze.md) | `OWNER-FREEZE-R1-TEMPERAMENT-WEIGHT-SCALE-v1` |
 | Bilious Batch 1 (8 rows) | [rule-01-bilious-batch1-owner-approval-freeze.md](./rule-01-bilious-batch1-owner-approval-freeze.md) · [rule-01-keyword-row-clinical-review-docket.csv](./rule-01-keyword-row-clinical-review-docket.csv) | `OWNER-FREEZE-R1-BILIOUS-BATCH1-v1` · `OWNER-APPROVE-R1-KW-0001-v1` … `0008-v1` |
 
-**Posture:** `clinically_used=false` / Rule 1 clinical activation **none** · medicine-selection influence **none** · Lymphatic/Nervous batches **pending**
+**Posture:** `clinically_used=false` / Rule 1 clinical activation **none** · medicine-selection influence **none** · Nervous batch **pending**
 
 ---
 
@@ -158,4 +158,16 @@ Phase 5R-1 audit owner questions (interpreter bypass, Mixed vs UNKNOWN, etc.) ar
 |---------|----------|--------|
 | Sanguine Batch 2 (10 rows) | [rule-01-sanguine-batch2-owner-approval-freeze.md](./rule-01-sanguine-batch2-owner-approval-freeze.md) · [rule-01-keyword-row-clinical-review-docket.csv](./rule-01-keyword-row-clinical-review-docket.csv) | `OWNER-FREEZE-R1-SANGUINE-BATCH2-v1` · `OWNER-APPROVE-R1-KW-0028-v1` … `0037-v1` |
 
-**Posture:** All ten raw Sanguine keywords `owner_approved_weight=0` · normalized concepts documented separately · structured systolic BP ≥140 weight **3** (max 1) · no second weight-scale token · Lymphatic/Nervous still pending
+**Posture:** All ten raw Sanguine keywords `owner_approved_weight=0` · normalized concepts documented separately · structured systolic BP ≥140 weight **3** (max 1) · no second weight-scale token · Lymphatic Batch 3 / Nervous still pending at time of this append
+
+---
+
+## Append — Lymphatic Batch 3 (@ `01cc71c`)
+
+**Authority:** Dr. Ghanshyam Bakalwar — APPROVED_OWNER_FREEZE (documentation only; **no runtime activation**)
+
+| Tranche | Document | Tokens |
+|---------|----------|--------|
+| Lymphatic Batch 3 (11 rows) | [rule-01-lymphatic-batch3-owner-approval-freeze.md](./rule-01-lymphatic-batch3-owner-approval-freeze.md) · [rule-01-keyword-row-clinical-review-docket.csv](./rule-01-keyword-row-clinical-review-docket.csv) | `OWNER-FREEZE-R1-LYMPHATIC-BATCH3-v1` · `OWNER-APPROVE-R1-KW-0009-v1` … `0019-v1` |
+
+**Posture:** All eleven raw Lymphatic keywords `owner_approved_weight=0` · normalized cold/bowel/habitus/edema/discharge concepts documented separately · structured systolic BP **&lt;100** weight **2** (max 1) **only with** ≥1 independent accepted non-BP Lymphatic feature · no second weight-scale token · Nervous still pending · `clinically_used=false` · medicine-selection influence **none**
