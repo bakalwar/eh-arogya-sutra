@@ -428,7 +428,7 @@ Incomplete status requires non-empty reason list (unless future explicit policy 
 - Do **not** alias Q2/Q3 governance tokens with Rule 4 slot `evidenceStatus`, Rule 5 `R5_*` / `RULE5_*` codes, persistence finding verification enums, or `ClinicalRuleStatus` without explicit adapter + version gate.
 - Do **not** treat `RULE_SET_VERSION` as schema version for Q3 pre-contract surfaces.
 - Do **not** merge assessment-level `evidenceStatus`, item-level freshness/verification/completeness, workflow states, required actions, or red-flag statuses.
-- Do **not** use `MIXED` as equal-tie fallback; use `UNRESOLVED_TIE` per Q3G-TIE for future implementation.
+- Do **not** use `MIXED` as equal-tie **fallback** for unresolved programming ties; Rule 1 **v1** equal highest scores after eligibility are a valid **`MIXED_TEMPERAMENT`** co-dominant profile per `OWNER-FREEZE-OD-R1-IMPL-07-MIXED-TEMPERAMENT-v1` (prior equal-top → `UNRESOLVED_TIE` **superseded** for that profile case). Interactive question bank remains forbidden (Q3G-TIE).
 - Do **not** implement boolean `provenanceComplete` as authority (PC-Q16 supersedes).
 
 ---

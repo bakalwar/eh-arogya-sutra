@@ -421,7 +421,23 @@ Future audit records should support (governance field list — **not** a live co
 | R1-CP-Q3E | Diagnosis/investigation | **B+A** |
 | R1-CP-Q3F | Freshness/conflict | **A** |
 | R1-CP-Q3G | Workflow (no questions) | **REVISED FINAL** |
-| R1-CP-Q3G-TIE | Equal tie | **A** (`UNRESOLVED_TIE`; no follow-up question) |
+| R1-CP-Q3G-TIE | Equal tie | **A** (`UNRESOLVED_TIE`; no follow-up question) — **Rule 1 v1 equal-top profile outcome superseded** by `OWNER-FREEZE-OD-R1-IMPL-07-MIXED-TEMPERAMENT-v1` → `MIXED_TEMPERAMENT` (see append below); interactive question bank remains **forbidden** |
 | R1-CP-Q3H | Red flags | **D+A** |
 
 **Authority tag:** OWNER_APPROVED_GOVERNANCE_BASELINE · **Runtime:** NOT_CONNECTED · **Clinical selection:** NOT_AUTHORIZED
+
+---
+
+## Append — OD-R1-IMPL-07 supersession of equal-top `UNRESOLVED_TIE` (documentation only)
+
+**Authority:** Dr. Ghanshyam Bakalwar — APPROVED_OWNER_FREEZE  
+**Runtime activation:** **NONE**  
+**Token:** `OWNER-FREEZE-OD-R1-IMPL-07-MIXED-TEMPERAMENT-v1`  
+**Canonical detail:** [rule-01-implementation-boundary-owner-freeze-OD-R1-IMPL-01-06.md](./rule-01-implementation-boundary-owner-freeze-OD-R1-IMPL-01-06.md) (Correction C)
+
+For Rule 1 **v1** temperament-profile outcomes after caps, dedupe, and minimum-evidence eligibility:
+
+- Numerical equal highest scores among two or more temperaments → **`MIXED_TEMPERAMENT`** (`DUAL_TEMPERAMENT` / `MULTI_TEMPERAMENT`), **not** `UNRESOLVED_TIE`.
+- This is a **valid co-dominant profile**, not an unresolved programming tie and not “MIXED as tie fallback.”
+- Q3G-TIE remains in force for: **no** interactive follow-up question bank; **no** dictionary/first-key/default winner; contradiction / insufficient evidence remain separate fail-closed paths.
+- Body §10 “Exact remaining tie → `UNRESOLVED_TIE`” is **superseded only** for the equal-top **score profile** case above; forensic text may remain.

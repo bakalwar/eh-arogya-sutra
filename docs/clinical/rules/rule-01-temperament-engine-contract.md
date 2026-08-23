@@ -120,7 +120,7 @@ Canonical cross-rule pointer: [../CLINICAL_PRODUCT_CONSTITUTION.md](../CLINICAL_
 | **R1-ID-02** | **`AFFIRM_CASE_TEMPERAMENT_SCOPE`** | Rule 1 owns **patient/case/symptom-level** Electro-Homeopathy temperament only. Rule 8 owns **disease-level** prakriti only. | Does **not** redefine Rule 8; does **not** authorize reconciliation. | Prevents silent merge with disease-level prakriti. |
 | **R1-ID-03** | **`SHADOW_MEDICINE_INFLUENCE_NONE`** | First shadow form: medicine-selection influence **`NONE`**; clinical activation **`NONE`**; orchestration **`NOT_CONNECTED`**; prescription/Rx effect **`NONE`**. Historical impact-matrix “YES” = **future** downstream evidence influence only (separate owner tranche). | Does **not** cancel forever the future clinical impact matrix; does **not** authorize ranking/boost/demote now. | Prevents selection creep in first technical shadow. |
 | **R1-ID-04** | **`EMPTY_REGISTRY_FAIL_CLOSED`** | Production/real evidence registry remains **immutable empty**; active validated mappings **`0`**. No invented keyword maps. Positive real mapping requires conjunctive gates (§6). | Does **not** create catalog or edges; does **not** import legacy `PRAKRITI_KEYWORDS` as authority. | Fail-closed when evidence absent/unapproved. |
-| **R1-ID-05** | **`ENCODE_Q3G_TIE_NORMATIVE`** | Future implementation: exact remaining equal tie → **`UNRESOLVED_TIE`**; **no** interactive question bank; **`MIXED`** only when genuinely evidence-supported — **never** as tie fallback. Historical freeze body preserved. | Does **not** invent tie-break questions or default temperament. | Aligns contract with Q3G-TIE; blocks dictionary/first-key defaults. |
+| **R1-ID-05** | **`ENCODE_Q3G_TIE_NORMATIVE`** | Future implementation: exact remaining equal tie → **`UNRESOLVED_TIE`**; **no** interactive question bank; **`MIXED`** only when genuinely evidence-supported — **never** as tie fallback. Historical freeze body preserved. **Rule 1 v1 equal-top score profile:** superseded by `OWNER-FREEZE-OD-R1-IMPL-07-MIXED-TEMPERAMENT-v1` → **`MIXED_TEMPERAMENT`** (valid co-dominant profile; not programming-tie / not question-bank). | Does **not** invent tie-break questions or default temperament. | Aligns contract with Q3G-TIE; blocks dictionary/first-key defaults; v1 equal-top uses Mixed profile. |
 
 ---
 
@@ -509,3 +509,22 @@ Under **`R1_TEMPERAMENT_ENGINE_CANONICAL_CONTRACT_DOCUMENTATION_AUTHORIZED`** (c
 **Historical (superseded for package presence only):** “Do not create `packages/rule1` or implement evaluator/tests” applied under the contract-docs authorization and is **superseded** by separately authorized PR #98 (`RULE1_SHADOW_EVALUATOR_IMPLEMENTED`). Remaining STOP bullets above still apply.
 
 **Separate authorizations required:** validated evidence catalog / mappings; independent clinical review of concrete edges; Rule 1↔Rule 8 reconciliation (if ever); orchestration connection; production activation; residual corrections.
+
+---
+
+## Append — OD-R1-IMPL-07 Mixed temperament (documentation only)
+
+**Authority:** Dr. Ghanshyam Bakalwar — APPROVED_OWNER_FREEZE  
+**Runtime activation:** **NONE**  
+**Token:** `OWNER-FREEZE-OD-R1-IMPL-07-MIXED-TEMPERAMENT-v1`
+
+For Rule 1 **v1** synthetic-shadow / future profile evaluation after eligibility:
+
+- Equal highest positive temperament scores → status **`MIXED_TEMPERAMENT`** with subtype `DUAL_TEMPERAMENT` (2) or `MULTI_TEMPERAMENT` (3–4); `primaryTemperament = null`; `dominantTemperaments` co-dominant.
+- Unique highest → `TEMPERAMENT_PROFILE_RESOLVED`.
+- `UNRESOLVED_TIE` as equal-top **profile** outcome is **superseded** (forensic mentions may remain).
+- Interactive question bank remains **forbidden** (Q3G-TIE).
+- `TEMPERAMENT_CONTRADICTORY` outranks Mixed.
+- Does **not** authorize medicine, Rx, orchestration, or `clinically_used=true`.
+
+Canonical text: [rule-01-implementation-boundary-owner-freeze-OD-R1-IMPL-01-06.md](./rule-01-implementation-boundary-owner-freeze-OD-R1-IMPL-01-06.md) Correction C.

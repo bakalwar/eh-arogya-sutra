@@ -32,6 +32,7 @@ RULE1_PERCENTAGE_ELIGIBILITY_V1 =
 
 - **Zero evidence** (`T == 0`) or fewer than **two** independent accepted normalized concepts → status **`TEMPERAMENT_INSUFFICIENT_EVIDENCE`** (alias display: **INSUFFICIENT**). Do **not** force percentages.
 - **Equal top score** among two or more temperaments with `S_max > 0` and eligibility otherwise met → status **`UNRESOLVED_TIE`**. Do **not** select a primary temperament. Percentages **may** still emit when eligibility is met (ties remain visible).
+  - **SUPERSEDED for Rule 1 v1 equal-top profile outcomes** by `OWNER-FREEZE-OD-R1-IMPL-07-MIXED-TEMPERAMENT-v1` → `MIXED_TEMPERAMENT` (see Append Correction C). Historical `UNRESOLVED_TIE` wording retained as forensic only.
 
 ### Formula (deterministic)
 
@@ -168,6 +169,7 @@ RULE1_V1_BILIOUS_SECONDARY_DOSHA_LOGIC =
 - Any historical / engineering path that treated Bilious as a **secondary dosha modifier**, required secondary resolution to pick a winner, or emitted `R1_BILIOUS_SECONDARY_UNRESOLVED` as a blocking clinical resolution step is **excluded** from Rule 1 **v1**.
 - Rule 1 v1 treats **`BILIOUS`** as an independent primary temperament (R1-OD-01 / R1-OD-02 / OD-R1-IMPL-02).
 - Equal top scores use **`UNRESOLVED_TIE`** (OD-R1-IMPL-01 / Q3G-TIE), not secondary-dosha follow-up.
+  - **SUPERSEDED for Rule 1 v1 equal-top profile outcomes** by `OWNER-FREEZE-OD-R1-IMPL-07-MIXED-TEMPERAMENT-v1` → `MIXED_TEMPERAMENT`. Q3G-TIE remains authority that interactive question-bank tie resolution is **not** authorized.
 - Interactive question-bank tie resolution remains **not** authorized for future implementation.
 
 ---
@@ -212,7 +214,7 @@ RULE1_V1_BILIOUS_SECONDARY_DOSHA_LOGIC =
 
 The block labeled `RULE1_PERCENTAGE_ROUNDING_V1` in OD-R1-IMPL-01 above (half-even + underspecified residual) is **SUPERSEDED** for Rule 1 **v1**. Do **not** implement that wording.
 
-Eligibility (`RULE1_PERCENTAGE_ELIGIBILITY_V1`), sum contract (`RULE1_PERCENTAGE_SUM_CONTRACT_V1`), insufficient / equal-top outcomes, and four-temperament score inputs remain in force.
+Eligibility (`RULE1_PERCENTAGE_ELIGIBILITY_V1`), sum contract (`RULE1_PERCENTAGE_SUM_CONTRACT_V1`), insufficient outcomes, and four-temperament score inputs remain in force. Equal-top **profile** outcome is governed by OD-R1-IMPL-07 (`MIXED_TEMPERAMENT`), not `UNRESOLVED_TIE`.
 
 ### Frozen algorithm — 0.1%-unit Hamilton / largest-remainder
 
@@ -275,10 +277,13 @@ RULE1_PERCENTAGE_SUM_CONTRACT_V1 =
 RULE1_V1_PRIMARY_SELECTION =
   if unique temperament has strictly highest S_t (S_max unique, S_max > 0):
     primaryTemperament = that temperament
+    // status TEMPERAMENT_PROFILE_RESOLVED — see OD-R1-IMPL-07
   else if two or more temperaments share S_max > 0:
     primaryTemperament = null
     status = UNRESOLVED_TIE
-  // REPRESENTATION_ORDER_EQUAL_REMAINDER must NOT break clinical ties.
+    // SUPERSEDED for Rule 1 v1 equal-top: see OD-R1-IMPL-07 → MIXED_TEMPERAMENT
+  // REPRESENTATION_ORDER_EQUAL_REMAINDER must NOT break clinical ties /
+  // must NOT rank one co-dominant as clinically superior.
 ```
 
 ```text
@@ -355,6 +360,129 @@ RULE1_THERMAL_CONTRADICTION_OUTCOME_V1 =
 - `OWNER-FREEZE-OD-R1-IMPL-01-CORR-v1`
 - `OWNER-FREEZE-OD-R1-IMPL-01-PRIMARY-RANK-v1`
 - `OWNER-FREEZE-OD-R1-IMPL-05-CORR-v1`
+- `OWNER-FREEZE-OD-R1-IMPL-07-MIXED-TEMPERAMENT-v1`
 - `RULE1_IMPL_BOUNDARY_CORRECTION_A_B_DOCUMENTATION_ONLY`
+- `RULE1_IMPL_BOUNDARY_CORRECTION_C_MIXED_TEMPERAMENT_DOCUMENTATION_ONLY`
 - `RULE1_CLINICAL_ACTIVATION_NONE`
 - `RULE1_MIGRATION_019_NOT_AUTHORIZED`
+
+---
+
+## Append — Correction C: OD-R1-IMPL-07 Mixed / Dual Temperament (docs only)
+
+| Field | Value |
+|-------|--------|
+| **Authority** | Dr. Ghanshyam Bakalwar — APPROVED_OWNER_FREEZE |
+| **Document class** | Append-only correction |
+| **Decision ID** | **OD-R1-IMPL-07** |
+| **Approval token** | `OWNER-FREEZE-OD-R1-IMPL-07-MIXED-TEMPERAMENT-v1` |
+| **Canonical base (PR tip before this append)** | `afb45ccfde938ca7a66b332f5993b9b1ead704ec` |
+| **Runtime activation** | **NONE** |
+
+### Clinical meaning
+
+A patient may have **more than one simultaneously dominant temperament**.
+
+Numerical equality between sufficiently supported highest temperament scores is **not** an error and must **not** be labelled an unresolved programming tie.
+
+### Supersession (Rule 1 v1 equal-top outcomes)
+
+For Rule 1 **v1** numerical equal-top temperament-profile outcomes after eligibility:
+
+| Prior instruction | Disposition |
+|-------------------|-------------|
+| OD-R1-IMPL-01 equal-top → `UNRESOLVED_TIE` | **SUPERSEDED** |
+| `OWNER-FREEZE-OD-R1-IMPL-01-PRIMARY-RANK-v1` equal-top → `UNRESOLVED_TIE` | **SUPERSEDED** for equal-top branch only (unique-max primary selection remains) |
+| Q3G-TIE “exact remaining tie → `UNRESOLVED_TIE`” as Rule 1 **v1 profile outcome** | **SUPERSEDED** by this decision for equal highest **scores** after caps/dedupe/eligibility |
+| Historical / forensic mentions of `UNRESOLVED_TIE` | May remain in place **only** as superseded/forensic text |
+
+```text
+RULE1_V1_EQUAL_TOP_OUTCOME =
+  MIXED_TEMPERAMENT
+  // NOT UNRESOLVED_TIE
+```
+
+Hamilton (`RULE1_PERCENTAGE_HAMILTON_V1`), thermal contradiction scope (`OWNER-FREEZE-OD-R1-IMPL-05-CORR-v1`), dedupe, BP gates, and 37-row freezes are **unchanged**.
+
+### Deterministic outcome precedence
+
+```text
+RULE1_V1_OUTCOME_PRECEDENCE =
+  1. Validate source / evidence authority
+  2. Apply exclusions, caps, and dedupe
+  3. If insufficient (T == 0 OR independent_accepted_normalized_concept_count < 2)
+       → TEMPERAMENT_INSUFFICIENT_EVIDENCE
+         (no primary; no MIXED outcome)
+  4. If RULE1_THERMAL_CONTRADICTION_SCOPE_V1 trigger is met
+       → TEMPERAMENT_CONTRADICTORY
+         (primaryTemperament = null; retain both evidence + scores for audit;
+          do NOT emit MIXED_TEMPERAMENT as the resolution;
+          percentages only as contradictory evidence distribution if eligibility met)
+  5. Else compute Hamilton percentages (unchanged algorithm)
+  6. Let S_max = maximum of four temperament scores
+     - if exactly one temperament has S_t == S_max and S_max > 0
+         → TEMPERAMENT_PROFILE_RESOLVED
+           primaryTemperament = that temperament
+     - if two or more temperaments have S_t == S_max and S_max > 0
+         → MIXED_TEMPERAMENT
+           primaryTemperament = null
+           dominantTemperaments = all temperaments with S_t == S_max
+  7. Emit deterministic ranked percentage profile + explanation
+```
+
+Contradiction is **higher precedence** than Mixed. Mixed must **not** hide contradictory, malformed, stale, or insufficient evidence.
+
+### Mixed / Dual / Multi output contract
+
+```text
+RULE1_V1_MIXED_TEMPERAMENT_CONTRACT =
+
+  When MIXED_TEMPERAMENT (step 6 equal maxima):
+
+  If |dominantTemperaments| == 2:
+    mixedSubtype = DUAL_TEMPERAMENT
+  If |dominantTemperaments| == 3 OR 4:
+    mixedSubtype = MULTI_TEMPERAMENT
+
+  primaryTemperament = null
+  dominantTemperaments ordered ONLY by REPRESENTATION_ORDER_EQUAL_REMAINDER:
+    BILIOUS → SANGUINE → LYMPHATIC → NERVOUS
+  // Stable output order ONLY — does NOT make one co-dominant clinically superior.
+
+  Both / all dominantTemperaments are clinically co-dominant for Rule 1 representation.
+  Hamilton percentage profile remains visible (deterministic; sum 100.0 when eligible).
+  Lower positive scores remain in the ranked percentage profile but are NOT in
+  dominantTemperaments unless they equal S_max.
+  No singular secondaryTemperament field.
+```
+
+### Valid Mixed vs contradiction
+
+| | Valid `MIXED_TEMPERAMENT` | `TEMPERAMENT_CONTRADICTORY` |
+|--|---------------------------|----------------------------|
+| Meaning | Valid co-dominant temperament **profile** | Evidence conflict requiring review |
+| Requires ≥2 independent accepted concepts | Yes | Trigger uses accepted systemic heat+cold per IMPL-05-CORR |
+| Equal highest scores | Yes (defining) | May or may not; status is contradiction, **not** Mixed |
+| Error / programming tie? | **No** | **No** — bounded clinical conflict status |
+
+### Authority boundary
+
+`MIXED_TEMPERAMENT` / `DUAL_TEMPERAMENT` / `MULTI_TEMPERAMENT` mean **only** a Rule 1 temperament-profile outcome. They do **not** mean diagnosis, disease confirmation, Rules 2–9 passed, medicine/formula/potency/dose/Rx, or `clinically_used=true`. Doctor-facing use remains separately authorized.
+
+### Deterministic examples (score order SANGUINE, LYMPHATIC, NERVOUS, BILIOUS)
+
+Assume concept-count eligibility met unless noted. Hamilton per `RULE1_PERCENTAGE_HAMILTON_V1`.
+
+| Scores (S,L,N,B) | pct (S,L,N,B) | Status | Subtype / primary | `dominantTemperaments` |
+|------------------|---------------|--------|-------------------|------------------------|
+| 2,2,0,0 | 50.0, 50.0, 0.0, 0.0 | `MIXED_TEMPERAMENT` | `DUAL_TEMPERAMENT` | SANGUINE, LYMPHATIC |
+| 3,3,2,1 | 33.4, 33.3, 22.2, 11.1 | `MIXED_TEMPERAMENT` | `DUAL_TEMPERAMENT` | SANGUINE, LYMPHATIC |
+| 1,1,1,0 | 33.4, 33.3, 33.3, 0.0 | `MIXED_TEMPERAMENT` | `MULTI_TEMPERAMENT` | SANGUINE, LYMPHATIC, NERVOUS |
+| 1,1,1,1 | 25.0, 25.0, 25.0, 25.0 | `MIXED_TEMPERAMENT` | `MULTI_TEMPERAMENT` | BILIOUS, SANGUINE, LYMPHATIC, NERVOUS |
+| 3,2,1,0 | 50.0, 33.3, 16.7, 0.0 | `TEMPERAMENT_PROFILE_RESOLVED` | primary **SANGUINE** | (n/a — unique max) |
+| T=0 or concepts&lt;2 | (none forced) | `TEMPERAMENT_INSUFFICIENT_EVIDENCE` | — | not Mixed |
+| Qualifying systemic heat+cold contradiction | evidence-distribution % only if eligible | `TEMPERAMENT_CONTRADICTORY` | primary null | **not** Mixed |
+
+For `1,1,1,1`, representation order lists all four co-dominants as BILIOUS → SANGUINE → LYMPHATIC → NERVOUS.
+
+**Status tokens:** `OWNER-FREEZE-OD-R1-IMPL-07-MIXED-TEMPERAMENT-v1` · `RULE1_V1_MIXED_TEMPERAMENT_OWNER_FROZEN` · `RULE1_V1_UNRESOLVED_TIE_SUPERSEDED_FOR_EQUAL_TOP` · `RULE1_CLINICAL_ACTIVATION_NONE` · `RULE1_MIGRATION_019_NOT_AUTHORIZED`

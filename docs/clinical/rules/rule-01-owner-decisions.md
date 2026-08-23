@@ -198,7 +198,7 @@ Phase 5R-1 audit owner questions (interpreter bypass, Mixed vs UNKNOWN, etc.) ar
 
 | ID | Decision |
 |----|----------|
-| OD-R1-IMPL-01 | Percentages from **deduped** scores; deterministic; sum **100.0**; ≥**2** independent accepted normalized concepts; zero evidence → **INSUFFICIENT**; equal top → **UNRESOLVED_TIE** |
+| OD-R1-IMPL-01 | Percentages from **deduped** scores; deterministic; sum **100.0**; ≥**2** independent accepted normalized concepts; zero evidence → **INSUFFICIENT**; equal top → **`MIXED_TEMPERAMENT`** (`OWNER-FREEZE-OD-R1-IMPL-07-MIXED-TEMPERAMENT-v1`; prior `UNRESOLVED_TIE` **superseded** for v1 equal-top) |
 | OD-R1-IMPL-02 | Canonical token **`BILIOUS` only**; `BILIOUS_HEPATIC` superseded for Rule 1 v1 primary output |
 | OD-R1-IMPL-03 | First implementation = **pure non-persistent synthetic shadow** only; no raw-text parse, E2 production binding, migration **019**, API, readiness, medicine, or Rx |
 | OD-R1-IMPL-04 | Dedupe on **concept ID** and **source-fact/content fingerprint** (either match → one contribution) |
@@ -220,7 +220,19 @@ Phase 5R-1 audit owner questions (interpreter bypass, Mixed vs UNKNOWN, etc.) ar
 **Posture:**
 
 - `RULE1_PERCENTAGE_ROUNDING_V1` (half-even residual) **superseded** by `RULE1_PERCENTAGE_HAMILTON_V1` (0.1%-unit floor + largest remainder; equal-remainder representation order `BILIOUS → SANGUINE → LYMPHATIC → NERVOUS`; **not** a clinical tie-breaker; zeros stay `0.0`; sum **100.0**)
-- Primary only on **unique** highest score; equal top → `UNRESOLVED_TIE`; **no** singular `secondaryTemperament` field — ranked percentages only
-- Thermal contradiction only for accepted non-negated **current same-consultation/episode systemic** heat+cold; historical-only and unrelated local-site do **not** pair; opposing subjective/objective systemic **do** contradict; both visible; primary null
+- Primary only on **unique** highest score → `TEMPERAMENT_PROFILE_RESOLVED`; equal top → **`MIXED_TEMPERAMENT`** (`DUAL_TEMPERAMENT` / `MULTI_TEMPERAMENT` per `OWNER-FREEZE-OD-R1-IMPL-07-MIXED-TEMPERAMENT-v1`; prior `UNRESOLVED_TIE` **superseded**); **no** singular `secondaryTemperament` field — ranked percentages only
+- Thermal contradiction only for accepted non-negated **current same-consultation/episode systemic** heat+cold; historical-only and unrelated local-site do **not** pair; opposing subjective/objective systemic **do** contradict; both visible; primary null; contradiction **outranks** Mixed
 
 **Still true:** Draft PR documentation only · no runtime / E2 / migration **019** / API / medicine / Rx / readiness
+
+---
+
+## Append — OD-R1-IMPL-07 Mixed / Dual Temperament (@ PR #138 Correction C)
+
+**Authority:** Dr. Ghanshyam Bakalwar — APPROVED_OWNER_FREEZE (documentation only; **no runtime activation**)
+
+| Tranche | Document | Tokens |
+|---------|----------|--------|
+| Mixed / Dual / Multi temperament equal-top outcome | [rule-01-implementation-boundary-owner-freeze-OD-R1-IMPL-01-06.md](./rule-01-implementation-boundary-owner-freeze-OD-R1-IMPL-01-06.md) (Append Correction C) | `OWNER-FREEZE-OD-R1-IMPL-07-MIXED-TEMPERAMENT-v1` |
+
+**Posture:** Equal highest scores after eligibility → valid **`MIXED_TEMPERAMENT`** (`DUAL_TEMPERAMENT` if 2; `MULTI_TEMPERAMENT` if 3–4); `dominantTemperaments` co-dominant; representation order stable-only; unique max → `TEMPERAMENT_PROFILE_RESOLVED`; `TEMPERAMENT_CONTRADICTORY` higher precedence than Mixed; `UNRESOLVED_TIE` **superseded** for Rule 1 v1 equal-top profile outcomes; Hamilton / dedupe / BP / 37-row unchanged; no medicine / Rx / `clinically_used`
