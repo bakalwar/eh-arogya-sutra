@@ -183,3 +183,26 @@ Phase 5R-1 audit owner questions (interpreter bypass, Mixed vs UNKNOWN, etc.) ar
 | Nervous Batch 4 (8 rows) | [rule-01-nervous-batch4-owner-approval-freeze.md](./rule-01-nervous-batch4-owner-approval-freeze.md) · [rule-01-keyword-row-clinical-review-docket.csv](./rule-01-keyword-row-clinical-review-docket.csv) | `OWNER-FREEZE-R1-NERVOUS-BATCH4-v1` · `OWNER-APPROVE-R1-KW-0020-v1` … `0027-v1` |
 
 **Posture:** All eight raw Nervous keywords `owner_approved_weight=0` · accepted current anxiety / restlessness / neuropathic pain / site-bound shooting pain / site-bound tingling each weight **2** with one-concept-once dedupe · `nas` and `nervous` **QUARANTINE** · `sciatica` **MOVE_TO_R3** · psychomotor agitation / objective neuro signs / new thresholds **not** included · no second weight-scale token · `clinically_used=false` · medicine-selection influence **none** · migration tip **018** / no **019**
+
+---
+
+## Append — Implementation-boundary freezes OD-R1-IMPL-01 … 06 (@ `b7855c9`)
+
+**Authority:** Dr. Ghanshyam Bakalwar — APPROVED_OWNER_FREEZE (documentation only; **no runtime activation**)
+
+| Tranche | Document | Tokens |
+|---------|----------|--------|
+| Implementation boundary (percentage, Bilious token, synthetic-shadow scope, dedupe, thermal contradiction, secondary-dosha exclusion) | [rule-01-implementation-boundary-owner-freeze-OD-R1-IMPL-01-06.md](./rule-01-implementation-boundary-owner-freeze-OD-R1-IMPL-01-06.md) | `OWNER-FREEZE-R1-IMPL-BOUNDARY-01-06-v1` · `OWNER-FREEZE-OD-R1-IMPL-01-v1` … `OWNER-FREEZE-OD-R1-IMPL-06-v1` |
+
+**Posture (summary):**
+
+| ID | Decision |
+|----|----------|
+| OD-R1-IMPL-01 | Percentages from **deduped** scores; deterministic; sum **100.0**; ≥**2** independent accepted normalized concepts; zero evidence → **INSUFFICIENT**; equal top → **UNRESOLVED_TIE** |
+| OD-R1-IMPL-02 | Canonical token **`BILIOUS` only**; `BILIOUS_HEPATIC` superseded for Rule 1 v1 primary output |
+| OD-R1-IMPL-03 | First implementation = **pure non-persistent synthetic shadow** only; no raw-text parse, E2 production binding, migration **019**, API, readiness, medicine, or Rx |
+| OD-R1-IMPL-04 | Dedupe on **concept ID** and **source-fact/content fingerprint** (either match → one contribution) |
+| OD-R1-IMPL-05 | Heat–cold contradiction: **both** evidence visible; **no** primary temperament |
+| OD-R1-IMPL-06 | Bilious **secondary-dosha** logic **excluded / superseded** for Rule 1 v1 |
+
+**Still true:** `clinically_used=false` · medicine-selection influence **none** · migration tip **018** / no **019** · 37-row batch freezes unchanged

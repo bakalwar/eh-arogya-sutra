@@ -118,3 +118,22 @@ Do **not** describe this model as universally or conventionally scientifically v
 - `RULE1_TAXONOMY_OWNER_FREEZE_DOCUMENTATION_ONLY`
 - `RULE1_CLINICAL_ACTIVATION_NONE`
 - `RULE1_MEDICINE_SELECTION_INFLUENCE_NONE`
+
+---
+
+## Append — R1-OD-03 algorithm completion (documentation only)
+
+**Authority:** Dr. Ghanshyam Bakalwar — APPROVED_OWNER_FREEZE  
+**Canonical base:** `b7855c9386541382a28fb1a1721f3602182c1b1e`  
+**Runtime activation:** **NONE**
+
+The percentage **intent** under `OWNER-FREEZE-R1-OD-03-v1` remains in force. The previously incomplete algorithm (formula, eligibility floor, rounding to **100.0**, insufficient / tie outcomes) is now frozen in:
+
+[rule-01-implementation-boundary-owner-freeze-OD-R1-IMPL-01-06.md](./rule-01-implementation-boundary-owner-freeze-OD-R1-IMPL-01-06.md)
+
+| Clarification | Token |
+|---------------|--------|
+| Percentage from deduped scores; sum **100.0**; ≥2 independent concepts; zero → **INSUFFICIENT**; equal top → **UNRESOLVED_TIE** | `OWNER-FREEZE-OD-R1-IMPL-01-v1` |
+| Canonical primary token **`BILIOUS` only** (`BILIOUS_HEPATIC` superseded for v1 output) | `OWNER-FREEZE-OD-R1-IMPL-02-v1` |
+
+Do **not** treat this append as runtime activation.
