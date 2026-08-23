@@ -1,506 +1,383 @@
+import { getCatalogEntry, type Rule1CatalogEntry } from './catalog.js';
 import {
-  RULE1_BP_LYMPHATIC_SUPPORT,
   RULE1_BP_LYMPHATIC_SYSTOLIC_MAX_EXCLUSIVE,
-  RULE1_BP_SANGUINE_SUPPORT,
+  RULE1_BP_LYMPHATIC_WEIGHT,
   RULE1_BP_SANGUINE_SYSTOLIC_MIN,
-  RULE1_BLOCKING_LIFECYCLE,
-  RULE1_OUTPUT_KEY_ORDER,
+  RULE1_BP_SANGUINE_WEIGHT,
   RULE1_REASON_CODES,
-  RULE1_SYNTHETIC_TEST_CLASSIFICATION,
-  type Rule1Outcome,
-  type Rule1ResolutionState,
-  type Rule1Rule8ComparisonState,
-  type Rule1TemperamentToken,
+  RULE1_REPRESENTATION_ORDER,
 } from './constants.js';
 import { Rule1EvaluationError } from './errors.js';
 import { deepFreeze } from './freeze.js';
-import type { Rule1DoshaMapping, Rule1Input, Rule1Output } from './types.js';
-import { isActivatingTemperamentEvidence, validateRule1Input } from './validateInput.js';
+import { computeCatalogFingerprint, sha256Hex } from './fingerprint.js';
+import { computeHamiltonPercentages, sumPercentages } from './hamilton.js';
+import type {
+  Rule1AcceptedContribution,
+  Rule1ExcludedEvidence,
+  Rule1Input,
+  Rule1Output,
+  Rule1PercentageMap,
+  Rule1RankedPercentageEntry,
+  Rule1ScoreMap,
+} from './types.js';
+import { validateRule1Input } from './validateInput.js';
 import {
+  RULE1_CATALOG_VERSION,
+  RULE1_INPUT_SCHEMA_VERSION,
+  RULE1_ORCHESTRATION_STATUS,
   RULE1_OUTPUT_CONTRACT_VERSION,
-  RULE1_RULE_IDENTITY,
-  RULE1_RULE_NUMBER,
+  RULE1_PERCENTAGE_ALGORITHM,
+  RULE1_PRESCRIPTION_EFFECT,
+  RULE1_RULE_CONTRACT_VERSION,
+  RULE1_RUNTIME_STATUS,
+  RULE1_SCORING_ALGORITHM_VERSION,
 } from './version.js';
 
-function sortedUnique(values: readonly string[]): string[] {
-  return [...new Set(values)].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+type MutableScores = {
+  BILIOUS: number;
+  SANGUINE: number;
+  LYMPHATIC: number;
+  NERVOUS: number;
+};
+
+function emptyScores(): MutableScores {
+  return { BILIOUS: 0, SANGUINE: 0, LYMPHATIC: 0, NERVOUS: 0 };
 }
 
-function buildOrderedOutput(partial: Rule1Output): Rule1Output {
-  const ordered: Record<string, unknown> = {};
-  for (const key of RULE1_OUTPUT_KEY_ORDER) {
-    ordered[key] = partial[key];
-  }
-  return deepFreeze(ordered as unknown as Rule1Output);
+function inputFingerprintMaterial(input: Rule1Input): string {
+  const ev = [...input.evidence]
+    .map(
+      (e) =>
+        `${e.conceptId}|${e.sourceFactFingerprint}|${e.temporalPosture}|${e.negationPosture}|${e.acceptancePosture}`,
+    )
+    .sort();
+  const bp = input.structuredVitals?.systolicBpMmHg;
+  const bpPart = bp ? `bp:${bp.value}:${bp.unit}:${bp.validationPosture}` : 'bp:none';
+  return [
+    input.inputSchemaVersion,
+    input.ruleContractVersion,
+    input.consultationId,
+    input.episodeId,
+    ...ev,
+    bpPart,
+  ].join('\n');
 }
 
-function fingerprint(parts: readonly string[]): string {
-  return `r1:${parts.join('|')}`;
-}
-
-function deriveRule8ComparisonState(input: Rule1Input): Rule1Rule8ComparisonState {
-  const ref = input.rule8ComparisonRef;
-  if (ref.status === 'NOT_SUPPLIED') return 'NOT_SUPPLIED';
-  if (ref.status === 'UNAVAILABLE') return 'UNAVAILABLE';
-  if (ref.status === 'CONFLICT') return 'CONFLICT';
-  if (ref.status === 'UNRESOLVED') return 'UNRESOLVED';
-  if (ref.status === 'CONSISTENT') return 'CONSISTENT';
-  return 'NOT_COMPARED';
-}
-
-function doshaFor(
-  token: Rule1TemperamentToken | null,
-  mixed: readonly Rule1TemperamentToken[],
-): Rule1DoshaMapping | null {
-  if (token === null && mixed.length === 0) return null;
-  if (token === 'UNKNOWN') {
-    return { doshaPrimary: null, doshaSecondary: null, doshaClassification: 'UNKNOWN' };
-  }
-  if (token === 'MIXED' || mixed.length >= 2) {
-    const n = mixed.length >= 2 ? mixed.length : 2;
-    return {
-      doshaPrimary: null,
-      doshaSecondary: null,
-      doshaClassification: n >= 3 ? 'TRIDOSHAJA' : 'DWANDVAJA',
-    };
-  }
-  if (token === 'LYMPHATIC') {
-    return { doshaPrimary: 'KAPHA', doshaSecondary: null, doshaClassification: null };
-  }
-  if (token === 'SANGUINE') {
-    return { doshaPrimary: 'PITTA', doshaSecondary: null, doshaClassification: null };
-  }
-  if (token === 'NERVOUS') {
-    return { doshaPrimary: 'VATA', doshaSecondary: null, doshaClassification: null };
-  }
-  if (token === 'BILIOUS_HEPATIC') {
-    return { doshaPrimary: 'PITTA', doshaSecondary: 'UNRESOLVED', doshaClassification: null };
-  }
-  return null;
-}
-
-function baseOutput(
-  input: Rule1Input,
-  status: Rule1Outcome,
-  applicability: string,
-  rule8ComparisonState: Rule1Rule8ComparisonState,
-  resolutionState: Rule1ResolutionState,
-  primary: Rule1TemperamentToken | null,
-  secondary: Rule1TemperamentToken | null,
-  mixed: readonly Rule1TemperamentToken[],
-  gaps: readonly string[],
-  reasonCodes: readonly string[],
-  blockers: readonly string[],
-): Rule1Output {
-  return buildOrderedOutput({
-    contractVersion: RULE1_OUTPUT_CONTRACT_VERSION,
-    ruleNumber: RULE1_RULE_NUMBER,
-    ruleIdentity: RULE1_RULE_IDENTITY,
-    requestId: input.requestId,
-    status,
-    applicability,
-    primaryTemperament: primary,
-    secondaryTemperament: secondary,
-    mixedComponents: Object.freeze([...mixed]),
-    resolutionState,
-    doshaMapping: deepFreeze(doshaFor(primary, mixed)),
-    evidenceGaps: Object.freeze([...gaps]),
-    reasonCodes: Object.freeze(sortedUnique(reasonCodes)),
-    blockersOrUnresolvedEvidence: Object.freeze(sortedUnique(blockers)),
-    rule8ComparisonState,
-    deterministicFingerprint: fingerprint([
-      input.requestId,
-      status,
-      resolutionState,
-      rule8ComparisonState,
-      primary ?? 'null',
-      ...mixed,
-    ]),
-    shadowOnly: true,
-    clinicalActivation: 'NONE',
-    medicineSelectionInfluence: 'NONE',
-    prescriptionEffect: 'NONE',
+function rankPercentages(
+  scores: Rule1ScoreMap,
+  percentages: Rule1PercentageMap,
+): Rule1RankedPercentageEntry[] {
+  const entries: Rule1RankedPercentageEntry[] = RULE1_REPRESENTATION_ORDER.map((t) => ({
+    temperament: t,
+    percentage: percentages[t],
+    score: scores[t],
+  }));
+  entries.sort((a, b) => {
+    if (b.percentage !== a.percentage) return b.percentage - a.percentage;
+    return (
+      RULE1_REPRESENTATION_ORDER.indexOf(a.temperament) -
+      RULE1_REPRESENTATION_ORDER.indexOf(b.temperament)
+    );
   });
+  return entries;
+}
+
+function finish(out: Rule1Output): Rule1Output {
+  return deepFreeze(out);
 }
 
 /**
- * Shadow-only Rule 1 Temperament Engine evaluator.
- * Empty production registry; synthetic activating evidence only; no medicine/Rx influence.
+ * Pure non-persistent Rule 1 v1 synthetic-shadow evaluator.
+ * Catalog-driven; no raw-text parsing; no E2/medicine/API reachability.
  */
 export function evaluateRule1Shadow(raw: unknown): Rule1Output {
   try {
-    const input = validateRule1Input(raw);
-    const rule8ComparisonState = deriveRule8ComparisonState(input);
-
-    if (input.upstreamApplicability.status === 'NOT_APPLICABLE') {
-      return baseOutput(
-        input,
-        'NOT_APPLICABLE',
-        'NOT_APPLICABLE',
-        rule8ComparisonState,
-        'NOT_EVALUABLE',
-        null,
-        null,
-        [],
-        ['upstream_not_applicable'],
-        [RULE1_REASON_CODES.UPSTREAM_NOT_APPLICABLE],
-        [RULE1_REASON_CODES.UPSTREAM_NOT_APPLICABLE],
-      );
-    }
-
-    if (input.upstreamApplicability.status === 'NOT_EVALUABLE') {
-      return baseOutput(
-        input,
-        'NOT_EVALUABLE',
-        'NOT_EVALUABLE',
-        rule8ComparisonState,
-        'NOT_EVALUABLE',
-        null,
-        null,
-        [],
-        ['upstream_not_evaluable'],
-        [RULE1_REASON_CODES.UPSTREAM_NOT_EVALUABLE],
-        [RULE1_REASON_CODES.UPSTREAM_NOT_EVALUABLE],
-      );
-    }
-
-    const entries = [...input.caseTemperamentEvidenceRegistry.entries].sort((a, b) =>
-      a.entryId < b.entryId ? -1 : a.entryId > b.entryId ? 1 : 0,
+    return evaluateValidated(validateRule1Input(raw));
+  } catch (err) {
+    if (err instanceof Rule1EvaluationError) throw err;
+    throw new Rule1EvaluationError(
+      'INTERNAL_FAILURE',
+      err instanceof Error ? err.message : 'internal failure',
     );
+  }
+}
 
-    const reasonCodes: string[] = [];
-    const blockers: string[] = [];
-    const gaps: string[] = [];
-    let unresolvedContradiction = false;
-    let sawBlockingLifecycle = false;
-    let sawForbidden = false;
+function evaluateValidated(input: Rule1Input): Rule1Output {
+  const catalogFp = computeCatalogFingerprint();
+  const inputFp = sha256Hex(inputFingerprintMaterial(input));
+  const reasons: string[] = [];
+  const excluded: Rule1ExcludedEvidence[] = [];
+  const accepted: Rule1AcceptedContribution[] = [];
+  const scores = emptyScores();
 
-    if (rule8ComparisonState === 'NOT_SUPPLIED') {
-      reasonCodes.push(RULE1_REASON_CODES.RULE8_NOT_SUPPLIED);
+  // Sort evidence deterministically (caller order must not affect output).
+  const sortedEvidence = [...input.evidence].sort((a, b) => {
+    const c = a.conceptId.localeCompare(b.conceptId);
+    if (c !== 0) return c;
+    return a.sourceFactFingerprint.localeCompare(b.sourceFactFingerprint);
+  });
+
+  type Pending = {
+    conceptId: string;
+    fingerprint: string;
+    entry: Rule1CatalogEntry;
+  };
+  const pending: Pending[] = [];
+  const fingerprintsSeenInPending = new Map<string, string>(); // fp -> conceptId
+
+  for (const ev of sortedEvidence) {
+    const entry = getCatalogEntry(ev.conceptId);
+    if (!entry) {
+      throw new Rule1EvaluationError('UNKNOWN_CONCEPT_ID', `unknown conceptId`);
     }
-    reasonCodes.push(RULE1_REASON_CODES.NO_QUESTION_BANK);
-
-    for (const entry of entries) {
-      if (entry.contradictionMarkers.length > 0) {
-        unresolvedContradiction = true;
-        blockers.push(RULE1_REASON_CODES.CONTRADICTORY_EVIDENCE);
-        reasonCodes.push(RULE1_REASON_CODES.CONTRADICTORY_EVIDENCE);
-      }
-      if ((RULE1_BLOCKING_LIFECYCLE as readonly string[]).includes(entry.effectiveStatus)) {
-        sawBlockingLifecycle = true;
-        reasonCodes.push(RULE1_REASON_CODES.EVIDENCE_BLOCKING_LIFECYCLE);
-      }
-      if (
-        entry.testClassification !== RULE1_SYNTHETIC_TEST_CLASSIFICATION &&
-        entry.effectiveStatus === 'APPROVED_AND_ACTIVE'
-      ) {
-        // Non-synthetic cannot activate under empty production registry / current stage.
-        sawForbidden = true;
-        reasonCodes.push(RULE1_REASON_CODES.FORBIDDEN_EVIDENCE_SOURCE);
-      }
+    if (entry.isBpFeature) {
+      // BP concepts are applied only via structured vitals, not evidence list.
+      excluded.push({
+        conceptId: ev.conceptId,
+        sourceFactFingerprint: ev.sourceFactFingerprint,
+        reasonCode: RULE1_REASON_CODES.BP_NOT_APPLICABLE,
+      });
+      continue;
+    }
+    if (ev.negationPosture === 'NEGATED') {
+      excluded.push({
+        conceptId: ev.conceptId,
+        sourceFactFingerprint: ev.sourceFactFingerprint,
+        reasonCode: RULE1_REASON_CODES.EXCLUDED_NEGATED,
+      });
+      continue;
+    }
+    if (ev.temporalPosture === 'HISTORICAL') {
+      excluded.push({
+        conceptId: ev.conceptId,
+        sourceFactFingerprint: ev.sourceFactFingerprint,
+        reasonCode: RULE1_REASON_CODES.EXCLUDED_HISTORICAL,
+      });
+      continue;
+    }
+    if (ev.acceptancePosture !== 'ACCEPTED') {
+      excluded.push({
+        conceptId: ev.conceptId,
+        sourceFactFingerprint: ev.sourceFactFingerprint,
+        reasonCode: RULE1_REASON_CODES.EXCLUDED_UNACCEPTED,
+      });
+      continue;
     }
 
-    // Precedence §11: forbidden → stale/lifecycle → contradictory → Rule 8 CONFLICT.
-    if (sawForbidden) {
-      return baseOutput(
-        input,
-        'NOT_EVALUABLE',
-        'APPLICABLE',
-        rule8ComparisonState,
-        'NOT_EVALUABLE',
-        null,
-        null,
-        [],
-        ['forbidden_or_non_synthetic_source'],
-        reasonCodes,
-        [RULE1_REASON_CODES.FORBIDDEN_EVIDENCE_SOURCE],
+    const priorConcept = fingerprintsSeenInPending.get(ev.sourceFactFingerprint);
+    if (priorConcept && priorConcept !== ev.conceptId) {
+      throw new Rule1EvaluationError(
+        'CONFLICTING_CONCEPTS_SAME_FINGERPRINT',
+        'same fingerprint cannot fund distinct concepts',
       );
     }
+    fingerprintsSeenInPending.set(ev.sourceFactFingerprint, ev.conceptId);
+    pending.push({
+      conceptId: ev.conceptId,
+      fingerprint: ev.sourceFactFingerprint,
+      entry,
+    });
+  }
 
-    if (sawBlockingLifecycle && entries.every((e) => !isActivatingTemperamentEvidence(e))) {
-      // Stale/disputed/superseded etc. with no activating synthetic rows.
-      const hasStaleLike = entries.some(
-        (e) =>
-          e.effectiveStatus === 'STALE' ||
-          e.effectiveStatus === 'DISPUTED' ||
-          e.effectiveStatus === 'SUPERSEDED',
-      );
-      if (hasStaleLike) {
-        return baseOutput(
-          input,
-          'UNRESOLVED_EVIDENCE',
-          'APPLICABLE',
-          rule8ComparisonState,
-          'UNRESOLVED_EVIDENCE',
-          null,
-          null,
-          [],
-          ['blocking_lifecycle'],
-          reasonCodes,
-          [RULE1_REASON_CODES.EVIDENCE_BLOCKING_LIFECYCLE],
+  const conceptCounts = new Map<string, number>();
+  const usedFingerprints = new Set<string>();
+
+  for (const item of pending) {
+    const used = conceptCounts.get(item.conceptId) ?? 0;
+    if (used >= item.entry.maxContributions) {
+      excluded.push({
+        conceptId: item.conceptId,
+        sourceFactFingerprint: item.fingerprint,
+        reasonCode: RULE1_REASON_CODES.DEDUPE_CONCEPT_CAP,
+      });
+      continue;
+    }
+    if (usedFingerprints.has(item.fingerprint)) {
+      excluded.push({
+        conceptId: item.conceptId,
+        sourceFactFingerprint: item.fingerprint,
+        reasonCode: RULE1_REASON_CODES.DEDUPE_FINGERPRINT,
+      });
+      continue;
+    }
+    usedFingerprints.add(item.fingerprint);
+    conceptCounts.set(item.conceptId, used + 1);
+    scores[item.entry.temperament] += item.entry.weight;
+    accepted.push({
+      conceptId: item.conceptId,
+      sourceFactFingerprint: item.fingerprint,
+      temperament: item.entry.temperament,
+      weight: item.entry.weight,
+      reasonCode: RULE1_REASON_CODES.EVIDENCE_ACCEPTED,
+    });
+    reasons.push(RULE1_REASON_CODES.EVIDENCE_ACCEPTED);
+  }
+
+  // Structured BP (max once each rule; Lymphatic requires non-BP Lymphatic support).
+  const bp = input.structuredVitals?.systolicBpMmHg;
+  const lymphaticNonBpPresent = accepted.some(
+    (a) => a.temperament === 'LYMPHATIC' && !getCatalogEntry(a.conceptId)?.isBpFeature,
+  );
+
+  if (bp) {
+    if (bp.validationPosture !== 'VALIDATED') {
+      throw new Rule1EvaluationError('MALFORMED_VITAL', 'bp not validated');
+    }
+    if (bp.value >= RULE1_BP_SANGUINE_SYSTOLIC_MIN) {
+      const fp = `structured-bp:ge140:${bp.value}`;
+      if (!usedFingerprints.has(fp)) {
+        usedFingerprints.add(fp);
+        scores.SANGUINE += RULE1_BP_SANGUINE_WEIGHT;
+        accepted.push({
+          conceptId: 'R1_FEAT_SANGUINE_SYSTOLIC_BP_GE_140',
+          sourceFactFingerprint: fp,
+          temperament: 'SANGUINE',
+          weight: RULE1_BP_SANGUINE_WEIGHT,
+          reasonCode: RULE1_REASON_CODES.BP_SANGUINE_APPLIED,
+        });
+        reasons.push(RULE1_REASON_CODES.BP_SANGUINE_APPLIED);
+        conceptCounts.set(
+          'R1_FEAT_SANGUINE_SYSTOLIC_BP_GE_140',
+          (conceptCounts.get('R1_FEAT_SANGUINE_SYSTOLIC_BP_GE_140') ?? 0) + 1,
         );
       }
-    }
-
-    if (unresolvedContradiction) {
-      return baseOutput(
-        input,
-        'UNRESOLVED_EVIDENCE',
-        'APPLICABLE',
-        rule8ComparisonState,
-        'UNRESOLVED_EVIDENCE',
-        null,
-        null,
-        [],
-        ['contradictory_evidence'],
-        reasonCodes,
-        blockers,
-      );
-    }
-
-    if (rule8ComparisonState === 'CONFLICT') {
-      return baseOutput(
-        input,
-        'BLOCKED_BY_RULE8_CONTRADICTION',
-        'APPLICABLE',
-        'CONFLICT',
-        'UNRESOLVED_EVIDENCE',
-        null,
-        null,
-        [],
-        ['rule8_conflict'],
-        [...reasonCodes, RULE1_REASON_CODES.RULE8_CONFLICT],
-        [RULE1_REASON_CODES.RULE8_CONFLICT],
-      );
-    }
-
-    const scores = new Map<Rule1TemperamentToken, number>();
-    const addScore = (token: Rule1TemperamentToken, units: number): void => {
-      if (token === 'UNKNOWN' || token === 'MIXED') return;
-      scores.set(token, (scores.get(token) ?? 0) + units);
-    };
-
-    let activatingNonBp = 0;
-    const activatingRefs: string[] = [];
-
-    for (const entry of entries) {
-      if (!isActivatingTemperamentEvidence(entry)) {
-        if (entry.testClassification === RULE1_SYNTHETIC_TEST_CLASSIFICATION) {
-          reasonCodes.push(RULE1_REASON_CODES.EVIDENCE_NON_ACTIVATING);
+    } else if (bp.value < RULE1_BP_LYMPHATIC_SYSTOLIC_MAX_EXCLUSIVE) {
+      if (!lymphaticNonBpPresent) {
+        reasons.push(RULE1_REASON_CODES.BP_LYMPHATIC_LACKS_NON_BP_SUPPORT);
+      } else {
+        const fp = `structured-bp:lt100:${bp.value}`;
+        if (!usedFingerprints.has(fp)) {
+          usedFingerprints.add(fp);
+          scores.LYMPHATIC += RULE1_BP_LYMPHATIC_WEIGHT;
+          accepted.push({
+            conceptId: 'R1_FEAT_LYMPHATIC_SYSTOLIC_BP_LT_100',
+            sourceFactFingerprint: fp,
+            temperament: 'LYMPHATIC',
+            weight: RULE1_BP_LYMPHATIC_WEIGHT,
+            reasonCode: RULE1_REASON_CODES.BP_LYMPHATIC_APPLIED,
+          });
+          reasons.push(RULE1_REASON_CODES.BP_LYMPHATIC_APPLIED);
+          conceptCounts.set(
+            'R1_FEAT_LYMPHATIC_SYSTOLIC_BP_LT_100',
+            (conceptCounts.get('R1_FEAT_LYMPHATIC_SYSTOLIC_BP_LT_100') ?? 0) + 1,
+          );
         }
-        continue;
       }
-      if (entry.evidenceKind === 'BP_SUPPORT' || entry.evidenceKind === 'PHOTO_SUPPORT') {
-        // BP/photo support rows in registry are supporting metadata only; scoring uses BP/photo fields.
-        continue;
-      }
-      activatingNonBp += 1;
-      addScore(entry.temperamentToken, entry.supportUnits);
-      activatingRefs.push(entry.evidenceSourceId);
-      reasonCodes.push(RULE1_REASON_CODES.ELIGIBLE_BY_APPROVED_SYNTHETIC_EVIDENCE);
+    } else {
+      reasons.push(RULE1_REASON_CODES.BP_NOT_APPLICABLE);
     }
-
-    const bp = input.bloodPressureEvidence;
-    let bpSupportApplied = false;
-    if (bp.status === 'SUPPLIED') {
-      if (bp.systolicMmHg >= RULE1_BP_SANGUINE_SYSTOLIC_MIN) {
-        addScore('SANGUINE', RULE1_BP_SANGUINE_SUPPORT);
-        bpSupportApplied = true;
-      } else if (bp.systolicMmHg < RULE1_BP_LYMPHATIC_SYSTOLIC_MAX_EXCLUSIVE) {
-        addScore('LYMPHATIC', RULE1_BP_LYMPHATIC_SUPPORT);
-        bpSupportApplied = true;
-      }
-    }
-
-    const photoSupplied = input.photoEvidenceRef.status === 'SUPPLIED';
-
-    // No evidence at all
-    if (activatingNonBp === 0 && !bpSupportApplied && !photoSupplied && entries.length === 0) {
-      gaps.push('insufficient_clinical_evidence');
-      return baseOutput(
-        input,
-        'ADDITIONAL_INFORMATION_REQUIRED',
-        'APPLICABLE',
-        rule8ComparisonState,
-        'ADDITIONAL_INFORMATION_REQUIRED',
-        'UNKNOWN',
-        null,
-        [],
-        gaps,
-        [
-          ...reasonCodes,
-          RULE1_REASON_CODES.NO_EVIDENCE,
-          RULE1_REASON_CODES.ADDITIONAL_INFORMATION_REQUIRED,
-        ],
-        [],
-      );
-    }
-
-    // BP alone insufficient
-    if (activatingNonBp === 0 && bpSupportApplied && !photoSupplied) {
-      gaps.push('bp_alone_insufficient');
-      return baseOutput(
-        input,
-        'ADDITIONAL_INFORMATION_REQUIRED',
-        'APPLICABLE',
-        rule8ComparisonState,
-        'ADDITIONAL_INFORMATION_REQUIRED',
-        'UNKNOWN',
-        null,
-        [],
-        gaps,
-        [
-          ...reasonCodes,
-          RULE1_REASON_CODES.BP_ALONE_INSUFFICIENT,
-          RULE1_REASON_CODES.ADDITIONAL_INFORMATION_REQUIRED,
-        ],
-        [],
-      );
-    }
-
-    // Photo alone insufficient (no non-BP activating + no BP resolve path)
-    if (activatingNonBp === 0 && photoSupplied && !bpSupportApplied) {
-      gaps.push('photo_alone_insufficient');
-      return baseOutput(
-        input,
-        'ADDITIONAL_INFORMATION_REQUIRED',
-        'APPLICABLE',
-        rule8ComparisonState,
-        'ADDITIONAL_INFORMATION_REQUIRED',
-        'UNKNOWN',
-        null,
-        [],
-        gaps,
-        [
-          ...reasonCodes,
-          RULE1_REASON_CODES.PHOTO_ALONE_INSUFFICIENT,
-          RULE1_REASON_CODES.ADDITIONAL_INFORMATION_REQUIRED,
-        ],
-        [],
-      );
-    }
-
-    // Photo + BP without non-BP clinical evidence still cannot resolve
-    if (activatingNonBp === 0 && photoSupplied && bpSupportApplied) {
-      gaps.push('bp_and_photo_without_non_bp_evidence');
-      return baseOutput(
-        input,
-        'ADDITIONAL_INFORMATION_REQUIRED',
-        'APPLICABLE',
-        rule8ComparisonState,
-        'ADDITIONAL_INFORMATION_REQUIRED',
-        'UNKNOWN',
-        null,
-        [],
-        gaps,
-        [
-          ...reasonCodes,
-          RULE1_REASON_CODES.BP_ALONE_INSUFFICIENT,
-          RULE1_REASON_CODES.PHOTO_ALONE_INSUFFICIENT,
-          RULE1_REASON_CODES.ADDITIONAL_INFORMATION_REQUIRED,
-        ],
-        [],
-      );
-    }
-
-    if (activatingNonBp === 0) {
-      gaps.push('insufficient_clinical_evidence');
-      return baseOutput(
-        input,
-        'ADDITIONAL_INFORMATION_REQUIRED',
-        'APPLICABLE',
-        rule8ComparisonState,
-        'ADDITIONAL_INFORMATION_REQUIRED',
-        'UNKNOWN',
-        null,
-        [],
-        gaps,
-        [
-          ...reasonCodes,
-          RULE1_REASON_CODES.NO_EVIDENCE,
-          RULE1_REASON_CODES.ADDITIONAL_INFORMATION_REQUIRED,
-        ],
-        [],
-      );
-    }
-
-    const scored = [...scores.entries()].sort((a, b) => {
-      if (b[1] !== a[1]) return b[1] - a[1];
-      return a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0;
-    });
-
-    if (scored.length === 0) {
-      return baseOutput(
-        input,
-        'NOT_EVALUABLE',
-        'APPLICABLE',
-        rule8ComparisonState,
-        'NOT_EVALUABLE',
-        null,
-        null,
-        [],
-        ['no_scored_temperament'],
-        reasonCodes,
-        [],
-      );
-    }
-
-    const topScore = scored[0]![1];
-    const tied = scored.filter(([, s]) => s === topScore).map(([t]) => t);
-
-    if (tied.length >= 2) {
-      return baseOutput(
-        input,
-        'UNRESOLVED_TIE',
-        'APPLICABLE',
-        rule8ComparisonState,
-        'UNRESOLVED_TIE',
-        null,
-        null,
-        tied,
-        ['exact_equal_tie'],
-        [...reasonCodes, RULE1_REASON_CODES.UNRESOLVED_TIE],
-        [RULE1_REASON_CODES.UNRESOLVED_TIE],
-      );
-    }
-
-    const winner = tied[0]!;
-
-    // Owner-clarification pending: Bilious secondary-dosha remains unresolved — fail-closed, no guess.
-    if (winner === 'BILIOUS_HEPATIC') {
-      return baseOutput(
-        input,
-        'UNRESOLVED_EVIDENCE',
-        'APPLICABLE',
-        rule8ComparisonState,
-        'UNRESOLVED_EVIDENCE',
-        null,
-        null,
-        [],
-        ['bilious_secondary_unresolved'],
-        [...reasonCodes, RULE1_REASON_CODES.BILIOUS_SECONDARY_UNRESOLVED],
-        [RULE1_REASON_CODES.BILIOUS_SECONDARY_UNRESOLVED],
-      );
-    }
-
-    const secondaryCandidates = scored.filter(([t, s]) => t !== winner && s > 0);
-    const secondary = secondaryCandidates.length === 1 ? secondaryCandidates[0]![0] : null;
-
-    return baseOutput(
-      input,
-      'SHADOW_TEMPERAMENT_INDICATION_PROPOSED',
-      'APPLICABLE',
-      rule8ComparisonState,
-      'OK',
-      winner,
-      secondary,
-      [],
-      [],
-      reasonCodes,
-      [],
-    );
-  } catch (e) {
-    if (e instanceof Rule1EvaluationError) throw e;
-    throw new Rule1EvaluationError('INTERNAL_FAILURE');
   }
+
+  const independentConceptCount = [...conceptCounts.keys()].filter((id) => {
+    const e = getCatalogEntry(id);
+    return e?.countsAsIndependentConcept !== false;
+  }).length;
+
+  const T = scores.BILIOUS + scores.SANGUINE + scores.LYMPHATIC + scores.NERVOUS;
+
+  const baseMeta = {
+    inputSchemaVersion: RULE1_INPUT_SCHEMA_VERSION,
+    ruleContractVersion: RULE1_RULE_CONTRACT_VERSION,
+    outputSchemaVersion: RULE1_OUTPUT_CONTRACT_VERSION,
+    percentageAlgorithm: RULE1_PERCENTAGE_ALGORITHM,
+    catalogVersion: RULE1_CATALOG_VERSION,
+    scoringAlgorithmVersion: RULE1_SCORING_ALGORITHM_VERSION,
+    catalogFingerprint: catalogFp,
+    inputFingerprint: inputFp,
+    acceptedContributions: accepted,
+    excludedEvidence: excluded,
+    clinicallyUsed: false as const,
+    shadowOnly: true as const,
+    clinicalActivation: 'NONE' as const,
+    medicineSelectionInfluence: 'NONE' as const,
+    prescriptionEffect: RULE1_PRESCRIPTION_EFFECT,
+    orchestrationStatus: RULE1_ORCHESTRATION_STATUS,
+    runtimeStatus: RULE1_RUNTIME_STATUS,
+  };
+
+  if (independentConceptCount < 2 || T <= 0) {
+    reasons.push(RULE1_REASON_CODES.INSUFFICIENT_EVIDENCE);
+    return finish({
+      ...baseMeta,
+      status: 'TEMPERAMENT_INSUFFICIENT_EVIDENCE',
+      mixedSubtype: null,
+      primaryTemperament: null,
+      dominantTemperaments: null,
+      scores,
+      percentages: null,
+      rankedPercentageProfile: null,
+      reasonCodes: uniqueReasons(reasons),
+    });
+  }
+
+  // Thermal contradiction (IMPL-05-CORR): current systemic heat+cold same consultation/episode.
+  // Synthetic input binds consultationId+episodeId globally; accepted CURRENT systemic HEAT and COLD.
+  const heat = accepted.some((a) => getCatalogEntry(a.conceptId)?.thermalAxis === 'HEAT');
+  const cold = accepted.some((a) => getCatalogEntry(a.conceptId)?.thermalAxis === 'COLD');
+  if (heat && cold) {
+    // Same consultation/episode is inherent to single Rule1Input.
+    reasons.push(RULE1_REASON_CODES.THERMAL_CONTRADICTION);
+    const percentages = computeHamiltonPercentages(scores);
+    if (sumPercentages(percentages) !== 100) {
+      throw new Rule1EvaluationError('INTERNAL_FAILURE', 'percentage sum invariant');
+    }
+    return finish({
+      ...baseMeta,
+      status: 'TEMPERAMENT_CONTRADICTORY',
+      mixedSubtype: null,
+      primaryTemperament: null,
+      dominantTemperaments: null,
+      scores,
+      percentages,
+      rankedPercentageProfile: rankPercentages(scores, percentages),
+      reasonCodes: uniqueReasons(reasons),
+    });
+  }
+
+  const percentages = computeHamiltonPercentages(scores);
+  if (sumPercentages(percentages) !== 100) {
+    throw new Rule1EvaluationError('INTERNAL_FAILURE', 'percentage sum invariant');
+  }
+  const ranked = rankPercentages(scores, percentages);
+
+  const max = Math.max(scores.BILIOUS, scores.SANGUINE, scores.LYMPHATIC, scores.NERVOUS);
+  const tops = RULE1_REPRESENTATION_ORDER.filter((t) => scores[t] === max && max > 0);
+
+  if (tops.length === 1) {
+    reasons.push(RULE1_REASON_CODES.PROFILE_RESOLVED);
+    reasons.push(RULE1_REASON_CODES.NO_SINGULAR_SECONDARY);
+    reasons.push(RULE1_REASON_CODES.BILIOUS_CANONICAL);
+    return finish({
+      ...baseMeta,
+      status: 'TEMPERAMENT_PROFILE_RESOLVED',
+      mixedSubtype: null,
+      primaryTemperament: tops[0]!,
+      dominantTemperaments: null,
+      scores,
+      percentages,
+      rankedPercentageProfile: ranked,
+      reasonCodes: uniqueReasons(reasons),
+    });
+  }
+
+  const subtype = tops.length === 2 ? 'DUAL_TEMPERAMENT' : 'MULTI_TEMPERAMENT';
+  reasons.push(
+    subtype === 'DUAL_TEMPERAMENT' ? RULE1_REASON_CODES.MIXED_DUAL : RULE1_REASON_CODES.MIXED_MULTI,
+  );
+  reasons.push(RULE1_REASON_CODES.NO_SINGULAR_SECONDARY);
+  return finish({
+    ...baseMeta,
+    status: 'MIXED_TEMPERAMENT',
+    mixedSubtype: subtype,
+    primaryTemperament: null,
+    dominantTemperaments: tops,
+    scores,
+    percentages,
+    rankedPercentageProfile: ranked,
+    reasonCodes: uniqueReasons(reasons),
+  });
+}
+
+function uniqueReasons(codes: string[]): string[] {
+  return [...new Set(codes)];
 }
