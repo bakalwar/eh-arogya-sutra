@@ -1,0 +1,10 @@
+{
+  "name": "@ehas2/disease-identity-generator",
+  "private": true,
+  "type": "module",
+  "version": "0.2.0-p2c-full-corpus-tooling",
+  "description": "Bounded disease-identity generator tooling (synthetic + gated full-corpus)",
+  "dependencies": {
+    "better-sqlite3": "^11.8.1"
+  }
+}

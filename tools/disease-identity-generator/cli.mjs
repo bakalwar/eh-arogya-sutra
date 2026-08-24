@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /**
- * R2-DATA-P2B disease identity generator — bounded, fail-closed, non-runtime.
+ * R2-DATA-P2C disease identity generator — bounded, fail-closed, non-runtime.
  *
  * Synthetic mode: processes explicit JSON/JSONL inputs only.
- * Full corpus mode: requires --authorize-full-corpus (not executed in P2B PR).
+ * Full corpus mode: requires --authorize-full-corpus and owner token (not executed in P2C-A).
  */
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
@@ -22,37 +22,26 @@ import {
   AUTHORITY_CLASSIFICATION,
   sha256HexLower,
 } from '../../packages/disease-identity/dist/index.js';
+import { parseArgs } from './lib/parseArgs.mjs';
+import {
+  cmdBuildFullCorpus,
+  cmdCompareFullBuilds,
+  cmdPreflightFullCorpus,
+  cmdVerifyFullBundle,
+  cmdVerifyInventory,
+  printFullCorpusUsage,
+} from './lib/fullCorpusCommands.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 
 function usage() {
   console.error(`Usage:
-  node tools/disease-identity-generator/cli.mjs synthetic --input <dir|file.jsonl> --output <dir>
+  node tools/disease-identity-generator/cli.mjs synthetic --input <file.jsonl> --output <dir>
   node tools/disease-identity-generator/cli.mjs validate --input <file.jsonl>
   node tools/disease-identity-generator/cli.mjs manifest-template --output <file.json>
-
-Full corpus mode requires --authorize-full-corpus and is blocked in P2B v1.`);
+`);
+  printFullCorpusUsage();
   process.exit(2);
-}
-
-function parseArgs(argv) {
-  const args = { flags: new Set(), positional: [] };
-  for (let i = 0; i < argv.length; i += 1) {
-    const token = argv[i];
-    if (token.startsWith('--')) {
-      const key = token.slice(2);
-      const next = argv[i + 1];
-      if (next && !next.startsWith('--')) {
-        args[key] = next;
-        i += 1;
-      } else {
-        args.flags.add(key);
-      }
-    } else {
-      args.positional.push(token);
-    }
-  }
-  return args;
 }
 
 function readJsonl(filePath) {
@@ -105,7 +94,7 @@ function cmdSynthetic(args) {
   if (args.flags.has('authorize-full-corpus')) {
     throw new DiseaseIdentityError(
       'MALFORMED_INPUT',
-      'Full corpus mode is not authorized in P2B control-plane v1',
+      'authorize-full-corpus is not valid for synthetic mode',
     );
   }
   const input = args.input;
@@ -188,7 +177,7 @@ function cmdManifestTemplate(args) {
   console.log(`Wrote manifest template to ${output}`);
 }
 
-function main() {
+async function main() {
   const args = parseArgs(process.argv.slice(2));
   const [command] = args.positional;
   try {
@@ -201,6 +190,21 @@ function main() {
         break;
       case 'manifest-template':
         cmdManifestTemplate(args);
+        break;
+      case 'preflight-full-corpus':
+        await cmdPreflightFullCorpus(args, ROOT);
+        break;
+      case 'build-full-corpus':
+        await cmdBuildFullCorpus(args, ROOT);
+        break;
+      case 'verify-full-bundle':
+        await cmdVerifyFullBundle(args);
+        break;
+      case 'compare-full-builds':
+        await cmdCompareFullBuilds(args);
+        break;
+      case 'verify-inventory':
+        await cmdVerifyInventory(args);
         break;
       default:
         usage();
