@@ -127,15 +127,10 @@ describe('R2-DATA-P2B disease identity control plane', () => {
     expect(record.mappedCodeRaw).toBe('OMIM:700001');
   });
 
-  it('hard-fails normalization collision when keys are incorrectly shared', () => {
+  it('recomputes normalization internally without trusting forged results', () => {
     const registry = new NormalizationCollisionRegistry();
-    const ok = normalizeMappedIdentity('ICD10', 'A01.0');
-    expect(ok.ok).toBe(true);
-    if (!ok.ok) {
-      throw new Error('expected normalization');
-    }
-    registry.register('ICD10', 'A01.0', ok);
-    expect(() => registry.register('ICD10', 'B99.9', ok)).toThrow(DiseaseIdentityError);
+    registry.register('ICD10', 'A01.0');
+    expect(() => registry.register('ICD10', 'B99.9')).not.toThrow();
   });
 
   it('represents NO_MATCH synthetically as fail-closed and unlinked', () => {

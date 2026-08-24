@@ -13,8 +13,7 @@ import {
   buildSyntheticMappedRecord,
   reconcileManifestCounts,
   serializeJsonl,
-  validateDiseaseIdentityRecord,
-  validateMappedIdentityRecord,
+  validateAndIndexRecordBatch,
   DiseaseIdentityError,
   APPROVED_AGGREGATE_COUNTS,
   BUNDLE_SCHEMA_VERSION,
@@ -74,7 +73,7 @@ function readJsonl(filePath) {
 
 function processSyntheticInput(raw) {
   if (raw.recordKind === 'LEGACY_DB_ROW') {
-    const record = buildSyntheticDiseaseRecord({
+    return buildSyntheticDiseaseRecord({
       legacyDbDiseaseId: raw.legacyDbDiseaseId,
       sourceLabel: raw.sourceLabel,
       sourceCodeRaw: raw.sourceCodeRaw,
@@ -86,11 +85,9 @@ function processSyntheticInput(raw) {
       isDbOnly: raw.isDbOnly,
       codeWithoutMappedParent: raw.codeWithoutMappedParent,
     });
-    validateDiseaseIdentityRecord(record);
-    return record;
   }
   if (raw.recordKind === 'MAPPED_CODE_INDEX_INPUT') {
-    const record = buildSyntheticMappedRecord({
+    return buildSyntheticMappedRecord({
       mappedSourceLabel: raw.mappedSourceLabel,
       mappedCodeRaw: raw.mappedCodeRaw,
       bridgeDisposition: raw.bridgeDisposition,
@@ -98,8 +95,6 @@ function processSyntheticInput(raw) {
       linkedEhas2DiseaseIds: raw.linkedEhas2DiseaseIds,
       provenanceVariants: raw.provenanceVariants,
     });
-    validateMappedIdentityRecord(record);
-    return record;
   }
   throw new DiseaseIdentityError('MALFORMED_INPUT', 'Unsupported synthetic input recordKind');
 }
@@ -118,7 +113,6 @@ function cmdSynthetic(args) {
   }
   const inputPath = path.resolve(ROOT, input);
   const outputDir = path.resolve(ROOT, output);
-  mkdirSync(outputDir, { recursive: true });
 
   let inputs;
   if (inputPath.endsWith('.jsonl')) {
@@ -134,6 +128,9 @@ function cmdSynthetic(args) {
   }
 
   const records = inputs.map((raw) => processSyntheticInput(raw));
+  validateAndIndexRecordBatch(records);
+
+  mkdirSync(outputDir, { recursive: true });
   const sorted = [...records].sort((a, b) => {
     const idA =
       'ehas2DiseaseId' in a
@@ -157,13 +154,7 @@ function cmdValidate(args) {
     usage();
   }
   const records = readJsonl(path.resolve(ROOT, input));
-  for (const record of records) {
-    if (record.recordKind === 'LEGACY_DB_ROW') {
-      validateDiseaseIdentityRecord(record);
-    } else {
-      validateMappedIdentityRecord(record);
-    }
-  }
+  validateAndIndexRecordBatch(records);
   console.log(`Validated ${records.length} records`);
 }
 

@@ -81,29 +81,44 @@ export function normalizeMappedIdentity(
 }
 
 export class NormalizationCollisionRegistry {
-  private readonly keyToRaw = new Map<string, Set<string>>();
+  private readonly keyToVariants = new Map<
+    string,
+    Array<{ mappedSourceLabel: string; rawCode: string }>
+  >();
 
-  register(
-    mappedSourceLabel: string,
-    rawCode: string,
-    result: Extract<NormalizationResult, { ok: true }>,
-  ): void {
-    const key = result.normalizedIdentityKey;
-    const bucket = this.keyToRaw.get(key) ?? new Set<string>();
-    bucket.add(rawCode);
-    this.keyToRaw.set(key, bucket);
-    if (bucket.size > 1) {
-      const variants = [...bucket].sort();
-      const allPresentationVariants = variants.every((variant) => {
-        const renormalized = normalizeMappedIdentity(mappedSourceLabel, variant);
-        return renormalized.ok && renormalized.normalizedIdentityKey === key;
-      });
-      if (!allPresentationVariants) {
-        throw new DiseaseIdentityError(
-          NORMALIZATION_COLLISION,
-          `Normalization collision for ${key}: ${variants.join(', ')}`,
-        );
+  register(mappedSourceLabel: string, rawCode: string): void {
+    const normalized = normalizeMappedIdentity(mappedSourceLabel, rawCode);
+    if (!normalized.ok) {
+      return;
+    }
+
+    const key = normalized.normalizedIdentityKey;
+    const bucket = this.keyToVariants.get(key) ?? [];
+
+    for (const existing of bucket) {
+      if (existing.mappedSourceLabel === mappedSourceLabel && existing.rawCode !== rawCode) {
+        const alternate = normalizeMappedIdentity(existing.mappedSourceLabel, rawCode);
+        const reverse = normalizeMappedIdentity(mappedSourceLabel, existing.rawCode);
+        const presentationEquivalent =
+          alternate.ok &&
+          reverse.ok &&
+          alternate.normalizedIdentityKey === key &&
+          reverse.normalizedIdentityKey === key;
+        if (!presentationEquivalent) {
+          throw new DiseaseIdentityError(
+            NORMALIZATION_COLLISION,
+            `Incompatible normalization variants for ${key}: ${existing.rawCode}, ${rawCode}`,
+          );
+        }
       }
+    }
+
+    const duplicate = bucket.some(
+      (entry) => entry.mappedSourceLabel === mappedSourceLabel && entry.rawCode === rawCode,
+    );
+    if (!duplicate) {
+      bucket.push({ mappedSourceLabel, rawCode });
+      this.keyToVariants.set(key, bucket);
     }
   }
 }

@@ -45,6 +45,19 @@ This phase MUST NOT modify:
 - [ ] `npm test` (includes `packages/disease-identity/tests/**`)
 - [ ] `npm run verify:boundary`
 
+## Fail-closed validator hardening (PR #141 follow-up)
+
+Record validation enforces:
+
+- Closed allowlists for disease/mapped/provenance/manifest structures (unknown fields rejected)
+- Recomputed canonical disease/mapped/raw IDs and record fingerprints
+- Recursive prohibited-field scanning including nested arrays
+- ID-03 disposition invariants (EXACT_MULTIPLE, OWNER_REVIEW, NO_MATCH, EXACT_UNIQUE)
+- Mapped canonical/raw-reference XOR with digest verification
+- Internal-only normalization collision registry (no caller-forged normalization results)
+- Canonical JSONL serialization via `CANON_JSON_V1`
+- Generator batch validation before any output write
+
 ## Evidence artifacts
 
 | Artifact | Location |
