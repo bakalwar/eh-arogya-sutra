@@ -1,0 +1,22 @@
+{
+  "ehas2DiseaseId": "ehas2-dis-v1-1a9d906ac198d5bf63e8f26bba3bd2be895875bfd0bdb526c216c5e6f638b06b",
+  "ledgerSchemaVersion": "ehas2-disease-identity-ledger-v1",
+  "recordKind": "LEGACY_DB_ROW",
+  "legacyAuthority": "EHAS2_PINNED_LEGACY_DISEASE_DB_V1",
+  "legacyDbDiseaseId": 9002,
+  "sourceNamespace": "ICD10",
+  "sourceCode": "E66.9",
+  "normalizedIdentityKey": "ICD10|E66.9",
+  "relationshipState": "LEGACY_DB_LINKED",
+  "bridgeDisposition": null,
+  "mappedIndexRefs": [],
+  "candidateLegacyDbIds": [9002],
+  "quarantineFlags": ["Q_DISPLAY_EMPTY", "Q_REL_DB_CODE_WITHOUT_MAPPED_PARENT"],
+  "reviewRequiredUnclassified": false,
+  "provenance": {
+    "authorityClassification": "ENGINEERING_IDENTITY_ONLY",
+    "datasetVersion": "ehas2-disease-identity-v1"
+  },
+  "recordFingerprint": "0a99540039f777199dc2fb173cc44d31d4dd3c08cd23bf323dc6a1b64ded1656",
+  "lifecycleStatus": "INVENTORY_ENGINEERING"
+}

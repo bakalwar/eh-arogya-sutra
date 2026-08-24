@@ -1,0 +1,32 @@
+{
+  "ehas2MappedIndexId": "ehas2-mdx-v1-9c4653ea91df5217f8772d8bbc26e9bf644202134b21874c8ec482e041e433a0",
+  "rawMappedReferenceId": null,
+  "mappedCodeRaw": "MESH:D019999",
+  "mappedSourceLabel": "MESH",
+  "sourceNamespace": "MESH",
+  "sourceCode": "D019999",
+  "normalizedIdentityKey": "MESH|D019999",
+  "bridgeDisposition": "EXACT_UNIQUE_MATCH",
+  "relationshipState": "MAPPED_INDEX",
+  "linkedEhas2DiseaseIds": [
+    "ehas2-dis-v1-1e3d2c7675d750e5478afcd0fa816825fb01e34196d195495e28afce4d9f8146"
+  ],
+  "candidateLegacyDbIds": [7001],
+  "provenanceVariants": [
+    {
+      "mappedSourceLabel": "MESH",
+      "mappedCodeRaw": "d019999"
+    },
+    {
+      "mappedSourceLabel": "MESH",
+      "mappedCodeRaw": "MESH:D019999"
+    }
+  ],
+  "quarantineFlags": [],
+  "reviewRequiredUnclassified": false,
+  "provenance": {
+    "authorityClassification": "ENGINEERING_IDENTITY_ONLY",
+    "datasetVersion": "ehas2-disease-identity-v1"
+  },
+  "recordFingerprint": "aece120b3dd29be85d4b5ddb10fbd20c757237946a3277fcb52995943eedba60"
+}

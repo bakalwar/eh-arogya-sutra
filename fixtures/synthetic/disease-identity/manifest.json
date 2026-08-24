@@ -1,0 +1,18 @@
+{
+  "fixtureVersion": "ehas2-disease-identity-synthetic-v1",
+  "classification": "SYNTHETIC_ENGINEERING_ONLY",
+  "scenarios": [
+    "exact-unique",
+    "exact-multiple",
+    "owner-review-required",
+    "no-match",
+    "db-only",
+    "shared-code-different-legacy-id",
+    "mapped-presentation-variants",
+    "invalid-namespace",
+    "invalid-code",
+    "csv-struct-corrupt",
+    "empty-display",
+    "db-code-without-mapped-parent"
+  ]
+}

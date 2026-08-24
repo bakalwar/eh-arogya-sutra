@@ -1,0 +1,26 @@
+{
+  "ehas2MappedIndexId": "ehas2-mdx-v1-9d26b7cef031a38aee1d735dfb2189fe6076f64cf3e62a18b3179cff01ef2a79",
+  "rawMappedReferenceId": null,
+  "mappedCodeRaw": "R99.9",
+  "mappedSourceLabel": "ICD10",
+  "sourceNamespace": "ICD10",
+  "sourceCode": "R99.9",
+  "normalizedIdentityKey": "ICD10|R99.9",
+  "bridgeDisposition": "NO_MATCH",
+  "relationshipState": "UNLINKED_MAPPED_CODE",
+  "linkedEhas2DiseaseIds": [],
+  "candidateLegacyDbIds": [],
+  "provenanceVariants": [
+    {
+      "mappedCodeRaw": "R99.9",
+      "mappedSourceLabel": "ICD10"
+    }
+  ],
+  "quarantineFlags": ["Q_REL_NO_DB_MATCH"],
+  "reviewRequiredUnclassified": false,
+  "provenance": {
+    "authorityClassification": "ENGINEERING_IDENTITY_ONLY",
+    "datasetVersion": "ehas2-disease-identity-v1"
+  },
+  "recordFingerprint": "73bf951db9b2abe74b9ae3f28865df726e44994be468e8c901fe68bd7d721cbb"
+}
