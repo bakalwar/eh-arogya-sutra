@@ -16,6 +16,7 @@ export default defineConfig({
       '@ehas2/database': path.join(root, 'packages/database/src/index.ts'),
       '@ehas2/observability': path.join(root, 'packages/observability/src/index.ts'),
       '@ehas2/security': path.join(root, 'packages/security/src/index.ts'),
+      '@ehas2/disease-identity': path.join(root, 'packages/disease-identity/src/index.ts'),
     },
   },
   test: {
@@ -30,6 +31,7 @@ export default defineConfig({
       'packages/rule7/tests/**/*.test.ts',
       'packages/rule8/tests/**/*.test.ts',
       'packages/rule9/tests/**/*.test.ts',
+      'packages/disease-identity/tests/**/*.test.ts',
     ],
     environment: 'node',
     testTimeout: 60_000,

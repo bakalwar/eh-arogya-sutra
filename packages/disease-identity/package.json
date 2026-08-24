@@ -1,0 +1,21 @@
+{
+  "name": "@ehas2/disease-identity",
+  "version": "0.1.0-control-plane",
+  "description": "E.H. AROGYA SUTRA 2 — shared canonical disease identity control plane (non-runtime)",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint src"
+  },
+  "dependencies": {}
+}
