@@ -1,0 +1,191 @@
+{
+  "manifestSchemaVersion": "ehas2-rule2-data-p2a-engineering-source-freeze-v1",
+  "phaseId": "R2-DATA-P2A",
+  "manifestPurpose": "ENGINEERING_IDENTITY_ONLY",
+  "clinicalAuthority": "NONE",
+  "registryPopulationAuthorized": false,
+  "runtimeActivationAuthorized": false,
+  "ownerAuthorizationToken": "R2-DATA-P2A: AUTHORIZE_ENGINEERING_SOURCE_FREEZE_MANIFEST_PR",
+  "bindingOwnerDeclaration": "MAPPED.JSON GENERATOR/PROVENANCE UNKNOWN",
+  "ownerBoundary": {
+    "mappedJsonPolarityIsNotClinicalAuthority": true,
+    "legacyMixedNotGenuineWithoutEvidence": true,
+    "noBlindPolarityImportOrActivation": true,
+    "diseaseIdentityBridgeIsEngineeringCandidateOnly": true,
+    "futureMappingsRequireAuthoritativeEvidenceAndOwnerClinicalApproval": true,
+    "missingEvidenceRemainsUnknownOrUnresolved": true,
+    "multiDiseasePolarityMustNotSilentlyCollapseToGlobalMixed": true,
+    "broadCoverageMustNotOverrideSafetyProvenanceOrCorrectness": true
+  },
+  "approvedRule2DecisionsReferencedNotRedefined": [
+    "R2-ID-01: ACCEPT_POLARITY_ENGINE_TOKEN",
+    "R2-ID-02: R2_ID02_MIXED_THERAPEUTIC_POLICY_LOCKED",
+    "R2-ID-03: R2_ID03_EMPTY_REGISTRY_FAIL_CLOSED_SYNTHETIC_ONLY",
+    "R2-ID-04: R2_ID04_SHADOW_INFLUENCE_NONE",
+    "R2-ID-05: R2_ID05_POLARITY_ENGINE_DISPLAY_ALIAS_POLICY"
+  ],
+  "ehas2Baseline": {
+    "repository": "bakalwar/EH_AROGYA_SUTRA_2",
+    "canonicalRemoteUrl": "https://github.com/bakalwar/EH_AROGYA_SUTRA_2.git",
+    "canonicalBaseSha": "8216522d3232541b6863b164a0f2b1fe0b41f9f5",
+    "branchName": "docs/rule2-data-p2a-engineering-source-freeze",
+    "prScope": "DOCS_DATA_ONLY_TWO_NEW_FILES",
+    "creationPhase": "R2-DATA-P2A",
+    "deploymentAuthorized": false,
+    "migrationAuthorized": false,
+    "migration019Authorized": false
+  },
+  "legacyIdentity": {
+    "repositoryUrl": "https://github.com/bakalwar/eh-arogya-sutra.git",
+    "legacyHeadSha": "b9ec3f6986c402afee13241673b954fe3564f169",
+    "branch": "main",
+    "aheadOfOriginCount": 32,
+    "dirtyWorktreeDisclosed": true,
+    "wholeWorktreeFreezeStatus": "NOT_REPRODUCIBLE",
+    "fileLevelEvidenceStatus": "REPRODUCIBLE_BY_HASH",
+    "absoluteLocalPathsIncluded": false
+  },
+  "mappedJson": {
+    "repositoryRelativePath": "eh-api/data/raw/mapped.json",
+    "gitBlobSha": "bded56b37df01925e94db21dea9ee38a42371717",
+    "sha256": "80b5d26cd06dec087350a64643933c3889f3553790653cb9dbc1f48b3531bda6",
+    "sizeBytes": 54597079,
+    "rowCount": 102320,
+    "schemaFingerprintSha256": "570349fe9f2cd995597f0620b93438a350b68e02b0a1439f50f96b341f76bad9",
+    "schemaKeys": [
+      "blood_vitiation",
+      "code",
+      "common_terms",
+      "dosha_primary",
+      "eh_system",
+      "lymph_vitiation",
+      "name_english",
+      "name_hindi",
+      "polarity",
+      "severity",
+      "source",
+      "symptoms_english",
+      "symptoms_hindi",
+      "symptoms_hinglish"
+    ],
+    "introducingCommitSha": "b432b25d8a19f560ddad01554fd390ac94b4e045",
+    "generatorStatus": "EXACT_GENERATOR_NOT_FOUND",
+    "provenance": "UNKNOWN",
+    "polarityClinicalAuthority": "NONE",
+    "mixedOriginStatus": "DEFAULT_PLACEHOLDER_HIGH_CONFIDENCE_ROW_LEVEL_CLINICAL_STATUS_NOT_DETERMINABLE",
+    "copiedIntoEhas2": false
+  },
+  "rawInputs": [
+    {
+      "logicalName": "icd10.json",
+      "repositoryRelativePath": "eh-api/data/raw/icd10.json",
+      "gitBlobSha": "b187ef03ffdbd6a5dd20c8c0d4b7241848cfd80d",
+      "sha256": "503494a9dcbf9e1bffaec9187971e3115c57fea03373eef4bf38ec19e0b9a418",
+      "sizeBytes": 19671229,
+      "copiedIntoEhas2": false
+    },
+    {
+      "logicalName": "omim.json",
+      "repositoryRelativePath": "eh-api/data/raw/omim.json",
+      "gitBlobSha": "9d2d239a63618348566f83d0bd59e33f84471fba",
+      "sha256": "2bb4302c5f8aef350bdf663831cb54333fb382c10819bbc66fb71520df59cc86",
+      "sizeBytes": 1476757,
+      "copiedIntoEhas2": false
+    },
+    {
+      "logicalName": "orphanet.json",
+      "repositoryRelativePath": "eh-api/data/raw/orphanet.json",
+      "gitBlobSha": "182d7839abfcde358017a99f4a756a15506b4882",
+      "sha256": "8406fe130e027e283bae5e17ce526a8e2aafba2a1c6221b518e631a424d2799d",
+      "sizeBytes": 1408503,
+      "copiedIntoEhas2": false
+    },
+    {
+      "logicalName": "mesh.json",
+      "repositoryRelativePath": "eh-api/data/raw/mesh.json",
+      "gitBlobSha": "f59102c42c14d5b419d397ceba01e60c960c86bc",
+      "sha256": "4f4c888acaa747ac5b91c45831875df698e9e3708de4a5f99fb9d125dc9f1ab7",
+      "sizeBytes": 157082,
+      "copiedIntoEhas2": false
+    }
+  ],
+  "database": {
+    "repositoryRelativePath": "eh-api/data/eh_arogya.db",
+    "sha256": "c3ff59f862ead2559e116cf6a4f629b7259bbd12d73385f299b780f25c4d1154",
+    "schemaFingerprintSha256": "17c24811d9f4d2a533fad48ee2cbfb9e15c54d8825ac17176ec0efcefe906e04",
+    "tableCount": 15,
+    "diseaseRowCount": 116284,
+    "polarityColumnPresent": false,
+    "walShmExcluded": true,
+    "consultationRuntimeDataExcluded": true,
+    "databaseClinicalPolarityAuthority": "NONE",
+    "copiedIntoEhas2": false
+  },
+  "priorDerivedArtifacts": {
+    "inventory": {
+      "logicalName": "L_R2_MAPPED_JSON_INVENTORY.jsonl",
+      "sha256": "e639685db08ac8acec965ee2234277305fbce6db7dfc89569a351bf4b84ae2a9",
+      "rowCount": 102320,
+      "storageStatus": "TEMPORARY_EXTERNAL_NOT_COMMITTED",
+      "clinicalAuthority": "NONE",
+      "copiedIntoEhas2": false
+    },
+    "bridgeV3": {
+      "logicalName": "R2_BRIDGE_CANDIDATES_V3.jsonl",
+      "sha256": "590751852f4e4757581e6348ddc67fb5415a608b5a7e42ec6c2f885aba3f8fdc",
+      "rowCount": 50544,
+      "exactUniqueMatchCount": 33070,
+      "exactMultipleMatchCount": 17181,
+      "ownerReviewConflictCount": 257,
+      "noMatchCount": 36,
+      "storageStatus": "TEMPORARY_EXTERNAL_NOT_COMMITTED",
+      "clinicalAuthority": "NONE",
+      "copiedIntoEhas2": false
+    }
+  },
+  "coverageAxes": {
+    "identityCoverage": {
+      "axis": "identity",
+      "technicalCodeMatchPercent": 99.93,
+      "technicalCodeMatchBasis": "bridge_v3_matched_keys_over_50544_excluding_36_no_match",
+      "note": "Technical identity/code match only. Not clinical coverage."
+    },
+    "sourceLinkedPolarityCoverage": {
+      "axis": "source_linked_polarity",
+      "count": 0,
+      "note": "No owner-attested source-linked disease polarity claims recorded in this phase."
+    },
+    "clinicallyReviewedCoverage": {
+      "axis": "clinically_reviewed",
+      "count": 0
+    },
+    "ownerApprovedCoverage": {
+      "axis": "owner_approved",
+      "count": 0
+    },
+    "activeRegistryCoverage": {
+      "axis": "active_registry",
+      "realValidatedRule2Mappings": 0,
+      "registryPosture": "RULE2_EMPTY_REGISTRY_FAIL_CLOSED"
+    }
+  },
+  "exclusions": {
+    "noDataAdoption": true,
+    "noPolarityApproval": true,
+    "noRegistryPopulation": true,
+    "noGeneratorReconstructionClaim": true,
+    "noAiClinicalMapping": true,
+    "noKeywordPromotion": true,
+    "noMedicineFormulaPotencyElectricityRxInfluence": true,
+    "noOrchestration": true,
+    "noProduction": true,
+    "noDeployment": true,
+    "noMigration019": true,
+    "noRule2Reimplementation": true,
+    "noLegacyMutation": true,
+    "noAbsoluteLocalPaths": true,
+    "noPhiPii": true,
+    "noCopyrightedSourceText": true,
+    "noLargeArtifactCopyIntoEhas2": true
+  }
+}
