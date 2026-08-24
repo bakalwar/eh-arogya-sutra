@@ -7,6 +7,7 @@ export * from './normalize.js';
 export * from './quarantine.js';
 export * from './fingerprint.js';
 export * from './validateRecord.js';
+export * from './validateSyntheticInput.js';
 export * from './batchValidate.js';
 export * from './manifest.js';
 export * from './buildSynthetic.js';

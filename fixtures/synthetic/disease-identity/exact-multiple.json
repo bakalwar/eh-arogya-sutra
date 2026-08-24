@@ -9,14 +9,19 @@
   "bridgeDisposition": "EXACT_MULTIPLE_MATCH",
   "relationshipState": "MAPPED_INDEX",
   "linkedEhas2DiseaseIds": [],
-  "candidateLegacyDbIds": [201, 202],
+  "candidateLegacyDbIds": [
+    201,
+    202
+  ],
   "provenanceVariants": [
     {
       "mappedCodeRaw": "B01.1",
       "mappedSourceLabel": "ICD10"
     }
   ],
-  "quarantineFlags": ["Q_REL_EXACT_MULTIPLE"],
+  "quarantineFlags": [
+    "Q_REL_EXACT_MULTIPLE"
+  ],
   "reviewRequiredUnclassified": false,
   "provenance": {
     "authorityClassification": "ENGINEERING_IDENTITY_ONLY",

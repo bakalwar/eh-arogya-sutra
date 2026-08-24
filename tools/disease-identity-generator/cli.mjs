@@ -14,6 +14,7 @@ import {
   reconcileManifestCounts,
   serializeJsonl,
   validateAndIndexRecordBatch,
+  validateSyntheticGeneratorInput,
   DiseaseIdentityError,
   APPROVED_AGGREGATE_COUNTS,
   BUNDLE_SCHEMA_VERSION,
@@ -72,6 +73,7 @@ function readJsonl(filePath) {
 }
 
 function processSyntheticInput(raw) {
+  validateSyntheticGeneratorInput(raw);
   if (raw.recordKind === 'LEGACY_DB_ROW') {
     return buildSyntheticDiseaseRecord({
       legacyDbDiseaseId: raw.legacyDbDiseaseId,

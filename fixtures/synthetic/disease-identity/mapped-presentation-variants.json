@@ -11,15 +11,17 @@
   "linkedEhas2DiseaseIds": [
     "ehas2-dis-v1-1e3d2c7675d750e5478afcd0fa816825fb01e34196d195495e28afce4d9f8146"
   ],
-  "candidateLegacyDbIds": [7001],
+  "candidateLegacyDbIds": [
+    7001
+  ],
   "provenanceVariants": [
     {
       "mappedSourceLabel": "MESH",
-      "mappedCodeRaw": "MESH:D019999"
+      "mappedCodeRaw": "d019999"
     },
     {
       "mappedSourceLabel": "MESH",
-      "mappedCodeRaw": "d019999"
+      "mappedCodeRaw": "MESH:D019999"
     }
   ],
   "quarantineFlags": [],
@@ -28,5 +30,5 @@
     "authorityClassification": "ENGINEERING_IDENTITY_ONLY",
     "datasetVersion": "ehas2-disease-identity-v1"
   },
-  "recordFingerprint": "e284c7e07cf6b510d3d8e7e9cd03b938e88587507109604718c7180b6655a8eb"
+  "recordFingerprint": "aece120b3dd29be85d4b5ddb10fbd20c757237946a3277fcb52995943eedba60"
 }

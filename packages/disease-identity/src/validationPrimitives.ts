@@ -20,6 +20,32 @@ const PROHIBITED_KEY_SET = new Set<string>([
   ...(DISPOSITION_PRIMARY_FIELDS as readonly string[]),
 ]);
 
+export function assertNonNegativeSafeInteger(value: unknown, label: string): number {
+  if (typeof value !== 'number' || !Number.isSafeInteger(value) || value < 0) {
+    throw new DiseaseIdentityError(MALFORMED_INPUT, `${label} must be a non-negative safe integer`);
+  }
+  return value;
+}
+
+export function assertSha256Hex(value: unknown, label: string): string {
+  const hex = assertBoundedString(value, label);
+  if (!/^[0-9a-f]{64}$/.test(hex)) {
+    throw new DiseaseIdentityError(MALFORMED_INPUT, `${label} must be 64 lowercase SHA-256 hex`);
+  }
+  return hex;
+}
+
+export function assertSafeArtifactFilename(value: unknown, label: string): string {
+  const name = assertBoundedString(value, label);
+  if (name.length === 0 || name.includes('..') || name.includes('/') || name.includes('\\')) {
+    throw new DiseaseIdentityError(MALFORMED_INPUT, `${label} must be a safe logical filename`);
+  }
+  if (!/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(name)) {
+    throw new DiseaseIdentityError(MALFORMED_INPUT, `${label} must be a safe logical filename`);
+  }
+  return name;
+}
+
 export function assertPositiveSafeInteger(value: unknown, label: string): number {
   if (typeof value !== 'number' || !Number.isSafeInteger(value) || value <= 0) {
     throw new DiseaseIdentityError(MALFORMED_INPUT, `${label} must be a positive safe integer`);

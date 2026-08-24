@@ -9,14 +9,19 @@
   "bridgeDisposition": "OWNER_REVIEW_REQUIRED",
   "relationshipState": "MAPPED_INDEX",
   "linkedEhas2DiseaseIds": [],
-  "candidateLegacyDbIds": [301, 302],
+  "candidateLegacyDbIds": [
+    301,
+    302
+  ],
   "provenanceVariants": [
     {
       "mappedCodeRaw": "600100",
       "mappedSourceLabel": "OMIM"
     }
   ],
-  "quarantineFlags": ["Q_REL_OWNER_REVIEW"],
+  "quarantineFlags": [
+    "Q_REL_OWNER_REVIEW"
+  ],
   "reviewRequiredUnclassified": false,
   "provenance": {
     "authorityClassification": "ENGINEERING_IDENTITY_ONLY",

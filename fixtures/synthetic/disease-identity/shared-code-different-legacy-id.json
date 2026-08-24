@@ -12,8 +12,12 @@
   "mappedIndexRefs": [
     "ehas2-mdx-v1-df5eac547f24feddcc9addc8405c93b29d582525f8f9dff775b3cbcb87e18214"
   ],
-  "candidateLegacyDbIds": [6001],
-  "quarantineFlags": ["Q_DISPLAY_EMPTY"],
+  "candidateLegacyDbIds": [
+    6001
+  ],
+  "quarantineFlags": [
+    "Q_DISPLAY_EMPTY"
+  ],
   "reviewRequiredUnclassified": false,
   "provenance": {
     "authorityClassification": "ENGINEERING_IDENTITY_ONLY",

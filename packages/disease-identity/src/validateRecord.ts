@@ -24,6 +24,7 @@ import {
   MAPPED_RELATIONSHIP_STATES,
   PROVENANCE_ALLOWED_KEYS,
   PROVENANCE_VARIANT_ALLOWED_KEYS,
+  RELATIONSHIP_DISPOSITION_QUARANTINE_FLAGS,
 } from './schemaAllowlists.js';
 import { DiseaseIdentityError, MALFORMED_INPUT } from './errors.js';
 import {
@@ -70,8 +71,10 @@ function validateProvenanceObject(value: unknown): Record<string, string> {
 
 function validateProvenanceVariants(
   value: unknown,
+  recordLabel: string,
+  recordRaw: string,
+  mode: 'normalized' | 'raw',
   expectedKey: string | null,
-  normalizedForm: boolean,
 ): void {
   if (!Array.isArray(value)) {
     throw new DiseaseIdentityError(MALFORMED_INPUT, 'provenanceVariants must be an array');
@@ -85,6 +88,9 @@ function validateProvenanceVariants(
   if (value.length === 0) {
     throw new DiseaseIdentityError(MALFORMED_INPUT, 'provenanceVariants must not be empty');
   }
+
+  const parsed: Array<{ label: string; raw: string }> = [];
+  const seen = new Set<string>();
 
   for (let i = 0; i < value.length; i += 1) {
     const variant = value[i];
@@ -103,8 +109,28 @@ function validateProvenanceVariants(
       variant.mappedCodeRaw,
       `provenanceVariants[${i}].mappedCodeRaw`,
     );
+    const variantKey = `${label}\0${raw}`;
+    if (seen.has(variantKey)) {
+      throw new DiseaseIdentityError(
+        MALFORMED_INPUT,
+        `Duplicate provenanceVariants entry at index ${i}`,
+      );
+    }
+    seen.add(variantKey);
+
+    if (i > 0) {
+      const prev = parsed[i - 1];
+      const labelCmp = prev.label.localeCompare(label);
+      if (labelCmp > 0 || (labelCmp === 0 && prev.raw.localeCompare(raw) >= 0)) {
+        throw new DiseaseIdentityError(
+          MALFORMED_INPUT,
+          'provenanceVariants must be deterministically ordered',
+        );
+      }
+    }
+
     const normalized = normalizeMappedIdentity(label, raw);
-    if (normalizedForm) {
+    if (mode === 'normalized') {
       if (!normalized.ok) {
         throw new DiseaseIdentityError(
           MALFORMED_INPUT,
@@ -117,7 +143,157 @@ function validateProvenanceVariants(
           `provenanceVariants[${i}] contradicts normalizedIdentityKey`,
         );
       }
+    } else if (normalized.ok) {
+      throw new DiseaseIdentityError(
+        MALFORMED_INPUT,
+        `provenanceVariants[${i}] must remain unnormalizable for raw mapped record`,
+      );
     }
+
+    parsed.push({ label, raw });
+  }
+
+  const includesOwn = parsed.some(
+    (entry) => entry.label === recordLabel && entry.raw === recordRaw,
+  );
+  if (!includesOwn) {
+    throw new DiseaseIdentityError(
+      MALFORMED_INPUT,
+      'provenanceVariants must include the record mappedSourceLabel/mappedCodeRaw pair',
+    );
+  }
+}
+
+function validateDispositionQuarantineConsistency(
+  disposition: string | null,
+  flags: readonly string[],
+): void {
+  const present = RELATIONSHIP_DISPOSITION_QUARANTINE_FLAGS.filter((flag) =>
+    hasQuarantineFlag(flags, flag),
+  );
+
+  switch (disposition) {
+    case 'EXACT_MULTIPLE_MATCH':
+      if (present.length !== 1 || present[0] !== 'Q_REL_EXACT_MULTIPLE') {
+        throw new DiseaseIdentityError(
+          MALFORMED_INPUT,
+          'EXACT_MULTIPLE_MATCH requires Q_REL_EXACT_MULTIPLE only',
+        );
+      }
+      return;
+    case 'OWNER_REVIEW_REQUIRED':
+      if (present.length !== 1 || present[0] !== 'Q_REL_OWNER_REVIEW') {
+        throw new DiseaseIdentityError(
+          MALFORMED_INPUT,
+          'OWNER_REVIEW_REQUIRED requires Q_REL_OWNER_REVIEW only',
+        );
+      }
+      return;
+    case 'NO_MATCH':
+      if (present.length !== 1 || present[0] !== 'Q_REL_NO_DB_MATCH') {
+        throw new DiseaseIdentityError(MALFORMED_INPUT, 'NO_MATCH requires Q_REL_NO_DB_MATCH only');
+      }
+      return;
+    case 'EXACT_UNIQUE_MATCH':
+      if (present.length !== 0) {
+        throw new DiseaseIdentityError(
+          MALFORMED_INPUT,
+          'EXACT_UNIQUE_MATCH must not carry relationship disposition quarantine flags',
+        );
+      }
+      return;
+    default:
+      if (present.length > 0) {
+        throw new DiseaseIdentityError(
+          MALFORMED_INPUT,
+          'Relationship disposition quarantine flags require a mapped bridge disposition',
+        );
+      }
+  }
+}
+
+function validateMappedDispositionInvariants(
+  disposition: string | null,
+  flags: readonly string[],
+  relationshipState: string,
+  candidateLegacyDbIds: readonly number[],
+  linkedEhas2DiseaseIds: readonly string[],
+): void {
+  validateDispositionQuarantineConsistency(disposition, flags);
+
+  switch (disposition) {
+    case 'EXACT_MULTIPLE_MATCH': {
+      if (candidateLegacyDbIds.length < 2) {
+        throw new DiseaseIdentityError(
+          MALFORMED_INPUT,
+          'EXACT_MULTIPLE_MATCH requires at least two candidates',
+        );
+      }
+      if (linkedEhas2DiseaseIds.length !== 0) {
+        throw new DiseaseIdentityError(
+          MALFORMED_INPUT,
+          'EXACT_MULTIPLE_MATCH must not link disease IDs',
+        );
+      }
+      break;
+    }
+    case 'OWNER_REVIEW_REQUIRED': {
+      if (candidateLegacyDbIds.length < 2) {
+        throw new DiseaseIdentityError(
+          MALFORMED_INPUT,
+          'OWNER_REVIEW_REQUIRED requires at least two candidates',
+        );
+      }
+      if (linkedEhas2DiseaseIds.length !== 0) {
+        throw new DiseaseIdentityError(
+          MALFORMED_INPUT,
+          'OWNER_REVIEW_REQUIRED must not link disease IDs',
+        );
+      }
+      break;
+    }
+    case 'NO_MATCH': {
+      if (relationshipState !== 'UNLINKED_MAPPED_CODE') {
+        throw new DiseaseIdentityError(MALFORMED_INPUT, 'NO_MATCH requires UNLINKED_MAPPED_CODE');
+      }
+      if (candidateLegacyDbIds.length !== 0) {
+        throw new DiseaseIdentityError(
+          MALFORMED_INPUT,
+          'NO_MATCH requires empty candidateLegacyDbIds',
+        );
+      }
+      if (linkedEhas2DiseaseIds.length !== 0) {
+        throw new DiseaseIdentityError(MALFORMED_INPUT, 'NO_MATCH must not link disease IDs');
+      }
+      break;
+    }
+    case 'EXACT_UNIQUE_MATCH': {
+      if (relationshipState !== 'MAPPED_INDEX') {
+        throw new DiseaseIdentityError(MALFORMED_INPUT, 'EXACT_UNIQUE_MATCH requires MAPPED_INDEX');
+      }
+      if (candidateLegacyDbIds.length !== 1) {
+        throw new DiseaseIdentityError(
+          MALFORMED_INPUT,
+          'EXACT_UNIQUE_MATCH requires exactly one candidateLegacyDbId',
+        );
+      }
+      if (linkedEhas2DiseaseIds.length !== 1) {
+        throw new DiseaseIdentityError(
+          MALFORMED_INPUT,
+          'EXACT_UNIQUE_MATCH requires exactly one linkedEhas2DiseaseId',
+        );
+      }
+      const expectedLink = generateDiseaseCanonicalId(candidateLegacyDbIds[0]);
+      if (linkedEhas2DiseaseIds[0] !== expectedLink) {
+        throw new DiseaseIdentityError(
+          MALFORMED_INPUT,
+          'EXACT_UNIQUE_MATCH linked disease ID must match candidate legacy anchor',
+        );
+      }
+      break;
+    }
+    default:
+      break;
   }
 }
 
@@ -139,89 +315,6 @@ function validateBridgeDisposition(value: unknown): string | null {
     throw new DiseaseIdentityError(MALFORMED_INPUT, `Invalid bridgeDisposition ${disposition}`);
   }
   return disposition;
-}
-
-function validateMappedDispositionInvariants(
-  disposition: string | null,
-  flags: readonly string[],
-  relationshipState: string,
-  candidateLegacyDbIds: readonly number[],
-  linkedEhas2DiseaseIds: readonly string[],
-): void {
-  switch (disposition) {
-    case 'EXACT_MULTIPLE_MATCH': {
-      if (candidateLegacyDbIds.length < 2) {
-        throw new DiseaseIdentityError(
-          MALFORMED_INPUT,
-          'EXACT_MULTIPLE_MATCH requires at least two candidates',
-        );
-      }
-      if (!hasQuarantineFlag(flags, 'Q_REL_EXACT_MULTIPLE')) {
-        throw new DiseaseIdentityError(
-          MALFORMED_INPUT,
-          'EXACT_MULTIPLE_MATCH requires Q_REL_EXACT_MULTIPLE',
-        );
-      }
-      if (linkedEhas2DiseaseIds.length !== 0) {
-        throw new DiseaseIdentityError(
-          MALFORMED_INPUT,
-          'EXACT_MULTIPLE_MATCH must not link disease IDs',
-        );
-      }
-      break;
-    }
-    case 'OWNER_REVIEW_REQUIRED': {
-      if (candidateLegacyDbIds.length < 2) {
-        throw new DiseaseIdentityError(
-          MALFORMED_INPUT,
-          'OWNER_REVIEW_REQUIRED requires at least two candidates',
-        );
-      }
-      if (!hasQuarantineFlag(flags, 'Q_REL_OWNER_REVIEW')) {
-        throw new DiseaseIdentityError(
-          MALFORMED_INPUT,
-          'OWNER_REVIEW_REQUIRED requires Q_REL_OWNER_REVIEW',
-        );
-      }
-      if (linkedEhas2DiseaseIds.length !== 0) {
-        throw new DiseaseIdentityError(
-          MALFORMED_INPUT,
-          'OWNER_REVIEW_REQUIRED must not link disease IDs',
-        );
-      }
-      break;
-    }
-    case 'NO_MATCH': {
-      if (!hasQuarantineFlag(flags, 'Q_REL_NO_DB_MATCH')) {
-        throw new DiseaseIdentityError(MALFORMED_INPUT, 'NO_MATCH requires Q_REL_NO_DB_MATCH');
-      }
-      if (relationshipState !== 'UNLINKED_MAPPED_CODE') {
-        throw new DiseaseIdentityError(MALFORMED_INPUT, 'NO_MATCH requires UNLINKED_MAPPED_CODE');
-      }
-      if (linkedEhas2DiseaseIds.length !== 0) {
-        throw new DiseaseIdentityError(MALFORMED_INPUT, 'NO_MATCH must not link disease IDs');
-      }
-      break;
-    }
-    case 'EXACT_UNIQUE_MATCH': {
-      if (
-        hasQuarantineFlag(flags, 'Q_REL_EXACT_MULTIPLE') ||
-        hasQuarantineFlag(flags, 'Q_REL_OWNER_REVIEW') ||
-        hasQuarantineFlag(flags, 'Q_REL_NO_DB_MATCH')
-      ) {
-        throw new DiseaseIdentityError(
-          MALFORMED_INPUT,
-          'EXACT_UNIQUE_MATCH must not carry ambiguity quarantine flags',
-        );
-      }
-      if (relationshipState !== 'MAPPED_INDEX') {
-        throw new DiseaseIdentityError(MALFORMED_INPUT, 'EXACT_UNIQUE_MATCH requires MAPPED_INDEX');
-      }
-      break;
-    }
-    default:
-      break;
-  }
 }
 
 function validateNormalizedMappedForm(record: Record<string, unknown>): void {
@@ -272,7 +365,13 @@ function validateNormalizedMappedForm(record: Record<string, unknown>): void {
     );
   }
 
-  validateProvenanceVariants(record.provenanceVariants, normalizedIdentityKey, true);
+  validateProvenanceVariants(
+    record.provenanceVariants,
+    mappedSourceLabel,
+    mappedCodeRaw,
+    'normalized',
+    normalizedIdentityKey,
+  );
 }
 
 function validateRawMappedForm(record: Record<string, unknown>, flags: readonly string[]): void {
@@ -318,7 +417,13 @@ function validateRawMappedForm(record: Record<string, unknown>, flags: readonly 
     );
   }
 
-  validateProvenanceVariants(record.provenanceVariants, null, false);
+  validateProvenanceVariants(
+    record.provenanceVariants,
+    mappedSourceLabel,
+    mappedCodeRaw,
+    'raw',
+    null,
+  );
 }
 
 export function validateDiseaseIdentityRecord(record: Record<string, unknown>): void {

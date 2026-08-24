@@ -28,6 +28,13 @@ import type {
   ProvenanceVariant,
 } from './types.js';
 
+function sortProvenanceVariants(variants: readonly ProvenanceVariant[]): ProvenanceVariant[] {
+  return [...variants].sort((a, b) => {
+    const labelCmp = a.mappedSourceLabel.localeCompare(b.mappedSourceLabel);
+    return labelCmp !== 0 ? labelCmp : a.mappedCodeRaw.localeCompare(b.mappedCodeRaw);
+  });
+}
+
 export type SyntheticDiseaseInput = {
   readonly legacyDbDiseaseId: number;
   readonly sourceLabel: string;
@@ -143,11 +150,11 @@ export function buildSyntheticMappedRecord(input: SyntheticMappedInput): MappedI
       input.bridgeDisposition === 'NO_MATCH' ? 'UNLINKED_MAPPED_CODE' : 'MAPPED_INDEX',
     linkedEhas2DiseaseIds: [...(input.linkedEhas2DiseaseIds ?? [])],
     candidateLegacyDbIds,
-    provenanceVariants: [
-      ...(input.provenanceVariants ?? [
+    provenanceVariants: sortProvenanceVariants(
+      input.provenanceVariants ?? [
         { mappedCodeRaw: input.mappedCodeRaw, mappedSourceLabel: input.mappedSourceLabel },
-      ]),
-    ],
+      ],
+    ),
     quarantineFlags,
     reviewRequiredUnclassified: reviewRequiredUnclassifiedDefault(),
     provenance: {

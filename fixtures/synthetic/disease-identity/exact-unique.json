@@ -11,7 +11,9 @@
   "linkedEhas2DiseaseIds": [
     "ehas2-dis-v1-2343bf624444d05f1c2c3f3a2979fee30d81c6cf047d109ad1a27b22914d9bbf"
   ],
-  "candidateLegacyDbIds": [101],
+  "candidateLegacyDbIds": [
+    101
+  ],
   "provenanceVariants": [
     {
       "mappedCodeRaw": "A00.0",

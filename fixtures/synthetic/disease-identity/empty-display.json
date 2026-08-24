@@ -10,8 +10,12 @@
   "relationshipState": "LEGACY_DB_LINKED",
   "bridgeDisposition": "EXACT_UNIQUE_MATCH",
   "mappedIndexRefs": [],
-  "candidateLegacyDbIds": [8002],
-  "quarantineFlags": ["Q_DISPLAY_EMPTY"],
+  "candidateLegacyDbIds": [
+    8002
+  ],
+  "quarantineFlags": [
+    "Q_DISPLAY_EMPTY"
+  ],
   "reviewRequiredUnclassified": false,
   "provenance": {
     "authorityClassification": "ENGINEERING_IDENTITY_ONLY",
