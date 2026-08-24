@@ -16,9 +16,7 @@
       "mappedSourceLabel": "ICD10"
     }
   ],
-  "quarantineFlags": [
-    "Q_REL_NO_DB_MATCH"
-  ],
+  "quarantineFlags": ["Q_REL_NO_DB_MATCH"],
   "reviewRequiredUnclassified": false,
   "provenance": {
     "authorityClassification": "ENGINEERING_IDENTITY_ONLY",

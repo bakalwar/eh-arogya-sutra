@@ -16,10 +16,7 @@
       "mappedSourceLabel": "ICD10"
     }
   ],
-  "quarantineFlags": [
-    "Q_IDENTITY_INVALID_CODE",
-    "Q_MAPPED_UNNORMALIZABLE_RAW"
-  ],
+  "quarantineFlags": ["Q_IDENTITY_INVALID_CODE", "Q_MAPPED_UNNORMALIZABLE_RAW"],
   "reviewRequiredUnclassified": false,
   "provenance": {
     "authorityClassification": "ENGINEERING_IDENTITY_ONLY",

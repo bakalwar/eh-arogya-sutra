@@ -11,9 +11,7 @@
   "linkedEhas2DiseaseIds": [
     "ehas2-dis-v1-1e3d2c7675d750e5478afcd0fa816825fb01e34196d195495e28afce4d9f8146"
   ],
-  "candidateLegacyDbIds": [
-    7001
-  ],
+  "candidateLegacyDbIds": [7001],
   "provenanceVariants": [
     {
       "mappedSourceLabel": "MESH",

@@ -16,10 +16,7 @@
       "mappedSourceLabel": "UNKNOWN_NS"
     }
   ],
-  "quarantineFlags": [
-    "Q_IDENTITY_INVALID_NAMESPACE",
-    "Q_MAPPED_UNNORMALIZABLE_RAW"
-  ],
+  "quarantineFlags": ["Q_IDENTITY_INVALID_NAMESPACE", "Q_MAPPED_UNNORMALIZABLE_RAW"],
   "reviewRequiredUnclassified": false,
   "provenance": {
     "authorityClassification": "ENGINEERING_IDENTITY_ONLY",
