@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import {
   APPROVED_AGGREGATE_COUNTS,
   BUNDLE_SCHEMA_VERSION,
+  BUNDLE_KIND_SYNTHETIC,
   DISEASE_ID_PREFIX,
   DiseaseIdentityError,
   IdentityDigestRegistry,
@@ -225,6 +226,7 @@ describe('R2-DATA-P2B disease identity control plane', () => {
     );
 
     reconcileManifestCounts({
+      bundleKind: BUNDLE_KIND_SYNTHETIC,
       bundleSchemaVersion: BUNDLE_SCHEMA_VERSION,
       datasetVersion: 'ehas2-disease-identity-v1',
       authorityClassification: 'ENGINEERING_IDENTITY_ONLY',

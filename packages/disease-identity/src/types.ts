@@ -92,6 +92,7 @@ export type BundleManifestArtifact = {
 };
 
 export type BundleManifestTemplate = {
+  readonly bundleKind: string;
   readonly bundleSchemaVersion: string;
   readonly datasetVersion: string;
   readonly authorityClassification: string;

@@ -41,6 +41,8 @@ import {
   SYNTHETIC_TEST_COMMIT,
   SOURCE_COMMIT_UNSET,
   BUNDLE_ARTIFACT_NAMES,
+  BUNDLE_KIND_PRODUCTION,
+  BUNDLE_KIND_SYNTHETIC,
 } from './fullCorpusConstants.js';
 import { serializeJsonl, sortRecordsById, reconcileManifestCounts } from './manifest.js';
 import { validateAndIndexRecordBatch } from './batchValidate.js';
@@ -77,7 +79,7 @@ export type FullCorpusBuildArtifacts = {
   readonly serialized: Record<string, string>;
 };
 
-function buildMappedRecord(
+export function buildMappedRecord(
   entry: MappedDedupeEntry,
   bridge: ParsedBridgeRow | undefined,
 ): MappedIdentityIndexRecord {
@@ -132,7 +134,7 @@ function buildMappedRecord(
   };
 }
 
-function buildDiseaseRecord(input: {
+export function buildDiseaseRecord(input: {
   row: LegacyDbRow;
   bridgeRowsForId: readonly ParsedBridgeRow[];
   referencedInBridge: boolean;
@@ -391,6 +393,8 @@ function buildEvidenceObject(input: {
   inventoryVerified: boolean;
   inventorySha256?: string | null;
   generatorSourceCommit: string;
+  expectedGeneratorCommit: string;
+  bundleKind: typeof BUNDLE_KIND_PRODUCTION | typeof BUNDLE_KIND_SYNTHETIC;
 }): Record<string, unknown> {
   return {
     authorityClassification: AUTHORITY_CLASSIFICATION,
@@ -406,8 +410,10 @@ function buildEvidenceObject(input: {
     estimatedPeakMemoryBudgetBytes: ESTIMATED_PEAK_MEMORY_BUDGET_BYTES,
     documentedPeakMemoryBudgetBytes: ESTIMATED_PEAK_MEMORY_BUDGET_BYTES,
     processingModel: 'BOUNDED_STREAM_DEDUPE_ITERATE_SQLITE_JSONL',
+    bundleKind: input.bundleKind,
     // Build-evidence only — not part of data-member aggregate fingerprint inputs beyond this file.
     generatorSourceCommit: input.generatorSourceCommit,
+    expectedGeneratorCommit: input.expectedGeneratorCommit,
   };
 }
 
@@ -423,6 +429,7 @@ function assembleManifestAndSerialized(input: {
   inventorySha256?: string | null;
   skipManifestReconciliation?: boolean;
   generatorSourceCommit: string;
+  bundleKind: typeof BUNDLE_KIND_PRODUCTION | typeof BUNDLE_KIND_SYNTHETIC;
   serializedMembers?: {
     diseaseJsonl: string;
     mappedJsonl: string;
@@ -459,6 +466,8 @@ function assembleManifestAndSerialized(input: {
     inventoryVerified: input.inventoryVerified,
     inventorySha256: input.inventorySha256,
     generatorSourceCommit: input.generatorSourceCommit,
+    expectedGeneratorCommit: input.generatorSourceCommit,
+    bundleKind: input.bundleKind,
   });
   const buildEvidenceJson = `${canonicalJsonString(buildEvidence)}\n`;
   const buildEvidenceSha256 = sha256HexLower(buildEvidenceJson);
@@ -506,6 +515,7 @@ function assembleManifestAndSerialized(input: {
   );
 
   const manifest = {
+    bundleKind: input.bundleKind,
     bundleSchemaVersion: BUNDLE_SCHEMA_VERSION,
     datasetVersion: DATASET_VERSION,
     authorityClassification: AUTHORITY_CLASSIFICATION,
@@ -593,6 +603,7 @@ export function buildFullCorpusArtifacts(input: {
     inventorySha256: input.inventorySha256,
     skipManifestReconciliation: input.skipManifestReconciliation,
     generatorSourceCommit: input.generatorSourceCommit ?? SYNTHETIC_TEST_COMMIT,
+    bundleKind: BUNDLE_KIND_SYNTHETIC,
   });
 }
 
@@ -718,6 +729,8 @@ export async function buildFullCorpusArtifactsProduction(input: {
     inventoryVerified: input.inventoryVerified,
     inventorySha256: input.inventorySha256,
     generatorSourceCommit: input.generatorSourceCommit,
+    expectedGeneratorCommit: input.generatorSourceCommit,
+    bundleKind: BUNDLE_KIND_PRODUCTION,
   });
   const buildEvidenceJson = `${canonicalJsonString(buildEvidence)}\n`;
   const evidencePath = path.join(input.stagingDir, 'p2c-build-evidence.json');
@@ -761,6 +774,7 @@ export async function buildFullCorpusArtifactsProduction(input: {
   );
 
   const manifest = {
+    bundleKind: BUNDLE_KIND_PRODUCTION,
     bundleSchemaVersion: BUNDLE_SCHEMA_VERSION,
     datasetVersion: DATASET_VERSION,
     authorityClassification: AUTHORITY_CLASSIFICATION,

@@ -1,4 +1,6 @@
+import { createHash } from 'node:crypto';
 import { createReadStream } from 'node:fs';
+import { Transform } from 'node:stream';
 import { DiseaseIdentityError } from './errors.js';
 import {
   createMappedDedupeBuckets,
@@ -285,4 +287,91 @@ export async function streamDedupeMappedJsonFile(
     buckets.add(row);
   }
   return dedupeMappedRowsFromBuckets(buckets, rawCount, options);
+}
+
+/**
+ * Parse and hash the exact same byte stream. Production callers provide onRow
+ * to persist immediately into SQLite; in that mode no mapped-entry array or
+ * corpus-sized dedupe map is created in JavaScript.
+ */
+export async function streamDedupeMappedJsonFileWithConsumedDigest(
+  filePath: string,
+  options?: {
+    expectedRawRows?: number;
+    expectedUniqueKeys?: number;
+    maxObjectBytes?: number;
+    onRow?: (row: MappedJsonRow) => void | Promise<void>;
+    getUniqueKeyCount?: () => number;
+  },
+): Promise<{
+  entries: MappedDedupeEntry[] | null;
+  consumedSha256: string;
+  consumedBytes: number;
+  rawRowCount: number;
+  uniqueKeyCount: number;
+}> {
+  const hash = createHash('sha256');
+  let consumedBytes = 0;
+  const input = createReadStream(filePath);
+  const hashing = new Transform({
+    transform(chunk: Buffer, _encoding, callback) {
+      hash.update(chunk);
+      consumedBytes += chunk.byteLength;
+      callback(null, chunk);
+    },
+  });
+  input.on('error', (error) => hashing.destroy(error));
+  input.pipe(hashing);
+  hashing.setEncoding('utf8');
+
+  const buckets = options?.onRow ? null : createMappedDedupeBuckets();
+  let rawRowCount = 0;
+  try {
+    for await (const row of streamMappedJsonArrayFromAsyncIterable(hashing, {
+      maxObjectBytes: options?.maxObjectBytes,
+    })) {
+      rawRowCount += 1;
+      if (options?.onRow) {
+        await options.onRow(row);
+      } else {
+        buckets!.add(row);
+      }
+    }
+  } catch (error) {
+    input.destroy();
+    hashing.destroy();
+    throw error;
+  }
+
+  let entries: MappedDedupeEntry[] | null = null;
+  let uniqueKeyCount: number;
+  if (buckets) {
+    entries = dedupeMappedRowsFromBuckets(buckets, rawRowCount, options);
+    uniqueKeyCount = entries.length;
+  } else {
+    uniqueKeyCount = options?.getUniqueKeyCount?.() ?? -1;
+    if (options?.expectedRawRows !== undefined && rawRowCount !== options.expectedRawRows) {
+      throw new DiseaseIdentityError(
+        'MALFORMED_INPUT',
+        `Expected ${options.expectedRawRows} mapped.json rows, observed ${rawRowCount}`,
+      );
+    }
+    if (
+      options?.expectedUniqueKeys !== undefined &&
+      uniqueKeyCount !== options.expectedUniqueKeys
+    ) {
+      throw new DiseaseIdentityError(
+        'MALFORMED_INPUT',
+        `Expected ${options.expectedUniqueKeys} unique mapped keys, observed ${uniqueKeyCount}`,
+      );
+    }
+  }
+
+  return {
+    entries,
+    consumedSha256: hash.digest('hex'),
+    consumedBytes,
+    rawRowCount,
+    uniqueKeyCount,
+  };
 }

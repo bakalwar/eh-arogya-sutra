@@ -48,6 +48,7 @@ export const PROVENANCE_ALLOWED_KEYS = ['authorityClassification', 'datasetVersi
 export const PROVENANCE_VARIANT_ALLOWED_KEYS = ['mappedCodeRaw', 'mappedSourceLabel'] as const;
 
 export const MANIFEST_ALLOWED_KEYS = [
+  'bundleKind',
   'bundleSchemaVersion',
   'datasetVersion',
   'authorityClassification',

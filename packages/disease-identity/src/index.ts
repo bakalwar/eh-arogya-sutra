@@ -25,3 +25,6 @@ export * from './verifyFullBundle.js';
 export * from './compareFullBuilds.js';
 export * from './preflightFullCorpus.js';
 export * from './streamMappedArray.js';
+export * from './productionBuildIndex.js';
+export * from './productionBoundedBuild.js';
+export * from './generatorGate.js';

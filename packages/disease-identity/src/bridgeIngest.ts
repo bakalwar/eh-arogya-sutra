@@ -9,6 +9,7 @@ import {
 import { mappedRawKey } from './namespaceResolution.js';
 import { APPROVED_AGGREGATE_COUNTS } from './constants.js';
 import { assertCandidateLegacyDbIds } from './validationPrimitives.js';
+import type { ProductionBuildIndex } from './productionBuildIndex.js';
 
 export const BRIDGE_ROW_ALLOWED_KEYS = [
   'mapped_source_label',
@@ -319,6 +320,87 @@ export function validateBridgeBatchProduction(
   }
 
   assertProductionDbCoverage(referencedDbIds, dbIdSet);
+}
+
+/**
+ * Production bridge validation using scalar SQL and anti-joins only. No corpus-sized
+ * bridge, mapped-key, referenced-ID, or DB-ID JavaScript collection is created.
+ */
+export function validateBridgeBatchProductionFromIndex(index: ProductionBuildIndex): void {
+  const counts = index.counts();
+  if (counts.bridgeRows !== EXPECTED_BRIDGE_ROW_COUNT) {
+    throw new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      `Expected ${EXPECTED_BRIDGE_ROW_COUNT} bridge rows, observed ${counts.bridgeRows}`,
+    );
+  }
+
+  const dispositionCounts = {
+    EXACT_UNIQUE_MATCH: index.scalarNumber(
+      "SELECT COUNT(*) FROM bridge_entry WHERE disposition='EXACT_UNIQUE_MATCH'",
+    ),
+    EXACT_MULTIPLE_MATCH: index.scalarNumber(
+      "SELECT COUNT(*) FROM bridge_entry WHERE disposition='EXACT_MULTIPLE_MATCH'",
+    ),
+    OWNER_REVIEW_REQUIRED: index.scalarNumber(
+      "SELECT COUNT(*) FROM bridge_entry WHERE disposition='OWNER_REVIEW_REQUIRED'",
+    ),
+    NO_MATCH: index.scalarNumber("SELECT COUNT(*) FROM bridge_entry WHERE disposition='NO_MATCH'"),
+  };
+  assertProductionDispositionCounts(dispositionCounts);
+
+  if (
+    index.scalarNumber(
+      `SELECT COUNT(*) FROM bridge_candidate c
+       LEFT JOIN db_disease d ON d.id=c.db_id WHERE d.id IS NULL`,
+    ) !== 0
+  ) {
+    throw new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      'Bridge candidate id is not present in the disease DB id set',
+    );
+  }
+  const referenced = index.scalarNumber('SELECT COUNT(DISTINCT db_id) FROM bridge_candidate');
+  if (referenced !== EXPECTED_REFERENCED_UNIQUE_DB_IDS) {
+    throw new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      `Expected ${EXPECTED_REFERENCED_UNIQUE_DB_IDS} unique referenced DB ids, observed ${referenced}`,
+    );
+  }
+  const dbOnly = index.scalarNumber(
+    `SELECT COUNT(*) FROM db_disease d
+     WHERE NOT EXISTS (SELECT 1 FROM bridge_candidate c WHERE c.db_id=d.id)`,
+  );
+  if (dbOnly !== APPROVED_AGGREGATE_COUNTS.dbOnlyRows) {
+    throw new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      `Expected ${APPROVED_AGGREGATE_COUNTS.dbOnlyRows} DB-only ids, observed ${dbOnly}`,
+    );
+  }
+  const missingMapped = index.scalarNumber(
+    `SELECT COUNT(*) FROM bridge_entry b
+     LEFT JOIN mapped_entry m ON m.dedupe_key=b.dedupe_key WHERE m.dedupe_key IS NULL`,
+  );
+  const missingBridge = index.scalarNumber(
+    `SELECT COUNT(*) FROM mapped_entry m
+     LEFT JOIN bridge_entry b ON b.dedupe_key=m.dedupe_key WHERE b.dedupe_key IS NULL`,
+  );
+  if (missingMapped !== 0 || missingBridge !== 0) {
+    throw new DiseaseIdentityError('MALFORMED_INPUT', 'Bridge/mapped key set mismatch');
+  }
+  const normalizedCollisions = index.scalarNumber(
+    `SELECT COUNT(*) FROM (
+       SELECT normalized_identity_key FROM bridge_entry
+       WHERE normalized_identity_key IS NOT NULL
+       GROUP BY normalized_identity_key HAVING COUNT(*) > 1
+     )`,
+  );
+  if (normalizedCollisions !== 0) {
+    throw new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      'Normalized mapped identity key collision across distinct raw keys',
+    );
+  }
 }
 
 /**

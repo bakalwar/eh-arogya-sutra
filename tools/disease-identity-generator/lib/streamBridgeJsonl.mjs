@@ -103,6 +103,64 @@ export async function streamBridgeToIndex(filePath, spoolPath, options = {}) {
   };
 }
 
+/** Production direct-to-SQLite ingest. Retains one parsed bridge line at a time. */
+export async function ingestBridgeToBuildIndex(filePath, index, options = {}) {
+  const maxLineBytes = options.maxLineBytes ?? MAX_BRIDGE_LINE_BYTES;
+  const maxRows = options.maxRows ?? MAX_BRIDGE_ROWS;
+  const hash = createHash('sha256');
+  let consumedBytes = 0;
+  const hashing = new Transform({
+    transform(chunk, _encoding, callback) {
+      hash.update(chunk);
+      consumedBytes += chunk.byteLength;
+      callback(null, chunk);
+    },
+  });
+  const fileStream = createReadStream(filePath);
+  fileStream.on('error', (error) => hashing.destroy(error));
+  fileStream.pipe(hashing);
+  const rl = readline.createInterface({ input: hashing, crlfDelay: Infinity });
+  let rowCount = 0;
+  try {
+    for await (const line of rl) {
+      if (line.trim().length === 0) continue;
+      if (Buffer.byteLength(line, 'utf8') > maxLineBytes) {
+        throw new DiseaseIdentityError(
+          'MALFORMED_INPUT',
+          `Bridge JSONL line exceeds maxLineBytes (${maxLineBytes})`,
+        );
+      }
+      rowCount += 1;
+      if (rowCount > maxRows) {
+        throw new DiseaseIdentityError(
+          'MALFORMED_INPUT',
+          `Bridge JSONL exceeds maxRows (${maxRows})`,
+        );
+      }
+      let raw;
+      try {
+        raw = JSON.parse(line);
+      } catch {
+        throw new DiseaseIdentityError(
+          'MALFORMED_INPUT',
+          `Malformed bridge JSON at line ${rowCount}`,
+        );
+      }
+      index.insertBridgeRow(parseBridgeJsonlRow(raw, rowCount));
+    }
+  } catch (error) {
+    rl.close();
+    fileStream.destroy();
+    hashing.destroy();
+    throw error;
+  }
+  const consumedSha256 = hash.digest('hex');
+  if (options.expectedSha256) {
+    await assertConsumedByteDigest(consumedSha256, options.expectedSha256, 'bridge');
+  }
+  return { rowCount, consumedSha256, consumedBytes };
+}
+
 /** @deprecated Prefer streamBridgeToIndex for production builds. */
 export async function collectBridgeRows(filePath, options = {}) {
   const maxLineBytes = options.maxLineBytes ?? MAX_BRIDGE_LINE_BYTES;

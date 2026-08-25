@@ -21,6 +21,7 @@ import {
   DATASET_VERSION,
   AUTHORITY_CLASSIFICATION,
   sha256HexLower,
+  BUNDLE_KIND_SYNTHETIC,
 } from '../../packages/disease-identity/dist/index.js';
 import { parseArgs } from './lib/parseArgs.mjs';
 import {
@@ -155,6 +156,7 @@ function cmdManifestTemplate(args) {
     usage();
   }
   const template = {
+    bundleKind: BUNDLE_KIND_SYNTHETIC,
     bundleSchemaVersion: BUNDLE_SCHEMA_VERSION,
     datasetVersion: DATASET_VERSION,
     authorityClassification: AUTHORITY_CLASSIFICATION,

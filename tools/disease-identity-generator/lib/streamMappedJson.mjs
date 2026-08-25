@@ -1,5 +1,6 @@
 import {
   streamDedupeMappedJsonFile,
+  streamDedupeMappedJsonFileWithConsumedDigest,
   streamMappedJsonArrayObjects,
   streamMappedJsonArrayFromAsyncIterable,
 } from '../../../packages/disease-identity/dist/streamMappedArray.js';
@@ -20,6 +21,7 @@ export async function collectMappedJsonRows(filePath) {
 
 export {
   streamDedupeMappedJsonFile,
+  streamDedupeMappedJsonFileWithConsumedDigest,
   streamMappedJsonArrayObjects,
   streamMappedJsonArrayFromAsyncIterable,
 };

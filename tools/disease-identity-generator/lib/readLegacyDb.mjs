@@ -1,5 +1,6 @@
 import { createWriteStream, existsSync } from 'node:fs';
 import { finished } from 'node:stream/promises';
+import { rm } from 'node:fs/promises';
 import path from 'node:path';
 import Database from 'better-sqlite3';
 import {
@@ -26,7 +27,7 @@ function assertNoWalShmSidecars(dbPath) {
   }
 }
 
-function openPinnedDb(dbPath) {
+export function openPinnedDb(dbPath, options = {}) {
   assertSqlMatchesDiseaseIdentityAllowlist(ALLOWED_DISEASE_IDENTITY_SQL);
   const absolute = path.resolve(dbPath);
   const uri = buildPinnedByteSqliteUri(absolute);
@@ -39,6 +40,9 @@ function openPinnedDb(dbPath) {
   let db;
   let usedImmutableUri = true;
   try {
+    if (options.testOnlyForceUriFailure === true) {
+      throw new Error('test-only forced immutable URI failure');
+    }
     db = new Database(uri, pinnedByteSqliteOpenOptions());
   } catch {
     assertNoWalShmSidecars(absolute);
@@ -46,28 +50,36 @@ function openPinnedDb(dbPath) {
     db = new Database(absolute, { readonly: true, fileMustExist: true });
   }
 
-  db.pragma('query_only = ON');
   try {
-    db.pragma('trusted_schema = OFF');
-  } catch {
-    // optional
-  }
+    db.pragma('query_only = ON');
+    try {
+      db.pragma('trusted_schema = OFF');
+    } catch {
+      // optional
+    }
 
-  if (!usedImmutableUri) {
-    assertNoWalShmSidecars(absolute);
-  }
+    if (!usedImmutableUri) {
+      assertNoWalShmSidecars(absolute);
+    }
 
-  const integrity = db.pragma('integrity_check', { simple: true });
-  if (integrity !== 'ok') {
-    throw new Error(`SQLite integrity check failed: ${integrity}`);
+    const integrity = db.pragma('integrity_check', { simple: true });
+    if (integrity !== 'ok') {
+      throw new Error(`SQLite integrity check failed: ${integrity}`);
+    }
+    const columns = db
+      .prepare('PRAGMA table_info(diseases)')
+      .all()
+      .map((row) => row.name);
+    assertDiseasesSchema(columns);
+    return { db, absolute, usedImmutableUri };
+  } catch (error) {
+    try {
+      db.close();
+    } catch {
+      // Preserve the validation error.
+    }
+    throw error;
   }
-  const columns = db
-    .prepare('PRAGMA table_info(diseases)')
-    .all()
-    .map((row) => row.name);
-  assertDiseasesSchema(columns);
-
-  return { db, absolute, usedImmutableUri };
 }
 
 /**
@@ -113,10 +125,11 @@ export async function streamLegacyDiseaseRowsToJsonl(dbPath, outPath, options = 
 
   const dbIdSet = new Set();
   let rowCount = 0;
-  const out = createWriteStream(outPath, { encoding: 'utf8' });
-
-  const { db } = openPinnedDb(absolute);
+  let out;
+  let db;
   try {
+    out = createWriteStream(outPath, { encoding: 'utf8' });
+    ({ db } = openPinnedDb(absolute));
     const stmt = db.prepare(ALLOWED_DISEASE_IDENTITY_SQL);
     const seen = new Set();
     for (const row of stmt.iterate()) {
@@ -128,13 +141,34 @@ export async function streamLegacyDiseaseRowsToJsonl(dbPath, outPath, options = 
         await new Promise((resolve) => out.once('drain', resolve));
       }
       rowCount += 1;
+      if (
+        typeof options.testOnlyFailAfterRows === 'number' &&
+        rowCount >= options.testOnlyFailAfterRows
+      ) {
+        throw new Error('test-only mid-iteration SQLite ingest failure');
+      }
     }
+    out.end();
+    await finished(out);
+  } catch (error) {
+    try {
+      out?.destroy();
+    } catch {
+      // Preserve original failure.
+    }
+    try {
+      await rm(outPath, { force: true });
+    } catch {
+      // Preserve original failure.
+    }
+    throw error;
   } finally {
-    db.close();
+    try {
+      db?.close();
+    } catch {
+      // Preserve original failure.
+    }
   }
-
-  out.end();
-  await finished(out);
 
   if (expectedCount !== undefined) {
     assertLegacyDbRowCount(rowCount, expectedCount);
@@ -148,6 +182,39 @@ export async function streamLegacyDiseaseRowsToJsonl(dbPath, outPath, options = 
   }
 
   return { dbIdSet, rowCount, spoolPath: outPath };
+}
+
+/** Production-only direct DB-to-controlled-index ingestion; no spool or DB-ID Set. */
+export async function streamLegacyDiseaseRowsToBuildIndex(dbPath, index, options = {}) {
+  const pinnedHash = options.pinnedHash ?? PINNED_LEGACY_DB_SHA256;
+  const absolute = path.resolve(dbPath);
+  assertNoWalShmSidecars(absolute);
+  const hashBefore = await sha256FileHex(absolute);
+  await assertConsumedByteDigest(hashBefore, pinnedHash, 'legacy-db-before-open');
+
+  let db;
+  let rowCount = 0;
+  try {
+    ({ db } = openPinnedDb(absolute));
+    const stmt = db.prepare(ALLOWED_DISEASE_IDENTITY_SQL);
+    const seen = new Set();
+    for (const row of stmt.iterate()) {
+      const normalized = { id: row.id, icd10_code: row.icd10_code ?? null };
+      validateLegacyDbRow(normalized, seen);
+      index.insertDbRow(normalized);
+      rowCount += 1;
+    }
+  } finally {
+    try {
+      db?.close();
+    } catch {
+      // Preserve ingestion failure.
+    }
+  }
+  assertLegacyDbRowCount(rowCount);
+  const hashAfter = await sha256FileHex(absolute);
+  await assertConsumedByteDigest(hashAfter, pinnedHash, 'legacy-db-after-close');
+  return { rowCount };
 }
 
 /**

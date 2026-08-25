@@ -27,12 +27,17 @@ export const EXPECTED_REFERENCED_UNIQUE_DB_IDS = 98_181 as const;
 
 export const FULL_CORPUS_GENERATOR_VERSION = '0.2.1-p2c-full-corpus-tooling-harden' as const;
 
+export const BUNDLE_KIND_PRODUCTION = 'EHAS2_FULL_CANONICAL_DISEASE_IDENTITY_LEDGER_V1' as const;
+export const BUNDLE_KIND_SYNTHETIC = 'EHAS2_SYNTHETIC_DISEASE_IDENTITY_FIXTURE_V1' as const;
+export const BUNDLE_ACTIVATION_MARKER_NAME = 'ehas2-bundle-activation.json' as const;
+
 /** Recommended free-space floor for a future authorized full-corpus build (bytes). */
 export const RECOMMENDED_MINIMUM_FREE_BYTES = 1_500_000_000;
 
 /**
- * Estimated peak-memory budget for tooling (engineering estimate only).
- * NOT enforced at runtime — see MAX_STAGING_MEMBER_BYTES for the fail-closed size check.
+ * Conservative engineering estimate for the disk-indexed production path. The
+ * runtime bound comes from parser/record limits and the controlled SQLite index,
+ * not from retaining corpus-sized JavaScript collections.
  */
 export const ESTIMATED_PEAK_MEMORY_BUDGET_BYTES = 512 * 1024 * 1024;
 
@@ -41,6 +46,9 @@ export const DOCUMENTED_PEAK_MEMORY_BUDGET_BYTES = ESTIMATED_PEAK_MEMORY_BUDGET_
 
 /** Fail-closed: a single staged bundle member must not exceed this size. */
 export const MAX_STAGING_MEMBER_BYTES = 512 * 1024 * 1024;
+
+/** Fail closed if the private, temporary SQLite build index grows beyond 2 GiB. */
+export const MAX_CONTROLLED_INDEX_BYTES = 2 * 1024 * 1024 * 1024;
 
 export const PRIVATE_ENGINEERING_LICENSING_CLASSIFICATION =
   'PRIVATE_ENGINEERING_IDENTITY_PENDING_LEGAL_CLEARANCE' as const;
@@ -52,6 +60,7 @@ export const BUNDLE_ARTIFACT_NAMES = [
   'unresolved-queue.jsonl',
   'bundle-manifest.json',
   'p2c-build-evidence.json',
+  BUNDLE_ACTIVATION_MARKER_NAME,
 ] as const;
 
 export type BundleArtifactName = (typeof BUNDLE_ARTIFACT_NAMES)[number];

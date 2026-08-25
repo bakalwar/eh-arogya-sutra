@@ -1,16 +1,15 @@
-import { createReadStream } from 'node:fs';
 import { mkdtemp, rm } from 'node:fs/promises';
-import { execSync } from 'node:child_process';
 import readline from 'node:readline';
 import path from 'node:path';
 import { tmpdir } from 'node:os';
 import {
   assertFileIdentityUnchanged,
   assertFullCorpusBuildAuthorized,
-  buildFullCorpusArtifactsProduction,
+  buildFullCorpusArtifactsBoundedProduction,
   compareFullBuilds,
+  createProductionBuildIndex,
   preflightFullCorpus,
-  validateBridgeBatchProduction,
+  validateBridgeBatchProductionFromIndex,
   verifyFullBundle,
   writeAtomicBundle,
   DiseaseIdentityError,
@@ -23,26 +22,13 @@ import {
   EXPECTED_MAPPED_JSON_ROW_COUNT,
   assertConsumedByteDigest,
   hashingReadStream,
-  SOURCE_COMMIT_UNSET,
+  assertProductionGeneratorReady,
+  BUNDLE_KIND_PRODUCTION,
+  EXPECTED_MAPPED_UNIQUE_CODE_COUNT,
 } from '../../../packages/disease-identity/dist/index.js';
-import { streamBridgeToIndex } from './streamBridgeJsonl.mjs';
-import { streamDedupeMappedJsonFile } from './streamMappedJson.mjs';
-import { streamLegacyDiseaseRowsToJsonl } from './readLegacyDb.mjs';
-
-function resolveGeneratorSourceCommit(repoRoot) {
-  try {
-    const sha = execSync('git rev-parse HEAD', {
-      cwd: repoRoot,
-      encoding: 'utf8',
-    }).trim();
-    if (!/^[0-9a-f]{40}$/i.test(sha)) {
-      throw new Error('unexpected git sha');
-    }
-    return sha;
-  } catch {
-    return SOURCE_COMMIT_UNSET;
-  }
-}
+import { ingestBridgeToBuildIndex } from './streamBridgeJsonl.mjs';
+import { streamDedupeMappedJsonFileWithConsumedDigest } from './streamMappedJson.mjs';
+import { streamLegacyDiseaseRowsToBuildIndex } from './readLegacyDb.mjs';
 
 export async function cmdPreflightFullCorpus(args, repoRoot) {
   const result = await preflightFullCorpus({
@@ -83,6 +69,11 @@ export async function cmdBuildFullCorpus(args, repoRoot) {
     outputPath: args.output ?? '',
   });
 
+  const generator = assertProductionGeneratorReady({
+    repoRoot,
+    expectedGeneratorCommit: args['expected-generator-commit'] ?? '',
+  });
+
   const preflight = await preflightFullCorpus({
     repoRoot,
     legacyDbPath: args['legacy-db'],
@@ -92,63 +83,34 @@ export async function cmdBuildFullCorpus(args, repoRoot) {
     inventoryPath: args.inventory ?? null,
   });
 
-  const generatorSourceCommit = resolveGeneratorSourceCommit(repoRoot);
-  if (generatorSourceCommit === SOURCE_COMMIT_UNSET) {
-    throw new DiseaseIdentityError(
-      'MALFORMED_INPUT',
-      'Unable to resolve generatorSourceCommit via git rev-parse HEAD',
-    );
-  }
-
-  const spoolRoot = await mkdtemp(path.join(tmpdir(), 'ehas2-p2c-spool-'));
+  const indexRoot = await mkdtemp(path.join(tmpdir(), 'ehas2-p2c-index-'));
+  const index = createProductionBuildIndex(indexRoot);
+  let stagingDir = null;
   try {
-    // Hash DB before open + after close via spool helper with pinned digest.
-    const { dbIdSet, spoolPath: dbSpool } = await streamLegacyDiseaseRowsToJsonl(
-      args['legacy-db'],
-      path.join(spoolRoot, 'db-rows.jsonl'),
-      { verifyPinnedHash: true, pinnedHash: PINNED_LEGACY_DB_SHA256 },
-    );
+    await streamLegacyDiseaseRowsToBuildIndex(args['legacy-db'], index, {
+      pinnedHash: PINNED_LEGACY_DB_SHA256,
+    });
 
-    // Production path still needs row objects for build — iterate spool (identity fields only).
-    const dbRows = [];
-    {
-      const rl = readline.createInterface({
-        input: createReadStream(dbSpool, { encoding: 'utf8' }),
-        crlfDelay: Infinity,
-      });
-      for await (const line of rl) {
-        if (line.trim().length === 0) continue;
-        dbRows.push(JSON.parse(line));
-      }
-    }
-
-    // Mapped: stream dedupe, then consumed-byte digest of exact file bytes.
-    const mappedEntries = await streamDedupeMappedJsonFile(args['mapped-json']);
-    const mappedHashing = hashingReadStream(args['mapped-json']);
-    await new Promise((resolve, reject) => {
-      mappedHashing.stream.on('error', reject);
-      mappedHashing.stream.on('end', resolve);
-      mappedHashing.stream.resume();
+    const mappedDigest = await streamDedupeMappedJsonFileWithConsumedDigest(args['mapped-json'], {
+      expectedRawRows: EXPECTED_MAPPED_JSON_ROW_COUNT,
+      expectedUniqueKeys: EXPECTED_MAPPED_UNIQUE_CODE_COUNT,
+      onRow: (row) => index.insertMappedRow(row),
+      getUniqueKeyCount: () => index.counts().mappedUniqueRows,
     });
     await assertConsumedByteDigest(
-      mappedHashing.digestHex(),
+      mappedDigest.consumedSha256,
       PINNED_MAPPED_JSON_SHA256,
       'mapped.json',
     );
 
-    const bridgeIndex = await streamBridgeToIndex(
-      args.bridge,
-      path.join(spoolRoot, 'bridge-spool.jsonl'),
-      { expectedSha256: PINNED_BRIDGE_V3_SHA256 },
-    );
-    const bridgeRows = bridgeIndex.rows();
-    validateBridgeBatchProduction(bridgeRows, dbIdSet);
+    await ingestBridgeToBuildIndex(args.bridge, index, { expectedSha256: PINNED_BRIDGE_V3_SHA256 });
+    index.enforceConfiguredCounts();
+    validateBridgeBatchProductionFromIndex(index);
+    index.assertIndexSizeLimit();
 
-    const stagingDir = await mkdtemp(`${path.resolve(args.output)}.staging-`);
-    const artifacts = await buildFullCorpusArtifactsProduction({
-      dbRows,
-      mappedEntries,
-      bridgeRows,
+    stagingDir = await mkdtemp(`${path.resolve(args.output)}.staging-`);
+    const artifacts = await buildFullCorpusArtifactsBoundedProduction({
+      index,
       inputEvidenceHashes: {
         legacyDbSha256: PINNED_LEGACY_DB_SHA256,
         mappedJsonSha256: PINNED_MAPPED_JSON_SHA256,
@@ -158,7 +120,8 @@ export async function cmdBuildFullCorpus(args, repoRoot) {
       inventoryVerified: Boolean(args.inventory),
       inventorySha256: args.inventory ? PINNED_INVENTORY_SHA256 : null,
       stagingDir,
-      generatorSourceCommit,
+      generatorSourceCommit: generator.generatorSourceCommit,
+      expectedGeneratorCommit: generator.expectedGeneratorCommit,
     });
 
     await assertFileIdentityUnchanged(args['legacy-db'], preflight.inputIdentities.legacyDb);
@@ -174,14 +137,18 @@ export async function cmdBuildFullCorpus(args, repoRoot) {
       serialized: artifacts.serialized,
       manifest: artifacts.manifest,
     });
+    stagingDir = null;
     console.log(JSON.stringify({ ok: true, bundleDir: result.destinationDir }, null, 2));
   } finally {
-    await rm(spoolRoot, { recursive: true, force: true });
+    index.destroy();
+    if (stagingDir) {
+      await rm(stagingDir, { recursive: true, force: true });
+    }
   }
 }
 
 export async function cmdVerifyFullBundle(args) {
-  await verifyFullBundle(args.input);
+  await verifyFullBundle(args.input, { expectedBundleKind: BUNDLE_KIND_PRODUCTION });
   console.log(JSON.stringify({ ok: true, bundleDir: path.resolve(args.input) }, null, 2));
 }
 
@@ -253,7 +220,7 @@ export function printFullCorpusUsage() {
     --legacy-db <path> --legacy-db-sha256 ${PINNED_LEGACY_DB_SHA256} \\
     --mapped-json <path> --mapped-json-sha256 ${PINNED_MAPPED_JSON_SHA256} \\
     --bridge <path> --bridge-sha256 ${PINNED_BRIDGE_V3_SHA256} \\
-    --output <external-path> [--inventory <path>]
+    --output <external-path> --expected-generator-commit <40-hex-sha> [--inventory <path>]
   verify-full-bundle --input <external-bundle-dir>
   compare-full-builds --a <dir> --b <dir>
   verify-inventory --inventory <path> --mapped-json <path>`);

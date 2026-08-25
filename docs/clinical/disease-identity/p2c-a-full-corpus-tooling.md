@@ -10,35 +10,54 @@
 
 ```text
 node tools/disease-identity-generator/cli.mjs preflight-full-corpus ...
-node tools/disease-identity-generator/cli.mjs build-full-corpus --authorize-full-corpus --owner-token "R2-DATA-P2C: AUTHORIZE_FULL_CANONICAL_IDENTITY_ARTIFACT_GENERATION_AND_VERIFICATION" ...
+node tools/disease-identity-generator/cli.mjs build-full-corpus --authorize-full-corpus --owner-token "..." \
+  --expected-generator-commit <40-hex> --legacy-db ... --mapped-json ... --bridge ... --output <external>
 node tools/disease-identity-generator/cli.mjs verify-full-bundle --input <external-dir>
 node tools/disease-identity-generator/cli.mjs compare-full-builds --a <dir> --b <dir>
 node tools/disease-identity-generator/cli.mjs verify-inventory --inventory <path> --mapped-json <path>
 ```
 
+`verify-full-bundle` locks expected `bundleKind` to
+`EHAS2_FULL_CANONICAL_DISEASE_IDENTITY_LEDGER_V1` (production). Artifacts cannot choose their own verification policy.
+
+## Bundle identity
+
+| Kind | Value |
+|------|--------|
+| Production | `EHAS2_FULL_CANONICAL_DISEASE_IDENTITY_LEDGER_V1` |
+| Synthetic fixture | `EHAS2_SYNTHETIC_DISEASE_IDENTITY_FIXTURE_V1` |
+
+`bundleKind` appears in both `bundle-manifest.json` and `p2c-build-evidence.json` and must agree. Production verification always enforces full-corpus counts when the expected kind is production — never by inferring from `diseaseCount === 116284` alone.
+
+Publication writes `ehas2-bundle-activation.json` **after** semantic verification and **before** rename. The marker binds `aggregateFingerprint`, `bundleKind`, and `schemaVersion`. Verifiers reject published directories lacking a valid marker.
+
 ## Guards
 
-- Full build requires `--authorize-full-corpus`, exact owner token, pinned SHA-256 values, and explicit external paths.
+- Full build requires `--authorize-full-corpus`, exact owner token, pinned SHA-256 values, `--expected-generator-commit`, clean git worktree, and remote `bakalwar/EH_AROGYA_SUTRA_2` (default remote name `ehas2`).
 - Output directory must be outside the Git repository (realpath / symlink-safe).
-- SQLite reads only `SELECT id, icd10_code FROM diseases ORDER BY id ASC` via pinned-byte immutable URI (`mode=ro&immutable=1`, `uri: true`, `readonly: true`, `fileMustExist: true`, `PRAGMA query_only=ON`). Presence of `-wal` or `-shm` fails closed before any open/fallback. Fallback readonly is permitted only when both sidecars are absent and URI open failed for another reason.
-- Consumed-byte SHA-256 digests are compared to pinned identities for mapped/bridge/inventory streams; SQLite main-file hash is checked before open and after close. Residual OS replace-and-restore races are acknowledged and not claimed as impossible.
-- mapped.json uses a string-aware streaming parser; unfinished objects (including mid-string / mid-escape / mid-`\uXXXX`) are retained across chunk boundaries; only `source`/`code` are retained; rows aggregate into dedupe buckets (no full raw array retained).
-- Bridge JSONL has bounded line length and max rows; candidate IDs must be unique, strictly ascending, and present in the DB id set.
-- Bridge key set must equal mapped unique-key set; EXACT_UNIQUE rows must each produce a relationship edge (no silent omit).
-- Production CLI calls `validateBridgeBatchProduction` + `buildFullCorpusArtifactsProduction` only — `skipBridgeMappedKeyReconciliation` and disposition/count overrides are impossible on that path.
-- Atomic bundle write verifies staged members (hashes, streaming row counts, semantic invariants) before rename; never overwrites an existing destination; staging/destination must share a filesystem; free-space math uses BigInt.
-- Manifest hash-pins every immutable member except itself (including `p2c-build-evidence.json`). Self-reference handling: `bundle-manifest.json` is not included in its own artifact hash list / aggregate fingerprint inputs as a circular self-hash.
-- Licensing classification for full corpus manifests:
-  `PRIVATE_ENGINEERING_IDENTITY_PENDING_LEGAL_CLEARANCE`
-  (not legal clearance; private/local engineering only).
+- SQLite reads only `SELECT id, icd10_code FROM diseases ORDER BY id ASC` via pinned-byte immutable URI; WAL/SHM presence fails closed before open/fallback. Fallback readonly only when both sidecars are absent.
+- **mapped.json / Bridge / inventory:** same-stream SHA-256 over the exact bytes fed to the parser/reader (no second independent hash pass for mapped consumed-byte proof). **SQLite:** pre/post main-file path hash + immutable readonly query — not a row-consumed-byte hash.
+- Production CLI uses a private temporary SQLite **controlled build index** (not shipped in the bundle): DB rows, mapped unique keys, and bridge rows/candidates are persisted and iterated from disk. It does **not** reconstruct `dbRows[]`, does **not** call `bridgeIndex.rows()`, and does **not** retain corpus-sized disease/mapped/edge/unresolved JavaScript arrays during generation.
+- Atomic publication never deletes a destination path on failure (foreign destinations created after pre-check survive). Only the owned staging directory is cleaned up. Rename is no-replace: existing destinations fail closed.
+- Manifest hash-pins immutable members except itself (including build-evidence). Activation marker is required for published verification but is not part of the aggregate fingerprint member list (it binds the fingerprint instead).
 
-## Memory / streaming posture
+## Memory / streaming posture (honest)
 
-Estimated peak-memory budget constant: `ESTIMATED_PEAK_MEMORY_BUDGET_BYTES` (512 MiB engineering estimate; **not enforced at runtime**).  
-Fail-closed size guard: `MAX_STAGING_MEMBER_BYTES` (512 MiB) — a single staged bundle member must not exceed this.  
-Processing model: bounded stream dedupe for mapped.json, SQLite `.iterate()` / JSONL spool, bounded Bridge JSONL line reads with index maps (no full raw row array), streamed inventory line counts, verify-one-artifact-at-a-time.  
-Production bridge validation (`validateBridgeBatchProduction`) requires a mandatory DB id set and fixed disposition/referenced/db-only counts with no overrides. Synthetic tests use `validateBridgeBatchSynthetic`.  
-`generatorSourceCommit` is recorded in `p2c-build-evidence.json` only (from `git rev-parse HEAD` at build time; synthetic tests use `SYNTHETIC_TEST_COMMIT`).
+| Structure | Location |
+|-----------|----------|
+| Legacy DB identity rows | Controlled SQLite index (`db_disease`) |
+| Mapped unique keys + provenance | Controlled SQLite index (`mapped_entry`) |
+| Bridge dispositions + candidates | Controlled SQLite index (`bridge_entry` / `bridge_candidate`) |
+| Generated member lines (pre-JSONL) | Controlled SQLite index (`output_record`) then streamed to staging |
+| Parser unfinished object buffer | Process memory (≤ `MAX_MAPPED_OBJECT_BYTES`) |
+| Verifier disease/mapped ID sets | Process memory (endpoint checks; not full member bodies) |
+| Manifest / evidence strings | Process memory (small) |
+
+- `ESTIMATED_PEAK_MEMORY_BUDGET_BYTES` (512 MiB) is an **engineering estimate only** — not a process RSS enforcer.
+- Fail-closed limits: `MAX_STAGING_MEMBER_BYTES`, `MAX_CONTROLLED_INDEX_BYTES` (2 GiB), max mapped object/line sizes, max bridge candidates (64), fixed production row counts.
+- Remaining OS limits: V8 heap, SQLite page cache, filesystem TOCTOU for input replace-and-restore races (mitigated by same-stream digests + pre/post identity snapshots, not eliminated).
+
+Synthetic unit tests may still use small in-memory arrays via `buildFullCorpusArtifacts`. Production CLI uses only the disk-backed path.
 
 ## Explicit non-goals
 

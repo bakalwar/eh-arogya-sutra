@@ -9,6 +9,9 @@ import { assertNoProhibitedFields } from './validationPrimitives.js';
 import { canonicalJsonString, sha256HexLower } from './canonicalJson.js';
 import {
   BUNDLE_ARTIFACT_NAMES,
+  BUNDLE_ACTIVATION_MARKER_NAME,
+  BUNDLE_KIND_PRODUCTION,
+  BUNDLE_KIND_SYNTHETIC,
   EXPECTED_LEGACY_DB_DISEASE_COUNT,
   EXPECTED_MAPPED_UNIQUE_CODE_COUNT,
   EXPECTED_RELATIONSHIP_EDGE_COUNT,
@@ -23,7 +26,12 @@ import {
   generateRelationshipId,
   isValidPrefixedDigestId,
 } from './canonicalId.js';
-import { DISEASE_ID_PREFIX, MAPPED_ID_PREFIX, RAW_MAPPED_REF_PREFIX } from './constants.js';
+import {
+  BUNDLE_SCHEMA_VERSION,
+  DISEASE_ID_PREFIX,
+  MAPPED_ID_PREFIX,
+  RAW_MAPPED_REF_PREFIX,
+} from './constants.js';
 import {
   buildDiseaseRecordFingerprintInput,
   buildMappedRecordFingerprintInput,
@@ -105,13 +113,34 @@ async function assertMemberHashAndSize(
   }
 }
 
-export async function verifyFullBundle(bundleDir: string): Promise<void> {
+export async function verifyFullBundle(
+  bundleDir: string,
+  options?: {
+    expectedBundleKind?: typeof BUNDLE_KIND_PRODUCTION | typeof BUNDLE_KIND_SYNTHETIC;
+    /** Internal pre-publication verification seam used before activation marker creation. */
+    requireActivationMarker?: boolean;
+  },
+): Promise<void> {
   const resolved = path.resolve(bundleDir);
   const manifestPath = path.join(resolved, 'bundle-manifest.json');
   const manifestRaw = await readFile(manifestPath, 'utf8');
   const manifest = JSON.parse(manifestRaw) as Record<string, unknown>;
   validateBundleManifest(manifest);
   assertNoProhibitedFields(manifest);
+  const manifestBundleKind = manifest.bundleKind;
+  if (
+    manifestBundleKind !== BUNDLE_KIND_PRODUCTION &&
+    manifestBundleKind !== BUNDLE_KIND_SYNTHETIC
+  ) {
+    throw new DiseaseIdentityError('MALFORMED_INPUT', 'Unknown manifest bundleKind');
+  }
+  if (options?.expectedBundleKind && manifestBundleKind !== options.expectedBundleKind) {
+    throw new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      'Bundle kind does not match expectedBundleKind',
+    );
+  }
+  const expectedBundleKind = options?.expectedBundleKind ?? manifestBundleKind;
 
   if (manifest.authorityClassification !== 'ENGINEERING_IDENTITY_ONLY') {
     throw new DiseaseIdentityError('MALFORMED_INPUT', 'Invalid authority classification');
@@ -357,7 +386,10 @@ export async function verifyFullBundle(bundleDir: string): Promise<void> {
     );
   }
 
-  if (diseaseCount === EXPECTED_LEGACY_DB_DISEASE_COUNT) {
+  if (expectedBundleKind === BUNDLE_KIND_PRODUCTION) {
+    if (diseaseCount !== EXPECTED_LEGACY_DB_DISEASE_COUNT) {
+      throw new DiseaseIdentityError('MALFORMED_INPUT', 'Full-corpus disease count mismatch');
+    }
     if (mappedCount !== EXPECTED_MAPPED_UNIQUE_CODE_COUNT) {
       throw new DiseaseIdentityError('MALFORMED_INPUT', 'Full-corpus mapped count mismatch');
     }
@@ -384,6 +416,9 @@ export async function verifyFullBundle(bundleDir: string): Promise<void> {
     throw new DiseaseIdentityError('MALFORMED_INPUT', 'Build evidence is not canonical');
   }
   assertNoProhibitedFields(evidence);
+  if (evidence.bundleKind !== manifestBundleKind) {
+    throw new DiseaseIdentityError('MALFORMED_INPUT', 'Manifest/evidence bundleKind mismatch');
+  }
   const evidenceText = evidenceRaw.toLowerCase();
   if (
     evidenceText.includes('c:\\users') ||
@@ -396,5 +431,28 @@ export async function verifyFullBundle(bundleDir: string): Promise<void> {
       'MALFORMED_INPUT',
       'Build evidence contains prohibited metadata',
     );
+  }
+
+  if (options?.requireActivationMarker !== false) {
+    const markerPath = path.join(resolved, BUNDLE_ACTIVATION_MARKER_NAME);
+    const markerRaw = await readFile(markerPath, 'utf8');
+    const marker = JSON.parse(markerRaw) as Record<string, unknown>;
+    if (`${canonicalJsonString(marker)}\n` !== markerRaw) {
+      throw new DiseaseIdentityError('MALFORMED_INPUT', 'Activation marker is not canonical');
+    }
+    const markerKeys = Object.keys(marker).sort();
+    if (
+      markerKeys.join(',') !==
+      ['aggregateFingerprint', 'bundleKind', 'schemaVersion'].sort().join(',')
+    ) {
+      throw new DiseaseIdentityError('MALFORMED_INPUT', 'Activation marker shape mismatch');
+    }
+    if (
+      marker.bundleKind !== manifestBundleKind ||
+      marker.aggregateFingerprint !== manifest.aggregateFingerprint ||
+      marker.schemaVersion !== BUNDLE_SCHEMA_VERSION
+    ) {
+      throw new DiseaseIdentityError('MALFORMED_INPUT', 'Activation marker binding mismatch');
+    }
   }
 }

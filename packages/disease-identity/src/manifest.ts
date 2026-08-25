@@ -1,4 +1,5 @@
 import { canonicalJsonString } from './canonicalJson.js';
+import { BUNDLE_KIND_PRODUCTION, BUNDLE_KIND_SYNTHETIC } from './fullCorpusConstants.js';
 import {
   APPROVED_AGGREGATE_COUNTS,
   AUTHORITY_CLASSIFICATION,
@@ -38,6 +39,12 @@ export function validateBundleManifest(manifest: Record<string, unknown>): void 
   assertPlainObject(manifest, 'manifest');
   assertNoProhibitedFields(manifest);
   assertExactAllowlistedKeys(manifest, MANIFEST_ALLOWED_KEYS, 'manifest');
+  if (
+    manifest.bundleKind !== BUNDLE_KIND_PRODUCTION &&
+    manifest.bundleKind !== BUNDLE_KIND_SYNTHETIC
+  ) {
+    throw new DiseaseIdentityError(MALFORMED_INPUT, 'Invalid or unknown bundleKind');
+  }
 
   assertExactString(manifest.bundleSchemaVersion, BUNDLE_SCHEMA_VERSION, 'bundleSchemaVersion');
   assertExactString(manifest.datasetVersion, DATASET_VERSION, 'datasetVersion');

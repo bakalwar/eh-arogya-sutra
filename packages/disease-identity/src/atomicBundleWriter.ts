@@ -12,11 +12,22 @@ import {
 import readline from 'node:readline';
 import path from 'node:path';
 import { DiseaseIdentityError } from './errors.js';
-import { sha256HexLower } from './canonicalJson.js';
+import { canonicalJsonString, sha256HexLower } from './canonicalJson.js';
 import { sha256FileHex } from './fileHash.js';
-import { BUNDLE_ARTIFACT_NAMES, MAX_STAGING_MEMBER_BYTES } from './fullCorpusConstants.js';
+import {
+  BUNDLE_ACTIVATION_MARKER_NAME,
+  BUNDLE_ARTIFACT_NAMES,
+  BUNDLE_KIND_PRODUCTION,
+  BUNDLE_KIND_SYNTHETIC,
+  MAX_STAGING_MEMBER_BYTES,
+} from './fullCorpusConstants.js';
 import { validateBundleManifest } from './manifest.js';
 import { verifyFullBundle } from './verifyFullBundle.js';
+import { BUNDLE_SCHEMA_VERSION } from './constants.js';
+
+const PRE_ACTIVATION_ARTIFACT_NAMES = BUNDLE_ARTIFACT_NAMES.filter(
+  (name) => name !== BUNDLE_ACTIVATION_MARKER_NAME,
+);
 
 /** Count non-empty JSONL lines without retaining member body content. */
 async function countJsonlRowsStreaming(filePath: string): Promise<number> {
@@ -40,6 +51,8 @@ export type AtomicBundleWriteInput = {
   readonly serialized?: Record<string, string>;
   /** Pre-filled staging directory (production streaming path). Mutually exclusive with full serialized. */
   readonly stagingDir?: string;
+  /** Test-only race seam. Production callers must not provide this. */
+  readonly testOnlyBeforeRename?: () => void | Promise<void>;
 };
 
 export type AtomicBundleWriteResult = {
@@ -117,16 +130,14 @@ async function verifyStagedBundle(
   stagingDir: string,
   expectedManifest: Record<string, unknown>,
 ): Promise<void> {
-  await assertNoSymlinkMembers(stagingDir);
-
   const entries = await readdir(stagingDir);
-  const expected = new Set<string>(BUNDLE_ARTIFACT_NAMES);
+  const expected = new Set<string>(PRE_ACTIVATION_ARTIFACT_NAMES);
   for (const entry of entries) {
     if (!expected.has(entry as (typeof BUNDLE_ARTIFACT_NAMES)[number])) {
       throw new DiseaseIdentityError('MALFORMED_INPUT', `Unexpected staged file ${entry}`);
     }
   }
-  for (const name of BUNDLE_ARTIFACT_NAMES) {
+  for (const name of PRE_ACTIVATION_ARTIFACT_NAMES) {
     if (!entries.includes(name)) {
       throw new DiseaseIdentityError('MALFORMED_INPUT', `Missing staged member ${name}`);
     }
@@ -177,7 +188,17 @@ async function verifyStagedBundle(
     );
   }
 
-  await verifyFullBundle(stagingDir);
+  const expectedBundleKind = expectedManifest.bundleKind;
+  if (
+    expectedBundleKind !== BUNDLE_KIND_PRODUCTION &&
+    expectedBundleKind !== BUNDLE_KIND_SYNTHETIC
+  ) {
+    throw new DiseaseIdentityError('MALFORMED_INPUT', 'Unknown expected bundleKind');
+  }
+  await verifyFullBundle(stagingDir, {
+    expectedBundleKind,
+    requireActivationMarker: false,
+  });
 }
 
 /**
@@ -200,14 +221,11 @@ export async function writeAtomicBundle(
   await mkdir(parentDir, { recursive: true });
 
   let stagingDir: string;
-  let ownsStagingCleanup = true;
-
   if (input.stagingDir) {
     stagingDir = path.resolve(input.stagingDir);
-    ownsStagingCleanup = true;
     // If serialized also provided for missing small members, fill them in.
     if (input.serialized) {
-      for (const name of BUNDLE_ARTIFACT_NAMES) {
+      for (const name of PRE_ACTIVATION_ARTIFACT_NAMES) {
         const memberPath = path.join(stagingDir, name);
         if (!existsSync(memberPath) && input.serialized[name] !== undefined) {
           await writeFile(memberPath, input.serialized[name]!, 'utf8');
@@ -222,7 +240,7 @@ export async function writeAtomicBundle(
       );
     }
     stagingDir = await mkdtemp(`${resolvedDestination}.staging-`);
-    for (const name of BUNDLE_ARTIFACT_NAMES) {
+    for (const name of PRE_ACTIVATION_ARTIFACT_NAMES) {
       const content = input.serialized[name];
       if (content === undefined) {
         throw new DiseaseIdentityError('MALFORMED_INPUT', `Missing bundle member ${name}`);
@@ -240,15 +258,27 @@ export async function writeAtomicBundle(
   try {
     assertSameFilesystem(stagingDir, resolvedDestination);
     await verifyStagedBundle(stagingDir, input.manifest);
+    const bundleKind = input.manifest.bundleKind;
+    if (bundleKind !== BUNDLE_KIND_PRODUCTION && bundleKind !== BUNDLE_KIND_SYNTHETIC) {
+      throw new DiseaseIdentityError('MALFORMED_INPUT', 'Cannot activate unknown bundleKind');
+    }
+    const marker = {
+      aggregateFingerprint: input.manifest.aggregateFingerprint,
+      bundleKind,
+      schemaVersion: BUNDLE_SCHEMA_VERSION,
+    };
+    await writeFile(
+      path.join(stagingDir, BUNDLE_ACTIVATION_MARKER_NAME),
+      `${canonicalJsonString(marker)}\n`,
+      'utf8',
+    );
+    await assertNoSymlinkMembers(stagingDir);
+    await verifyFullBundle(stagingDir, { expectedBundleKind: bundleKind });
+    await input.testOnlyBeforeRename?.();
     await rename(stagingDir, resolvedDestination);
     return { destinationDir: resolvedDestination, stagingDir: null };
   } catch (error) {
-    if (ownsStagingCleanup) {
-      await rm(stagingDir, { recursive: true, force: true });
-    }
-    if (existsSync(resolvedDestination)) {
-      await rm(resolvedDestination, { recursive: true, force: true });
-    }
+    await rm(stagingDir, { recursive: true, force: true });
     throw error;
   }
 }
