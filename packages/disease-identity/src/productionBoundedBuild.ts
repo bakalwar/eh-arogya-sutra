@@ -70,6 +70,7 @@ type BoundedBuildInput = {
     readonly mappedJsonSha256: string;
     readonly bridgeSha256: string;
     readonly note?: string;
+    readonly dbIdentityInputClass?: string;
   };
   readonly inventoryVerified: boolean;
   readonly inventorySha256?: string | null;

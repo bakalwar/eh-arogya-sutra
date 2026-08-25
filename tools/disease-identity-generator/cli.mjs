@@ -27,6 +27,7 @@ import { parseArgs } from './lib/parseArgs.mjs';
 import {
   cmdBuildFullCorpus,
   cmdCompareFullBuilds,
+  cmdDeriveSanitizedDiseaseIdentity,
   cmdPreflightFullCorpus,
   cmdVerifyFullBundle,
   cmdVerifyInventory,
@@ -207,6 +208,9 @@ async function main() {
         break;
       case 'verify-inventory':
         await cmdVerifyInventory(args);
+        break;
+      case 'derive-sanitized-disease-identity':
+        await cmdDeriveSanitizedDiseaseIdentity(args, ROOT);
         break;
       default:
         usage();
