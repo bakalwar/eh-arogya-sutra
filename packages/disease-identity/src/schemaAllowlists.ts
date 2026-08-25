@@ -48,6 +48,7 @@ export const PROVENANCE_ALLOWED_KEYS = ['authorityClassification', 'datasetVersi
 export const PROVENANCE_VARIANT_ALLOWED_KEYS = ['mappedCodeRaw', 'mappedSourceLabel'] as const;
 
 export const MANIFEST_ALLOWED_KEYS = [
+  'bundleKind',
   'bundleSchemaVersion',
   'datasetVersion',
   'authorityClassification',
@@ -69,7 +70,10 @@ export const MANIFEST_EVIDENCE_HASH_KEYS = [
   'bridgeSha256',
 ] as const;
 
-export const APPROVED_LICENSING_CLASSIFICATIONS = ['SYNTHETIC_ENGINEERING'] as const;
+export const APPROVED_LICENSING_CLASSIFICATIONS = [
+  'SYNTHETIC_ENGINEERING',
+  'PRIVATE_ENGINEERING_IDENTITY_PENDING_LEGAL_CLEARANCE',
+] as const;
 
 export const APPROVED_MANIFEST_ALGORITHMS = [
   'EHAS2_CANONICAL_DISEASE_ID_v1_SHA256',

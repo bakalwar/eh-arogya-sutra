@@ -3,6 +3,7 @@ import {
   APPROVED_AGGREGATE_COUNTS,
   AUTHORITY_CLASSIFICATION,
   BUNDLE_SCHEMA_VERSION,
+  BUNDLE_KIND_SYNTHETIC,
   buildSyntheticMappedRecord,
   DATASET_VERSION,
   DiseaseIdentityError,
@@ -26,6 +27,7 @@ function validExactUniqueRecord() {
 
 function validManifestTemplate() {
   return {
+    bundleKind: BUNDLE_KIND_SYNTHETIC,
     bundleSchemaVersion: BUNDLE_SCHEMA_VERSION,
     datasetVersion: DATASET_VERSION,
     authorityClassification: AUTHORITY_CLASSIFICATION,
