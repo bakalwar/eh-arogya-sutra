@@ -576,7 +576,7 @@ function assembleManifestAndSerialized(input: {
 
 /**
  * Synthetic / small-fixture builder. May allow skip flags for unit tests.
- * Production CLI must call buildFullCorpusArtifactsProduction instead.
+ * Production CLI must call buildFullCorpusArtifactsBoundedProduction instead.
  */
 export function buildFullCorpusArtifacts(input: {
   readonly dbRows: readonly LegacyDbRow[];
@@ -637,10 +637,10 @@ async function writeJsonlStreaming(
 }
 
 /**
- * Production builder — forbids skip/weaken flags; writes JSONL members to staging via streaming
- * writes then hashes from disk; records generatorSourceCommit in build-evidence only.
+ * Synthetic-only streaming array builder retained for small fixtures. It can never emit the
+ * production bundle kind; production authority belongs only to the bounded disk builder.
  */
-export async function buildFullCorpusArtifactsProduction(input: {
+export async function buildFullCorpusArtifactsSyntheticStreaming(input: {
   readonly dbRows: readonly LegacyDbRow[];
   readonly mappedEntries: readonly MappedDedupeEntry[];
   readonly bridgeRows: readonly ParsedBridgeRow[];
@@ -658,7 +658,7 @@ export async function buildFullCorpusArtifactsProduction(input: {
   if (!input.generatorSourceCommit || input.generatorSourceCommit === SOURCE_COMMIT_UNSET) {
     throw new DiseaseIdentityError(
       'MALFORMED_INPUT',
-      'Production build requires generatorSourceCommit from git rev-parse HEAD',
+      'Synthetic streaming build requires generatorSourceCommit',
     );
   }
 
@@ -730,7 +730,7 @@ export async function buildFullCorpusArtifactsProduction(input: {
     inventorySha256: input.inventorySha256,
     generatorSourceCommit: input.generatorSourceCommit,
     expectedGeneratorCommit: input.generatorSourceCommit,
-    bundleKind: BUNDLE_KIND_PRODUCTION,
+    bundleKind: BUNDLE_KIND_SYNTHETIC,
   });
   const buildEvidenceJson = `${canonicalJsonString(buildEvidence)}\n`;
   const evidencePath = path.join(input.stagingDir, 'p2c-build-evidence.json');
@@ -774,7 +774,7 @@ export async function buildFullCorpusArtifactsProduction(input: {
   );
 
   const manifest = {
-    bundleKind: BUNDLE_KIND_PRODUCTION,
+    bundleKind: BUNDLE_KIND_SYNTHETIC,
     bundleSchemaVersion: BUNDLE_SCHEMA_VERSION,
     datasetVersion: DATASET_VERSION,
     authorityClassification: AUTHORITY_CLASSIFICATION,

@@ -115,12 +115,23 @@ async function assertMemberHashAndSize(
 
 export async function verifyFullBundle(
   bundleDir: string,
-  options?: {
-    expectedBundleKind?: typeof BUNDLE_KIND_PRODUCTION | typeof BUNDLE_KIND_SYNTHETIC;
+  options: {
+    expectedBundleKind: typeof BUNDLE_KIND_PRODUCTION | typeof BUNDLE_KIND_SYNTHETIC;
     /** Internal pre-publication verification seam used before activation marker creation. */
     requireActivationMarker?: boolean;
   },
 ): Promise<void> {
+  // Fail before deep artifact parsing when the caller omits or mistypes expected kind.
+  if (
+    options.expectedBundleKind !== BUNDLE_KIND_PRODUCTION &&
+    options.expectedBundleKind !== BUNDLE_KIND_SYNTHETIC
+  ) {
+    throw new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      'expectedBundleKind is mandatory and must be production or synthetic',
+    );
+  }
+  const expectedBundleKind = options.expectedBundleKind;
   const resolved = path.resolve(bundleDir);
   const manifestPath = path.join(resolved, 'bundle-manifest.json');
   const manifestRaw = await readFile(manifestPath, 'utf8');
@@ -134,13 +145,21 @@ export async function verifyFullBundle(
   ) {
     throw new DiseaseIdentityError('MALFORMED_INPUT', 'Unknown manifest bundleKind');
   }
-  if (options?.expectedBundleKind && manifestBundleKind !== options.expectedBundleKind) {
+  if (manifestBundleKind !== expectedBundleKind) {
     throw new DiseaseIdentityError(
       'MALFORMED_INPUT',
       'Bundle kind does not match expectedBundleKind',
     );
   }
-  const expectedBundleKind = options?.expectedBundleKind ?? manifestBundleKind;
+  const maxima =
+    expectedBundleKind === BUNDLE_KIND_PRODUCTION
+      ? {
+          disease: EXPECTED_LEGACY_DB_DISEASE_COUNT,
+          mapped: EXPECTED_MAPPED_UNIQUE_CODE_COUNT,
+          relationship: EXPECTED_RELATIONSHIP_EDGE_COUNT,
+          unresolved: EXPECTED_UNRESOLVED_QUEUE_COUNT,
+        }
+      : { disease: 100, mapped: 100, relationship: 100, unresolved: 100 };
 
   if (manifest.authorityClassification !== 'ENGINEERING_IDENTITY_ONLY') {
     throw new DiseaseIdentityError('MALFORMED_INPUT', 'Invalid authority classification');
@@ -198,6 +217,9 @@ export async function verifyFullBundle(
   for await (const line of iterateJsonlLines(
     path.join(resolved, 'disease-identity-ledger.jsonl'),
   )) {
+    if (diseaseCount >= maxima.disease) {
+      throw new DiseaseIdentityError('MALFORMED_INPUT', 'Disease ledger exceeds verifier bound');
+    }
     const record = JSON.parse(line) as Record<string, unknown>;
     assertCanonicalLine(line, record);
     assertNoProhibitedFields(record);
@@ -236,6 +258,9 @@ export async function verifyFullBundle(
   let mappedCount = 0;
   let mappedExactUnique = 0;
   for await (const line of iterateJsonlLines(path.join(resolved, 'mapped-index.jsonl'))) {
+    if (mappedCount >= maxima.mapped) {
+      throw new DiseaseIdentityError('MALFORMED_INPUT', 'Mapped index exceeds verifier bound');
+    }
     const record = JSON.parse(line) as Record<string, unknown>;
     assertCanonicalLine(line, record);
     assertNoProhibitedFields(record);
@@ -296,6 +321,9 @@ export async function verifyFullBundle(
   let prevRel = '';
   let relCount = 0;
   for await (const line of iterateJsonlLines(path.join(resolved, 'relationship-edges.jsonl'))) {
+    if (relCount >= maxima.relationship) {
+      throw new DiseaseIdentityError('MALFORMED_INPUT', 'Relationship edges exceed verifier bound');
+    }
     const record = JSON.parse(line) as Record<string, unknown>;
     assertCanonicalLine(line, record);
     assertNoProhibitedFields(record);
@@ -349,6 +377,9 @@ export async function verifyFullBundle(
   let prevQueue = '';
   let unresolvedCount = 0;
   for await (const line of iterateJsonlLines(path.join(resolved, 'unresolved-queue.jsonl'))) {
+    if (unresolvedCount >= maxima.unresolved) {
+      throw new DiseaseIdentityError('MALFORMED_INPUT', 'Unresolved queue exceeds verifier bound');
+    }
     const record = JSON.parse(line) as Record<string, unknown>;
     assertCanonicalLine(line, record);
     assertNoProhibitedFields(record);
@@ -433,7 +464,7 @@ export async function verifyFullBundle(
     );
   }
 
-  if (options?.requireActivationMarker !== false) {
+  if (options.requireActivationMarker !== false) {
     const markerPath = path.join(resolved, BUNDLE_ACTIVATION_MARKER_NAME);
     const markerRaw = await readFile(markerPath, 'utf8');
     const marker = JSON.parse(markerRaw) as Record<string, unknown>;

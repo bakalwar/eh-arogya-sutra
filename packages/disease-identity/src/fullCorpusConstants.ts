@@ -7,6 +7,7 @@ export const PINNED_LEGACY_DB_SHA256 =
 
 export const PINNED_MAPPED_JSON_SHA256 =
   '80b5d26cd06dec087350a64643933c3889f3553790653cb9dbc1f48b3531bda6' as const;
+export const PINNED_MAPPED_JSON_BYTES = 54_597_079 as const;
 
 export const PINNED_BRIDGE_V3_SHA256 =
   '590751852f4e4757581e6348ddc67fb5415a608b5a7e42ec6c2f885aba3f8fdc' as const;

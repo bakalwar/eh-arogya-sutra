@@ -28,3 +28,4 @@ export * from './streamMappedArray.js';
 export * from './productionBuildIndex.js';
 export * from './productionBoundedBuild.js';
 export * from './generatorGate.js';
+export * from './inventoryVerify.js';

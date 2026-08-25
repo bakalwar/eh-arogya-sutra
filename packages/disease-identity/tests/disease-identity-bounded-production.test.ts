@@ -1,11 +1,20 @@
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { describe, expect, it } from 'vitest';
 import Database from 'better-sqlite3';
+import * as publicApi from '../src/index.js';
 import {
   assertFullCorpusBuildAuthorized,
   assertProductionGeneratorReady,
@@ -19,6 +28,8 @@ import {
   PINNED_BRIDGE_V3_SHA256,
   PINNED_LEGACY_DB_SHA256,
   PINNED_MAPPED_JSON_SHA256,
+  PINNED_MAPPED_JSON_BYTES,
+  assertConsumedByteDigestAndBytes,
   streamDedupeMappedJsonFileWithConsumedDigest,
   verifyFullBundle,
   writeAtomicBundle,
@@ -138,7 +149,12 @@ function initTempGitRepo(dir: string, commitMessage = 'init'): string {
     ['remote', 'add', 'ehas2', 'https://github.com/bakalwar/EH_AROGYA_SUTRA_2.git'],
     { cwd: dir, stdio: 'ignore' },
   );
-  return execFileSync('git', ['rev-parse', 'HEAD'], { cwd: dir, encoding: 'utf8' }).trim();
+  const head = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: dir, encoding: 'utf8' }).trim();
+  execFileSync('git', ['update-ref', 'refs/remotes/ehas2/main', head], {
+    cwd: dir,
+    stdio: 'ignore',
+  });
+  return head;
 }
 
 describe('R2-DATA-P2C-A bounded production architecture', () => {
@@ -264,6 +280,25 @@ describe('R2-DATA-P2C-A bounded production architecture', () => {
     ).toThrow(/clean/);
 
     execFileSync('git', ['checkout', '--', 'README'], { cwd: dir, stdio: 'ignore' });
+    expect(() =>
+      assertProductionGeneratorReady({
+        repoRoot: dir,
+        expectedGeneratorCommit: head,
+      }),
+    ).not.toThrow();
+    writeFileSync(path.join(dir, 'SECOND'), 'second\n', 'utf8');
+    execFileSync('git', ['add', 'SECOND'], { cwd: dir, stdio: 'ignore' });
+    execFileSync('git', ['commit', '-m', 'second'], { cwd: dir, stdio: 'ignore' });
+    const secondHead = execFileSync('git', ['rev-parse', 'HEAD'], {
+      cwd: dir,
+      encoding: 'utf8',
+    }).trim();
+    expect(() =>
+      assertProductionGeneratorReady({
+        repoRoot: dir,
+        expectedGeneratorCommit: secondHead,
+      }),
+    ).toThrow(/main tip/);
     execFileSync('git', ['remote', 'set-url', 'ehas2', 'https://github.com/other/repo.git'], {
       cwd: dir,
       stdio: 'ignore',
@@ -271,7 +306,7 @@ describe('R2-DATA-P2C-A bounded production architecture', () => {
     expect(() =>
       assertProductionGeneratorReady({
         repoRoot: dir,
-        expectedGeneratorCommit: head,
+        expectedGeneratorCommit: secondHead,
       }),
     ).toThrow(/EH_AROGYA_SUTRA_2/);
 
@@ -303,7 +338,7 @@ describe('R2-DATA-P2C-A bounded production architecture', () => {
         stagingDir: artifacts.stagingDir,
         serialized: artifacts.serialized,
         manifest: artifacts.manifest,
-        testOnlyBeforeRename: async () => {
+        testOnlyBeforeOwnershipAcquisition: async () => {
           mkdirSync(dest);
           await writeFile(sentinel, 'do-not-delete\n', 'utf8');
         },
@@ -439,6 +474,68 @@ describe('R2-DATA-P2C-A bounded production architecture', () => {
       }),
     ).rejects.toThrow();
     expect(existsSync(dest)).toBe(false);
+    index.destroy();
+    rmSync(base, { recursive: true, force: true });
+  });
+
+  it('public export firewall leaves only bounded production authority', () => {
+    const productionBuilders = Object.keys(publicApi)
+      .filter((name) => /^buildFullCorpusArtifacts.*Production$/.test(name))
+      .sort();
+    expect(productionBuilders).toEqual(['buildFullCorpusArtifactsBoundedProduction']);
+    expect(publicApi).not.toHaveProperty('buildFullCorpusArtifactsProduction');
+  });
+
+  it('existing empty destination fails closed and remains untouched', async () => {
+    const base = mkdtempSync(path.join(tmpdir(), 'ehas2-empty-dest-'));
+    const index = seedSyntheticIndex(path.join(base, 'index'));
+    const stagingDir = path.join(base, 'staging');
+    mkdirSync(stagingDir);
+    const artifacts = await buildFullCorpusArtifactsBoundedSyntheticDisk({
+      index,
+      stagingDir,
+      inputEvidenceHashes: {
+        legacyDbSha256: sha256('empty-db'),
+        mappedJsonSha256: sha256('empty-mapped'),
+        bridgeSha256: sha256('empty-bridge'),
+      },
+      inventoryVerified: false,
+      generatorSourceCommit: FAKE_COMMIT,
+      expectedGeneratorCommit: FAKE_COMMIT,
+    });
+    const destination = path.join(base, 'already-empty');
+    mkdirSync(destination);
+    await expect(
+      writeAtomicBundle({
+        destinationDir: destination,
+        stagingDir: artifacts.stagingDir,
+        serialized: artifacts.serialized,
+        manifest: artifacts.manifest,
+      }),
+    ).rejects.toThrow(/exists|overwrite/i);
+    expect(existsSync(destination)).toBe(true);
+    expect(readdirSync(destination)).toEqual([]);
+    index.destroy();
+    rmSync(base, { recursive: true, force: true });
+  });
+
+  it('SQLite rejects unknown output kinds and mapped byte pin is enforced', async () => {
+    const base = mkdtempSync(path.join(tmpdir(), 'ehas2-output-kind-'));
+    const index = seedSyntheticIndex(path.join(base, 'index'));
+    expect(() =>
+      index.db
+        .prepare('INSERT INTO output_record(kind, sort_key, json) VALUES (?, ?, ?)')
+        .run('unknown', 'x', '{}'),
+    ).toThrow();
+    await expect(
+      assertConsumedByteDigestAndBytes(
+        PINNED_MAPPED_JSON_SHA256,
+        PINNED_MAPPED_JSON_BYTES - 1,
+        PINNED_MAPPED_JSON_SHA256,
+        PINNED_MAPPED_JSON_BYTES,
+        'mapped.json',
+      ),
+    ).rejects.toThrow(/size mismatch/);
     index.destroy();
     rmSync(base, { recursive: true, force: true });
   });

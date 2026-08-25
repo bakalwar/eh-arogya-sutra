@@ -60,6 +60,37 @@ export function assertProductionGeneratorReady(input: {
       `Generator remote ${remoteName} does not match bakalwar/EH_AROGYA_SUTRA_2`,
     );
   }
+  git(input.repoRoot, ['cat-file', '-e', `${input.expectedGeneratorCommit}^{commit}`]);
+  const canonicalMainTip = git(input.repoRoot, ['rev-parse', `${remoteName}/main`]);
+  if (!/^[0-9a-f]{40}$/i.test(canonicalMainTip)) {
+    throw new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      `Canonical ${remoteName}/main tip is not a 40-hex commit`,
+    );
+  }
+  if (canonicalMainTip.toLowerCase() !== input.expectedGeneratorCommit.toLowerCase()) {
+    throw new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      `Expected generator commit must equal verified ${remoteName}/main tip`,
+    );
+  }
+  // Exact tip equality implies reachability; still prove ancestry explicitly.
+  try {
+    execFileSync(
+      'git',
+      ['merge-base', '--is-ancestor', input.expectedGeneratorCommit, `${remoteName}/main`],
+      {
+        cwd: input.repoRoot,
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'pipe'],
+      },
+    );
+  } catch {
+    throw new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      `Expected generator commit is not reachable from ${remoteName}/main`,
+    );
+  }
   return {
     generatorSourceCommit: generatorSourceCommit.toLowerCase(),
     expectedGeneratorCommit: input.expectedGeneratorCommit.toLowerCase(),

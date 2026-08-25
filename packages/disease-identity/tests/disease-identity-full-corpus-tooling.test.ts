@@ -23,7 +23,8 @@ import {
   assertProductionDispositionCounts,
   assertSqlMatchesDiseaseIdentityAllowlist,
   buildFullCorpusArtifacts,
-  buildFullCorpusArtifactsProduction,
+  buildFullCorpusArtifactsSyntheticStreaming,
+  BUNDLE_KIND_SYNTHETIC,
   buildPinnedByteSqliteUri,
   compareFullBuilds,
   dedupeMappedRows,
@@ -358,7 +359,7 @@ describe('R2-DATA-P2C-A full-corpus tooling (synthetic)', () => {
         serialized: second.serialized,
         manifest: second.manifest,
       });
-      await verifyFullBundle(outA);
+      await verifyFullBundle(outA, { expectedBundleKind: BUNDLE_KIND_SYNTHETIC });
       await compareFullBuilds(outA, outB);
 
       await expect(
@@ -756,7 +757,7 @@ describe('R2-DATA-P2C-A tooling safety hardening', () => {
       serialized: artifacts.serialized,
       manifest: artifacts.manifest,
     });
-    await verifyFullBundle(good);
+    await verifyFullBundle(good, { expectedBundleKind: BUNDLE_KIND_SYNTHETIC });
 
     // Tamper relationship endpoint to a non-existent disease id while keeping hashes out of sync
     // by rewriting both file and manifest artifact entry — still fail semantic check.
@@ -786,7 +787,9 @@ describe('R2-DATA-P2C-A tooling safety hardening', () => {
     // Manifest must be canonical JSON + newline for verify — use JSON.stringify then
     // write; validateBundleManifest may still accept. Semantic check is the target.
     writeFileSync(manifestPath, `${JSON.stringify(manifest)}\n`, 'utf8');
-    await expect(verifyFullBundle(tamperDir)).rejects.toThrow();
+    await expect(
+      verifyFullBundle(tamperDir, { expectedBundleKind: BUNDLE_KIND_SYNTHETIC }),
+    ).rejects.toThrow();
 
     rmSync(base, { recursive: true, force: true });
   });
@@ -878,7 +881,7 @@ describe('R2-DATA-P2C-A tooling safety hardening', () => {
     const base = mkdtempSync(path.join(tmpdir(), 'ehas2-prod-api-'));
     const dbRows = readLegacyDiseaseRowsTool(makeSyntheticDb(base), { expectedCount: 6 });
     await expect(
-      buildFullCorpusArtifactsProduction({
+      buildFullCorpusArtifactsSyntheticStreaming({
         dbRows,
         mappedEntries: makeSyntheticMappedEntries().slice(0, 1),
         bridgeRows: makeSyntheticBridgeRows(),
@@ -894,7 +897,7 @@ describe('R2-DATA-P2C-A tooling safety hardening', () => {
     ).rejects.toThrow(/Bridge|Mapped|mismatch|counterpart/i);
 
     await expect(
-      buildFullCorpusArtifactsProduction({
+      buildFullCorpusArtifactsSyntheticStreaming({
         dbRows,
         mappedEntries: makeSyntheticMappedEntries(),
         bridgeRows: makeSyntheticBridgeRows(),
@@ -976,7 +979,7 @@ describe('R2-DATA-P2C-A tooling safety hardening', () => {
       manifest: artifacts.manifest,
     });
     // verifyFullBundle streams JSONL line-by-line; success proves no all-body Map requirement.
-    await verifyFullBundle(dest);
+    await verifyFullBundle(dest, { expectedBundleKind: BUNDLE_KIND_SYNTHETIC });
     rmSync(base, { recursive: true, force: true });
   });
 
@@ -1036,7 +1039,9 @@ describe('R2-DATA-P2C-A tooling safety hardening', () => {
       lines[0] = JSON.stringify(obj, null, 2).replace(/\n/g, ' ');
       writeFileSync(ledger, `${lines.join('\n')}\n`, 'utf8');
       rewriteManifestHashes(dir);
-      await expect(verifyFullBundle(dir)).rejects.toThrow();
+      await expect(
+        verifyFullBundle(dir, { expectedBundleKind: BUNDLE_KIND_SYNTHETIC }),
+      ).rejects.toThrow();
     }
 
     // Forged disease id (not recomputed from legacy id).
@@ -1049,14 +1054,18 @@ describe('R2-DATA-P2C-A tooling safety hardening', () => {
       lines[0] = JSON.stringify(obj);
       writeFileSync(ledger, `${lines.join('\n')}\n`, 'utf8');
       rewriteManifestHashes(dir);
-      await expect(verifyFullBundle(dir)).rejects.toThrow(/recompute|canonical|fingerprint|order/i);
+      await expect(
+        verifyFullBundle(dir, { expectedBundleKind: BUNDLE_KIND_SYNTHETIC }),
+      ).rejects.toThrow(/recompute|canonical|fingerprint|order/i);
     }
 
     // Missing build-evidence artifact.
     {
       const dir = await cloneBundle('no-evidence');
       rmSync(path.join(dir, 'p2c-build-evidence.json'));
-      await expect(verifyFullBundle(dir)).rejects.toThrow();
+      await expect(
+        verifyFullBundle(dir, { expectedBundleKind: BUNDLE_KIND_SYNTHETIC }),
+      ).rejects.toThrow();
     }
 
     // Prohibited nested field.
@@ -1069,7 +1078,9 @@ describe('R2-DATA-P2C-A tooling safety hardening', () => {
       lines[0] = JSON.stringify(obj);
       writeFileSync(ledger, `${lines.join('\n')}\n`, 'utf8');
       rewriteManifestHashes(dir);
-      await expect(verifyFullBundle(dir)).rejects.toThrow();
+      await expect(
+        verifyFullBundle(dir, { expectedBundleKind: BUNDLE_KIND_SYNTHETIC }),
+      ).rejects.toThrow();
     }
 
     // Altered artifact byte count in manifest only (hash still old) — hash/size fail.
@@ -1082,7 +1093,9 @@ describe('R2-DATA-P2C-A tooling safety hardening', () => {
       };
       manifest.artifacts[0]!.bytes += 1;
       writeFileSync(manifestPath, `${JSON.stringify(manifest)}\n`, 'utf8');
-      await expect(verifyFullBundle(dir)).rejects.toThrow();
+      await expect(
+        verifyFullBundle(dir, { expectedBundleKind: BUNDLE_KIND_SYNTHETIC }),
+      ).rejects.toThrow();
     }
 
     // Fabricated edge for a NO_MATCH disposition is impossible on synthetic EXACT_UNIQUE-only
@@ -1093,7 +1106,9 @@ describe('R2-DATA-P2C-A tooling safety hardening', () => {
       const lines = readFileSync(q, 'utf8').trimEnd().split('\n');
       writeFileSync(q, `${lines.slice(0, -1).join('\n')}\n`, 'utf8');
       rewriteManifestHashes(dir);
-      await expect(verifyFullBundle(dir)).rejects.toThrow();
+      await expect(
+        verifyFullBundle(dir, { expectedBundleKind: BUNDLE_KIND_SYNTHETIC }),
+      ).rejects.toThrow();
     }
 
     rmSync(base, { recursive: true, force: true });

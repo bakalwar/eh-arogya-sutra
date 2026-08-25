@@ -1,10 +1,10 @@
-import { createReadStream, existsSync, statSync, lstatSync } from 'node:fs';
+import { constants as fsConstants, createReadStream, existsSync, lstatSync } from 'node:fs';
 import {
+  copyFile,
   mkdir,
   mkdtemp,
   readFile,
   readdir,
-  rename,
   rm,
   writeFile,
   realpath,
@@ -52,7 +52,11 @@ export type AtomicBundleWriteInput = {
   /** Pre-filled staging directory (production streaming path). Mutually exclusive with full serialized. */
   readonly stagingDir?: string;
   /** Test-only race seam. Production callers must not provide this. */
-  readonly testOnlyBeforeRename?: () => void | Promise<void>;
+  readonly testOnlyBeforeOwnershipAcquisition?: () => void | Promise<void>;
+  /** Test-only: runs after exclusive destination mkdir, before member copy. */
+  readonly testOnlyAfterDestinationOwnership?: () => void | Promise<void>;
+  /** Test-only: runs after member copy/re-verify, before activation marker. */
+  readonly testOnlyBeforeActivationMarker?: () => void | Promise<void>;
 };
 
 export type AtomicBundleWriteResult = {
@@ -60,38 +64,11 @@ export type AtomicBundleWriteResult = {
   readonly stagingDir: string | null;
 };
 
-function assertSameFilesystem(stagingPath: string, destinationPath: string): void {
-  const stagingParent = path.dirname(stagingPath);
-  const destParent = path.dirname(destinationPath);
-  // Ensure parents exist for stat.
-  const stagingStat = statSync(existsSync(stagingParent) ? stagingParent : stagingPath);
-  const destStat = statSync(existsSync(destParent) ? destParent : path.dirname(destParent));
-  // On Windows, device id comparison via root drive letter / same volume.
-  const stagingRoot = path.parse(path.resolve(stagingPath)).root.toLowerCase();
-  const destRoot = path.parse(path.resolve(destinationPath)).root.toLowerCase();
-  if (stagingRoot !== destRoot) {
-    throw new DiseaseIdentityError(
-      'MALFORMED_INPUT',
-      'Staging and destination must be on the same filesystem/volume',
-    );
-  }
-  // Prefer inode device ids when available (POSIX); on Windows both often 0 — root check above covers it.
-  if (
-    typeof stagingStat.dev === 'number' &&
-    typeof destStat.dev === 'number' &&
-    stagingStat.dev !== 0 &&
-    destStat.dev !== 0 &&
-    stagingStat.dev !== destStat.dev
-  ) {
-    throw new DiseaseIdentityError(
-      'MALFORMED_INPUT',
-      'Staging and destination must share the same filesystem device',
-    );
-  }
-}
-
-async function assertNoSymlinkMembers(stagingDir: string): Promise<void> {
-  for (const name of BUNDLE_ARTIFACT_NAMES) {
+async function assertNoSymlinkMembers(
+  stagingDir: string,
+  names: readonly string[] = BUNDLE_ARTIFACT_NAMES,
+): Promise<void> {
+  for (const name of names) {
     const memberPath = path.join(stagingDir, name);
     const lst = lstatSync(memberPath);
     if (lst.isSymbolicLink()) {
@@ -203,20 +180,14 @@ async function verifyStagedBundle(
 
 /**
  * Write all members to a staging directory (or accept a pre-filled staging dir),
- * verify completely, then atomically rename. Failure leaves no authoritative destination.
- * Never overwrites an existing destination. Rejects symlinks; requires same filesystem.
+ * Verify staging completely, exclusively acquire an empty destination, copy and re-verify
+ * members, then create the activation marker last. This is fail-closed activation publication,
+ * not an atomic directory rename. An existing destination is never replaced or removed.
  */
 export async function writeAtomicBundle(
   input: AtomicBundleWriteInput,
 ): Promise<AtomicBundleWriteResult> {
   const resolvedDestination = path.resolve(input.destinationDir);
-  if (existsSync(resolvedDestination)) {
-    throw new DiseaseIdentityError(
-      'MALFORMED_INPUT',
-      'Destination bundle directory already exists; refusing overwrite',
-    );
-  }
-
   const parentDir = path.dirname(resolvedDestination);
   await mkdir(parentDir, { recursive: true });
 
@@ -255,29 +226,56 @@ export async function writeAtomicBundle(
     }
   }
 
+  let ownedDestination = false;
+  let activated = false;
   try {
-    assertSameFilesystem(stagingDir, resolvedDestination);
+    await assertNoSymlinkMembers(stagingDir, PRE_ACTIVATION_ARTIFACT_NAMES);
     await verifyStagedBundle(stagingDir, input.manifest);
     const bundleKind = input.manifest.bundleKind;
     if (bundleKind !== BUNDLE_KIND_PRODUCTION && bundleKind !== BUNDLE_KIND_SYNTHETIC) {
       throw new DiseaseIdentityError('MALFORMED_INPUT', 'Cannot activate unknown bundleKind');
     }
+    await input.testOnlyBeforeOwnershipAcquisition?.();
+    await mkdir(resolvedDestination, { recursive: false });
+    ownedDestination = true;
+    await input.testOnlyAfterDestinationOwnership?.();
+
+    for (const name of PRE_ACTIVATION_ARTIFACT_NAMES) {
+      await copyFile(
+        path.join(stagingDir, name),
+        path.join(resolvedDestination, name),
+        fsConstants.COPYFILE_EXCL,
+      );
+    }
+    await assertNoSymlinkMembers(resolvedDestination, PRE_ACTIVATION_ARTIFACT_NAMES);
+    await verifyStagedBundle(resolvedDestination, input.manifest);
+    await input.testOnlyBeforeActivationMarker?.();
+
     const marker = {
       aggregateFingerprint: input.manifest.aggregateFingerprint,
       bundleKind,
       schemaVersion: BUNDLE_SCHEMA_VERSION,
     };
     await writeFile(
-      path.join(stagingDir, BUNDLE_ACTIVATION_MARKER_NAME),
+      path.join(resolvedDestination, BUNDLE_ACTIVATION_MARKER_NAME),
       `${canonicalJsonString(marker)}\n`,
-      'utf8',
+      { encoding: 'utf8', flag: 'wx' },
     );
-    await assertNoSymlinkMembers(stagingDir);
-    await verifyFullBundle(stagingDir, { expectedBundleKind: bundleKind });
-    await input.testOnlyBeforeRename?.();
-    await rename(stagingDir, resolvedDestination);
+    activated = true;
+    await assertNoSymlinkMembers(resolvedDestination);
+    await verifyFullBundle(resolvedDestination, { expectedBundleKind: bundleKind });
+    await rm(stagingDir, { recursive: true, force: true });
     return { destinationDir: resolvedDestination, stagingDir: null };
   } catch (error) {
+    if (ownedDestination && !activated && existsSync(resolvedDestination)) {
+      const entries = await readdir(resolvedDestination).catch(() => []);
+      const containsOnlyOwnedNames = entries.every((entry) =>
+        BUNDLE_ARTIFACT_NAMES.includes(entry as (typeof BUNDLE_ARTIFACT_NAMES)[number]),
+      );
+      if (containsOnlyOwnedNames) {
+        await rm(resolvedDestination, { recursive: true, force: true });
+      }
+    }
     await rm(stagingDir, { recursive: true, force: true });
     throw error;
   }

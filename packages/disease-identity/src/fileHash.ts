@@ -32,12 +32,15 @@ export function hashingReadStream(filePath: string): {
   stream: Transform;
   hash: Hash;
   digestHex: () => string;
+  consumedBytes: () => number;
 } {
   const hash = createHash('sha256');
+  let bytes = 0;
   const fileStream = createReadStream(filePath);
   const transform = new Transform({
     transform(chunk: Buffer, _encoding: BufferEncoding, callback: TransformCallback) {
       hash.update(chunk);
+      bytes += chunk.byteLength;
       callback(null, chunk);
     },
   });
@@ -47,6 +50,7 @@ export function hashingReadStream(filePath: string): {
     stream: transform,
     hash,
     digestHex: () => hash.digest('hex'),
+    consumedBytes: () => bytes,
   };
 }
 
@@ -76,6 +80,22 @@ export async function assertConsumedByteDigest(
     throw new DiseaseIdentityError(
       'MALFORMED_INPUT',
       `Consumed-byte SHA-256 mismatch for ${label}`,
+    );
+  }
+}
+
+export async function assertConsumedByteDigestAndBytes(
+  observedHex: string,
+  observedBytes: number,
+  expectedHex: string,
+  expectedBytes: number,
+  label: string,
+): Promise<void> {
+  await assertConsumedByteDigest(observedHex, expectedHex, label);
+  if (observedBytes !== expectedBytes) {
+    throw new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      `Consumed-byte size mismatch for ${label}: expected ${expectedBytes}, observed ${observedBytes}`,
     );
   }
 }

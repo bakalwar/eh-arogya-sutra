@@ -21,7 +21,7 @@ import { deriveBridgeQuarantineFlags } from './quarantine.js';
 import { normalizeMappedIdentity } from './normalize.js';
 import { resolveDbRowNamespace } from './namespaceResolution.js';
 import { DiseaseIdentityError } from './errors.js';
-import type { ProductionBuildIndex } from './productionBuildIndex.js';
+import type { OutputRecordKind, ProductionBuildIndex } from './productionBuildIndex.js';
 import {
   BUNDLE_KIND_PRODUCTION,
   BUNDLE_KIND_SYNTHETIC,
@@ -36,10 +36,10 @@ import {
 } from './fullCorpusConstants.js';
 import { reconcileManifestCounts } from './manifest.js';
 
-const OUTPUT_DISEASE = 'disease';
-const OUTPUT_MAPPED = 'mapped';
-const OUTPUT_RELATIONSHIP = 'relationship';
-const OUTPUT_UNRESOLVED = 'unresolved';
+const OUTPUT_DISEASE: OutputRecordKind = 'disease';
+const OUTPUT_MAPPED: OutputRecordKind = 'mapped';
+const OUTPUT_RELATIONSHIP: OutputRecordKind = 'relationship';
+const OUTPUT_UNRESOLVED: OutputRecordKind = 'unresolved';
 
 export type BoundedBuildInstrumentation = {
   readonly dbRowsArrayCreated: false;
@@ -104,7 +104,7 @@ export function createBoundedBuildInstrumentation(): BoundedBuildInstrumentation
 
 async function writeIndexedJsonl(
   index: ProductionBuildIndex,
-  kind: string,
+  kind: OutputRecordKind,
   filePath: string,
 ): Promise<ArtifactMeta> {
   const hash = createHash('sha256');
@@ -208,6 +208,7 @@ function populateOutputRecords(
     bridgeNext = bridgeIterator.next();
   }
 
+  input.index.checkControlledIndexSize();
   for (const row of input.index.iterateDbRows()) {
     const bridgeRowsForId = input.index.bridgeRowsForDbId(row.id);
     const mappedIndexRefs: string[] = [];
@@ -256,6 +257,7 @@ function populateOutputRecords(
     );
     instrumentation.dbRowsStreamed += 1;
   }
+  input.index.checkControlledIndexSize();
 }
 
 async function buildBounded(
@@ -282,6 +284,8 @@ async function buildBounded(
   }
 
   const instrumentation = input.instrumentation ?? createBoundedBuildInstrumentation();
+  input.index.flushTransactionBatch();
+  input.index.checkControlledIndexSize();
   await mkdir(input.stagingDir, { recursive: true });
   populateOutputRecords(input, instrumentation);
 
@@ -293,7 +297,13 @@ async function buildBounded(
       throw new DiseaseIdentityError('MALFORMED_INPUT', 'Production unresolved count mismatch');
     }
   }
+  input.index.checkControlledIndexSize();
   input.index.assertIndexSizeLimit();
+  input.index.setMeta(
+    'peakControlledIndexBytes',
+    input.index.peakControlledIndexBytes().toString(),
+  );
+  input.index.checkControlledIndexSize();
   input.index.setQueryOnlyAfterPopulate();
 
   // Sequential writes — avoid concurrent iteration on the same SQLite connection.
@@ -319,6 +329,7 @@ async function buildBounded(
       path.join(input.stagingDir, 'unresolved-queue.jsonl'),
     ),
   ];
+  input.index.checkControlledIndexSize();
 
   const buildEvidence = {
     authorityClassification: AUTHORITY_CLASSIFICATION,
@@ -327,6 +338,7 @@ async function buildBounded(
     artifactLogicalNames: artifacts.map((artifact) => artifact.name),
     generatorVersion: FULL_CORPUS_GENERATOR_VERSION,
     estimatedPeakMemoryBudgetBytes: ESTIMATED_PEAK_MEMORY_BUDGET_BYTES,
+    peakControlledIndexBytes: input.index.peakControlledIndexBytes().toString(),
     processingModel: 'DISK_BACKED_SQLITE_ORDERED_STREAMING_NO_FULL_COLLECTIONS',
     bundleKind,
     generatorSourceCommit: input.generatorSourceCommit,

@@ -1,5 +1,4 @@
 import { mkdtemp, rm } from 'node:fs/promises';
-import readline from 'node:readline';
 import path from 'node:path';
 import { tmpdir } from 'node:os';
 import {
@@ -11,6 +10,7 @@ import {
   preflightFullCorpus,
   validateBridgeBatchProductionFromIndex,
   verifyFullBundle,
+  verifyInventorySameStream,
   writeAtomicBundle,
   DiseaseIdentityError,
   FULL_CORPUS_BUILD_AUTHORIZATION_TOKEN,
@@ -18,10 +18,9 @@ import {
   PINNED_INVENTORY_SHA256,
   PINNED_LEGACY_DB_SHA256,
   PINNED_MAPPED_JSON_SHA256,
-  EXPECTED_INVENTORY_ROW_COUNT,
+  PINNED_MAPPED_JSON_BYTES,
   EXPECTED_MAPPED_JSON_ROW_COUNT,
-  assertConsumedByteDigest,
-  hashingReadStream,
+  assertConsumedByteDigestAndBytes,
   assertProductionGeneratorReady,
   BUNDLE_KIND_PRODUCTION,
   EXPECTED_MAPPED_UNIQUE_CODE_COUNT,
@@ -87,9 +86,11 @@ export async function cmdBuildFullCorpus(args, repoRoot) {
   const index = createProductionBuildIndex(indexRoot);
   let stagingDir = null;
   try {
+    index.checkControlledIndexSize();
     await streamLegacyDiseaseRowsToBuildIndex(args['legacy-db'], index, {
       pinnedHash: PINNED_LEGACY_DB_SHA256,
     });
+    index.flushTransactionBatch();
 
     const mappedDigest = await streamDedupeMappedJsonFileWithConsumedDigest(args['mapped-json'], {
       expectedRawRows: EXPECTED_MAPPED_JSON_ROW_COUNT,
@@ -97,16 +98,24 @@ export async function cmdBuildFullCorpus(args, repoRoot) {
       onRow: (row) => index.insertMappedRow(row),
       getUniqueKeyCount: () => index.counts().mappedUniqueRows,
     });
-    await assertConsumedByteDigest(
+    await assertConsumedByteDigestAndBytes(
       mappedDigest.consumedSha256,
+      mappedDigest.consumedBytes,
       PINNED_MAPPED_JSON_SHA256,
+      PINNED_MAPPED_JSON_BYTES,
       'mapped.json',
     );
+    index.flushTransactionBatch();
 
     await ingestBridgeToBuildIndex(args.bridge, index, { expectedSha256: PINNED_BRIDGE_V3_SHA256 });
+    index.flushTransactionBatch();
     index.enforceConfiguredCounts();
     validateBridgeBatchProductionFromIndex(index);
-    index.assertIndexSizeLimit();
+    index.checkControlledIndexSize();
+    const inventoryEvidence = await verifyInventorySameStream({
+      inventoryPath: args.inventory ?? null,
+      mappedRawRowCount: mappedDigest.rawRowCount,
+    });
 
     stagingDir = await mkdtemp(`${path.resolve(args.output)}.staging-`);
     const artifacts = await buildFullCorpusArtifactsBoundedProduction({
@@ -117,8 +126,8 @@ export async function cmdBuildFullCorpus(args, repoRoot) {
         bridgeSha256: PINNED_BRIDGE_V3_SHA256,
         note: 'Pinned P2A engineering evidence hashes',
       },
-      inventoryVerified: Boolean(args.inventory),
-      inventorySha256: args.inventory ? PINNED_INVENTORY_SHA256 : null,
+      inventoryVerified: inventoryEvidence.inventoryVerified,
+      inventorySha256: inventoryEvidence.inventorySha256,
       stagingDir,
       generatorSourceCommit: generator.generatorSourceCommit,
       expectedGeneratorCommit: generator.expectedGeneratorCommit,
@@ -153,58 +162,38 @@ export async function cmdVerifyFullBundle(args) {
 }
 
 export async function cmdCompareFullBuilds(args) {
+  await verifyFullBundle(args.a, { expectedBundleKind: BUNDLE_KIND_PRODUCTION });
+  await verifyFullBundle(args.b, { expectedBundleKind: BUNDLE_KIND_PRODUCTION });
   await compareFullBuilds(args.a, args.b);
   console.log(JSON.stringify({ ok: true, byteIdentical: true }, null, 2));
 }
 
 export async function cmdVerifyInventory(args) {
-  const { assertFileSha256 } = await import('../../../packages/disease-identity/dist/fileHash.js');
-  await assertFileSha256(args.inventory, PINNED_INVENTORY_SHA256);
-
-  const invHashing = hashingReadStream(args.inventory);
-  let inventoryRows = 0;
-  const rl = readline.createInterface({
-    input: invHashing.stream,
-    crlfDelay: Infinity,
-  });
-  for await (const line of rl) {
-    if (line.trim().length === 0) {
-      continue;
-    }
-    inventoryRows += 1;
-    if (inventoryRows > EXPECTED_INVENTORY_ROW_COUNT) {
-      throw new DiseaseIdentityError(
-        'MALFORMED_INPUT',
-        `Inventory exceeds expected ${EXPECTED_INVENTORY_ROW_COUNT} rows`,
-      );
-    }
-  }
-  await assertConsumedByteDigest(invHashing.digestHex(), PINNED_INVENTORY_SHA256, 'inventory');
-  if (inventoryRows !== EXPECTED_INVENTORY_ROW_COUNT) {
-    throw new DiseaseIdentityError(
-      'MALFORMED_INPUT',
-      `Inventory row count mismatch: ${inventoryRows}`,
-    );
-  }
-
   let mappedRows = 0;
   const { streamMappedJsonArrayObjects } = await import('./streamMappedJson.mjs');
   for await (const unused of streamMappedJsonArrayObjects(args['mapped-json'])) {
     void unused;
     mappedRows += 1;
   }
-  if (mappedRows !== EXPECTED_MAPPED_JSON_ROW_COUNT || mappedRows !== inventoryRows) {
+  if (mappedRows !== EXPECTED_MAPPED_JSON_ROW_COUNT) {
     throw new DiseaseIdentityError(
       'MALFORMED_INPUT',
-      'Inventory row count does not reconcile with mapped.json',
+      `mapped.json row count mismatch: ${mappedRows}`,
     );
+  }
+  const inventoryEvidence = await verifyInventorySameStream({
+    inventoryPath: args.inventory,
+    mappedRawRowCount: mappedRows,
+  });
+  if (!inventoryEvidence.inventoryVerified) {
+    throw new DiseaseIdentityError('MALFORMED_INPUT', 'Inventory verification failed');
   }
   console.log(
     JSON.stringify(
       {
         ok: true,
         inventorySha256: PINNED_INVENTORY_SHA256,
-        inventoryRows,
+        inventoryRows: inventoryEvidence.rowCount,
         mappedJsonRows: mappedRows,
       },
       null,

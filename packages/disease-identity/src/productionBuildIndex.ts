@@ -1,4 +1,4 @@
-import { mkdirSync, rmSync, statSync } from 'node:fs';
+import { existsSync, mkdirSync, rmSync, statSync } from 'node:fs';
 import path from 'node:path';
 import Database from 'better-sqlite3';
 import { DiseaseIdentityError } from './errors.js';
@@ -16,13 +16,15 @@ import { mappedRawKey } from './namespaceResolution.js';
 import { canonicalJsonString } from './canonicalJson.js';
 
 type IndexMode =
-  | { readonly mode?: 'production' }
+  | { readonly mode?: 'production'; readonly maxControlledIndexBytes?: number }
   | {
       readonly mode: 'synthetic-test';
       readonly expectedDbRows: number;
       readonly expectedMappedRawRows: number;
       readonly expectedMappedUniqueRows: number;
       readonly expectedBridgeRows: number;
+      /** Test-only override; production mode always uses MAX_CONTROLLED_INDEX_BYTES. */
+      readonly maxControlledIndexBytes?: number;
     };
 
 type SqlRow = Record<string, unknown>;
@@ -44,19 +46,27 @@ export type ProductionBuildIndex = {
     bridgeCandidates: number;
   };
   enforceConfiguredCounts(): void;
+  flushTransactionBatch(): void;
   setQueryOnlyAfterPopulate(): void;
+  checkControlledIndexSize(): bigint;
   assertIndexSizeLimit(): void;
+  peakControlledIndexBytes(): bigint;
+  /** Synthetic-test only: record an observed peak without reading the filesystem. */
+  testOnlyRecordPeakBytes(bytes: bigint): void;
   iterateMappedEntries(): IterableIterator<MappedDedupeEntry>;
   iterateBridgeRows(): IterableIterator<ParsedBridgeRow>;
   iterateDbRows(): IterableIterator<LegacyDbRow>;
   bridgeRowsForDbId(dbId: number): ParsedBridgeRow[];
-  addOutputRecord(kind: string, sortKey: string, json: string): void;
-  iterateOutputRecords(kind: string): IterableIterator<{ json: string }>;
-  outputCount(kind: string): number;
+  addOutputRecord(kind: OutputRecordKind, sortKey: string, json: string): void;
+  iterateOutputRecords(kind: OutputRecordKind): IterableIterator<{ json: string }>;
+  outputCount(kind: OutputRecordKind): number;
   scalarNumber(sql: string): number;
   close(): void;
   destroy(): void;
 };
+
+export const OUTPUT_RECORD_KINDS = ['disease', 'mapped', 'relationship', 'unresolved'] as const;
+export type OutputRecordKind = (typeof OUTPUT_RECORD_KINDS)[number];
 
 function safeJsonArray(value: string, label: string): unknown[] {
   const parsed = JSON.parse(value) as unknown;
@@ -72,6 +82,7 @@ export function createProductionBuildIndex(
 ): ProductionBuildIndex {
   mkdirSync(dir, { recursive: true });
   const dbPath = path.join(dir, 'production-build-index.sqlite');
+  const ownsIndexFiles = !existsSync(dbPath);
   const db = new Database(dbPath);
   // Separate connection for output writes so ordered readers can stay open without
   // "database connection is busy" conflicts during streaming generation.
@@ -113,7 +124,7 @@ export function createProductionBuildIndex(
       value TEXT NOT NULL
     ) STRICT;
     CREATE TABLE output_record (
-      kind TEXT NOT NULL,
+      kind TEXT NOT NULL CHECK (kind IN ('disease','mapped','relationship','unresolved')),
       sort_key TEXT NOT NULL,
       json TEXT NOT NULL,
       PRIMARY KEY (kind, sort_key)
@@ -158,6 +169,11 @@ export function createProductionBuildIndex(
 
   let closed = false;
   let queryOnly = false;
+  let peakControlledIndexBytes = 0n;
+  let mutationsSinceSizeCheck = 0;
+  let inputBatchRows = 0;
+  let inputTransactionOpen = false;
+  const TRANSACTION_BATCH_ROWS = 256;
   const configured =
     options.mode === 'synthetic-test'
       ? options
@@ -168,9 +184,92 @@ export function createProductionBuildIndex(
           expectedMappedUniqueRows: EXPECTED_MAPPED_UNIQUE_CODE_COUNT,
           expectedBridgeRows: EXPECTED_BRIDGE_ROW_COUNT,
         };
+  const maxIndexBytes =
+    configured.mode === 'synthetic-test' && typeof options.maxControlledIndexBytes === 'number'
+      ? options.maxControlledIndexBytes
+      : MAX_CONTROLLED_INDEX_BYTES;
 
   function count(table: string): number {
     return Number((db.prepare(`SELECT COUNT(*) AS count FROM ${table}`).get() as SqlRow).count);
+  }
+
+  function controlledIndexBytes(): bigint {
+    return [dbPath, `${dbPath}-wal`, `${dbPath}-shm`, `${dbPath}-journal`].reduce(
+      (total, file) => total + (existsSync(file) ? BigInt(statSync(file).size) : 0n),
+      0n,
+    );
+  }
+
+  function failClosedOnIndexSize(reason: string): never {
+    if (inputTransactionOpen) {
+      try {
+        db.exec('ROLLBACK');
+      } catch {
+        // Continue fail-closed cleanup.
+      }
+      inputTransactionOpen = false;
+      inputBatchRows = 0;
+    }
+    if (ownsIndexFiles && !closed) {
+      try {
+        writeDb.close();
+      } catch {
+        // Continue closing and removing only the owned index directory.
+      }
+      try {
+        db.close();
+      } catch {
+        // Continue removing only the owned index directory.
+      }
+      closed = true;
+      rmSync(dir, { recursive: true, force: true });
+    }
+    throw new DiseaseIdentityError('MALFORMED_INPUT', reason);
+  }
+
+  function checkControlledIndexSize(): bigint {
+    if (closed) {
+      throw new DiseaseIdentityError('MALFORMED_INPUT', 'Controlled index already closed');
+    }
+    const bytes = controlledIndexBytes();
+    if (bytes > peakControlledIndexBytes) peakControlledIndexBytes = bytes;
+    if (bytes > BigInt(maxIndexBytes) || peakControlledIndexBytes > BigInt(maxIndexBytes)) {
+      failClosedOnIndexSize(
+        `Production build index exceeds MAX_CONTROLLED_INDEX_BYTES (${maxIndexBytes})`,
+      );
+    }
+    return bytes;
+  }
+
+  function beginInputTransaction(): void {
+    if (!inputTransactionOpen) {
+      db.exec('BEGIN IMMEDIATE');
+      inputTransactionOpen = true;
+    }
+  }
+
+  function flushInputTransaction(): void {
+    if (inputTransactionOpen) {
+      db.exec('COMMIT');
+      inputTransactionOpen = false;
+      inputBatchRows = 0;
+      checkControlledIndexSize();
+    }
+  }
+
+  function afterInputMutation(): void {
+    inputBatchRows += 1;
+    if (inputBatchRows >= TRANSACTION_BATCH_ROWS) {
+      flushInputTransaction();
+    }
+  }
+
+  function afterOutputMutation(): void {
+    mutationsSinceSizeCheck += 1;
+    if (mutationsSinceSizeCheck >= TRANSACTION_BATCH_ROWS) {
+      mutationsSinceSizeCheck = 0;
+      checkControlledIndexSize();
+    }
   }
 
   const api: ProductionBuildIndex = {
@@ -178,9 +277,14 @@ export function createProductionBuildIndex(
     db,
     mode: configured.mode,
     insertDbRow(row) {
+      checkControlledIndexSize();
+      beginInputTransaction();
       insertDb.run(row.id, row.icd10_code);
+      afterInputMutation();
     },
     insertMappedRow(row) {
+      checkControlledIndexSize();
+      beginInputTransaction();
       const dedupeKey = mappedRawKey(row.source, row.code);
       const variant = { mappedCodeRaw: row.code, mappedSourceLabel: row.source };
       const existing = db
@@ -216,9 +320,13 @@ export function createProductionBuildIndex(
         }
       }
       incrementMappedRaw.run();
+      afterInputMutation();
     },
     insertBridgeRow(row) {
+      checkControlledIndexSize();
+      beginInputTransaction();
       insertBridgeTransaction(row);
+      afterInputMutation();
     },
     setMeta(key, value) {
       setMetaStatement.run(key, value);
@@ -253,25 +361,49 @@ export function createProductionBuildIndex(
         }
       }
     },
+    flushTransactionBatch() {
+      flushInputTransaction();
+    },
     setQueryOnlyAfterPopulate() {
+      flushInputTransaction();
+      checkControlledIndexSize();
       db.pragma('optimize');
+      checkControlledIndexSize();
       db.pragma('query_only = ON');
       writeDb.pragma('query_only = ON');
       queryOnly = true;
     },
+    checkControlledIndexSize,
+    peakControlledIndexBytes() {
+      return peakControlledIndexBytes;
+    },
     assertIndexSizeLimit() {
+      checkControlledIndexSize();
+      const peakBeforeCheckpoint = peakControlledIndexBytes;
       try {
         db.pragma('wal_checkpoint(TRUNCATE)');
       } catch {
         // DELETE journal mode may not expose WAL checkpoint.
       }
-      const bytes = statSync(dbPath).size;
-      if (bytes > MAX_CONTROLLED_INDEX_BYTES) {
-        throw new DiseaseIdentityError(
-          'MALFORMED_INPUT',
-          `Production build index exceeds MAX_CONTROLLED_INDEX_BYTES (${MAX_CONTROLLED_INDEX_BYTES})`,
+      checkControlledIndexSize();
+      // Checkpoint must not hide a previously observed over-limit peak.
+      if (
+        peakBeforeCheckpoint > BigInt(maxIndexBytes) ||
+        peakControlledIndexBytes > BigInt(maxIndexBytes)
+      ) {
+        failClosedOnIndexSize(
+          `Production build index peak exceeds MAX_CONTROLLED_INDEX_BYTES (${maxIndexBytes})`,
         );
       }
+    },
+    testOnlyRecordPeakBytes(bytes) {
+      if (configured.mode !== 'synthetic-test') {
+        throw new DiseaseIdentityError(
+          'MALFORMED_INPUT',
+          'testOnlyRecordPeakBytes is synthetic-test only',
+        );
+      }
+      if (bytes > peakControlledIndexBytes) peakControlledIndexBytes = bytes;
     },
     *iterateMappedEntries() {
       const rows = db
@@ -350,6 +482,10 @@ export function createProductionBuildIndex(
       }));
     },
     addOutputRecord(kind, sortKey, json) {
+      if (!(OUTPUT_RECORD_KINDS as readonly string[]).includes(kind)) {
+        throw new DiseaseIdentityError('MALFORMED_INPUT', `Unknown output_record kind: ${kind}`);
+      }
+      checkControlledIndexSize();
       if (queryOnly) {
         throw new DiseaseIdentityError(
           'MALFORMED_INPUT',
@@ -357,13 +493,20 @@ export function createProductionBuildIndex(
         );
       }
       addOutput.run(kind, sortKey, json);
+      afterOutputMutation();
     },
     *iterateOutputRecords(kind) {
+      if (!(OUTPUT_RECORD_KINDS as readonly string[]).includes(kind)) {
+        throw new DiseaseIdentityError('MALFORMED_INPUT', `Unknown output_record kind: ${kind}`);
+      }
       yield* db
         .prepare('SELECT json FROM output_record WHERE kind = ? ORDER BY sort_key')
         .iterate(kind) as IterableIterator<{ json: string }>;
     },
     outputCount(kind) {
+      if (!(OUTPUT_RECORD_KINDS as readonly string[]).includes(kind)) {
+        throw new DiseaseIdentityError('MALFORMED_INPUT', `Unknown output_record kind: ${kind}`);
+      }
       return Number(
         (
           db
@@ -379,6 +522,14 @@ export function createProductionBuildIndex(
     },
     close() {
       if (!closed) {
+        if (inputTransactionOpen) {
+          try {
+            db.exec('ROLLBACK');
+          } catch {
+            // Continue closing both handles.
+          }
+          inputTransactionOpen = false;
+        }
         try {
           writeDb.close();
         } catch {
