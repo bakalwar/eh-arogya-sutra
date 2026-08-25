@@ -74,7 +74,7 @@ export function validateLegacyDbRow(row: LegacyDbRow, seenIds: Set<number>): voi
     throw new DiseaseIdentityError('MALFORMED_INPUT', 'Disease id must be a positive safe integer');
   }
   if (seenIds.has(row.id)) {
-    throw new DiseaseIdentityError('MALFORMED_INPUT', `Duplicate disease id ${row.id}`);
+    throw new DiseaseIdentityError('MALFORMED_INPUT', 'Duplicate disease id in identity stream');
   }
   seenIds.add(row.id);
   if (row.icd10_code !== null && row.icd10_code.length > 512) {

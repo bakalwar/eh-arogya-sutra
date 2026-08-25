@@ -26,7 +26,7 @@ export const EXPECTED_UNRESOLVED_QUEUE_COUNT = 17_474 as const;
 /** Unique DB disease IDs referenced by at least one bridge candidate. */
 export const EXPECTED_REFERENCED_UNIQUE_DB_IDS = 98_181 as const;
 
-export const FULL_CORPUS_GENERATOR_VERSION = '0.2.1-p2c-full-corpus-tooling-harden' as const;
+export const FULL_CORPUS_GENERATOR_VERSION = '0.3.0-p2c-sanitized-identity-tooling' as const;
 
 export const BUNDLE_KIND_PRODUCTION = 'EHAS2_FULL_CANONICAL_DISEASE_IDENTITY_LEDGER_V1' as const;
 export const BUNDLE_KIND_SYNTHETIC = 'EHAS2_SYNTHETIC_DISEASE_IDENTITY_FIXTURE_V1' as const;

@@ -29,3 +29,15 @@ export * from './productionBuildIndex.js';
 export * from './productionBoundedBuild.js';
 export * from './generatorGate.js';
 export * from './inventoryVerify.js';
+export * from './sanitizedIdentityConstants.js';
+export * from './sanitizedIdentityRecord.js';
+export * from './orderedSanitizedIdentityFingerprint.js';
+export * from './sanitizedArtifactManifest.js';
+export * from './sanitizedAdoptionManifest.js';
+export * from './sanitizedAdoptionControlPlane.js';
+export * from './sanitizedCliFirewall.js';
+export * from './sourceMainIdentity.js';
+export {
+  streamSanitizedIdentityJsonlFile,
+  type StreamSanitizedIdentityJsonlResult,
+} from './streamSanitizedIdentityJsonl.js';

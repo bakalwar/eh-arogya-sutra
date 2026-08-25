@@ -484,6 +484,9 @@ describe('R2-DATA-P2C-A bounded production architecture', () => {
       .sort();
     expect(productionBuilders).toEqual(['buildFullCorpusArtifactsBoundedProduction']);
     expect(publicApi).not.toHaveProperty('buildFullCorpusArtifactsProduction');
+    expect(publicApi).not.toHaveProperty('openLiveReadonlyDiseaseIdentityDb');
+    expect(publicApi).not.toHaveProperty('deriveSanitizedDiseaseIdentity');
+    expect(publicApi).not.toHaveProperty('executeSanitizedDeriveOrchestration');
   });
 
   it('existing empty destination fails closed and remains untouched', async () => {

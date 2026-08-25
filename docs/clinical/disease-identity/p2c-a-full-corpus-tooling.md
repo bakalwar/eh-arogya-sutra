@@ -4,7 +4,7 @@
 **Classification:** `ENGINEERING_IDENTITY_ONLY`
 **Clinical authority:** NONE
 **Real full-corpus build authorized by this PR:** FALSE
-**Generator version:** `0.2.1-p2c-full-corpus-tooling-harden`
+**Generator version:** `0.3.0-p2c-sanitized-identity-tooling` (see also `p2c-c-sanitized-identity-tooling.md`)
 
 ## Commands
 
