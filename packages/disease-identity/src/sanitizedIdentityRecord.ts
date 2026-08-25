@@ -139,7 +139,7 @@ export function validateSanitizedDiseaseIdentityRecord(
   if (seenIds.has(obj.legacyDbDiseaseId)) {
     throw new DiseaseIdentityError(
       'MALFORMED_INPUT',
-      `Duplicate legacyDbDiseaseId ${obj.legacyDbDiseaseId}`,
+      'Duplicate legacyDbDiseaseId in sanitized stream',
     );
   }
   seenIds.add(obj.legacyDbDiseaseId);

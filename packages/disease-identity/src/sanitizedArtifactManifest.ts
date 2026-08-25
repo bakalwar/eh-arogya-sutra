@@ -116,7 +116,10 @@ function rejectForbiddenStrings(value: unknown, label: string): void {
   }
 }
 
-export function validateSanitizedArtifactManifest(raw: unknown): SanitizedArtifactManifest {
+export function validateSanitizedArtifactManifest(
+  raw: unknown,
+  mode: 'production' | 'synthetic' = 'production',
+): SanitizedArtifactManifest {
   if (raw === null || typeof raw !== 'object' || Array.isArray(raw)) {
     throw new DiseaseIdentityError('MALFORMED_INPUT', 'Sanitized manifest must be a plain object');
   }
@@ -183,10 +186,16 @@ export function validateSanitizedArtifactManifest(raw: unknown): SanitizedArtifa
   if (typeof obj.generatorVersion !== 'string' || obj.generatorVersion.length === 0) {
     throw new DiseaseIdentityError('MALFORMED_INPUT', 'generatorVersion required');
   }
-  if (
-    typeof obj.generatorSourceCommit !== 'string' ||
-    (!/^[0-9a-f]{40}$/.test(obj.generatorSourceCommit) &&
-      obj.generatorSourceCommit !== 'SYNTHETIC_TEST_COMMIT')
+  if (typeof obj.generatorSourceCommit !== 'string') {
+    throw new DiseaseIdentityError('MALFORMED_INPUT', 'generatorSourceCommit invalid');
+  }
+  if (mode === 'production') {
+    if (!/^[0-9a-f]{40}$/.test(obj.generatorSourceCommit)) {
+      throw new DiseaseIdentityError('MALFORMED_INPUT', 'generatorSourceCommit invalid');
+    }
+  } else if (
+    !/^[0-9a-f]{40}$/.test(obj.generatorSourceCommit) &&
+    obj.generatorSourceCommit !== 'SYNTHETIC_TEST_COMMIT'
   ) {
     throw new DiseaseIdentityError('MALFORMED_INPUT', 'generatorSourceCommit invalid');
   }
@@ -263,7 +272,13 @@ export function buildSanitizedArtifactManifest(input: {
     exclusions: [...SANITIZED_EXCLUSIONS],
     lifecycleStatus: SANITIZED_LIFECYCLE_DERIVED_PENDING_ADOPTION,
   };
-  return validateSanitizedArtifactManifest(manifest);
+  return validateSanitizedArtifactManifest(manifest, 'production');
+}
+
+export function validateSanitizedArtifactManifestSynthetic(
+  raw: unknown,
+): SanitizedArtifactManifest {
+  return validateSanitizedArtifactManifest(raw, 'synthetic');
 }
 
 const FIXED_MANIFEST_FIELDS = {

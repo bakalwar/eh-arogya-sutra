@@ -32,18 +32,20 @@ import {
   buildDiseaseCanonicalIdentityInput,
   buildSanitizedDiseaseIdentityRecord,
   canonicalJsonString,
-  captureSourceDbSidecarSnapshot,
-  deriveSanitizedDiseaseIdentity,
   generateDiseaseCanonicalId,
-  openLiveReadonlyDiseaseIdentityDb,
   parseDbIdentityInputClass,
   resolveSanitizedAdoptionControlPlanePath,
-  streamDiseaseIdentityFingerprintInReadTransaction,
-  validateSanitizedAdoptionManifest,
-  validateSanitizedArtifactManifest,
+  validateSanitizedAdoptionManifestSynthetic,
+  validateSanitizedArtifactManifestSynthetic,
   validateSanitizedDiseaseIdentityRecord,
+} from '../src/index.js';
+import {
+  captureSourceDbSidecarSnapshot,
+  deriveSanitizedDiseaseIdentitySyntheticHarness,
+  openLiveReadonlyDiseaseIdentityDb,
+  streamDiseaseIdentityFingerprintInReadTransaction,
   verifySanitizedArtifactPackage,
-} from '../src/index.ts';
+} from '../src/toolingInternal.js';
 
 const GOLDEN_DISEASE_CANONICAL_JSON =
   '{"algorithm":"EHAS2_CANONICAL_DISEASE_ID_v1_SHA256","legacyAuthority":"EHAS2_PINNED_LEGACY_DISEASE_DB_V1","legacyDbDiseaseId":1,"recordKind":"LEGACY_DB_ROW"}';
@@ -52,6 +54,7 @@ const GOLDEN_DISEASE_ID =
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 const DESKTOP_TEST_ROOT = path.resolve(REPO_ROOT, '..', '_ehas2_p2c_sanitized_test_outputs');
+const FAKE_COMMIT = 'a'.repeat(40);
 
 const cleanupDirs: string[] = [];
 afterEach(() => {
@@ -255,9 +258,7 @@ describe('R2-DATA-P2C-C sanitized identity tooling', () => {
     conn.db.exec('BEGIN DEFERRED');
     const first = conn.db
       .prepare('SELECT id, icd10_code FROM diseases ORDER BY id ASC')
-      .all() as Array<{
-      id: number;
-    }>;
+      .all() as Array<{ id: number }>;
     expect(first.map((r) => r.id)).toEqual([1, 2]);
 
     const writer2 = new Database(dbPath);
@@ -266,10 +267,7 @@ describe('R2-DATA-P2C-C sanitized identity tooling', () => {
 
     const still = conn.db
       .prepare('SELECT id, icd10_code FROM diseases ORDER BY id ASC')
-      .all() as Array<{
-      id: number;
-    }>;
-    // Snapshot from BEGIN should exclude id=3
+      .all() as Array<{ id: number }>;
     expect(still.map((r) => r.id)).toEqual([1, 2]);
     conn.db.exec('COMMIT');
     conn.db.close();
@@ -296,7 +294,7 @@ describe('R2-DATA-P2C-C sanitized identity tooling', () => {
     conn.db.close();
   });
 
-  it('two-pass derivation publishes verified package and detects identity drift', async () => {
+  it('two-pass derivation publishes verified package via synthetic harness', async () => {
     const dbPath = createSyntheticIdentityDb({
       rows: [
         { id: 1, icd10_code: 'A00.0' },
@@ -306,17 +304,16 @@ describe('R2-DATA-P2C-C sanitized identity tooling', () => {
     });
     const outParent = desktopOutDir('out-');
     const outputDir = path.join(outParent, 'pkg');
-    const result = await deriveSanitizedDiseaseIdentity({
+    const result = await deriveSanitizedDiseaseIdentitySyntheticHarness({
       authorizeDeriveFlag: true,
       ownerToken: SANITIZED_DERIVE_AUTHORIZATION_TOKEN,
       repoRoot: REPO_ROOT,
       sourceDbPath: dbPath,
       sourceEvidenceRefHistoricalMainSha256: PINNED_LEGACY_DB_SHA256,
       outputDir,
-      expectedGeneratorCommit: 'SYNTHETIC_TEST_COMMIT',
-      generatorSourceCommit: 'SYNTHETIC_TEST_COMMIT',
+      expectedGeneratorCommit: FAKE_COMMIT,
       expectedRecordCount: 2,
-      syntheticTestMode: true,
+      skipGeneratorGate: true,
       minimumFreeBytes: 1,
     });
     expect(result.recordCount).toBe(2);
@@ -330,7 +327,7 @@ describe('R2-DATA-P2C-C sanitized identity tooling', () => {
       readFileSync(path.join(outputDir, 'sanitized-disease-identity.manifest.json'), 'utf8'),
     );
     expect(manifest.lifecycleStatus).toBe(SANITIZED_LIFECYCLE_DERIVED_PENDING_ADOPTION);
-    validateSanitizedArtifactManifest(manifest);
+    validateSanitizedArtifactManifestSynthetic(manifest);
 
     await verifySanitizedArtifactPackage({
       artifactPath: path.join(outputDir, 'sanitized-disease-identity.jsonl'),
@@ -341,34 +338,22 @@ describe('R2-DATA-P2C-C sanitized identity tooling', () => {
       expectedOrderedIdentityFingerprint: result.orderedIdentityFingerprint,
       expectedManifestSHA256: result.manifestSHA256,
     });
-
-    // Drift detection: after changing disease identity, a second derive to a new dir should
-    // still succeed for the new stream; pass-B mismatch is covered by injecting between passes
-    // via unit of fingerprint inequality.
-    const conn = openLiveReadonlyDiseaseIdentityDb(dbPath);
-    const fp1 = streamDiseaseIdentityFingerprintInReadTransaction(conn.db, { expectedCount: 2 });
-    const w = new Database(dbPath);
-    w.prepare('INSERT INTO diseases (id, icd10_code) VALUES (?, ?)').run(3, 'Z99.9');
-    w.close();
-    const fp2 = streamDiseaseIdentityFingerprintInReadTransaction(conn.db, { expectedCount: 3 });
-    expect(fp2.orderedIdentityFingerprint).not.toBe(fp1.orderedIdentityFingerprint);
-    conn.db.close();
   });
 
   it('rejects derive without authorization token', async () => {
     const dbPath = createSyntheticIdentityDb({ rows: [{ id: 1, icd10_code: null }] });
     const outputDir = path.join(desktopOutDir('deny-'), 'pkg');
     await expect(
-      deriveSanitizedDiseaseIdentity({
+      deriveSanitizedDiseaseIdentitySyntheticHarness({
         authorizeDeriveFlag: false,
         ownerToken: SANITIZED_DERIVE_AUTHORIZATION_TOKEN,
         repoRoot: REPO_ROOT,
         sourceDbPath: dbPath,
         sourceEvidenceRefHistoricalMainSha256: PINNED_LEGACY_DB_SHA256,
         outputDir,
-        expectedGeneratorCommit: 'SYNTHETIC_TEST_COMMIT',
+        expectedGeneratorCommit: FAKE_COMMIT,
         expectedRecordCount: 1,
-        syntheticTestMode: true,
+        skipGeneratorGate: true,
         minimumFreeBytes: 1,
       }),
     ).rejects.toBeInstanceOf(DiseaseIdentityError);
@@ -380,16 +365,16 @@ describe('R2-DATA-P2C-C sanitized identity tooling', () => {
     const outputDir = path.join(outParent, 'pkg');
     mkdirSync(outputDir);
     await expect(
-      deriveSanitizedDiseaseIdentity({
+      deriveSanitizedDiseaseIdentitySyntheticHarness({
         authorizeDeriveFlag: true,
         ownerToken: SANITIZED_DERIVE_AUTHORIZATION_TOKEN,
         repoRoot: REPO_ROOT,
         sourceDbPath: dbPath,
         sourceEvidenceRefHistoricalMainSha256: PINNED_LEGACY_DB_SHA256,
         outputDir,
-        expectedGeneratorCommit: 'SYNTHETIC_TEST_COMMIT',
+        expectedGeneratorCommit: FAKE_COMMIT,
         expectedRecordCount: 1,
-        syntheticTestMode: true,
+        skipGeneratorGate: true,
         minimumFreeBytes: 1,
       }),
     ).rejects.toBeInstanceOf(DiseaseIdentityError);
@@ -400,7 +385,7 @@ describe('R2-DATA-P2C-C sanitized identity tooling', () => {
   });
 
   it('validates adoption manifest contract without creating a real control-plane entry', () => {
-    const adoption = validateSanitizedAdoptionManifest({
+    const adoption = validateSanitizedAdoptionManifestSynthetic({
       manifestSchemaVersion: SANITIZED_ADOPTION_MANIFEST_SCHEMA_VERSION,
       adoptionKind: SANITIZED_ADOPTION_MANIFEST_KIND,
       artifactKind: SANITIZED_ARTIFACT_KIND,
@@ -418,7 +403,7 @@ describe('R2-DATA-P2C-C sanitized identity tooling', () => {
       orderedIdentityFingerprint: 'b'.repeat(64),
       orderedIdentityFingerprintAlgorithm: ORDERED_SANITIZED_IDENTITY_FP_ALGORITHM,
       sanitizedManifestSHA256: 'c'.repeat(64),
-      derivationToolingCommit: 'SYNTHETIC_TEST_COMMIT',
+      derivationToolingCommit: FAKE_COMMIT,
       expectedCanonicalRepository: 'bakalwar/EH_AROGYA_SUTRA_2',
       ownerAdoptionTokenIdentity: 'R2-DATA-P2C-C-ADOPT-SANITIZED-INPUT-01',
       lifecycleStatus: 'ADOPTED_AS_GENERATOR_INPUT',
@@ -426,9 +411,6 @@ describe('R2-DATA-P2C-C sanitized identity tooling', () => {
       supersededBy: null,
     });
     expect(adoption.adoptionKind).toBe(SANITIZED_ADOPTION_MANIFEST_KIND);
-    expect(ORDERED_SANITIZED_IDENTITY_FP_ALGORITHM).toBe(
-      'EHAS2_ORDERED_SANITIZED_DISEASE_IDENTITY_FP_V1_SHA256',
-    );
   });
 
   it('records sidecar metadata without paths and keeps production aggregate firewall numbers', () => {

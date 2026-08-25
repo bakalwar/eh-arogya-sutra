@@ -35,6 +35,9 @@ export * from './orderedSanitizedIdentityFingerprint.js';
 export * from './sanitizedArtifactManifest.js';
 export * from './sanitizedAdoptionManifest.js';
 export * from './sanitizedAdoptionControlPlane.js';
-export * from './liveReadonlyDiseaseIdentityRead.js';
-export * from './deriveSanitizedIdentity.js';
-export * from './streamSanitizedIdentityJsonl.js';
+export * from './sanitizedCliFirewall.js';
+export * from './sourceMainIdentity.js';
+export {
+  streamSanitizedIdentityJsonlFile,
+  type StreamSanitizedIdentityJsonlResult,
+} from './streamSanitizedIdentityJsonl.js';

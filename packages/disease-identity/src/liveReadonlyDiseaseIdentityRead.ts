@@ -16,6 +16,7 @@ import {
   type SanitizedDiseaseIdentityRecord,
 } from './sanitizedIdentityRecord.js';
 import { OrderedSanitizedIdentityFingerprintBuilder } from './orderedSanitizedIdentityFingerprint.js';
+import { LIVE_READONLY_SQLITE_BUSY_TIMEOUT_MS } from './sanitizedIdentityConstants.js';
 
 export type SidecarFileMetadata = {
   readonly present: boolean;
@@ -59,7 +60,7 @@ export function buildLiveReadonlySqliteUri(dbPath: string): string {
   if (normalized.startsWith('/') && /^\/[A-Za-z]:/.test(normalized)) {
     normalized = normalized.slice(1);
   }
-  const uri = `file:${normalized}?mode=ro`;
+  const uri = `file:${normalized}?mode=ro&busy_timeout=${LIVE_READONLY_SQLITE_BUSY_TIMEOUT_MS}`;
   if (uri.includes('immutable=1')) {
     throw new DiseaseIdentityError('MALFORMED_INPUT', 'Live readonly URI must not use immutable=1');
   }
@@ -90,7 +91,8 @@ function assertDiseasesIdentityColumnsPresent(db: Database.Database): void {
   }
 }
 
-function assertNoWritablePragma(db: Database.Database): void {
+function applyReadonlyConnectionPragmas(db: Database.Database): void {
+  db.pragma(`busy_timeout = ${LIVE_READONLY_SQLITE_BUSY_TIMEOUT_MS}`);
   db.pragma('query_only = ON');
   try {
     db.pragma('trusted_schema = OFF');
@@ -130,7 +132,7 @@ export function openLiveReadonlyDiseaseIdentityDb(dbPath: string): LiveReadonlyI
     db = new Database(absolute, { readonly: true, fileMustExist: true });
   }
   try {
-    assertNoWritablePragma(db);
+    applyReadonlyConnectionPragmas(db);
     assertDiseasesIdentityColumnsPresent(db);
     return {
       db,

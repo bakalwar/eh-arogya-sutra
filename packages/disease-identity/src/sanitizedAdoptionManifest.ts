@@ -105,7 +105,10 @@ function rejectPathsAndSecrets(value: unknown, label: string): void {
   }
 }
 
-export function validateSanitizedAdoptionManifest(raw: unknown): SanitizedAdoptionManifest {
+export function validateSanitizedAdoptionManifest(
+  raw: unknown,
+  mode: 'production' | 'synthetic' = 'production',
+): SanitizedAdoptionManifest {
   if (raw === null || typeof raw !== 'object' || Array.isArray(raw)) {
     throw new DiseaseIdentityError('MALFORMED_INPUT', 'Adoption manifest must be a plain object');
   }
@@ -165,10 +168,16 @@ export function validateSanitizedAdoptionManifest(raw: unknown): SanitizedAdopti
   if (typeof obj.recordCount !== 'number' || !Number.isSafeInteger(obj.recordCount)) {
     throw new DiseaseIdentityError('MALFORMED_INPUT', 'recordCount invalid');
   }
-  if (
-    typeof obj.derivationToolingCommit !== 'string' ||
-    (!/^[0-9a-f]{40}$/.test(obj.derivationToolingCommit) &&
-      obj.derivationToolingCommit !== 'SYNTHETIC_TEST_COMMIT')
+  if (typeof obj.derivationToolingCommit !== 'string') {
+    throw new DiseaseIdentityError('MALFORMED_INPUT', 'derivationToolingCommit invalid');
+  }
+  if (mode === 'production') {
+    if (!/^[0-9a-f]{40}$/.test(obj.derivationToolingCommit)) {
+      throw new DiseaseIdentityError('MALFORMED_INPUT', 'derivationToolingCommit invalid');
+    }
+  } else if (
+    !/^[0-9a-f]{40}$/.test(obj.derivationToolingCommit) &&
+    obj.derivationToolingCommit !== 'SYNTHETIC_TEST_COMMIT'
   ) {
     throw new DiseaseIdentityError('MALFORMED_INPUT', 'derivationToolingCommit invalid');
   }
@@ -191,4 +200,10 @@ export function validateSanitizedAdoptionManifest(raw: unknown): SanitizedAdopti
     throw new DiseaseIdentityError('MALFORMED_INPUT', 'supersededBy invalid');
   }
   return obj as unknown as SanitizedAdoptionManifest;
+}
+
+export function validateSanitizedAdoptionManifestSynthetic(
+  raw: unknown,
+): SanitizedAdoptionManifest {
+  return validateSanitizedAdoptionManifest(raw, 'synthetic');
 }

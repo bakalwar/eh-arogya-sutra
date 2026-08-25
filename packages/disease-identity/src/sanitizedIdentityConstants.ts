@@ -99,3 +99,15 @@ export const FULL_CORPUS_GENERATOR_VERSION_SANITIZED = FULL_CORPUS_GENERATOR_VER
 
 export const HISTORICAL_P2A_LEGACY_MAIN_FILE_EVIDENCE_LABEL =
   'P2A_HISTORICAL_MAIN_FILE_SHA256_REF' as const;
+
+/** Bounded SQLite busy wait before readonly identity transactions fail closed. */
+export const LIVE_READONLY_SQLITE_BUSY_TIMEOUT_MS = 5_000 as const;
+
+/** Production CLI must reject these flags (no synthetic/test bypass). */
+export const SANITIZED_CLI_REJECTED_FLAGS = [
+  'synthetic-test-mode',
+  'test-mode',
+  'skip-generator-gate',
+  'allow-synthetic',
+  'synthetic',
+] as const;

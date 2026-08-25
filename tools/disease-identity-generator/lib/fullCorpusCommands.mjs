@@ -4,18 +4,15 @@ import {
   assertFullCorpusBuildAuthorized,
   assertProductionGeneratorReady,
   assertSanitizedFullCorpusBuildAuthorized,
+  assertSanitizedProductionCliFlagsRejected,
   buildFullCorpusArtifactsBoundedProduction,
   compareFullBuilds,
   createProductionBuildIndex,
-  deriveSanitizedDiseaseIdentity,
-  loadSanitizedAdoptionManifestFromControlPlane,
   parseDbIdentityInputClass,
   preflightFullCorpus,
-  streamSanitizedIdentityJsonlFile,
   validateBridgeBatchProductionFromIndex,
   verifyFullBundle,
   verifyInventorySameStream,
-  verifySanitizedArtifactPackage,
   writeAtomicBundle,
   DiseaseIdentityError,
   FULL_CORPUS_BUILD_AUTHORIZATION_TOKEN,
@@ -34,6 +31,12 @@ import {
   SANITIZED_DERIVE_AUTHORIZATION_TOKEN,
   EXPECTED_LEGACY_DB_DISEASE_COUNT,
 } from '../../../packages/disease-identity/dist/index.js';
+import {
+  deriveSanitizedDiseaseIdentity,
+  loadSanitizedAdoptionManifestFromControlPlane,
+  streamSanitizedIdentityJsonlFile,
+  verifySanitizedArtifactPackage,
+} from '../../../packages/disease-identity/dist/toolingInternal.js';
 import { mkdtemp, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { tmpdir } from 'node:os';
@@ -88,7 +91,7 @@ export async function cmdPreflightFullCorpus(args, repoRoot) {
   );
 }
 
-async function ingestSanitizedArtifactToBuildIndex(args, repoRoot, index) {
+async function ingestSanitizedArtifactToBuildIndex(args, repoRoot, index, expectedGeneratorCommit) {
   assertSanitizedFullCorpusBuildAuthorized({
     authorizeFullCorpusFlag: args.flags?.has('authorize-full-corpus') ?? false,
     ownerToken: args['owner-token'] ?? '',
@@ -122,6 +125,7 @@ async function ingestSanitizedArtifactToBuildIndex(args, repoRoot, index) {
   const adoption = await loadSanitizedAdoptionManifestFromControlPlane({
     repoRoot,
     adoptionId: args['adoption-id'],
+    expectedGeneratorCommit,
   });
   assertAdoptionMatchesArtifact({
     adoption: adoption.manifest,
@@ -177,7 +181,12 @@ export async function cmdBuildFullCorpus(args, repoRoot) {
     index.checkControlledIndexSize();
 
     if (inputClass === DB_IDENTITY_INPUT_CLASS_SANITIZED_JSONL) {
-      await ingestSanitizedArtifactToBuildIndex(args, repoRoot, index);
+      await ingestSanitizedArtifactToBuildIndex(
+        args,
+        repoRoot,
+        index,
+        generator.expectedGeneratorCommit,
+      );
     } else {
       const preflight = await preflightFullCorpus({
         repoRoot,
@@ -278,6 +287,7 @@ export async function cmdBuildFullCorpus(args, repoRoot) {
 }
 
 export async function cmdDeriveSanitizedDiseaseIdentity(args, repoRoot) {
+  assertSanitizedProductionCliFlagsRejected(args.flags ?? new Set());
   const result = await deriveSanitizedDiseaseIdentity({
     authorizeDeriveFlag: args.flags?.has('authorize-derive-sanitized-identity') ?? false,
     ownerToken: args['owner-token'] ?? '',
@@ -286,11 +296,6 @@ export async function cmdDeriveSanitizedDiseaseIdentity(args, repoRoot) {
     sourceEvidenceRefHistoricalMainSha256: args['source-evidence-ref'] ?? '',
     outputDir: args.output ?? '',
     expectedGeneratorCommit: args['expected-generator-commit'] ?? '',
-    expectedRecordCount: args['expected-record-count']
-      ? Number(args['expected-record-count'])
-      : undefined,
-    syntheticTestMode: args.flags?.has('synthetic-test-mode') ?? false,
-    generatorSourceCommit: args['generator-source-commit'],
     minimumFreeBytes: args['min-free-bytes'] ? Number(args['min-free-bytes']) : undefined,
   });
   console.log(
