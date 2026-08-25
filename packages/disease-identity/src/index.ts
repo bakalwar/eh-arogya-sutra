@@ -24,3 +24,4 @@ export * from './atomicBundleWriter.js';
 export * from './verifyFullBundle.js';
 export * from './compareFullBuilds.js';
 export * from './preflightFullCorpus.js';
+export * from './streamMappedArray.js';

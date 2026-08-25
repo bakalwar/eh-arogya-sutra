@@ -1,9 +1,11 @@
+import { createReadStream } from 'node:fs';
+import readline from 'node:readline';
 import path from 'node:path';
 import {
+  assertFileIdentityUnchanged,
   assertFullCorpusBuildAuthorized,
   buildFullCorpusArtifacts,
   compareFullBuilds,
-  dedupeMappedRows,
   preflightFullCorpus,
   validateBridgeBatch,
   verifyFullBundle,
@@ -14,9 +16,11 @@ import {
   PINNED_INVENTORY_SHA256,
   PINNED_LEGACY_DB_SHA256,
   PINNED_MAPPED_JSON_SHA256,
+  EXPECTED_INVENTORY_ROW_COUNT,
+  EXPECTED_MAPPED_JSON_ROW_COUNT,
 } from '../../../packages/disease-identity/dist/index.js';
 import { collectBridgeRows } from './streamBridgeJsonl.mjs';
-import { collectMappedJsonRows } from './streamMappedJson.mjs';
+import { streamDedupeMappedJsonFile } from './streamMappedJson.mjs';
 import { readLegacyDiseaseRows } from './readLegacyDb.mjs';
 
 export async function cmdPreflightFullCorpus(args, repoRoot) {
@@ -29,7 +33,20 @@ export async function cmdPreflightFullCorpus(args, repoRoot) {
     inventoryPath: args.inventory ?? null,
     minimumFreeBytes: args['min-free-bytes'] ? Number(args['min-free-bytes']) : undefined,
   });
-  console.log(JSON.stringify({ ok: true, ...result }, null, 2));
+  console.log(
+    JSON.stringify(
+      {
+        ok: true,
+        legacyDbSha256: result.legacyDbSha256,
+        mappedJsonSha256: result.mappedJsonSha256,
+        bridgeSha256: result.bridgeSha256,
+        inventorySha256: result.inventorySha256,
+        outputPathLogical: path.basename(result.outputPath),
+      },
+      null,
+      2,
+    ),
+  );
 }
 
 export async function cmdBuildFullCorpus(args, repoRoot) {
@@ -45,7 +62,7 @@ export async function cmdBuildFullCorpus(args, repoRoot) {
     outputPath: args.output ?? '',
   });
 
-  await preflightFullCorpus({
+  const preflight = await preflightFullCorpus({
     repoRoot,
     legacyDbPath: args['legacy-db'],
     mappedJsonPath: args['mapped-json'],
@@ -55,10 +72,10 @@ export async function cmdBuildFullCorpus(args, repoRoot) {
   });
 
   const dbRows = readLegacyDiseaseRows(args['legacy-db']);
-  const mappedRows = await collectMappedJsonRows(args['mapped-json']);
-  const mappedEntries = dedupeMappedRows(mappedRows);
+  const dbIdSet = new Set(dbRows.map((row) => row.id));
+  const mappedEntries = await streamDedupeMappedJsonFile(args['mapped-json']);
   const bridgeRows = await collectBridgeRows(args.bridge);
-  validateBridgeBatch(bridgeRows);
+  validateBridgeBatch(bridgeRows, { dbIdSet });
 
   const artifacts = buildFullCorpusArtifacts({
     dbRows,
@@ -73,6 +90,14 @@ export async function cmdBuildFullCorpus(args, repoRoot) {
     inventoryVerified: Boolean(args.inventory),
     inventorySha256: args.inventory ? PINNED_INVENTORY_SHA256 : null,
   });
+
+  // Detect input replacement during processing before promotion.
+  await assertFileIdentityUnchanged(args['legacy-db'], preflight.inputIdentities.legacyDb);
+  await assertFileIdentityUnchanged(args['mapped-json'], preflight.inputIdentities.mappedJson);
+  await assertFileIdentityUnchanged(args.bridge, preflight.inputIdentities.bridge);
+  if (args.inventory && preflight.inputIdentities.inventory) {
+    await assertFileIdentityUnchanged(args.inventory, preflight.inputIdentities.inventory);
+  }
 
   const result = await writeAtomicBundle({
     destinationDir: path.resolve(args.output),
@@ -95,14 +120,36 @@ export async function cmdCompareFullBuilds(args) {
 export async function cmdVerifyInventory(args) {
   const { assertFileSha256 } = await import('../../../packages/disease-identity/dist/fileHash.js');
   await assertFileSha256(args.inventory, PINNED_INVENTORY_SHA256);
-  let lineCount = 0;
-  const mappedRows = await collectMappedJsonRows(args['mapped-json']);
-  const fs = await import('node:fs/promises');
-  const inventoryLines = (await fs.readFile(args.inventory, 'utf8'))
-    .split('\n')
-    .filter((line) => line.trim().length > 0);
-  lineCount = inventoryLines.length;
-  if (lineCount !== mappedRows.length) {
+  let inventoryRows = 0;
+  const rl = readline.createInterface({
+    input: createReadStream(args.inventory, { encoding: 'utf8' }),
+    crlfDelay: Infinity,
+  });
+  for await (const line of rl) {
+    if (line.trim().length === 0) {
+      continue;
+    }
+    inventoryRows += 1;
+    if (inventoryRows > EXPECTED_INVENTORY_ROW_COUNT) {
+      throw new DiseaseIdentityError(
+        'MALFORMED_INPUT',
+        `Inventory exceeds expected ${EXPECTED_INVENTORY_ROW_COUNT} rows`,
+      );
+    }
+  }
+  if (inventoryRows !== EXPECTED_INVENTORY_ROW_COUNT) {
+    throw new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      `Inventory row count mismatch: ${inventoryRows}`,
+    );
+  }
+  // Stream-count mapped rows without retaining the full array.
+  let mappedRows = 0;
+  const { streamMappedJsonArrayObjects } = await import('./streamMappedJson.mjs');
+  for await (const _row of streamMappedJsonArrayObjects(args['mapped-json'])) {
+    mappedRows += 1;
+  }
+  if (mappedRows !== EXPECTED_MAPPED_JSON_ROW_COUNT || mappedRows !== inventoryRows) {
     throw new DiseaseIdentityError(
       'MALFORMED_INPUT',
       'Inventory row count does not reconcile with mapped.json',
@@ -113,8 +160,8 @@ export async function cmdVerifyInventory(args) {
       {
         ok: true,
         inventorySha256: PINNED_INVENTORY_SHA256,
-        inventoryRows: lineCount,
-        mappedJsonRows: mappedRows.length,
+        inventoryRows,
+        mappedJsonRows: mappedRows,
       },
       null,
       2,

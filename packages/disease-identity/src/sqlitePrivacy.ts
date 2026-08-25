@@ -1,3 +1,4 @@
+import { pathToFileURL } from 'node:url';
 import { DiseaseIdentityError } from './errors.js';
 import { EXPECTED_LEGACY_DB_DISEASE_COUNT } from './fullCorpusConstants.js';
 
@@ -35,6 +36,23 @@ export const FORBIDDEN_DISEASES_COLUMNS = [
   'system_key',
 ] as const;
 
+/**
+ * Pinned-byte open strategy: SQLite URI with mode=ro&immutable=1.
+ * Immutable mode ignores WAL/SHM sidecars so rows come from the pinned main DB file bytes.
+ * Callers must still SHA-256 the main DB file before open.
+ */
+export function buildPinnedByteSqliteUri(dbPath: string): string {
+  // better-sqlite3 on Windows is sensitive to file:// encoding; use SQLite's file: form.
+  const absolute = pathToFileURL(dbPath).pathname;
+  // pathname is like /C:/Users/... (POSIX-style); decode %20 for SQLite URI consumer.
+  const decoded = decodeURIComponent(absolute);
+  const normalized =
+    decoded.startsWith('/') && /^\/[A-Za-z]:\//.test(decoded)
+      ? decoded.slice(1)
+      : decoded.replace(/^\//, '');
+  return `file:${normalized.replace(/\\/g, '/')}?mode=ro&immutable=1`;
+}
+
 export function assertSqlMatchesDiseaseIdentityAllowlist(sql: string): void {
   const normalized = sql.replace(/\s+/g, ' ').trim().toLowerCase();
   const allowed = ALLOWED_DISEASE_IDENTITY_SQL.replace(/\s+/g, ' ').trim().toLowerCase();
@@ -52,7 +70,7 @@ export type LegacyDbRow = {
 };
 
 export function validateLegacyDbRow(row: LegacyDbRow, seenIds: Set<number>): void {
-  if (!Number.isInteger(row.id) || row.id <= 0) {
+  if (typeof row.id !== 'number' || !Number.isSafeInteger(row.id) || row.id <= 0) {
     throw new DiseaseIdentityError('MALFORMED_INPUT', 'Disease id must be a positive safe integer');
   }
   if (seenIds.has(row.id)) {
@@ -82,6 +100,11 @@ export function assertDiseasesSchema(columns: readonly string[]): void {
       throw new DiseaseIdentityError('MALFORMED_INPUT', `Missing required diseases column ${col}`);
     }
   }
+  for (const col of FORBIDDEN_DISEASES_COLUMNS) {
+    if (columns.includes(col) && col === 'polarity') {
+      throw new DiseaseIdentityError('MALFORMED_INPUT', 'polarity column must be absent');
+    }
+  }
   if (columns.includes('polarity')) {
     throw new DiseaseIdentityError('MALFORMED_INPUT', 'polarity column must be absent');
   }
@@ -97,5 +120,29 @@ export function assertSelectColumnsAllowlisted(selectColumns: readonly string[])
         `SELECT column outside disease-identity allowlist: ${col}`,
       );
     }
+  }
+}
+
+export type SqlitePinnedOpenOptions = {
+  readonly readonly: true;
+  readonly fileMustExist: true;
+  readonly uri: true;
+};
+
+/** Options for better-sqlite3 that guarantee pinned-byte / ignore-WAL semantics. */
+export function pinnedByteSqliteOpenOptions(): SqlitePinnedOpenOptions {
+  return { readonly: true, fileMustExist: true, uri: true };
+}
+
+export function assertPinnedByteConnectionGuarantees(flags: {
+  readonly readonly: boolean;
+  readonly uri: boolean;
+  readonly immutableQueryParam: boolean;
+}): void {
+  if (!flags.readonly || !flags.uri || !flags.immutableQueryParam) {
+    throw new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      'SQLite connection mode cannot guarantee pinned-byte semantics (require readonly URI immutable=1)',
+    );
   }
 }

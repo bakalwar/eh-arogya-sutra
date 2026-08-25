@@ -3,6 +3,11 @@ import { nfcNormalize } from './canonicalJson.js';
 import { normalizeMappedIdentity, resolveCanonicalNamespace } from './normalize.js';
 import type { NormalizationResult } from './types.js';
 
+export type BridgeNamespaceEvidence = {
+  readonly sourceLabel: string;
+  readonly mappedCodeRaw: string;
+};
+
 export type DbNamespaceResolution =
   | {
       readonly kind: 'RESOLVED';
@@ -38,31 +43,66 @@ function inferNamespaceFromDbCode(rawCode: string): CanonicalNamespace | null {
   return null;
 }
 
+/**
+ * Resolve namespace for a DB disease row.
+ * When any bridge evidence links the row (including ambiguous), use bridge namespaces
+ * without selecting a primary disease. Conflicting namespaces → UNRESOLVED + flag.
+ * DB-only rows may use approved deterministic prefix/pattern rules only — never default ICD10.
+ */
 export function resolveDbRowNamespace(input: {
   readonly icd10_code: string | null;
-  readonly bridgeSourceLabel: string | null;
-  readonly bridgeMappedCodeRaw: string | null;
-  readonly bridgeNamespaces: readonly CanonicalNamespace[];
+  /** @deprecated Prefer bridgeEvidenceRows — retained for back-compat test helpers. */
+  readonly bridgeSourceLabel?: string | null;
+  readonly bridgeMappedCodeRaw?: string | null;
+  readonly bridgeNamespaces?: readonly CanonicalNamespace[];
+  readonly bridgeEvidenceRows?: readonly BridgeNamespaceEvidence[];
 }): DbNamespaceResolution {
-  if (input.bridgeSourceLabel && input.bridgeMappedCodeRaw) {
-    const bridgeNorm = normalizeMappedIdentity(input.bridgeSourceLabel, input.bridgeMappedCodeRaw);
-    if (bridgeNorm.ok) {
-      const uniqueBridgeNamespaces = [...new Set(input.bridgeNamespaces)];
-      if (
-        uniqueBridgeNamespaces.length > 1 &&
-        !uniqueBridgeNamespaces.every((ns) => ns === bridgeNorm.sourceNamespace)
-      ) {
-        return {
-          kind: 'UNRESOLVED',
-          sourceCodeRaw: input.icd10_code,
-          reason: 'NAMESPACE_CONFLICT',
-        };
+  const evidenceRows: readonly BridgeNamespaceEvidence[] =
+    input.bridgeEvidenceRows ??
+    (input.bridgeSourceLabel && input.bridgeMappedCodeRaw
+      ? [{ sourceLabel: input.bridgeSourceLabel, mappedCodeRaw: input.bridgeMappedCodeRaw }]
+      : []);
+
+  if (evidenceRows.length > 0) {
+    const normalizedEvidence: Array<{
+      sourceLabel: string;
+      mappedCodeRaw: string;
+      normalization: NormalizationResult & { ok: true };
+    }> = [];
+    const namespaces = new Set<CanonicalNamespace>();
+
+    for (const row of evidenceRows) {
+      const bridgeNorm = normalizeMappedIdentity(row.sourceLabel, row.mappedCodeRaw);
+      if (bridgeNorm.ok) {
+        namespaces.add(bridgeNorm.sourceNamespace);
+        normalizedEvidence.push({
+          sourceLabel: row.sourceLabel,
+          mappedCodeRaw: row.mappedCodeRaw,
+          normalization: bridgeNorm,
+        });
       }
+    }
+
+    // Also consider explicitly supplied bridgeNamespaces (e.g. from caller aggregation).
+    for (const ns of input.bridgeNamespaces ?? []) {
+      namespaces.add(ns);
+    }
+
+    if (namespaces.size > 1) {
+      return {
+        kind: 'UNRESOLVED',
+        sourceCodeRaw: null,
+        reason: 'NAMESPACE_CONFLICT',
+      };
+    }
+
+    if (normalizedEvidence.length > 0 && namespaces.size === 1) {
+      const chosen = normalizedEvidence[0]!;
       return {
         kind: 'RESOLVED',
-        sourceLabel: input.bridgeSourceLabel,
-        sourceCodeRaw: input.bridgeMappedCodeRaw,
-        normalization: bridgeNorm,
+        sourceLabel: chosen.sourceLabel,
+        sourceCodeRaw: chosen.mappedCodeRaw,
+        normalization: chosen.normalization,
         reason: 'BRIDGE_EVIDENCED',
       };
     }

@@ -34,40 +34,51 @@ export function parseMappedJsonRow(
   return { source, code };
 }
 
-export function dedupeMappedRows(
-  rows: readonly MappedJsonRow[],
+type DedupeBucketStore = Map<string, { label: string; variants: Map<string, ProvenanceVariant> }>;
+
+export type MappedDedupeBuckets = {
+  readonly store: DedupeBucketStore;
+  add(row: MappedJsonRow): void;
+};
+
+export function createMappedDedupeBuckets(): MappedDedupeBuckets {
+  const store: DedupeBucketStore = new Map();
+  return {
+    store,
+    add(row: MappedJsonRow): void {
+      const key = mappedRawKey(row.source, row.code);
+      const bucket = store.get(key) ?? { label: row.source, variants: new Map() };
+      bucket.variants.set(`${row.source}\u0000${row.code}`, {
+        mappedSourceLabel: row.source,
+        mappedCodeRaw: row.code,
+      });
+      store.set(key, bucket);
+    },
+  };
+}
+
+export function dedupeMappedRowsFromBuckets(
+  buckets: MappedDedupeBuckets,
+  rawRowCount: number,
   options?: { expectedRawRows?: number; expectedUniqueKeys?: number },
 ): MappedDedupeEntry[] {
   const expectedRawRows = options?.expectedRawRows ?? EXPECTED_MAPPED_JSON_ROW_COUNT;
   const expectedUniqueKeys = options?.expectedUniqueKeys ?? EXPECTED_MAPPED_UNIQUE_CODE_COUNT;
-  if (rows.length !== expectedRawRows) {
+  if (rawRowCount !== expectedRawRows) {
     throw new DiseaseIdentityError(
       'MALFORMED_INPUT',
-      `Expected ${expectedRawRows} mapped.json rows, observed ${rows.length}`,
+      `Expected ${expectedRawRows} mapped.json rows, observed ${rawRowCount}`,
     );
   }
-
-  const buckets = new Map<string, { label: string; variants: Map<string, ProvenanceVariant> }>();
-
-  for (const row of rows) {
-    const key = mappedRawKey(row.source, row.code);
-    const bucket = buckets.get(key) ?? { label: row.source, variants: new Map() };
-    bucket.variants.set(`${row.source}\u0000${row.code}`, {
-      mappedSourceLabel: row.source,
-      mappedCodeRaw: row.code,
-    });
-    buckets.set(key, bucket);
-  }
-
-  if (buckets.size !== expectedUniqueKeys) {
+  if (buckets.store.size !== expectedUniqueKeys) {
     throw new DiseaseIdentityError(
       'MALFORMED_INPUT',
-      `Expected ${expectedUniqueKeys} unique mapped keys, observed ${buckets.size}`,
+      `Expected ${expectedUniqueKeys} unique mapped keys, observed ${buckets.store.size}`,
     );
   }
 
   const entries: MappedDedupeEntry[] = [];
-  for (const [dedupeKey, bucket] of buckets) {
+  for (const [dedupeKey, bucket] of buckets.store) {
     const variants = [...bucket.variants.values()].sort((a, b) => {
       const labelCmp = a.mappedSourceLabel.localeCompare(b.mappedSourceLabel);
       return labelCmp !== 0 ? labelCmp : a.mappedCodeRaw.localeCompare(b.mappedCodeRaw);
@@ -83,4 +94,16 @@ export function dedupeMappedRows(
 
   entries.sort((a, b) => a.dedupeKey.localeCompare(b.dedupeKey));
   return entries;
+}
+
+/** Prefer streamDedupeMappedJsonFile for large inputs; this retains the input array. */
+export function dedupeMappedRows(
+  rows: readonly MappedJsonRow[],
+  options?: { expectedRawRows?: number; expectedUniqueKeys?: number },
+): MappedDedupeEntry[] {
+  const buckets = createMappedDedupeBuckets();
+  for (const row of rows) {
+    buckets.add(row);
+  }
+  return dedupeMappedRowsFromBuckets(buckets, rows.length, options);
 }

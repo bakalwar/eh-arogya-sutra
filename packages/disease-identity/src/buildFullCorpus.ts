@@ -22,7 +22,7 @@ import {
   mergeStructuralFlags,
   reviewRequiredUnclassifiedDefault,
 } from './quarantine.js';
-import type { ParsedBridgeRow } from './bridgeIngest.js';
+import { reconcileBridgeMappedKeys, type ParsedBridgeRow } from './bridgeIngest.js';
 import type { MappedDedupeEntry } from './mappedIngest.js';
 import { mappedRawKey, resolveDbRowNamespace } from './namespaceResolution.js';
 import type { LegacyDbRow } from './sqlitePrivacy.js';
@@ -31,11 +31,14 @@ import {
   FULL_CORPUS_GENERATOR_VERSION,
   PRIVATE_ENGINEERING_LICENSING_CLASSIFICATION,
   RELATIONSHIP_TYPE_EXACT_UNIQUE,
+  EXPECTED_RELATIONSHIP_EDGE_COUNT,
+  DOCUMENTED_PEAK_MEMORY_BUDGET_BYTES,
 } from './fullCorpusConstants.js';
 import { serializeJsonl, sortRecordsById, reconcileManifestCounts } from './manifest.js';
 import { validateAndIndexRecordBatch } from './batchValidate.js';
-import { sha256HexLower } from './canonicalJson.js';
+import { canonicalJsonString, sha256HexLower } from './canonicalJson.js';
 import type { DiseaseIdentityRecord, MappedIdentityIndexRecord } from './types.js';
+import { DiseaseIdentityError } from './errors.js';
 
 export type RelationshipEdgeRecord = {
   readonly relationshipId: string;
@@ -206,13 +209,29 @@ export function buildFullCorpusArtifacts(input: {
   readonly inventoryVerified: boolean;
   readonly inventorySha256?: string | null;
   readonly skipManifestReconciliation?: boolean;
+  readonly skipBridgeMappedKeyReconciliation?: boolean;
+  readonly expectedRelationshipEdges?: number;
 }): FullCorpusBuildArtifacts {
+  if (!input.skipBridgeMappedKeyReconciliation) {
+    reconcileBridgeMappedKeys({
+      bridgeRows: input.bridgeRows,
+      mappedDedupeKeys: input.mappedEntries.map((entry) => entry.dedupeKey),
+    });
+  }
+
   const bridgeByKey = new Map(input.bridgeRows.map((row) => [row.dedupeKey, row]));
   const bridgeByDbId = new Map<number, ParsedBridgeRow[]>();
   const referencedDbIds = new Set<number>();
+  const dbIdSet = new Set(input.dbRows.map((row) => row.id));
 
   for (const row of input.bridgeRows) {
     for (const id of row.candidateLegacyDbIds) {
+      if (!dbIdSet.has(id)) {
+        throw new DiseaseIdentityError(
+          'MALFORMED_INPUT',
+          `Cannot generate disease identity for missing DB id ${id}`,
+        );
+      }
       referencedDbIds.add(id);
       const bucket = bridgeByDbId.get(id) ?? [];
       bucket.push(row);
@@ -220,17 +239,22 @@ export function buildFullCorpusArtifacts(input: {
     }
   }
 
-  const mappedRecords = input.mappedEntries.map((entry) =>
-    buildMappedRecord(entry, bridgeByKey.get(entry.dedupeKey)),
-  );
+  const mappedRecords = input.mappedEntries.map((entry) => {
+    const bridge = bridgeByKey.get(entry.dedupeKey);
+    if (!bridge && !input.skipBridgeMappedKeyReconciliation) {
+      throw new DiseaseIdentityError(
+        'MALFORMED_INPUT',
+        'Mapped entry missing bridge row after key reconciliation',
+      );
+    }
+    return buildMappedRecord(entry, bridge);
+  });
 
   const mappedIdByKey = new Map<string, string>();
   for (const record of mappedRecords) {
+    const key = mappedRawKey(record.mappedSourceLabel, record.mappedCodeRaw);
     if (record.ehas2MappedIndexId) {
-      mappedIdByKey.set(
-        mappedRawKey(record.mappedSourceLabel, record.mappedCodeRaw),
-        record.ehas2MappedIndexId,
-      );
+      mappedIdByKey.set(key, record.ehas2MappedIndexId);
     }
   }
 
@@ -244,9 +268,13 @@ export function buildFullCorpusArtifacts(input: {
       if (bridge.disposition === 'EXACT_UNIQUE_MATCH') {
         bridgeDisposition = bridge.disposition;
         const mappedId = mappedIdByKey.get(bridge.dedupeKey);
-        if (mappedId) {
-          mappedIndexRefs.push(mappedId);
+        if (!mappedId) {
+          throw new DiseaseIdentityError(
+            'MALFORMED_INPUT',
+            'Missing mapped index id for EXACT_UNIQUE bridge row',
+          );
         }
+        mappedIndexRefs.push(mappedId);
       } else if (bridgeDisposition === null) {
         bridgeDisposition = bridge.disposition;
       }
@@ -259,8 +287,6 @@ export function buildFullCorpusArtifacts(input: {
       .filter((r): r is Extract<typeof r, { ok: true }> => r.ok)
       .map((r) => r.sourceNamespace);
 
-    const primaryBridge = bridgeRowsForId.find((b) => b.disposition === 'EXACT_UNIQUE_MATCH');
-
     diseaseRecords.push(
       buildDiseaseRecord({
         row,
@@ -270,8 +296,10 @@ export function buildFullCorpusArtifacts(input: {
         bridgeDisposition,
         namespaceResolution: resolveDbRowNamespace({
           icd10_code: row.icd10_code,
-          bridgeSourceLabel: primaryBridge?.mappedSourceLabel ?? null,
-          bridgeMappedCodeRaw: primaryBridge?.mappedCodeRaw ?? null,
+          bridgeEvidenceRows: bridgeRowsForId.map((b) => ({
+            sourceLabel: b.mappedSourceLabel,
+            mappedCodeRaw: b.mappedCodeRaw,
+          })),
           bridgeNamespaces,
         }),
       }),
@@ -287,7 +315,10 @@ export function buildFullCorpusArtifacts(input: {
     }
     const mappedId = mappedIdByKey.get(bridge.dedupeKey);
     if (!mappedId) {
-      continue;
+      throw new DiseaseIdentityError(
+        'MALFORMED_INPUT',
+        'Missing mapped ID for EXACT_UNIQUE relationship edge',
+      );
     }
     const diseaseId = generateDiseaseCanonicalId(bridge.candidateLegacyDbIds[0]!);
     relationshipEdges.push({
@@ -299,6 +330,29 @@ export function buildFullCorpusArtifacts(input: {
     });
   }
   relationshipEdges.sort((a, b) => a.relationshipId.localeCompare(b.relationshipId));
+
+  const expectedEdges =
+    input.expectedRelationshipEdges ??
+    (input.skipManifestReconciliation
+      ? relationshipEdges.length
+      : EXPECTED_RELATIONSHIP_EDGE_COUNT);
+  if (!input.skipManifestReconciliation && relationshipEdges.length !== expectedEdges) {
+    throw new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      `Expected ${expectedEdges} relationship edges, observed ${relationshipEdges.length}`,
+    );
+  }
+  if (input.skipManifestReconciliation) {
+    const exactUnique = input.bridgeRows.filter(
+      (r) => r.disposition === 'EXACT_UNIQUE_MATCH',
+    ).length;
+    if (relationshipEdges.length !== exactUnique) {
+      throw new DiseaseIdentityError(
+        'MALFORMED_INPUT',
+        'Relationship edge count must equal EXACT_UNIQUE bridge rows',
+      );
+    }
+  }
 
   const unresolvedQueue: UnresolvedQueueRecord[] = [];
   for (const bridge of input.bridgeRows) {
@@ -334,8 +388,30 @@ export function buildFullCorpusArtifacts(input: {
       })
       .map((record) => record as unknown as Record<string, unknown>),
   );
-  const relationshipJsonl = `${relationshipEdges.map((edge) => JSON.stringify(edge)).join('\n')}\n`;
-  const unresolvedJsonl = `${unresolvedQueue.map((entry) => JSON.stringify(entry)).join('\n')}\n`;
+  const relationshipJsonl = serializeJsonl(
+    relationshipEdges.map((edge) => edge as unknown as Record<string, unknown>),
+  );
+  const unresolvedJsonl = serializeJsonl(
+    unresolvedQueue.map((entry) => entry as unknown as Record<string, unknown>),
+  );
+
+  const buildEvidence = {
+    authorityClassification: AUTHORITY_CLASSIFICATION,
+    inventoryVerified: input.inventoryVerified,
+    inventorySha256: input.inventorySha256 ?? null,
+    artifactLogicalNames: [
+      'disease-identity-ledger.jsonl',
+      'mapped-index.jsonl',
+      'relationship-edges.jsonl',
+      'unresolved-queue.jsonl',
+    ],
+    generatorVersion: FULL_CORPUS_GENERATOR_VERSION,
+    documentedPeakMemoryBudgetBytes: DOCUMENTED_PEAK_MEMORY_BUDGET_BYTES,
+    processingModel: 'BOUNDED_STREAM_DEDUPE_ITERATE_SQLITE_JSONL',
+  };
+  const buildEvidenceJson = `${canonicalJsonString(buildEvidence)}\n`;
+  const buildEvidenceSha256 = sha256HexLower(buildEvidenceJson);
+  const buildEvidenceBytes = Buffer.byteLength(buildEvidenceJson, 'utf8');
 
   const artifactSpecs = [
     {
@@ -350,6 +426,11 @@ export function buildFullCorpusArtifacts(input: {
       rowCount: relationshipEdges.length,
     },
     { name: 'unresolved-queue.jsonl', content: unresolvedJsonl, rowCount: unresolvedQueue.length },
+    {
+      name: 'p2c-build-evidence.json',
+      content: buildEvidenceJson,
+      rowCount: 0,
+    },
   ];
 
   const artifacts = artifactSpecs.map((spec) => ({
@@ -359,6 +440,7 @@ export function buildFullCorpusArtifacts(input: {
     bytes: Buffer.byteLength(spec.content, 'utf8'),
   }));
 
+  // Manifest excludes itself from member hashing (no circular self-hash).
   const aggregateFingerprint = sha256HexLower(
     artifacts.map((artifact) => `${artifact.name}:${artifact.sha256}`).join('|'),
   );
@@ -385,22 +467,26 @@ export function buildFullCorpusArtifacts(input: {
     reconcileManifestCounts(manifest as never);
   }
 
-  const buildEvidence = {
-    authorityClassification: AUTHORITY_CLASSIFICATION,
-    inventoryVerified: input.inventoryVerified,
-    inventorySha256: input.inventorySha256 ?? null,
-    artifactLogicalNames: artifactSpecs.map((spec) => spec.name),
-    aggregateFingerprint,
-  };
+  const manifestJson = `${canonicalJsonString(manifest)}\n`;
 
   const serialized: Record<string, string> = {
     'disease-identity-ledger.jsonl': diseaseJsonl,
     'mapped-index.jsonl': mappedJsonl,
     'relationship-edges.jsonl': relationshipJsonl,
     'unresolved-queue.jsonl': unresolvedJsonl,
-    'bundle-manifest.json': `${JSON.stringify(manifest, null, 2)}\n`,
-    'p2c-build-evidence.json': `${JSON.stringify(buildEvidence, null, 2)}\n`,
+    'bundle-manifest.json': manifestJson,
+    'p2c-build-evidence.json': buildEvidenceJson,
   };
+
+  // Sanity: build evidence hash matches artifact entry
+  const evidenceArtifact = artifacts.find((a) => a.name === 'p2c-build-evidence.json');
+  if (
+    !evidenceArtifact ||
+    evidenceArtifact.sha256 !== buildEvidenceSha256 ||
+    evidenceArtifact.bytes !== buildEvidenceBytes
+  ) {
+    throw new DiseaseIdentityError('MALFORMED_INPUT', 'Build evidence hash membership mismatch');
+  }
 
   return {
     diseaseRecords,

@@ -22,8 +22,16 @@ export const EXPECTED_INVENTORY_ROW_COUNT = 102_320 as const;
 
 export const EXPECTED_RELATIONSHIP_EDGE_COUNT = 33_070 as const;
 export const EXPECTED_UNRESOLVED_QUEUE_COUNT = 17_474 as const;
+/** Unique DB disease IDs referenced by at least one bridge candidate. */
+export const EXPECTED_REFERENCED_UNIQUE_DB_IDS = 98_181 as const;
 
-export const FULL_CORPUS_GENERATOR_VERSION = '0.2.0-p2c-full-corpus-tooling' as const;
+export const FULL_CORPUS_GENERATOR_VERSION = '0.2.1-p2c-full-corpus-tooling-harden' as const;
+
+/** Recommended free-space floor for a future authorized full-corpus build (bytes). */
+export const RECOMMENDED_MINIMUM_FREE_BYTES = 1_500_000_000;
+
+/** Documented peak-memory budget for tooling (engineering estimate; not a runtime guarantee). */
+export const DOCUMENTED_PEAK_MEMORY_BUDGET_BYTES = 512 * 1024 * 1024;
 
 export const PRIVATE_ENGINEERING_LICENSING_CLASSIFICATION =
   'PRIVATE_ENGINEERING_IDENTITY_PENDING_LEGAL_CLEARANCE' as const;
