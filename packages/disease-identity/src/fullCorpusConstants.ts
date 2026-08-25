@@ -30,8 +30,17 @@ export const FULL_CORPUS_GENERATOR_VERSION = '0.2.1-p2c-full-corpus-tooling-hard
 /** Recommended free-space floor for a future authorized full-corpus build (bytes). */
 export const RECOMMENDED_MINIMUM_FREE_BYTES = 1_500_000_000;
 
-/** Documented peak-memory budget for tooling (engineering estimate; not a runtime guarantee). */
-export const DOCUMENTED_PEAK_MEMORY_BUDGET_BYTES = 512 * 1024 * 1024;
+/**
+ * Estimated peak-memory budget for tooling (engineering estimate only).
+ * NOT enforced at runtime — see MAX_STAGING_MEMBER_BYTES for the fail-closed size check.
+ */
+export const ESTIMATED_PEAK_MEMORY_BUDGET_BYTES = 512 * 1024 * 1024;
+
+/** @deprecated Use ESTIMATED_PEAK_MEMORY_BUDGET_BYTES — not a runtime enforcement. */
+export const DOCUMENTED_PEAK_MEMORY_BUDGET_BYTES = ESTIMATED_PEAK_MEMORY_BUDGET_BYTES;
+
+/** Fail-closed: a single staged bundle member must not exceed this size. */
+export const MAX_STAGING_MEMBER_BYTES = 512 * 1024 * 1024;
 
 export const PRIVATE_ENGINEERING_LICENSING_CLASSIFICATION =
   'PRIVATE_ENGINEERING_IDENTITY_PENDING_LEGAL_CLEARANCE' as const;
@@ -48,3 +57,9 @@ export const BUNDLE_ARTIFACT_NAMES = [
 export type BundleArtifactName = (typeof BUNDLE_ARTIFACT_NAMES)[number];
 
 export const RELATIONSHIP_TYPE_EXACT_UNIQUE = 'EXACT_UNIQUE_MATCH' as const;
+
+/** Placeholder filled by CLI via `git rev-parse HEAD` into build evidence only. */
+export const SOURCE_COMMIT_UNSET = 'SOURCE_COMMIT_UNSET' as const;
+
+/** Fixed commit marker for synthetic unit tests (not a real git SHA). */
+export const SYNTHETIC_TEST_COMMIT = 'SYNTHETIC_TEST_COMMIT' as const;

@@ -33,6 +33,14 @@ export type ParsedBridgeRow = {
   readonly normalizedIdentityKey: string | null;
 };
 
+/** Fixed production disposition counts — not overridable. */
+export const PRODUCTION_BRIDGE_DISPOSITION_COUNTS = {
+  EXACT_UNIQUE_MATCH: 33_070,
+  EXACT_MULTIPLE_MATCH: 17_181,
+  OWNER_REVIEW_REQUIRED: 257,
+  NO_MATCH: 36,
+} as const;
+
 function parseCandidateIds(raw: unknown): number[] {
   let ids: number[];
   if (Array.isArray(raw)) {
@@ -74,7 +82,6 @@ function parseCandidateIds(raw: unknown): number[] {
   }
 
   ids.sort((a, b) => a - b);
-  // Reject duplicates and enforce strictly ascending after sort.
   return assertCandidateLegacyDbIds(ids, 'candidateLegacyDbIds');
 }
 
@@ -145,12 +152,12 @@ export function parseBridgeJsonlRow(
   };
 }
 
-export type ValidateBridgeBatchOptions = {
-  readonly expectedRowCount?: number;
-  readonly dbIdSet?: ReadonlySet<number>;
-  readonly expectedReferencedDbIds?: number;
-  readonly expectedDbOnlyIds?: number;
-  readonly expectedDispositionCounts?: {
+export type ValidateBridgeBatchSyntheticOptions = {
+  readonly expectedRowCount: number;
+  readonly dbIdSet: ReadonlySet<number>;
+  readonly expectedReferencedDbIds: number;
+  readonly expectedDbOnlyIds: number;
+  readonly expectedDispositionCounts: {
     readonly EXACT_UNIQUE_MATCH: number;
     readonly EXACT_MULTIPLE_MATCH: number;
     readonly OWNER_REVIEW_REQUIRED: number;
@@ -158,18 +165,15 @@ export type ValidateBridgeBatchOptions = {
   };
 };
 
-export function validateBridgeBatch(
-  rows: readonly ParsedBridgeRow[],
-  options?: ValidateBridgeBatchOptions,
-): void {
-  const expectedRows = options?.expectedRowCount ?? EXPECTED_BRIDGE_ROW_COUNT;
-  if (rows.length !== expectedRows) {
-    throw new DiseaseIdentityError(
-      'MALFORMED_INPUT',
-      `Expected ${expectedRows} bridge rows, observed ${rows.length}`,
-    );
-  }
-
+function tallyBridgeBatch(rows: readonly ParsedBridgeRow[]): {
+  dispositionCounts: {
+    EXACT_UNIQUE_MATCH: number;
+    EXACT_MULTIPLE_MATCH: number;
+    OWNER_REVIEW_REQUIRED: number;
+    NO_MATCH: number;
+  };
+  referencedDbIds: Set<number>;
+} {
   const dispositionCounts = {
     EXACT_UNIQUE_MATCH: 0,
     EXACT_MULTIPLE_MATCH: 0,
@@ -191,83 +195,219 @@ export function validateBridgeBatch(
     }
   }
 
-  const expectedDispositions =
-    options?.expectedDispositionCounts ??
-    (expectedRows === EXPECTED_BRIDGE_ROW_COUNT
-      ? {
-          EXACT_UNIQUE_MATCH: 33_070,
-          EXACT_MULTIPLE_MATCH: 17_181,
-          OWNER_REVIEW_REQUIRED: 257,
-          NO_MATCH: 36,
-        }
-      : null);
+  return { dispositionCounts, referencedDbIds };
+}
 
-  if (expectedDispositions) {
-    if (dispositionCounts.EXACT_UNIQUE_MATCH !== expectedDispositions.EXACT_UNIQUE_MATCH) {
-      throw new DiseaseIdentityError('MALFORMED_INPUT', 'Bridge EXACT_UNIQUE count mismatch');
-    }
-    if (dispositionCounts.EXACT_MULTIPLE_MATCH !== expectedDispositions.EXACT_MULTIPLE_MATCH) {
-      throw new DiseaseIdentityError('MALFORMED_INPUT', 'Bridge EXACT_MULTIPLE count mismatch');
-    }
-    if (dispositionCounts.OWNER_REVIEW_REQUIRED !== expectedDispositions.OWNER_REVIEW_REQUIRED) {
-      throw new DiseaseIdentityError('MALFORMED_INPUT', 'Bridge OWNER_REVIEW count mismatch');
-    }
-    if (dispositionCounts.NO_MATCH !== expectedDispositions.NO_MATCH) {
-      throw new DiseaseIdentityError('MALFORMED_INPUT', 'Bridge NO_MATCH count mismatch');
-    }
-
-    const unresolved =
-      dispositionCounts.EXACT_MULTIPLE_MATCH +
-      dispositionCounts.OWNER_REVIEW_REQUIRED +
-      dispositionCounts.NO_MATCH;
-    if (
-      expectedRows === EXPECTED_BRIDGE_ROW_COUNT &&
-      unresolved !== EXPECTED_UNRESOLVED_QUEUE_COUNT
-    ) {
-      throw new DiseaseIdentityError('MALFORMED_INPUT', 'Bridge unresolved queue count mismatch');
-    }
+/** Exported for fail-closed production invariant unit tests (not a bypass API). */
+export function assertDispositionCounts(
+  observed: {
+    EXACT_UNIQUE_MATCH: number;
+    EXACT_MULTIPLE_MATCH: number;
+    OWNER_REVIEW_REQUIRED: number;
+    NO_MATCH: number;
+  },
+  expected: {
+    readonly EXACT_UNIQUE_MATCH: number;
+    readonly EXACT_MULTIPLE_MATCH: number;
+    readonly OWNER_REVIEW_REQUIRED: number;
+    readonly NO_MATCH: number;
+  },
+): void {
+  if (observed.EXACT_UNIQUE_MATCH !== expected.EXACT_UNIQUE_MATCH) {
+    throw new DiseaseIdentityError('MALFORMED_INPUT', 'Bridge EXACT_UNIQUE count mismatch');
   }
+  if (observed.EXACT_MULTIPLE_MATCH !== expected.EXACT_MULTIPLE_MATCH) {
+    throw new DiseaseIdentityError('MALFORMED_INPUT', 'Bridge EXACT_MULTIPLE count mismatch');
+  }
+  if (observed.OWNER_REVIEW_REQUIRED !== expected.OWNER_REVIEW_REQUIRED) {
+    throw new DiseaseIdentityError('MALFORMED_INPUT', 'Bridge OWNER_REVIEW count mismatch');
+  }
+  if (observed.NO_MATCH !== expected.NO_MATCH) {
+    throw new DiseaseIdentityError('MALFORMED_INPUT', 'Bridge NO_MATCH count mismatch');
+  }
+}
 
-  if (options?.dbIdSet) {
-    for (const id of referencedDbIds) {
-      if (!options.dbIdSet.has(id)) {
-        throw new DiseaseIdentityError(
-          'MALFORMED_INPUT',
-          `Bridge candidate id ${id} is not present in the disease DB id set`,
-        );
-      }
-    }
+/** Production disposition invariant — no caller overrides. */
+export function assertProductionDispositionCounts(observed: {
+  EXACT_UNIQUE_MATCH: number;
+  EXACT_MULTIPLE_MATCH: number;
+  OWNER_REVIEW_REQUIRED: number;
+  NO_MATCH: number;
+}): void {
+  assertDispositionCounts(observed, PRODUCTION_BRIDGE_DISPOSITION_COUNTS);
+}
 
-    const expectedReferenced =
-      options.expectedReferencedDbIds ??
-      (expectedRows === EXPECTED_BRIDGE_ROW_COUNT ? EXPECTED_REFERENCED_UNIQUE_DB_IDS : undefined);
-    if (expectedReferenced !== undefined && referencedDbIds.size !== expectedReferenced) {
+/** Exported for fail-closed production invariant unit tests (not a bypass API). */
+export function assertDbIdSetCoverage(
+  referencedDbIds: ReadonlySet<number>,
+  dbIdSet: ReadonlySet<number>,
+  expectedReferenced: number,
+  expectedDbOnly: number,
+): void {
+  for (const id of referencedDbIds) {
+    if (!dbIdSet.has(id)) {
       throw new DiseaseIdentityError(
         'MALFORMED_INPUT',
-        `Expected ${expectedReferenced} unique referenced DB ids, observed ${referencedDbIds.size}`,
+        `Bridge candidate id ${id} is not present in the disease DB id set`,
       );
     }
+  }
 
-    const expectedDbOnly =
-      options.expectedDbOnlyIds ??
-      (expectedRows === EXPECTED_BRIDGE_ROW_COUNT
-        ? APPROVED_AGGREGATE_COUNTS.dbOnlyRows
-        : undefined);
-    if (expectedDbOnly !== undefined) {
-      let dbOnly = 0;
-      for (const id of options.dbIdSet) {
-        if (!referencedDbIds.has(id)) {
-          dbOnly += 1;
-        }
-      }
-      if (dbOnly !== expectedDbOnly) {
-        throw new DiseaseIdentityError(
-          'MALFORMED_INPUT',
-          `Expected ${expectedDbOnly} DB-only ids, observed ${dbOnly}`,
-        );
-      }
+  if (referencedDbIds.size !== expectedReferenced) {
+    throw new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      `Expected ${expectedReferenced} unique referenced DB ids, observed ${referencedDbIds.size}`,
+    );
+  }
+
+  let dbOnly = 0;
+  for (const id of dbIdSet) {
+    if (!referencedDbIds.has(id)) {
+      dbOnly += 1;
     }
   }
+  if (dbOnly !== expectedDbOnly) {
+    throw new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      `Expected ${expectedDbOnly} DB-only ids, observed ${dbOnly}`,
+    );
+  }
+}
+
+/** Production referenced/db-only/total invariants — no caller overrides. */
+export function assertProductionDbCoverage(
+  referencedDbIds: ReadonlySet<number>,
+  dbIdSet: ReadonlySet<number>,
+): void {
+  assertDbIdSetCoverage(
+    referencedDbIds,
+    dbIdSet,
+    EXPECTED_REFERENCED_UNIQUE_DB_IDS,
+    APPROVED_AGGREGATE_COUNTS.dbOnlyRows,
+  );
+  if (dbIdSet.size !== APPROVED_AGGREGATE_COUNTS.legacyDbRows) {
+    throw new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      `Expected ${APPROVED_AGGREGATE_COUNTS.legacyDbRows} total DB disease rows, observed ${dbIdSet.size}`,
+    );
+  }
+}
+
+/**
+ * Production bridge validation — mandatory dbIdSet; fixed full-corpus counts; no overrides.
+ */
+export function validateBridgeBatchProduction(
+  rows: readonly ParsedBridgeRow[],
+  dbIdSet: ReadonlySet<number>,
+): void {
+  if (rows.length !== EXPECTED_BRIDGE_ROW_COUNT) {
+    throw new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      `Expected ${EXPECTED_BRIDGE_ROW_COUNT} bridge rows, observed ${rows.length}`,
+    );
+  }
+
+  const { dispositionCounts, referencedDbIds } = tallyBridgeBatch(rows);
+  assertProductionDispositionCounts(dispositionCounts);
+
+  const unresolved =
+    dispositionCounts.EXACT_MULTIPLE_MATCH +
+    dispositionCounts.OWNER_REVIEW_REQUIRED +
+    dispositionCounts.NO_MATCH;
+  if (unresolved !== EXPECTED_UNRESOLVED_QUEUE_COUNT) {
+    throw new DiseaseIdentityError('MALFORMED_INPUT', 'Bridge unresolved queue count mismatch');
+  }
+
+  assertProductionDbCoverage(referencedDbIds, dbIdSet);
+}
+
+/**
+ * Synthetic / test-only bridge validation with injectable expected counts.
+ * Production CLI must never call this.
+ */
+export function validateBridgeBatchSynthetic(
+  rows: readonly ParsedBridgeRow[],
+  options: ValidateBridgeBatchSyntheticOptions,
+): void {
+  if (rows.length !== options.expectedRowCount) {
+    throw new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      `Expected ${options.expectedRowCount} bridge rows, observed ${rows.length}`,
+    );
+  }
+
+  const { dispositionCounts, referencedDbIds } = tallyBridgeBatch(rows);
+  assertDispositionCounts(dispositionCounts, options.expectedDispositionCounts);
+  assertDbIdSetCoverage(
+    referencedDbIds,
+    options.dbIdSet,
+    options.expectedReferencedDbIds,
+    options.expectedDbOnlyIds,
+  );
+}
+
+/**
+ * @deprecated Use validateBridgeBatchSynthetic (tests) or validateBridgeBatchProduction (CLI).
+ * Delegates to synthetic when options include injectable counts; otherwise production when
+ * dbIdSet is provided with full-corpus defaults. Prefer the explicit APIs.
+ */
+export function validateBridgeBatch(
+  rows: readonly ParsedBridgeRow[],
+  options?: {
+    readonly expectedRowCount?: number;
+    readonly dbIdSet?: ReadonlySet<number>;
+    readonly expectedReferencedDbIds?: number;
+    readonly expectedDbOnlyIds?: number;
+    readonly expectedDispositionCounts?: {
+      readonly EXACT_UNIQUE_MATCH: number;
+      readonly EXACT_MULTIPLE_MATCH: number;
+      readonly OWNER_REVIEW_REQUIRED: number;
+      readonly NO_MATCH: number;
+    };
+  },
+): void {
+  // If any injectable override is present, require full synthetic options (tests).
+  const hasSyntheticOverrides =
+    options?.expectedRowCount !== undefined ||
+    options?.expectedReferencedDbIds !== undefined ||
+    options?.expectedDbOnlyIds !== undefined ||
+    options?.expectedDispositionCounts !== undefined;
+
+  if (hasSyntheticOverrides) {
+    if (!options?.dbIdSet) {
+      throw new DiseaseIdentityError(
+        'MALFORMED_INPUT',
+        'validateBridgeBatchSynthetic requires dbIdSet',
+      );
+    }
+    if (
+      options.expectedRowCount === undefined ||
+      options.expectedReferencedDbIds === undefined ||
+      options.expectedDbOnlyIds === undefined ||
+      options.expectedDispositionCounts === undefined
+    ) {
+      throw new DiseaseIdentityError(
+        'MALFORMED_INPUT',
+        'Synthetic bridge validation requires all injectable expected counts',
+      );
+    }
+    validateBridgeBatchSynthetic(rows, {
+      expectedRowCount: options.expectedRowCount,
+      dbIdSet: options.dbIdSet,
+      expectedReferencedDbIds: options.expectedReferencedDbIds,
+      expectedDbOnlyIds: options.expectedDbOnlyIds,
+      expectedDispositionCounts: options.expectedDispositionCounts,
+    });
+    return;
+  }
+
+  if (!options?.dbIdSet) {
+    throw new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      'Production bridge validation requires dbIdSet (mandatory)',
+    );
+  }
+  validateBridgeBatchProduction(rows, options.dbIdSet);
 }
 
 export function indexBridgeRows(rows: readonly ParsedBridgeRow[]): Map<string, ParsedBridgeRow> {
@@ -310,9 +450,6 @@ export function reconcileBridgeMappedKeys(input: {
     }
   }
 
-  // Normalized-key collision hard-fail: distinct raw keys must not collapse to one normalized key
-  // when both normalize successfully to the same identity with different raw keys already checked
-  // via unique dedupeKey. Additional collision: same normalizedIdentityKey from different raw keys.
   const normalizedToRaw = new Map<string, string>();
   for (const row of input.bridgeRows) {
     if (!row.normalizedIdentityKey) {

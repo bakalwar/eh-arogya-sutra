@@ -1,7 +1,7 @@
-import { createReadStream } from 'node:fs';
 import {
   streamDedupeMappedJsonFile,
   streamMappedJsonArrayObjects,
+  streamMappedJsonArrayFromAsyncIterable,
 } from '../../../packages/disease-identity/dist/streamMappedArray.js';
 
 /** @deprecated Prefer streamDedupeMappedJsonFile — does not retain the full raw array. */
@@ -18,4 +18,8 @@ export async function collectMappedJsonRows(filePath) {
   return rows;
 }
 
-export { streamDedupeMappedJsonFile, streamMappedJsonArrayObjects };
+export {
+  streamDedupeMappedJsonFile,
+  streamMappedJsonArrayObjects,
+  streamMappedJsonArrayFromAsyncIterable,
+};

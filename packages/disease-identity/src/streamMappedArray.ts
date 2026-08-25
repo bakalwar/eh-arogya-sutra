@@ -11,29 +11,42 @@ import {
 /** Max UTF-8 bytes for a single top-level mapped object (source/code only retained after parse). */
 export const MAX_MAPPED_OBJECT_BYTES = 256 * 1024;
 
+const VALID_SINGLE_ESCAPES = new Set(['"', '\\', '/', 'b', 'f', 'n', 'r', 't']);
+
 type ParserState =
-  'SEEK_ARRAY' | 'IN_ARRAY' | 'IN_OBJECT' | 'IN_STRING' | 'IN_STRING_ESCAPE' | 'AFTER_ARRAY';
+  | 'SEEK_ARRAY'
+  | 'IN_ARRAY'
+  | 'IN_OBJECT'
+  | 'IN_STRING'
+  | 'IN_STRING_ESCAPE'
+  | 'IN_UNICODE_ESCAPE'
+  | 'AFTER_ARRAY';
+
+function isHexDigit(ch: string): boolean {
+  return (ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'f') || (ch >= 'A' && ch <= 'F');
+}
 
 /**
  * String-aware streaming extractor for a single top-level JSON array of objects.
- * Tracks quotes, escapes, and braces inside strings. Does not retain clinical fields —
- * each object is JSON.parsed then reduced via parseMappedJsonRow.
+ * Chunk-boundary safe: unfinished objects (including mid-string / mid-escape /
+ * mid-unicode-escape) are retained across chunks. Invalid JSON escapes are rejected.
  */
-export async function* streamMappedJsonArrayObjects(
-  filePath: string,
+export async function* streamMappedJsonArrayFromAsyncIterable(
+  chunks: AsyncIterable<string>,
   options?: { maxObjectBytes?: number },
 ): AsyncGenerator<MappedJsonRow> {
   const maxObjectBytes = options?.maxObjectBytes ?? MAX_MAPPED_OBJECT_BYTES;
-  const stream = createReadStream(filePath, { encoding: 'utf8' });
   let state: ParserState = 'SEEK_ARRAY';
   let buffer = '';
   let objectStart = -1;
   let depth = 0;
+  let arrayDepth = 0;
   let rowNumber = 0;
   let sawArrayEnd = false;
   let scanFrom = 0;
+  let hexDigitsRemaining = 0;
 
-  for await (const chunk of stream) {
+  for await (const chunk of chunks) {
     buffer += chunk;
     let i = scanFrom;
     while (i < buffer.length) {
@@ -74,11 +87,35 @@ export async function* streamMappedJsonArrayObjects(
       }
 
       if (state === 'IN_STRING_ESCAPE') {
-        // Consume one escaped character (including \" \\ \/ \b \f \n \r \t or \uXXXX first char).
-        // For \uXXXX we only need to skip the backslash+one char here; subsequent hex digits
-        // are ordinary string characters and safe for brace tracking.
+        if (ch === 'u') {
+          state = 'IN_UNICODE_ESCAPE';
+          hexDigitsRemaining = 4;
+          i += 1;
+          continue;
+        }
+        if (!VALID_SINGLE_ESCAPES.has(ch)) {
+          throw new DiseaseIdentityError(
+            'MALFORMED_INPUT',
+            `Invalid JSON string escape \\${ch} in mapped.json`,
+          );
+        }
         state = 'IN_STRING';
         i += 1;
+        continue;
+      }
+
+      if (state === 'IN_UNICODE_ESCAPE') {
+        if (!isHexDigit(ch)) {
+          throw new DiseaseIdentityError(
+            'MALFORMED_INPUT',
+            'Invalid JSON unicode escape in mapped.json',
+          );
+        }
+        hexDigitsRemaining -= 1;
+        i += 1;
+        if (hexDigitsRemaining === 0) {
+          state = 'IN_STRING';
+        }
         continue;
       }
 
@@ -96,6 +133,7 @@ export async function* streamMappedJsonArrayObjects(
         if (ch === '{') {
           state = 'IN_OBJECT';
           depth = 1;
+          arrayDepth = 0;
           objectStart = i;
           i += 1;
           continue;
@@ -103,7 +141,7 @@ export async function* streamMappedJsonArrayObjects(
         throw new DiseaseIdentityError('MALFORMED_INPUT', 'Unexpected token in mapped.json array');
       }
 
-      // IN_OBJECT (outside strings)
+      // IN_OBJECT (outside strings) — track nested braces/brackets for ignored fields.
       if (ch === '"') {
         state = 'IN_STRING';
         i += 1;
@@ -114,9 +152,37 @@ export async function* streamMappedJsonArrayObjects(
         i += 1;
         continue;
       }
+      if (ch === '[') {
+        arrayDepth += 1;
+        i += 1;
+        continue;
+      }
+      if (ch === ']') {
+        arrayDepth -= 1;
+        if (arrayDepth < 0) {
+          throw new DiseaseIdentityError(
+            'MALFORMED_INPUT',
+            'Malformed nested array in mapped.json object',
+          );
+        }
+        i += 1;
+        continue;
+      }
       if (ch === '}') {
         depth -= 1;
+        if (depth < 0) {
+          throw new DiseaseIdentityError(
+            'MALFORMED_INPUT',
+            'Malformed nested object in mapped.json',
+          );
+        }
         if (depth === 0) {
+          if (arrayDepth !== 0) {
+            throw new DiseaseIdentityError(
+              'MALFORMED_INPUT',
+              'Malformed nesting in mapped.json object',
+            );
+          }
           const objectText = buffer.slice(objectStart, i + 1);
           const byteLen = Buffer.byteLength(objectText, 'utf8');
           if (byteLen > maxObjectBytes) {
@@ -155,7 +221,15 @@ export async function* streamMappedJsonArrayObjects(
       i += 1;
     }
 
-    if (state === 'IN_OBJECT' && objectStart >= 0) {
+    // Chunk boundary: retain unfinished object across IN_OBJECT / string / escape states.
+    const inUnfinishedObject =
+      objectStart >= 0 &&
+      (state === 'IN_OBJECT' ||
+        state === 'IN_STRING' ||
+        state === 'IN_STRING_ESCAPE' ||
+        state === 'IN_UNICODE_ESCAPE');
+
+    if (inUnfinishedObject) {
       buffer = buffer.slice(objectStart);
       objectStart = 0;
       scanFrom = buffer.length;
@@ -166,18 +240,28 @@ export async function* streamMappedJsonArrayObjects(
         );
       }
     } else {
-      // Keep only unconsumed tail (should be empty when array/after-array idle).
       buffer = buffer.slice(i);
       scanFrom = 0;
     }
   }
 
-  if (!sawArrayEnd || (state as string) !== 'AFTER_ARRAY') {
+  if (!sawArrayEnd || state !== 'AFTER_ARRAY') {
     throw new DiseaseIdentityError('MALFORMED_INPUT', 'mapped.json array not closed or incomplete');
   }
   if (buffer.trim().length > 0) {
     throw new DiseaseIdentityError('MALFORMED_INPUT', 'Trailing data after mapped.json array');
   }
+}
+
+/**
+ * File-based wrapper — does not retain clinical fields beyond parseMappedJsonRow.
+ */
+export async function* streamMappedJsonArrayObjects(
+  filePath: string,
+  options?: { maxObjectBytes?: number },
+): AsyncGenerator<MappedJsonRow> {
+  const stream = createReadStream(filePath, { encoding: 'utf8' });
+  yield* streamMappedJsonArrayFromAsyncIterable(stream, options);
 }
 
 /**

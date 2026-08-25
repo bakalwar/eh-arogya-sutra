@@ -1,7 +1,9 @@
-import { readFile, readdir } from 'node:fs/promises';
+import { createReadStream, openSync, readSync, closeSync, statSync } from 'node:fs';
+import { readdir, stat, readFile } from 'node:fs/promises';
+import readline from 'node:readline';
 import path from 'node:path';
 import { DiseaseIdentityError } from './errors.js';
-import { assertFileSha256 } from './fileHash.js';
+import { assertFileSha256, sha256FileHex } from './fileHash.js';
 import { validateBundleManifest } from './manifest.js';
 import { assertNoProhibitedFields } from './validationPrimitives.js';
 import { canonicalJsonString, sha256HexLower } from './canonicalJson.js';
@@ -11,6 +13,7 @@ import {
   EXPECTED_MAPPED_UNIQUE_CODE_COUNT,
   EXPECTED_RELATIONSHIP_EDGE_COUNT,
   EXPECTED_UNRESOLVED_QUEUE_COUNT,
+  MAX_STAGING_MEMBER_BYTES,
   RELATIONSHIP_TYPE_EXACT_UNIQUE,
 } from './fullCorpusConstants.js';
 import {
@@ -27,21 +30,49 @@ import {
   computeRecordFingerprint,
 } from './fingerprint.js';
 
-function splitCanonicalJsonl(content: string): string[] {
-  if (!content.endsWith('\n')) {
+function assertJsonlTrailingNewline(filePath: string): void {
+  const st = statSync(filePath);
+  if (st.size === 0) {
     throw new DiseaseIdentityError(
       'MALFORMED_INPUT',
       'JSONL must end with a single trailing newline',
     );
   }
-  if (content.length === 1) {
-    return [];
+  const fd = openSync(filePath, 'r');
+  try {
+    const buf = Buffer.alloc(1);
+    readSync(fd, buf, 0, 1, st.size - 1);
+    if (buf[0] !== 0x0a) {
+      throw new DiseaseIdentityError(
+        'MALFORMED_INPUT',
+        'JSONL must end with a single trailing newline',
+      );
+    }
+  } finally {
+    closeSync(fd);
   }
-  const body = content.slice(0, -1);
-  if (body.includes('\r')) {
-    throw new DiseaseIdentityError('MALFORMED_INPUT', 'JSONL must use LF line endings only');
+}
+
+async function* iterateJsonlLines(filePath: string): AsyncGenerator<string> {
+  assertJsonlTrailingNewline(filePath);
+  const st = statSync(filePath);
+  // Empty JSONL is exactly one trailing newline (zero records).
+  if (st.size === 1) {
+    return;
   }
-  return body.length === 0 ? [] : body.split('\n');
+  const rl = readline.createInterface({
+    input: createReadStream(filePath, { encoding: 'utf8' }),
+    crlfDelay: Infinity,
+  });
+  for await (const line of rl) {
+    if (line.includes('\r')) {
+      throw new DiseaseIdentityError('MALFORMED_INPUT', 'JSONL must use LF line endings only');
+    }
+    if (line.length === 0) {
+      throw new DiseaseIdentityError('MALFORMED_INPUT', 'JSONL contains empty line');
+    }
+    yield line;
+  }
 }
 
 function assertCanonicalLine(line: string, parsed: unknown): void {
@@ -50,9 +81,34 @@ function assertCanonicalLine(line: string, parsed: unknown): void {
   }
 }
 
+async function assertMemberHashAndSize(
+  filePath: string,
+  artifact: { name: string; sha256: string; bytes: number },
+): Promise<void> {
+  const st = await stat(filePath);
+  if (st.size > MAX_STAGING_MEMBER_BYTES) {
+    throw new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      `Bundle member ${artifact.name} exceeds MAX_STAGING_MEMBER_BYTES`,
+    );
+  }
+  if (st.size !== artifact.bytes) {
+    throw new DiseaseIdentityError('MALFORMED_INPUT', `Byte size mismatch for ${artifact.name}`);
+  }
+  await assertFileSha256(filePath, artifact.sha256);
+  const recomputed = await sha256FileHex(filePath);
+  if (recomputed !== artifact.sha256) {
+    throw new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      `Hash recompute mismatch for ${artifact.name}`,
+    );
+  }
+}
+
 export async function verifyFullBundle(bundleDir: string): Promise<void> {
   const resolved = path.resolve(bundleDir);
-  const manifestRaw = await readFile(path.join(resolved, 'bundle-manifest.json'), 'utf8');
+  const manifestPath = path.join(resolved, 'bundle-manifest.json');
+  const manifestRaw = await readFile(manifestPath, 'utf8');
   const manifest = JSON.parse(manifestRaw) as Record<string, unknown>;
   validateBundleManifest(manifest);
   assertNoProhibitedFields(manifest);
@@ -86,22 +142,9 @@ export async function verifyFullBundle(bundleDir: string): Promise<void> {
   }
 
   const recomputedParts: string[] = [];
-  const contents = new Map<string, string>();
-
   for (const artifact of artifacts) {
     const filePath = path.join(resolved, artifact.name);
-    const content = await readFile(filePath, 'utf8');
-    contents.set(artifact.name, content);
-    if (Buffer.byteLength(content, 'utf8') !== artifact.bytes) {
-      throw new DiseaseIdentityError('MALFORMED_INPUT', `Byte size mismatch for ${artifact.name}`);
-    }
-    await assertFileSha256(filePath, artifact.sha256);
-    if (sha256HexLower(content) !== artifact.sha256) {
-      throw new DiseaseIdentityError(
-        'MALFORMED_INPUT',
-        `Hash recompute mismatch for ${artifact.name}`,
-      );
-    }
+    await assertMemberHashAndSize(filePath, artifact);
     recomputedParts.push(`${artifact.name}:${artifact.sha256}`);
   }
 
@@ -118,16 +161,14 @@ export async function verifyFullBundle(bundleDir: string): Promise<void> {
     }
   }
 
-  // --- Disease ledger ---
-  const diseaseLines = splitCanonicalJsonl(contents.get('disease-identity-ledger.jsonl')!);
   const diseaseArtifact = artifactByName.get('disease-identity-ledger.jsonl')!;
-  if (diseaseLines.length !== diseaseArtifact.rowCount) {
-    throw new DiseaseIdentityError('MALFORMED_INPUT', 'Disease ledger row count mismatch');
-  }
   const diseaseIds = new Set<string>();
   const legacyIds = new Set<number>();
   let prevDiseaseId = '';
-  for (const line of diseaseLines) {
+  let diseaseCount = 0;
+  for await (const line of iterateJsonlLines(
+    path.join(resolved, 'disease-identity-ledger.jsonl'),
+  )) {
     const record = JSON.parse(line) as Record<string, unknown>;
     assertCanonicalLine(line, record);
     assertNoProhibitedFields(record);
@@ -154,17 +195,18 @@ export async function verifyFullBundle(bundleDir: string): Promise<void> {
     if (record.recordFingerprint !== expectedFp) {
       throw new DiseaseIdentityError('MALFORMED_INPUT', 'Disease fingerprint mismatch');
     }
+    diseaseCount += 1;
+  }
+  if (diseaseCount !== diseaseArtifact.rowCount) {
+    throw new DiseaseIdentityError('MALFORMED_INPUT', 'Disease ledger row count mismatch');
   }
 
-  // --- Mapped index ---
-  const mappedLines = splitCanonicalJsonl(contents.get('mapped-index.jsonl')!);
   const mappedArtifact = artifactByName.get('mapped-index.jsonl')!;
-  if (mappedLines.length !== mappedArtifact.rowCount) {
-    throw new DiseaseIdentityError('MALFORMED_INPUT', 'Mapped index row count mismatch');
-  }
   const mappedIds = new Set<string>();
   let prevMappedSort = '';
-  for (const line of mappedLines) {
+  let mappedCount = 0;
+  let mappedExactUnique = 0;
+  for await (const line of iterateJsonlLines(path.join(resolved, 'mapped-index.jsonl'))) {
     const record = JSON.parse(line) as Record<string, unknown>;
     assertCanonicalLine(line, record);
     assertNoProhibitedFields(record);
@@ -211,18 +253,20 @@ export async function verifyFullBundle(bundleDir: string): Promise<void> {
     if (record.recordFingerprint !== expectedFp) {
       throw new DiseaseIdentityError('MALFORMED_INPUT', 'Mapped fingerprint mismatch');
     }
+    if (record.bridgeDisposition === 'EXACT_UNIQUE_MATCH') {
+      mappedExactUnique += 1;
+    }
+    mappedCount += 1;
+  }
+  if (mappedCount !== mappedArtifact.rowCount) {
+    throw new DiseaseIdentityError('MALFORMED_INPUT', 'Mapped index row count mismatch');
   }
 
-  // --- Relationships ---
-  const relLines = splitCanonicalJsonl(contents.get('relationship-edges.jsonl')!);
   const relArtifact = artifactByName.get('relationship-edges.jsonl')!;
-  if (relLines.length !== relArtifact.rowCount) {
-    throw new DiseaseIdentityError('MALFORMED_INPUT', 'Relationship row count mismatch');
-  }
   const relIds = new Set<string>();
   let prevRel = '';
-  const exactUniqueMapped = new Set<string>();
-  for (const line of relLines) {
+  let relCount = 0;
+  for await (const line of iterateJsonlLines(path.join(resolved, 'relationship-edges.jsonl'))) {
     const record = JSON.parse(line) as Record<string, unknown>;
     assertCanonicalLine(line, record);
     assertNoProhibitedFields(record);
@@ -252,15 +296,20 @@ export async function verifyFullBundle(bundleDir: string): Promise<void> {
       throw new DiseaseIdentityError('MALFORMED_INPUT', 'Relationships out of order');
     }
     prevRel = String(record.relationshipId);
-    exactUniqueMapped.add(mappedId);
+    relCount += 1;
+  }
+  if (relCount !== relArtifact.rowCount) {
+    throw new DiseaseIdentityError('MALFORMED_INPUT', 'Relationship row count mismatch');
   }
 
-  // --- Unresolved queue ---
-  const unresolvedLines = splitCanonicalJsonl(contents.get('unresolved-queue.jsonl')!);
-  const unresolvedArtifact = artifactByName.get('unresolved-queue.jsonl')!;
-  if (unresolvedLines.length !== unresolvedArtifact.rowCount) {
-    throw new DiseaseIdentityError('MALFORMED_INPUT', 'Unresolved queue row count mismatch');
+  if (mappedExactUnique !== relCount) {
+    throw new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      'EXACT_UNIQUE mapped records must equal relationship edge count',
+    );
   }
+
+  const unresolvedArtifact = artifactByName.get('unresolved-queue.jsonl')!;
   const queueKeys = new Set<string>();
   const dispositionCounts = {
     EXACT_UNIQUE_MATCH: 0,
@@ -269,7 +318,8 @@ export async function verifyFullBundle(bundleDir: string): Promise<void> {
     NO_MATCH: 0,
   };
   let prevQueue = '';
-  for (const line of unresolvedLines) {
+  let unresolvedCount = 0;
+  for await (const line of iterateJsonlLines(path.join(resolved, 'unresolved-queue.jsonl'))) {
     const record = JSON.parse(line) as Record<string, unknown>;
     assertCanonicalLine(line, record);
     assertNoProhibitedFields(record);
@@ -293,32 +343,28 @@ export async function verifyFullBundle(bundleDir: string): Promise<void> {
       throw new DiseaseIdentityError('MALFORMED_INPUT', 'Invalid unresolved disposition');
     }
     dispositionCounts[disp as keyof typeof dispositionCounts] += 1;
+    unresolvedCount += 1;
+  }
+  if (unresolvedCount !== unresolvedArtifact.rowCount) {
+    throw new DiseaseIdentityError('MALFORMED_INPUT', 'Unresolved queue row count mismatch');
   }
 
-  // Consistency: exact-unique mapped records with disposition should match edge count
-  let mappedExactUnique = 0;
-  for (const line of mappedLines) {
-    const record = JSON.parse(line) as Record<string, unknown>;
-    if (record.bridgeDisposition === 'EXACT_UNIQUE_MATCH') {
-      mappedExactUnique += 1;
-    }
-  }
-  if (mappedExactUnique !== relLines.length) {
+  const expectedUnresolvedFromMapped = mappedCount - mappedExactUnique;
+  if (unresolvedCount !== expectedUnresolvedFromMapped) {
     throw new DiseaseIdentityError(
       'MALFORMED_INPUT',
-      'EXACT_UNIQUE mapped records must equal relationship edge count',
+      'Unresolved queue incomplete relative to mapped dispositions',
     );
   }
 
-  // Full-corpus absolute counts when ledger is full size
-  if (diseaseLines.length === EXPECTED_LEGACY_DB_DISEASE_COUNT) {
-    if (mappedLines.length !== EXPECTED_MAPPED_UNIQUE_CODE_COUNT) {
+  if (diseaseCount === EXPECTED_LEGACY_DB_DISEASE_COUNT) {
+    if (mappedCount !== EXPECTED_MAPPED_UNIQUE_CODE_COUNT) {
       throw new DiseaseIdentityError('MALFORMED_INPUT', 'Full-corpus mapped count mismatch');
     }
-    if (relLines.length !== EXPECTED_RELATIONSHIP_EDGE_COUNT) {
+    if (relCount !== EXPECTED_RELATIONSHIP_EDGE_COUNT) {
       throw new DiseaseIdentityError('MALFORMED_INPUT', 'Full-corpus relationship count mismatch');
     }
-    if (unresolvedLines.length !== EXPECTED_UNRESOLVED_QUEUE_COUNT) {
+    if (unresolvedCount !== EXPECTED_UNRESOLVED_QUEUE_COUNT) {
       throw new DiseaseIdentityError('MALFORMED_INPUT', 'Full-corpus unresolved count mismatch');
     }
     if (dispositionCounts.EXACT_MULTIPLE_MATCH !== 17_181) {
@@ -332,8 +378,7 @@ export async function verifyFullBundle(bundleDir: string): Promise<void> {
     }
   }
 
-  // Build evidence — deterministic, no timestamps/paths
-  const evidenceRaw = contents.get('p2c-build-evidence.json')!;
+  const evidenceRaw = await readFile(path.join(resolved, 'p2c-build-evidence.json'), 'utf8');
   const evidence = JSON.parse(evidenceRaw) as Record<string, unknown>;
   if (`${canonicalJsonString(evidence)}\n` !== evidenceRaw) {
     throw new DiseaseIdentityError('MALFORMED_INPUT', 'Build evidence is not canonical');

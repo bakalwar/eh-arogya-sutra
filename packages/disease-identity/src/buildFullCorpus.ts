@@ -1,3 +1,7 @@
+import { createWriteStream } from 'node:fs';
+import { mkdir, writeFile, stat as fsStat, lstat, realpath } from 'node:fs/promises';
+import path from 'node:path';
+import { finished } from 'node:stream/promises';
 import {
   AUTHORITY_CLASSIFICATION,
   DATASET_VERSION,
@@ -32,11 +36,16 @@ import {
   PRIVATE_ENGINEERING_LICENSING_CLASSIFICATION,
   RELATIONSHIP_TYPE_EXACT_UNIQUE,
   EXPECTED_RELATIONSHIP_EDGE_COUNT,
-  DOCUMENTED_PEAK_MEMORY_BUDGET_BYTES,
+  ESTIMATED_PEAK_MEMORY_BUDGET_BYTES,
+  MAX_STAGING_MEMBER_BYTES,
+  SYNTHETIC_TEST_COMMIT,
+  SOURCE_COMMIT_UNSET,
+  BUNDLE_ARTIFACT_NAMES,
 } from './fullCorpusConstants.js';
 import { serializeJsonl, sortRecordsById, reconcileManifestCounts } from './manifest.js';
 import { validateAndIndexRecordBatch } from './batchValidate.js';
 import { canonicalJsonString, sha256HexLower } from './canonicalJson.js';
+import { sha256FileHex } from './fileHash.js';
 import type { DiseaseIdentityRecord, MappedIdentityIndexRecord } from './types.js';
 import { DiseaseIdentityError } from './errors.js';
 
@@ -196,22 +205,21 @@ function buildDiseaseRecord(input: {
   };
 }
 
-export function buildFullCorpusArtifacts(input: {
+type CoreBuildResult = {
+  diseaseRecords: DiseaseIdentityRecord[];
+  mappedRecords: MappedIdentityIndexRecord[];
+  relationshipEdges: RelationshipEdgeRecord[];
+  unresolvedQueue: UnresolvedQueueRecord[];
+};
+
+function buildCoreRecords(input: {
   readonly dbRows: readonly LegacyDbRow[];
   readonly mappedEntries: readonly MappedDedupeEntry[];
   readonly bridgeRows: readonly ParsedBridgeRow[];
-  readonly inputEvidenceHashes: {
-    readonly legacyDbSha256: string;
-    readonly mappedJsonSha256: string;
-    readonly bridgeSha256: string;
-    readonly note?: string;
-  };
-  readonly inventoryVerified: boolean;
-  readonly inventorySha256?: string | null;
-  readonly skipManifestReconciliation?: boolean;
   readonly skipBridgeMappedKeyReconciliation?: boolean;
+  readonly skipManifestReconciliation?: boolean;
   readonly expectedRelationshipEdges?: number;
-}): FullCorpusBuildArtifacts {
+}): CoreBuildResult {
   if (!input.skipBridgeMappedKeyReconciliation) {
     reconcileBridgeMappedKeys({
       bridgeRows: input.bridgeRows,
@@ -376,26 +384,15 @@ export function buildFullCorpusArtifacts(input: {
     unknown
   >[]);
 
-  const diseaseJsonl = serializeJsonl(
-    sortRecordsById(diseaseRecords as unknown as Record<string, unknown>[], 'ehas2DiseaseId'),
-  );
-  const mappedJsonl = serializeJsonl(
-    [...mappedRecords]
-      .sort((a, b) => {
-        const idA = a.ehas2MappedIndexId ?? a.rawMappedReferenceId ?? '';
-        const idB = b.ehas2MappedIndexId ?? b.rawMappedReferenceId ?? '';
-        return idA.localeCompare(idB);
-      })
-      .map((record) => record as unknown as Record<string, unknown>),
-  );
-  const relationshipJsonl = serializeJsonl(
-    relationshipEdges.map((edge) => edge as unknown as Record<string, unknown>),
-  );
-  const unresolvedJsonl = serializeJsonl(
-    unresolvedQueue.map((entry) => entry as unknown as Record<string, unknown>),
-  );
+  return { diseaseRecords, mappedRecords, relationshipEdges, unresolvedQueue };
+}
 
-  const buildEvidence = {
+function buildEvidenceObject(input: {
+  inventoryVerified: boolean;
+  inventorySha256?: string | null;
+  generatorSourceCommit: string;
+}): Record<string, unknown> {
+  return {
     authorityClassification: AUTHORITY_CLASSIFICATION,
     inventoryVerified: input.inventoryVerified,
     inventorySha256: input.inventorySha256 ?? null,
@@ -406,9 +403,63 @@ export function buildFullCorpusArtifacts(input: {
       'unresolved-queue.jsonl',
     ],
     generatorVersion: FULL_CORPUS_GENERATOR_VERSION,
-    documentedPeakMemoryBudgetBytes: DOCUMENTED_PEAK_MEMORY_BUDGET_BYTES,
+    estimatedPeakMemoryBudgetBytes: ESTIMATED_PEAK_MEMORY_BUDGET_BYTES,
+    documentedPeakMemoryBudgetBytes: ESTIMATED_PEAK_MEMORY_BUDGET_BYTES,
     processingModel: 'BOUNDED_STREAM_DEDUPE_ITERATE_SQLITE_JSONL',
+    // Build-evidence only — not part of data-member aggregate fingerprint inputs beyond this file.
+    generatorSourceCommit: input.generatorSourceCommit,
   };
+}
+
+function assembleManifestAndSerialized(input: {
+  core: CoreBuildResult;
+  inputEvidenceHashes: {
+    readonly legacyDbSha256: string;
+    readonly mappedJsonSha256: string;
+    readonly bridgeSha256: string;
+    readonly note?: string;
+  };
+  inventoryVerified: boolean;
+  inventorySha256?: string | null;
+  skipManifestReconciliation?: boolean;
+  generatorSourceCommit: string;
+  serializedMembers?: {
+    diseaseJsonl: string;
+    mappedJsonl: string;
+    relationshipJsonl: string;
+    unresolvedJsonl: string;
+  };
+}): FullCorpusBuildArtifacts {
+  const { diseaseRecords, mappedRecords, relationshipEdges, unresolvedQueue } = input.core;
+
+  const diseaseJsonl =
+    input.serializedMembers?.diseaseJsonl ??
+    serializeJsonl(
+      sortRecordsById(diseaseRecords as unknown as Record<string, unknown>[], 'ehas2DiseaseId'),
+    );
+  const mappedJsonl =
+    input.serializedMembers?.mappedJsonl ??
+    serializeJsonl(
+      [...mappedRecords]
+        .sort((a, b) => {
+          const idA = a.ehas2MappedIndexId ?? a.rawMappedReferenceId ?? '';
+          const idB = b.ehas2MappedIndexId ?? b.rawMappedReferenceId ?? '';
+          return idA.localeCompare(idB);
+        })
+        .map((record) => record as unknown as Record<string, unknown>),
+    );
+  const relationshipJsonl =
+    input.serializedMembers?.relationshipJsonl ??
+    serializeJsonl(relationshipEdges.map((edge) => edge as unknown as Record<string, unknown>));
+  const unresolvedJsonl =
+    input.serializedMembers?.unresolvedJsonl ??
+    serializeJsonl(unresolvedQueue.map((entry) => entry as unknown as Record<string, unknown>));
+
+  const buildEvidence = buildEvidenceObject({
+    inventoryVerified: input.inventoryVerified,
+    inventorySha256: input.inventorySha256,
+    generatorSourceCommit: input.generatorSourceCommit,
+  });
   const buildEvidenceJson = `${canonicalJsonString(buildEvidence)}\n`;
   const buildEvidenceSha256 = sha256HexLower(buildEvidenceJson);
   const buildEvidenceBytes = Buffer.byteLength(buildEvidenceJson, 'utf8');
@@ -433,6 +484,16 @@ export function buildFullCorpusArtifacts(input: {
     },
   ];
 
+  for (const spec of artifactSpecs) {
+    const bytes = Buffer.byteLength(spec.content, 'utf8');
+    if (bytes > MAX_STAGING_MEMBER_BYTES) {
+      throw new DiseaseIdentityError(
+        'MALFORMED_INPUT',
+        `Bundle member ${spec.name} exceeds MAX_STAGING_MEMBER_BYTES (${MAX_STAGING_MEMBER_BYTES})`,
+      );
+    }
+  }
+
   const artifacts = artifactSpecs.map((spec) => ({
     name: spec.name,
     rowCount: spec.rowCount,
@@ -440,7 +501,6 @@ export function buildFullCorpusArtifacts(input: {
     bytes: Buffer.byteLength(spec.content, 'utf8'),
   }));
 
-  // Manifest excludes itself from member hashing (no circular self-hash).
   const aggregateFingerprint = sha256HexLower(
     artifacts.map((artifact) => `${artifact.name}:${artifact.sha256}`).join('|'),
   );
@@ -468,6 +528,12 @@ export function buildFullCorpusArtifacts(input: {
   }
 
   const manifestJson = `${canonicalJsonString(manifest)}\n`;
+  if (Buffer.byteLength(manifestJson, 'utf8') > MAX_STAGING_MEMBER_BYTES) {
+    throw new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      `Bundle member bundle-manifest.json exceeds MAX_STAGING_MEMBER_BYTES`,
+    );
+  }
 
   const serialized: Record<string, string> = {
     'disease-identity-ledger.jsonl': diseaseJsonl,
@@ -478,7 +544,6 @@ export function buildFullCorpusArtifacts(input: {
     'p2c-build-evidence.json': buildEvidenceJson,
   };
 
-  // Sanity: build evidence hash matches artifact entry
   const evidenceArtifact = artifacts.find((a) => a.name === 'p2c-build-evidence.json');
   if (
     !evidenceArtifact ||
@@ -496,5 +561,256 @@ export function buildFullCorpusArtifacts(input: {
     manifest,
     buildEvidence,
     serialized,
+  };
+}
+
+/**
+ * Synthetic / small-fixture builder. May allow skip flags for unit tests.
+ * Production CLI must call buildFullCorpusArtifactsProduction instead.
+ */
+export function buildFullCorpusArtifacts(input: {
+  readonly dbRows: readonly LegacyDbRow[];
+  readonly mappedEntries: readonly MappedDedupeEntry[];
+  readonly bridgeRows: readonly ParsedBridgeRow[];
+  readonly inputEvidenceHashes: {
+    readonly legacyDbSha256: string;
+    readonly mappedJsonSha256: string;
+    readonly bridgeSha256: string;
+    readonly note?: string;
+  };
+  readonly inventoryVerified: boolean;
+  readonly inventorySha256?: string | null;
+  readonly skipManifestReconciliation?: boolean;
+  readonly skipBridgeMappedKeyReconciliation?: boolean;
+  readonly expectedRelationshipEdges?: number;
+  readonly generatorSourceCommit?: string;
+}): FullCorpusBuildArtifacts {
+  const core = buildCoreRecords(input);
+  return assembleManifestAndSerialized({
+    core,
+    inputEvidenceHashes: input.inputEvidenceHashes,
+    inventoryVerified: input.inventoryVerified,
+    inventorySha256: input.inventorySha256,
+    skipManifestReconciliation: input.skipManifestReconciliation,
+    generatorSourceCommit: input.generatorSourceCommit ?? SYNTHETIC_TEST_COMMIT,
+  });
+}
+
+async function writeJsonlStreaming(
+  filePath: string,
+  records: readonly Record<string, unknown>[],
+): Promise<{ bytes: number; sha256: string; rowCount: number }> {
+  const { createHash } = await import('node:crypto');
+  const hash = createHash('sha256');
+  const out = createWriteStream(filePath, { encoding: 'utf8' });
+  let bytes = 0;
+  for (const record of records) {
+    const line = `${canonicalJsonString(record)}\n`;
+    const lineBytes = Buffer.byteLength(line, 'utf8');
+    bytes += lineBytes;
+    if (bytes > MAX_STAGING_MEMBER_BYTES) {
+      out.destroy();
+      throw new DiseaseIdentityError(
+        'MALFORMED_INPUT',
+        `Bundle member exceeds MAX_STAGING_MEMBER_BYTES (${MAX_STAGING_MEMBER_BYTES})`,
+      );
+    }
+    hash.update(line, 'utf8');
+    if (!out.write(line)) {
+      await new Promise<void>((resolve) => out.once('drain', resolve));
+    }
+  }
+  out.end();
+  await finished(out);
+  return { bytes, sha256: hash.digest('hex'), rowCount: records.length };
+}
+
+/**
+ * Production builder — forbids skip/weaken flags; writes JSONL members to staging via streaming
+ * writes then hashes from disk; records generatorSourceCommit in build-evidence only.
+ */
+export async function buildFullCorpusArtifactsProduction(input: {
+  readonly dbRows: readonly LegacyDbRow[];
+  readonly mappedEntries: readonly MappedDedupeEntry[];
+  readonly bridgeRows: readonly ParsedBridgeRow[];
+  readonly inputEvidenceHashes: {
+    readonly legacyDbSha256: string;
+    readonly mappedJsonSha256: string;
+    readonly bridgeSha256: string;
+    readonly note?: string;
+  };
+  readonly inventoryVerified: boolean;
+  readonly inventorySha256?: string | null;
+  readonly stagingDir: string;
+  readonly generatorSourceCommit: string;
+}): Promise<FullCorpusBuildArtifacts & { stagingDir: string }> {
+  if (!input.generatorSourceCommit || input.generatorSourceCommit === SOURCE_COMMIT_UNSET) {
+    throw new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      'Production build requires generatorSourceCommit from git rev-parse HEAD',
+    );
+  }
+
+  // Non-bypassable: always reconcile; never skip manifest reconciliation.
+  const core = buildCoreRecords({
+    dbRows: input.dbRows,
+    mappedEntries: input.mappedEntries,
+    bridgeRows: input.bridgeRows,
+    skipBridgeMappedKeyReconciliation: false,
+    skipManifestReconciliation: false,
+  });
+
+  await mkdir(input.stagingDir, { recursive: true });
+
+  const diseaseSorted = sortRecordsById(
+    core.diseaseRecords as unknown as Record<string, unknown>[],
+    'ehas2DiseaseId',
+  );
+  const mappedSorted = [...core.mappedRecords]
+    .sort((a, b) => {
+      const idA = a.ehas2MappedIndexId ?? a.rawMappedReferenceId ?? '';
+      const idB = b.ehas2MappedIndexId ?? b.rawMappedReferenceId ?? '';
+      return idA.localeCompare(idB);
+    })
+    .map((record) => record as unknown as Record<string, unknown>);
+  const relSorted = core.relationshipEdges.map(
+    (edge) => edge as unknown as Record<string, unknown>,
+  );
+  const unresolvedSorted = core.unresolvedQueue.map(
+    (entry) => entry as unknown as Record<string, unknown>,
+  );
+
+  const diseasePath = path.join(input.stagingDir, 'disease-identity-ledger.jsonl');
+  const mappedPath = path.join(input.stagingDir, 'mapped-index.jsonl');
+  const relPath = path.join(input.stagingDir, 'relationship-edges.jsonl');
+  const unresolvedPath = path.join(input.stagingDir, 'unresolved-queue.jsonl');
+
+  const diseaseMeta = await writeJsonlStreaming(diseasePath, diseaseSorted);
+  // Drop large string buffers — re-read hashes from disk for manifest.
+  const mappedMeta = await writeJsonlStreaming(mappedPath, mappedSorted);
+  const relMeta = await writeJsonlStreaming(relPath, relSorted);
+  const unresolvedMeta = await writeJsonlStreaming(unresolvedPath, unresolvedSorted);
+
+  // Verify disk hashes match streaming digests (fail-closed).
+  for (const [filePath, meta] of [
+    [diseasePath, diseaseMeta],
+    [mappedPath, mappedMeta],
+    [relPath, relMeta],
+    [unresolvedPath, unresolvedMeta],
+  ] as const) {
+    const diskSha = await sha256FileHex(filePath);
+    const st = await fsStat(filePath);
+    if (diskSha !== meta.sha256 || st.size !== meta.bytes) {
+      throw new DiseaseIdentityError(
+        'MALFORMED_INPUT',
+        `Staging member hash/bytes mismatch for ${path.basename(filePath)}`,
+      );
+    }
+    if (st.size > MAX_STAGING_MEMBER_BYTES) {
+      throw new DiseaseIdentityError(
+        'MALFORMED_INPUT',
+        `Bundle member ${path.basename(filePath)} exceeds MAX_STAGING_MEMBER_BYTES`,
+      );
+    }
+  }
+
+  const buildEvidence = buildEvidenceObject({
+    inventoryVerified: input.inventoryVerified,
+    inventorySha256: input.inventorySha256,
+    generatorSourceCommit: input.generatorSourceCommit,
+  });
+  const buildEvidenceJson = `${canonicalJsonString(buildEvidence)}\n`;
+  const evidencePath = path.join(input.stagingDir, 'p2c-build-evidence.json');
+  await writeFile(evidencePath, buildEvidenceJson, 'utf8');
+
+  const artifacts = [
+    {
+      name: 'disease-identity-ledger.jsonl',
+      rowCount: diseaseMeta.rowCount,
+      sha256: diseaseMeta.sha256,
+      bytes: diseaseMeta.bytes,
+    },
+    {
+      name: 'mapped-index.jsonl',
+      rowCount: mappedMeta.rowCount,
+      sha256: mappedMeta.sha256,
+      bytes: mappedMeta.bytes,
+    },
+    {
+      name: 'relationship-edges.jsonl',
+      rowCount: relMeta.rowCount,
+      sha256: relMeta.sha256,
+      bytes: relMeta.bytes,
+    },
+    {
+      name: 'unresolved-queue.jsonl',
+      rowCount: unresolvedMeta.rowCount,
+      sha256: unresolvedMeta.sha256,
+      bytes: unresolvedMeta.bytes,
+    },
+    {
+      name: 'p2c-build-evidence.json',
+      rowCount: 0,
+      sha256: sha256HexLower(buildEvidenceJson),
+      bytes: Buffer.byteLength(buildEvidenceJson, 'utf8'),
+    },
+  ];
+
+  const aggregateFingerprint = sha256HexLower(
+    artifacts.map((artifact) => `${artifact.name}:${artifact.sha256}`).join('|'),
+  );
+
+  const manifest = {
+    bundleSchemaVersion: BUNDLE_SCHEMA_VERSION,
+    datasetVersion: DATASET_VERSION,
+    authorityClassification: AUTHORITY_CLASSIFICATION,
+    licensingClassification: PRIVATE_ENGINEERING_LICENSING_CLASSIFICATION,
+    canonicalIdAlgorithms: [
+      'EHAS2_CANONICAL_DISEASE_ID_v1_SHA256',
+      'EHAS2_MAPPED_IDENTITY_KEY_v1_SHA256',
+      'EHAS2_IDENTITY_RELATIONSHIP_v1_SHA256',
+      'EHAS2_UNNORMALIZABLE_MAPPED_RAW_v1_SHA256',
+    ],
+    inputEvidenceHashes: input.inputEvidenceHashes,
+    generatorVersion: FULL_CORPUS_GENERATOR_VERSION,
+    artifacts,
+    aggregateFingerprint,
+    reconciliation: { ...APPROVED_AGGREGATE_COUNTS },
+  };
+
+  reconcileManifestCounts(manifest as never);
+
+  const manifestJson = `${canonicalJsonString(manifest)}\n`;
+  await writeFile(path.join(input.stagingDir, 'bundle-manifest.json'), manifestJson, 'utf8');
+
+  // Ensure all expected members present (no extras checked by atomic writer).
+  for (const name of BUNDLE_ARTIFACT_NAMES) {
+    const memberPath = path.join(input.stagingDir, name);
+    const lst = await lstat(memberPath);
+    if (lst.isSymbolicLink()) {
+      throw new DiseaseIdentityError(
+        'MALFORMED_INPUT',
+        `Staged member ${name} must not be a symlink`,
+      );
+    }
+    await realpath(memberPath);
+  }
+
+  // Provide serialized map for callers that still need it (small enough after write for evidence/manifest).
+  // Large JSONL bodies are intentionally omitted from memory — read from staging if needed.
+  const serialized: Record<string, string> = {
+    'bundle-manifest.json': manifestJson,
+    'p2c-build-evidence.json': buildEvidenceJson,
+  };
+
+  return {
+    diseaseRecords: core.diseaseRecords,
+    mappedRecords: core.mappedRecords,
+    relationshipEdges: core.relationshipEdges,
+    unresolvedQueue: core.unresolvedQueue,
+    manifest,
+    buildEvidence,
+    serialized,
+    stagingDir: input.stagingDir,
   };
 }
