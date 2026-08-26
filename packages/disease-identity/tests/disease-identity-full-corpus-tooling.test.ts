@@ -34,6 +34,12 @@ import {
   EXPECTED_REFERENCED_UNIQUE_DB_IDS,
   FULL_CORPUS_BUILD_AUTHORIZATION_TOKEN,
   parseBridgeJsonlRow,
+  parsePinnedBridgeV3JsonlRow,
+  parseBridgeRowForSchema,
+  parseJsonObjectRejectDuplicateRootKeys,
+  BRIDGE_INGEST_SCHEMA_PINNED_V3,
+  BRIDGE_INGEST_SCHEMA_SYNTHETIC,
+  PINNED_BRIDGE_V3_REQUIRED_KEYS,
   PINNED_BRIDGE_V3_SHA256,
   PINNED_LEGACY_DB_SHA256,
   PINNED_MAPPED_JSON_SHA256,
@@ -52,6 +58,8 @@ import {
   assertFileIdentityUnchanged,
   pinnedByteSqliteOpenOptions,
 } from '../src/index.js';
+import { ingestBridgeToBuildIndex } from '../../../tools/disease-identity-generator/lib/streamBridgeJsonl.mjs';
+import { createProductionBuildIndex } from '../src/productionBuildIndex.js';
 import { readLegacyDiseaseRows as readLegacyDiseaseRowsTool } from '../../../tools/disease-identity-generator/lib/readLegacyDb.mjs';
 
 function sha256(content: string): string {
@@ -1112,5 +1120,405 @@ describe('R2-DATA-P2C-A tooling safety hardening', () => {
     }
 
     rmSync(base, { recursive: true, force: true });
+  });
+});
+
+function makeSyntheticPinnedV3Row(
+  overrides: Record<string, unknown> = {},
+): Record<string, unknown> {
+  return {
+    ambiguity: false,
+    bridge_id: 'syn-bridge-unique-001',
+    candidate_eh_disease_id: 1,
+    majority_polarity: 'MIXED',
+    mapped_code: 'A00.0',
+    mapped_name: 'SyntheticNameOnly',
+    match_confidence: 'HIGH',
+    match_method: 'exact_code_multinamespace_icd10_code_col',
+    polarity_conflict: false,
+    polarity_counts: { MIXED: 1 },
+    recommended_disposition: 'EXACT_UNIQUE_MATCH',
+    source_system: 'ICD10',
+    technical_disposition: 'EXACT_UNIQUE_MATCH',
+    ...overrides,
+  };
+}
+
+describe('R2-DATA-P2C-C pinned Bridge V3 actual-schema adapter (synthetic)', () => {
+  it('accepts exact 13-key actual V3 row and maps source_system', () => {
+    const row = parsePinnedBridgeV3JsonlRow(makeSyntheticPinnedV3Row(), 1);
+    expect(Object.keys(makeSyntheticPinnedV3Row()).sort()).toEqual(
+      [...PINNED_BRIDGE_V3_REQUIRED_KEYS].sort(),
+    );
+    expect(row.mappedSourceLabel).toBe('ICD10');
+    expect(row.mappedCodeRaw).toBe('A00.0');
+    expect(row.disposition).toBe('EXACT_UNIQUE_MATCH');
+    expect(row.candidateLegacyDbIds).toEqual([1]);
+    expect(row).not.toHaveProperty('bridge_id');
+    expect(row).not.toHaveProperty('mapped_name');
+    expect(row).not.toHaveProperty('majority_polarity');
+    expect(row).not.toHaveProperty('polarity_counts');
+    expect(row).not.toHaveProperty('polarity_conflict');
+  });
+
+  it('accepts and structurally validates bridge_id uniqueness option', () => {
+    const seen = new Set<string>();
+    parsePinnedBridgeV3JsonlRow(makeSyntheticPinnedV3Row({ bridge_id: 'id-a' }), 1, {
+      seenBridgeIds: seen,
+    });
+    expect(() =>
+      parsePinnedBridgeV3JsonlRow(
+        makeSyntheticPinnedV3Row({
+          bridge_id: 'id-a',
+          mapped_code: 'A00.1',
+        }),
+        2,
+        { seenBridgeIds: seen },
+      ),
+    ).toThrow(/Duplicate bridge_id/);
+  });
+
+  it('rejects missing required key, unknown extra key, and hybrid actual/projected rows', () => {
+    const missing = makeSyntheticPinnedV3Row();
+    delete missing.bridge_id;
+    expect(() => parsePinnedBridgeV3JsonlRow(missing, 1)).toThrow(/exactly 13 keys|Missing/);
+
+    expect(() =>
+      parsePinnedBridgeV3JsonlRow({ ...makeSyntheticPinnedV3Row(), extra_field: 1 }, 1),
+    ).toThrow(/Unknown bridge field|exactly 13/);
+
+    expect(() =>
+      parsePinnedBridgeV3JsonlRow(
+        {
+          ...makeSyntheticPinnedV3Row(),
+          mapped_source_label: 'ICD10',
+        } as Record<string, unknown>,
+        1,
+      ),
+    ).toThrow(/Unknown bridge field|exactly 13|Hybrid/);
+  });
+
+  it('rejects invalid source_system and case variants', () => {
+    expect(() =>
+      parsePinnedBridgeV3JsonlRow(makeSyntheticPinnedV3Row({ source_system: 'icd10' }), 1),
+    ).toThrow(/Unknown source_system/);
+    expect(() =>
+      parsePinnedBridgeV3JsonlRow(makeSyntheticPinnedV3Row({ source_system: 'ICD-10' }), 1),
+    ).toThrow(/Unknown source_system/);
+    expect(() =>
+      parsePinnedBridgeV3JsonlRow(makeSyntheticPinnedV3Row({ source_system: '' }), 1),
+    ).toThrow(/Unknown source_system/);
+  });
+
+  it('enforces disposition-specific candidate number/string/null forms', () => {
+    expect(
+      parsePinnedBridgeV3JsonlRow(makeSyntheticPinnedV3Row({ candidate_eh_disease_id: 42 }), 1)
+        .candidateLegacyDbIds,
+    ).toEqual([42]);
+
+    expect(() =>
+      parsePinnedBridgeV3JsonlRow(makeSyntheticPinnedV3Row({ candidate_eh_disease_id: '42' }), 1),
+    ).toThrow(/positive safe integer/);
+
+    const multi = makeSyntheticPinnedV3Row({
+      ambiguity: true,
+      bridge_id: 'syn-multi-1',
+      candidate_eh_disease_id: '3;1;2',
+      match_confidence: 'MEDIUM',
+      recommended_disposition: 'EXACT_MULTIPLE_MATCH',
+      technical_disposition: 'EXACT_MULTIPLE_MATCH',
+    });
+    expect(parsePinnedBridgeV3JsonlRow(multi, 1).candidateLegacyDbIds).toEqual([1, 2, 3]);
+
+    const owner = makeSyntheticPinnedV3Row({
+      ambiguity: true,
+      bridge_id: 'syn-owner-1',
+      candidate_eh_disease_id: '9;8',
+      match_confidence: 'MEDIUM',
+      polarity_conflict: true,
+      recommended_disposition: 'OWNER_REVIEW_REQUIRED',
+      technical_disposition: 'EXACT_MULTIPLE_MATCH',
+    });
+    const ownerRow = parsePinnedBridgeV3JsonlRow(owner, 1);
+    expect(ownerRow.disposition).toBe('OWNER_REVIEW_REQUIRED');
+    expect(ownerRow.candidateLegacyDbIds).toEqual([8, 9]);
+
+    const none = makeSyntheticPinnedV3Row({
+      ambiguity: false,
+      bridge_id: 'syn-none-1',
+      candidate_eh_disease_id: null,
+      match_confidence: 'N/A',
+      match_method: 'exact_code_failed',
+      recommended_disposition: 'NO_MATCH',
+      technical_disposition: 'NO_MATCH',
+    });
+    expect(parsePinnedBridgeV3JsonlRow(none, 1).candidateLegacyDbIds).toEqual([]);
+  });
+
+  it('rejects duplicate/unsafe candidates and unexpected disposition pairs', () => {
+    expect(() =>
+      parsePinnedBridgeV3JsonlRow(
+        makeSyntheticPinnedV3Row({
+          ambiguity: true,
+          candidate_eh_disease_id: '1;1',
+          match_confidence: 'MEDIUM',
+          recommended_disposition: 'EXACT_MULTIPLE_MATCH',
+          technical_disposition: 'EXACT_MULTIPLE_MATCH',
+        }),
+        1,
+      ),
+    ).toThrow(/duplicate/i);
+
+    expect(() =>
+      parsePinnedBridgeV3JsonlRow(
+        makeSyntheticPinnedV3Row({
+          ambiguity: true,
+          candidate_eh_disease_id: '1;0',
+          match_confidence: 'MEDIUM',
+          recommended_disposition: 'EXACT_MULTIPLE_MATCH',
+          technical_disposition: 'EXACT_MULTIPLE_MATCH',
+        }),
+        1,
+      ),
+    ).toThrow(/Unsafe|Invalid/);
+
+    expect(() =>
+      parsePinnedBridgeV3JsonlRow(
+        makeSyntheticPinnedV3Row({
+          recommended_disposition: 'OWNER_REVIEW_REQUIRED',
+          technical_disposition: 'OWNER_REVIEW_REQUIRED',
+          ambiguity: true,
+          polarity_conflict: true,
+          match_confidence: 'MEDIUM',
+          candidate_eh_disease_id: '1;2',
+        }),
+        1,
+      ),
+    ).toThrow(/Unexpected recommended\/technical/);
+  });
+
+  it('rejects ambiguity contradiction and malformed match/polarity fields', () => {
+    expect(() =>
+      parsePinnedBridgeV3JsonlRow(makeSyntheticPinnedV3Row({ ambiguity: true }), 1),
+    ).toThrow(/ambiguity contradicts/);
+
+    expect(() =>
+      parsePinnedBridgeV3JsonlRow(makeSyntheticPinnedV3Row({ match_method: 'unknown_method' }), 1),
+    ).toThrow(/Invalid match_method/);
+
+    expect(() =>
+      parsePinnedBridgeV3JsonlRow(
+        makeSyntheticPinnedV3Row({
+          polarity_counts: { MIXED: 1, UNKNOWN: 2 },
+        }),
+        1,
+      ),
+    ).toThrow(/Unknown polarity_counts key/);
+
+    expect(() =>
+      parsePinnedBridgeV3JsonlRow(
+        makeSyntheticPinnedV3Row({
+          polarity_counts: { MIXED: -1 },
+        }),
+        1,
+      ),
+    ).toThrow(/Invalid polarity_counts value/);
+  });
+
+  it('polarity-value variation yields identical identity outputs with no polarity keys', () => {
+    const a = parsePinnedBridgeV3JsonlRow(
+      makeSyntheticPinnedV3Row({
+        majority_polarity: 'POSITIVE',
+        polarity_counts: { POSITIVE: 3 },
+      }),
+      1,
+    );
+    const b = parsePinnedBridgeV3JsonlRow(
+      makeSyntheticPinnedV3Row({
+        bridge_id: 'syn-bridge-unique-002',
+        majority_polarity: 'NEGATIVE',
+        polarity_counts: { NEGATIVE: 9, MIXED: 1 },
+      }),
+      2,
+    );
+    expect(JSON.stringify(a)).toBe(JSON.stringify(b));
+    const serialized = JSON.stringify(a);
+    expect(serialized).not.toMatch(/polarity/i);
+    expect(serialized).not.toMatch(/majority/i);
+    expect(serialized).not.toMatch(/mapped_name|bridge_id|match_method/);
+  });
+
+  it('rejects unknown keys before destination creation via production ingest path', async () => {
+    const dir = mkdtempSync(path.join(tmpdir(), 'ehas2-v3-ingest-'));
+    const indexDir = path.join(dir, 'index');
+    mkdirSync(indexDir, { recursive: true });
+    let index: ReturnType<typeof createProductionBuildIndex> | undefined;
+    try {
+      const bridgePath = path.join(dir, 'bridge.jsonl');
+      writeFileSync(
+        bridgePath,
+        `${JSON.stringify({ ...makeSyntheticPinnedV3Row(), rogue: true })}\n`,
+        'utf8',
+      );
+      index = createProductionBuildIndex(indexDir, {
+        mode: 'synthetic-test',
+        expectedDbRows: 1,
+        expectedMappedRawRows: 1,
+        expectedMappedUniqueRows: 1,
+        expectedBridgeRows: 1,
+      });
+      await expect(ingestBridgeToBuildIndex(bridgePath, index)).rejects.toThrow(
+        /Unknown bridge field|exactly 13/,
+      );
+      expect(index.counts().bridgeRows).toBe(0);
+    } finally {
+      index?.destroy();
+      try {
+        rmSync(dir, { recursive: true, force: true });
+      } catch (error) {
+        // Known Windows ENOTEMPTY on SQLite teardown; Linux CI remains authoritative.
+        if ((error as NodeJS.ErrnoException).code !== 'ENOTEMPTY') {
+          throw error;
+        }
+      }
+    }
+  });
+
+  it('production sanitized CLI ingest accepts actual-schema fixture; synthetic schema blocked', async () => {
+    const dir = mkdtempSync(path.join(tmpdir(), 'ehas2-v3-ok-'));
+    const indexDir = path.join(dir, 'index');
+    mkdirSync(indexDir, { recursive: true });
+    let index: ReturnType<typeof createProductionBuildIndex> | undefined;
+    try {
+      const bridgePath = path.join(dir, 'bridge.jsonl');
+      const rows = [
+        makeSyntheticPinnedV3Row({
+          bridge_id: 'ok-1',
+          mapped_code: 'A00.0',
+          candidate_eh_disease_id: 1,
+        }),
+        makeSyntheticPinnedV3Row({
+          ambiguity: true,
+          bridge_id: 'ok-2',
+          mapped_code: '100100',
+          source_system: 'OMIM',
+          candidate_eh_disease_id: '2;5',
+          match_confidence: 'MEDIUM',
+          recommended_disposition: 'EXACT_MULTIPLE_MATCH',
+          technical_disposition: 'EXACT_MULTIPLE_MATCH',
+        }),
+        makeSyntheticPinnedV3Row({
+          ambiguity: true,
+          bridge_id: 'ok-3',
+          mapped_code: '558',
+          source_system: 'ORPHANET',
+          candidate_eh_disease_id: '3;6',
+          match_confidence: 'MEDIUM',
+          polarity_conflict: true,
+          recommended_disposition: 'OWNER_REVIEW_REQUIRED',
+          technical_disposition: 'EXACT_MULTIPLE_MATCH',
+        }),
+        makeSyntheticPinnedV3Row({
+          bridge_id: 'ok-4',
+          mapped_code: 'D000001',
+          source_system: 'MESH',
+          candidate_eh_disease_id: null,
+          match_confidence: 'N/A',
+          match_method: 'exact_code_failed',
+          recommended_disposition: 'NO_MATCH',
+          technical_disposition: 'NO_MATCH',
+        }),
+      ];
+      writeFileSync(bridgePath, `${rows.map((r) => JSON.stringify(r)).join('\n')}\n`, 'utf8');
+      index = createProductionBuildIndex(indexDir, {
+        mode: 'synthetic-test',
+        expectedDbRows: 6,
+        expectedMappedRawRows: 4,
+        expectedMappedUniqueRows: 4,
+        expectedBridgeRows: 4,
+      });
+      const result = await ingestBridgeToBuildIndex(bridgePath, index, { maxRows: 4 });
+      expect(result.rowCount).toBe(4);
+      expect(index.counts().bridgeRows).toBe(4);
+      const dispositions = {
+        EXACT_UNIQUE_MATCH: index.scalarNumber(
+          "SELECT COUNT(*) FROM bridge_entry WHERE disposition='EXACT_UNIQUE_MATCH'",
+        ),
+        EXACT_MULTIPLE_MATCH: index.scalarNumber(
+          "SELECT COUNT(*) FROM bridge_entry WHERE disposition='EXACT_MULTIPLE_MATCH'",
+        ),
+        OWNER_REVIEW_REQUIRED: index.scalarNumber(
+          "SELECT COUNT(*) FROM bridge_entry WHERE disposition='OWNER_REVIEW_REQUIRED'",
+        ),
+        NO_MATCH: index.scalarNumber(
+          "SELECT COUNT(*) FROM bridge_entry WHERE disposition='NO_MATCH'",
+        ),
+      };
+      expect(dispositions).toEqual({
+        EXACT_UNIQUE_MATCH: 1,
+        EXACT_MULTIPLE_MATCH: 1,
+        OWNER_REVIEW_REQUIRED: 1,
+        NO_MATCH: 1,
+      });
+      // Controlled index bridge_entry columns are identity-only (no polarity).
+      expect(
+        index.scalarNumber(
+          "SELECT COUNT(*) FROM pragma_table_info('bridge_entry') WHERE name LIKE '%polar%'",
+        ),
+      ).toBe(0);
+
+      expect(() =>
+        parseBridgeRowForSchema(
+          BRIDGE_INGEST_SCHEMA_SYNTHETIC,
+          {
+            mapped_source_label: 'ICD10',
+            mapped_code: 'A00.0',
+            recommended_disposition: 'EXACT_UNIQUE_MATCH',
+            candidate_eh_disease_id: '1',
+          },
+          1,
+        ),
+      ).toThrow(/test-only|cannot enter the production path/);
+
+      expect(
+        parseBridgeRowForSchema(
+          BRIDGE_INGEST_SCHEMA_SYNTHETIC,
+          {
+            mapped_source_label: 'ICD10',
+            mapped_code: 'A00.0',
+            recommended_disposition: 'EXACT_UNIQUE_MATCH',
+            candidate_eh_disease_id: '1',
+          },
+          1,
+          { allowSyntheticBridgeSchema: true },
+        ).disposition,
+      ).toBe('EXACT_UNIQUE_MATCH');
+
+      expect(BRIDGE_INGEST_SCHEMA_PINNED_V3).toBe('pinned-bridge-v3-actual');
+      expect(PRODUCTION_BRIDGE_DISPOSITION_COUNTS).toEqual({
+        EXACT_UNIQUE_MATCH: 33070,
+        EXACT_MULTIPLE_MATCH: 17181,
+        OWNER_REVIEW_REQUIRED: 257,
+        NO_MATCH: 36,
+      });
+    } finally {
+      index?.destroy();
+      try {
+        rmSync(dir, { recursive: true, force: true });
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== 'ENOTEMPTY') {
+          throw error;
+        }
+      }
+    }
+  });
+
+  it('rejects duplicate root JSON keys when detectable', () => {
+    expect(() =>
+      parseJsonObjectRejectDuplicateRootKeys(
+        '{"ambiguity":false,"ambiguity":true,"bridge_id":"x"}',
+        1,
+      ),
+    ).toThrow(/Duplicate bridge JSON key/);
   });
 });

@@ -5,7 +5,10 @@ import { createHash } from 'node:crypto';
 import { Transform } from 'node:stream';
 import {
   EXPECTED_BRIDGE_ROW_COUNT,
-  parseBridgeJsonlRow,
+  parseBridgeRowForSchema,
+  parseJsonObjectRejectDuplicateRootKeys,
+  BRIDGE_INGEST_SCHEMA_PINNED_V3,
+  BRIDGE_INGEST_SCHEMA_SYNTHETIC,
   DiseaseIdentityError,
   assertConsumedByteDigest,
 } from '../../../packages/disease-identity/dist/index.js';
@@ -22,14 +25,45 @@ function createHashingPassThrough(hash) {
   });
 }
 
+function resolveBridgeSchema(options = {}) {
+  const schema = options.bridgeSchema ?? BRIDGE_INGEST_SCHEMA_PINNED_V3;
+  if (schema === BRIDGE_INGEST_SCHEMA_SYNTHETIC) {
+    if (options.allowSyntheticBridgeSchema !== true) {
+      throw new DiseaseIdentityError(
+        'MALFORMED_INPUT',
+        'Synthetic bridge schema is test-only and cannot enter the production path',
+      );
+    }
+    return schema;
+  }
+  if (schema !== BRIDGE_INGEST_SCHEMA_PINNED_V3) {
+    throw new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      `Unknown bridge schema mode ${String(schema)}`,
+    );
+  }
+  return schema;
+}
+
+function parseBridgeLine(line, lineNumber, schema, options) {
+  const raw = parseJsonObjectRejectDuplicateRootKeys(line, lineNumber);
+  return parseBridgeRowForSchema(schema, raw, lineNumber, {
+    seenBridgeIds: options.seenBridgeIds,
+    allowSyntheticBridgeSchema: options.allowSyntheticBridgeSchema === true,
+  });
+}
+
 /**
  * Stream bridge JSONL into an index Map by dedupeKey and Map dbId->evidence,
  * writing a JSONL spool. Stores ParsedBridgeRow in maps only once (no raw rows array).
+ * Production default: pinned Bridge V3 actual schema.
  */
 export async function streamBridgeToIndex(filePath, spoolPath, options = {}) {
   const maxLineBytes = options.maxLineBytes ?? MAX_BRIDGE_LINE_BYTES;
   const maxRows = options.maxRows ?? MAX_BRIDGE_ROWS;
   const expectedSha256 = options.expectedSha256 ?? null;
+  const schema = resolveBridgeSchema(options);
+  const seenBridgeIds = schema === BRIDGE_INGEST_SCHEMA_PINNED_V3 ? new Set() : undefined;
 
   const byDedupeKey = new Map();
   const byDbId = new Map();
@@ -63,7 +97,10 @@ export async function streamBridgeToIndex(filePath, spoolPath, options = {}) {
         `Bridge JSONL exceeds maxRows (${maxRows})`,
       );
     }
-    const parsed = parseBridgeJsonlRow(JSON.parse(line), lineNumber);
+    const parsed = parseBridgeLine(line, lineNumber, schema, {
+      seenBridgeIds,
+      allowSyntheticBridgeSchema: options.allowSyntheticBridgeSchema,
+    });
     if (byDedupeKey.has(parsed.dedupeKey)) {
       throw new DiseaseIdentityError('MALFORMED_INPUT', 'Duplicate bridge mapped key');
     }
@@ -107,6 +144,8 @@ export async function streamBridgeToIndex(filePath, spoolPath, options = {}) {
 export async function ingestBridgeToBuildIndex(filePath, index, options = {}) {
   const maxLineBytes = options.maxLineBytes ?? MAX_BRIDGE_LINE_BYTES;
   const maxRows = options.maxRows ?? MAX_BRIDGE_ROWS;
+  const schema = resolveBridgeSchema(options);
+  const seenBridgeIds = schema === BRIDGE_INGEST_SCHEMA_PINNED_V3 ? new Set() : undefined;
   const hash = createHash('sha256');
   let consumedBytes = 0;
   const hashing = new Transform({
@@ -137,16 +176,12 @@ export async function ingestBridgeToBuildIndex(filePath, index, options = {}) {
           `Bridge JSONL exceeds maxRows (${maxRows})`,
         );
       }
-      let raw;
-      try {
-        raw = JSON.parse(line);
-      } catch {
-        throw new DiseaseIdentityError(
-          'MALFORMED_INPUT',
-          `Malformed bridge JSON at line ${rowCount}`,
-        );
-      }
-      index.insertBridgeRow(parseBridgeJsonlRow(raw, rowCount));
+      index.insertBridgeRow(
+        parseBridgeLine(line, rowCount, schema, {
+          seenBridgeIds,
+          allowSyntheticBridgeSchema: options.allowSyntheticBridgeSchema,
+        }),
+      );
     }
   } catch (error) {
     rl.close();
@@ -165,6 +200,8 @@ export async function ingestBridgeToBuildIndex(filePath, index, options = {}) {
 export async function collectBridgeRows(filePath, options = {}) {
   const maxLineBytes = options.maxLineBytes ?? MAX_BRIDGE_LINE_BYTES;
   const maxRows = options.maxRows ?? MAX_BRIDGE_ROWS;
+  const schema = resolveBridgeSchema(options);
+  const seenBridgeIds = schema === BRIDGE_INGEST_SCHEMA_PINNED_V3 ? new Set() : undefined;
   const rows = [];
   const hash = createHash('sha256');
   const hashing = createHashingPassThrough(hash);
@@ -191,7 +228,12 @@ export async function collectBridgeRows(filePath, options = {}) {
         `Bridge JSONL exceeds maxRows (${maxRows})`,
       );
     }
-    rows.push(parseBridgeJsonlRow(JSON.parse(line), lineNumber));
+    rows.push(
+      parseBridgeLine(line, lineNumber, schema, {
+        seenBridgeIds,
+        allowSyntheticBridgeSchema: options.allowSyntheticBridgeSchema,
+      }),
+    );
   }
   const consumedSha256 = hash.digest('hex');
   if (options.expectedSha256) {

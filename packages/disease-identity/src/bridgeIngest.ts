@@ -1,4 +1,11 @@
-import { BRIDGE_DISPOSITIONS, MAX_CANDIDATE_IDS } from './constants.js';
+import {
+  APPROVED_AGGREGATE_COUNTS,
+  BRIDGE_DISPOSITIONS,
+  MAX_CANDIDATE_IDS,
+  MAX_FIELD_LENGTH,
+  SOURCE_LABEL_TO_NAMESPACE,
+} from './constants.js';
+import { nfcNormalize } from './canonicalJson.js';
 import { DiseaseIdentityError } from './errors.js';
 import { normalizeMappedIdentity } from './normalize.js';
 import {
@@ -7,10 +14,13 @@ import {
   EXPECTED_UNRESOLVED_QUEUE_COUNT,
 } from './fullCorpusConstants.js';
 import { mappedRawKey } from './namespaceResolution.js';
-import { APPROVED_AGGREGATE_COUNTS } from './constants.js';
 import { assertCandidateLegacyDbIds } from './validationPrimitives.js';
 import type { ProductionBuildIndex } from './productionBuildIndex.js';
 
+/**
+ * Synthetic / test-only projected mini-schema keys.
+ * Must never be used as a permissive production allowlist.
+ */
 export const BRIDGE_ROW_ALLOWED_KEYS = [
   'mapped_source_label',
   'mappedSourceLabel',
@@ -22,6 +32,53 @@ export const BRIDGE_ROW_ALLOWED_KEYS = [
   'candidate_eh_disease_id',
   'candidateLegacyDbIds',
 ] as const;
+
+/** Production pinned Bridge V3 actual-schema keys (exact set, all required). */
+export const PINNED_BRIDGE_V3_REQUIRED_KEYS = [
+  'ambiguity',
+  'bridge_id',
+  'candidate_eh_disease_id',
+  'majority_polarity',
+  'mapped_code',
+  'mapped_name',
+  'match_confidence',
+  'match_method',
+  'polarity_conflict',
+  'polarity_counts',
+  'recommended_disposition',
+  'source_system',
+  'technical_disposition',
+] as const;
+
+export const BRIDGE_INGEST_SCHEMA_PINNED_V3 = 'pinned-bridge-v3-actual' as const;
+export const BRIDGE_INGEST_SCHEMA_SYNTHETIC = 'synthetic-projected-mini' as const;
+
+export type BridgeIngestSchemaMode =
+  typeof BRIDGE_INGEST_SCHEMA_PINNED_V3 | typeof BRIDGE_INGEST_SCHEMA_SYNTHETIC;
+
+const PINNED_BRIDGE_V3_KEY_SET: ReadonlySet<string> = new Set(PINNED_BRIDGE_V3_REQUIRED_KEYS);
+
+/** Locked recommended×technical pairs from pinned V3 aggregate audit. */
+export const PINNED_BRIDGE_V3_PERMITTED_DISPOSITION_PAIRS = [
+  ['EXACT_UNIQUE_MATCH', 'EXACT_UNIQUE_MATCH'],
+  ['EXACT_MULTIPLE_MATCH', 'EXACT_MULTIPLE_MATCH'],
+  ['OWNER_REVIEW_REQUIRED', 'EXACT_MULTIPLE_MATCH'],
+  ['NO_MATCH', 'NO_MATCH'],
+] as const;
+
+const PINNED_V3_PAIR_SET: ReadonlySet<string> = new Set(
+  PINNED_BRIDGE_V3_PERMITTED_DISPOSITION_PAIRS.map(([r, t]) => `${r}|${t}`),
+);
+
+const PINNED_V3_MATCH_METHODS = new Set([
+  'exact_code_multinamespace_icd10_code_col',
+  'exact_code_failed',
+]);
+
+const PINNED_V3_MATCH_CONFIDENCES = new Set(['HIGH', 'MEDIUM', 'N/A']);
+const PINNED_V3_MAJORITY_POLARITIES = new Set(['MIXED', 'POSITIVE', 'NEGATIVE']);
+const PINNED_V3_POLARITY_COUNT_KEYS = new Set(['MIXED', 'POSITIVE', 'NEGATIVE']);
+const PINNED_V3_BRIDGE_ID_PATTERN = /^[A-Za-z0-9._:-]+$/;
 
 export type BridgeDisposition = (typeof BRIDGE_DISPOSITIONS)[number];
 
@@ -41,6 +98,11 @@ export const PRODUCTION_BRIDGE_DISPOSITION_COUNTS = {
   OWNER_REVIEW_REQUIRED: 257,
   NO_MATCH: 36,
 } as const;
+
+export type ParsePinnedBridgeV3Options = {
+  /** When provided, enforces corpus-wide bridge_id uniqueness (production ingest). */
+  readonly seenBridgeIds?: Set<string>;
+};
 
 function parseCandidateIds(raw: unknown): number[] {
   let ids: number[];
@@ -86,6 +148,478 @@ function parseCandidateIds(raw: unknown): number[] {
   return assertCandidateLegacyDbIds(ids, 'candidateLegacyDbIds');
 }
 
+function assertBoundedNfcString(
+  value: unknown,
+  label: string,
+  lineNumber: number,
+  options: { readonly allowEmpty: boolean },
+): string {
+  if (typeof value !== 'string') {
+    throw new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      `Bridge ${label} must be a string at line ${lineNumber}`,
+    );
+  }
+  const normalized = nfcNormalize(value);
+  if (!options.allowEmpty && normalized.trim().length === 0) {
+    throw new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      `Bridge ${label} must be non-empty at line ${lineNumber}`,
+    );
+  }
+  if (normalized.length > MAX_FIELD_LENGTH) {
+    throw new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      `Bridge ${label} exceeds ${MAX_FIELD_LENGTH} at line ${lineNumber}`,
+    );
+  }
+  return normalized;
+}
+
+/**
+ * Reject duplicate root JSON object keys when the streaming layer can detect them.
+ * Nested object keys (e.g. polarity_counts) are ignored for this check.
+ */
+export function parseJsonObjectRejectDuplicateRootKeys(
+  text: string,
+  lineNumber: number,
+): Record<string, unknown> {
+  let depth = 0;
+  let inString = false;
+  let escape = false;
+  let expectingKey = false;
+  let collectingKey = false;
+  let keyBuffer = '';
+  const rootKeys = new Set<string>();
+
+  for (let i = 0; i < text.length; i += 1) {
+    const ch = text[i]!;
+    if (inString) {
+      if (escape) {
+        if (collectingKey) keyBuffer += ch;
+        escape = false;
+        continue;
+      }
+      if (ch === '\\') {
+        escape = true;
+        if (collectingKey) keyBuffer += ch;
+        continue;
+      }
+      if (ch === '"') {
+        inString = false;
+        if (collectingKey && depth === 1 && expectingKey) {
+          if (rootKeys.has(keyBuffer)) {
+            throw new DiseaseIdentityError(
+              'MALFORMED_INPUT',
+              `Duplicate bridge JSON key at line ${lineNumber}`,
+            );
+          }
+          rootKeys.add(keyBuffer);
+          collectingKey = false;
+          expectingKey = false;
+          keyBuffer = '';
+        }
+        continue;
+      }
+      if (collectingKey) keyBuffer += ch;
+      continue;
+    }
+
+    if (ch === '"') {
+      inString = true;
+      if (depth === 1 && expectingKey) {
+        collectingKey = true;
+        keyBuffer = '';
+      }
+      continue;
+    }
+    if (ch === '{') {
+      depth += 1;
+      if (depth === 1) expectingKey = true;
+      continue;
+    }
+    if (ch === '}') {
+      depth -= 1;
+      continue;
+    }
+    if (ch === '[') {
+      depth += 1;
+      continue;
+    }
+    if (ch === ']') {
+      depth -= 1;
+      continue;
+    }
+    if (depth === 1 && ch === ',') {
+      expectingKey = true;
+    }
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    throw new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      `Malformed bridge JSON at line ${lineNumber}`,
+    );
+  }
+  if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      `Bridge row must be a JSON object at line ${lineNumber}`,
+    );
+  }
+  return parsed as Record<string, unknown>;
+}
+
+function assertPinnedV3ExactKeySet(raw: Record<string, unknown>, lineNumber: number): void {
+  const keys = Object.keys(raw);
+  if (keys.length !== PINNED_BRIDGE_V3_REQUIRED_KEYS.length) {
+    throw new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      `Pinned Bridge V3 row must have exactly ${PINNED_BRIDGE_V3_REQUIRED_KEYS.length} keys at line ${lineNumber}`,
+    );
+  }
+  for (const key of keys) {
+    if (!PINNED_BRIDGE_V3_KEY_SET.has(key)) {
+      throw new DiseaseIdentityError(
+        'MALFORMED_INPUT',
+        `Unknown bridge field ${key} at line ${lineNumber}`,
+      );
+    }
+  }
+  for (const required of PINNED_BRIDGE_V3_REQUIRED_KEYS) {
+    if (!Object.prototype.hasOwnProperty.call(raw, required)) {
+      throw new DiseaseIdentityError(
+        'MALFORMED_INPUT',
+        `Missing bridge field ${required} at line ${lineNumber}`,
+      );
+    }
+  }
+}
+
+function validatePinnedV3PolarityFirewall(raw: Record<string, unknown>, lineNumber: number): void {
+  const majority = raw.majority_polarity;
+  if (typeof majority !== 'string' || !PINNED_V3_MAJORITY_POLARITIES.has(majority)) {
+    throw new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      `Invalid majority_polarity at line ${lineNumber}`,
+    );
+  }
+  if (typeof raw.polarity_conflict !== 'boolean') {
+    throw new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      `polarity_conflict must be boolean at line ${lineNumber}`,
+    );
+  }
+  const counts = raw.polarity_counts;
+  if (counts === null || typeof counts !== 'object' || Array.isArray(counts)) {
+    throw new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      `polarity_counts must be object at line ${lineNumber}`,
+    );
+  }
+  const countKeys = Object.keys(counts as Record<string, unknown>);
+  if (countKeys.length === 0) {
+    throw new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      `polarity_counts must be non-empty at line ${lineNumber}`,
+    );
+  }
+  for (const key of countKeys) {
+    if (!PINNED_V3_POLARITY_COUNT_KEYS.has(key)) {
+      throw new DiseaseIdentityError(
+        'MALFORMED_INPUT',
+        `Unknown polarity_counts key at line ${lineNumber}`,
+      );
+    }
+    const value = (counts as Record<string, unknown>)[key];
+    if (typeof value !== 'number' || !Number.isSafeInteger(value) || value < 0) {
+      throw new DiseaseIdentityError(
+        'MALFORMED_INPUT',
+        `Invalid polarity_counts value at line ${lineNumber}`,
+      );
+    }
+  }
+}
+
+function parsePinnedV3Candidates(
+  disposition: BridgeDisposition,
+  raw: unknown,
+  lineNumber: number,
+): number[] {
+  if (disposition === 'EXACT_UNIQUE_MATCH') {
+    if (typeof raw !== 'number' || !Number.isSafeInteger(raw) || raw <= 0) {
+      throw new DiseaseIdentityError(
+        'MALFORMED_INPUT',
+        `EXACT_UNIQUE candidate must be one positive safe integer at line ${lineNumber}`,
+      );
+    }
+    return assertCandidateLegacyDbIds([raw], 'candidateLegacyDbIds');
+  }
+
+  if (disposition === 'NO_MATCH') {
+    if (raw !== null) {
+      throw new DiseaseIdentityError(
+        'MALFORMED_INPUT',
+        `NO_MATCH candidate must be null at line ${lineNumber}`,
+      );
+    }
+    return [];
+  }
+
+  // EXACT_MULTIPLE_MATCH and OWNER_REVIEW_REQUIRED: semicolon-delimited string only.
+  if (typeof raw !== 'string') {
+    throw new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      `Ambiguous bridge candidate must be semicolon string at line ${lineNumber}`,
+    );
+  }
+  if (!raw.includes(';')) {
+    throw new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      `Ambiguous bridge candidate must include ';' at line ${lineNumber}`,
+    );
+  }
+  const parts = raw.split(';');
+  const ids: number[] = [];
+  for (const part of parts) {
+    if (part.trim().length !== part.length || part.length === 0) {
+      throw new DiseaseIdentityError(
+        'MALFORMED_INPUT',
+        `Malformed bridge candidate token at line ${lineNumber}`,
+      );
+    }
+    if (!/^[0-9]+$/.test(part)) {
+      throw new DiseaseIdentityError(
+        'MALFORMED_INPUT',
+        `Invalid bridge candidate token at line ${lineNumber}`,
+      );
+    }
+    const n = Number(part);
+    if (!Number.isSafeInteger(n) || n <= 0) {
+      throw new DiseaseIdentityError(
+        'MALFORMED_INPUT',
+        `Unsafe bridge candidate id at line ${lineNumber}`,
+      );
+    }
+    ids.push(n);
+  }
+  if (ids.length < 2) {
+    throw new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      `Ambiguous bridge row must have multiple candidate ids at line ${lineNumber}`,
+    );
+  }
+  if (ids.length > MAX_CANDIDATE_IDS) {
+    throw new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      `Bridge candidate array exceeds ${MAX_CANDIDATE_IDS}`,
+    );
+  }
+  ids.sort((a, b) => a - b);
+  return assertCandidateLegacyDbIds(ids, 'candidateLegacyDbIds');
+}
+
+function assertPinnedV3DispositionInvariants(
+  recommended: BridgeDisposition,
+  technical: string,
+  ambiguity: unknown,
+  polarityConflict: unknown,
+  matchMethod: unknown,
+  matchConfidence: unknown,
+  lineNumber: number,
+): void {
+  if (!PINNED_V3_PAIR_SET.has(`${recommended}|${technical}`)) {
+    throw new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      `Unexpected recommended/technical disposition pair at line ${lineNumber}`,
+    );
+  }
+  if (typeof ambiguity !== 'boolean') {
+    throw new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      `ambiguity must be boolean at line ${lineNumber}`,
+    );
+  }
+  if (typeof polarityConflict !== 'boolean') {
+    throw new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      `polarity_conflict must be boolean at line ${lineNumber}`,
+    );
+  }
+  if (typeof matchMethod !== 'string' || !PINNED_V3_MATCH_METHODS.has(matchMethod)) {
+    throw new DiseaseIdentityError('MALFORMED_INPUT', `Invalid match_method at line ${lineNumber}`);
+  }
+  if (typeof matchConfidence !== 'string' || !PINNED_V3_MATCH_CONFIDENCES.has(matchConfidence)) {
+    throw new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      `Invalid match_confidence at line ${lineNumber}`,
+    );
+  }
+
+  const expectAmbiguous =
+    recommended === 'EXACT_MULTIPLE_MATCH' || recommended === 'OWNER_REVIEW_REQUIRED';
+  if (ambiguity !== expectAmbiguous) {
+    throw new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      `ambiguity contradicts disposition at line ${lineNumber}`,
+    );
+  }
+  const expectPolarityConflict = recommended === 'OWNER_REVIEW_REQUIRED';
+  if (polarityConflict !== expectPolarityConflict) {
+    throw new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      `polarity_conflict contradicts disposition at line ${lineNumber}`,
+    );
+  }
+
+  if (recommended === 'NO_MATCH') {
+    if (matchMethod !== 'exact_code_failed' || matchConfidence !== 'N/A') {
+      throw new DiseaseIdentityError(
+        'MALFORMED_INPUT',
+        `NO_MATCH match provenance mismatch at line ${lineNumber}`,
+      );
+    }
+  } else if (matchMethod !== 'exact_code_multinamespace_icd10_code_col') {
+    throw new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      `match_method mismatch at line ${lineNumber}`,
+    );
+  } else if (recommended === 'EXACT_UNIQUE_MATCH' && matchConfidence !== 'HIGH') {
+    throw new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      `match_confidence mismatch at line ${lineNumber}`,
+    );
+  } else if (
+    (recommended === 'EXACT_MULTIPLE_MATCH' || recommended === 'OWNER_REVIEW_REQUIRED') &&
+    matchConfidence !== 'MEDIUM'
+  ) {
+    throw new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      `match_confidence mismatch at line ${lineNumber}`,
+    );
+  }
+}
+
+/**
+ * Production parser for the exact pinned Bridge V3 actual schema.
+ * Identity-only: polarity/name/bridge_id/match fields are structurally validated and dropped.
+ * `recommended_disposition` is authoritative; `technical_disposition` is cross-check only.
+ */
+export function parsePinnedBridgeV3JsonlRow(
+  raw: Record<string, unknown>,
+  lineNumber: number,
+  options: ParsePinnedBridgeV3Options = {},
+): ParsedBridgeRow {
+  assertPinnedV3ExactKeySet(raw, lineNumber);
+
+  // Hybrid actual/projected rows fail closed (projected keys are unknown extras).
+  if (
+    Object.prototype.hasOwnProperty.call(raw, 'mapped_source_label') ||
+    Object.prototype.hasOwnProperty.call(raw, 'mappedSourceLabel') ||
+    Object.prototype.hasOwnProperty.call(raw, 'candidateLegacyDbIds')
+  ) {
+    throw new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      `Hybrid bridge schema rejected at line ${lineNumber}`,
+    );
+  }
+
+  const recommendedRaw = raw.recommended_disposition;
+  if (
+    typeof recommendedRaw !== 'string' ||
+    !(BRIDGE_DISPOSITIONS as readonly string[]).includes(recommendedRaw)
+  ) {
+    throw new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      `Invalid recommended_disposition at line ${lineNumber}`,
+    );
+  }
+  const recommended = recommendedRaw as BridgeDisposition;
+  const technical = raw.technical_disposition;
+  if (typeof technical !== 'string') {
+    throw new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      `technical_disposition must be string at line ${lineNumber}`,
+    );
+  }
+
+  assertPinnedV3DispositionInvariants(
+    recommended,
+    technical,
+    raw.ambiguity,
+    raw.polarity_conflict,
+    raw.match_method,
+    raw.match_confidence,
+    lineNumber,
+  );
+  validatePinnedV3PolarityFirewall(raw, lineNumber);
+
+  const bridgeId = assertBoundedNfcString(raw.bridge_id, 'bridge_id', lineNumber, {
+    allowEmpty: false,
+  });
+  if (!PINNED_V3_BRIDGE_ID_PATTERN.test(bridgeId)) {
+    throw new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      `Invalid bridge_id format at line ${lineNumber}`,
+    );
+  }
+  if (options.seenBridgeIds) {
+    if (options.seenBridgeIds.has(bridgeId)) {
+      throw new DiseaseIdentityError(
+        'MALFORMED_INPUT',
+        `Duplicate bridge_id at line ${lineNumber}`,
+      );
+    }
+    options.seenBridgeIds.add(bridgeId);
+  }
+
+  // Non-authority: structurally validate mapped_name; never propagate.
+  assertBoundedNfcString(raw.mapped_name, 'mapped_name', lineNumber, { allowEmpty: false });
+
+  const sourceSystem = raw.source_system;
+  if (typeof sourceSystem !== 'string' || sourceSystem.trim() !== sourceSystem) {
+    throw new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      `Invalid source_system at line ${lineNumber}`,
+    );
+  }
+  if (!Object.prototype.hasOwnProperty.call(SOURCE_LABEL_TO_NAMESPACE, sourceSystem)) {
+    throw new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      `Unknown source_system at line ${lineNumber}`,
+    );
+  }
+  const mappedSourceLabel = sourceSystem;
+  const mappedCodeRaw = assertBoundedNfcString(raw.mapped_code, 'mapped_code', lineNumber, {
+    allowEmpty: false,
+  });
+
+  const candidateLegacyDbIds = parsePinnedV3Candidates(
+    recommended,
+    raw.candidate_eh_disease_id,
+    lineNumber,
+  );
+
+  const normalized = normalizeMappedIdentity(mappedSourceLabel, mappedCodeRaw);
+  const dedupeKey = mappedRawKey(mappedSourceLabel, mappedCodeRaw);
+
+  return {
+    mappedSourceLabel,
+    mappedCodeRaw,
+    disposition: recommended,
+    candidateLegacyDbIds,
+    dedupeKey,
+    normalizedIdentityKey: normalized.ok ? normalized.normalizedIdentityKey : null,
+  };
+}
+
+/**
+ * Synthetic / test-only projected mini-schema parser.
+ * Production full-corpus ingest must use parsePinnedBridgeV3JsonlRow.
+ */
 export function parseBridgeJsonlRow(
   raw: Record<string, unknown>,
   lineNumber: number,
@@ -151,6 +685,31 @@ export function parseBridgeJsonlRow(
     dedupeKey,
     normalizedIdentityKey: normalized.ok ? normalized.normalizedIdentityKey : null,
   };
+}
+
+/**
+ * Explicit schema selector. Production tooling must pass pinned-v3.
+ * Synthetic mini-schema requires allowSyntheticBridgeSchema=true (tests only).
+ */
+export function parseBridgeRowForSchema(
+  schema: BridgeIngestSchemaMode,
+  raw: Record<string, unknown>,
+  lineNumber: number,
+  options: ParsePinnedBridgeV3Options & { readonly allowSyntheticBridgeSchema?: boolean } = {},
+): ParsedBridgeRow {
+  if (schema === BRIDGE_INGEST_SCHEMA_PINNED_V3) {
+    return parsePinnedBridgeV3JsonlRow(raw, lineNumber, options);
+  }
+  if (schema === BRIDGE_INGEST_SCHEMA_SYNTHETIC) {
+    if (options.allowSyntheticBridgeSchema !== true) {
+      throw new DiseaseIdentityError(
+        'MALFORMED_INPUT',
+        'Synthetic bridge schema is test-only and cannot enter the production path',
+      );
+    }
+    return parseBridgeJsonlRow(raw, lineNumber);
+  }
+  throw new DiseaseIdentityError('MALFORMED_INPUT', `Unknown bridge schema mode ${String(schema)}`);
 }
 
 export type ValidateBridgeBatchSyntheticOptions = {
