@@ -16,6 +16,7 @@ import { describe, expect, it } from 'vitest';
 import Database from 'better-sqlite3';
 import * as publicApi from '../src/index.js';
 import {
+  APPROVED_AGGREGATE_COUNTS,
   assertFullCorpusBuildAuthorized,
   assertProductionGeneratorReady,
   BUNDLE_KIND_PRODUCTION,
@@ -520,6 +521,36 @@ describe('R2-DATA-P2C-A bounded production architecture', () => {
     expect(readdirSync(destination)).toEqual([]);
     index.destroy();
     rmSync(base, { recursive: true, force: true });
+  });
+
+  it('deterministic synthetic disk bundle fingerprint unchanged with WAL checkpoint boundaries', async () => {
+    const baseA = mkdtempSync(path.join(tmpdir(), 'ehas2-det-a-'));
+    const baseB = mkdtempSync(path.join(tmpdir(), 'ehas2-det-b-'));
+    const buildOnce = async (base: string) => {
+      const index = seedSyntheticIndex(path.join(base, 'index'));
+      const stagingDir = path.join(base, 'staging');
+      mkdirSync(stagingDir);
+      const artifacts = await buildFullCorpusArtifactsBoundedSyntheticDisk({
+        index,
+        stagingDir,
+        inputEvidenceHashes: {
+          legacyDbSha256: sha256('deterministic-db'),
+          mappedJsonSha256: sha256('deterministic-mapped'),
+          bridgeSha256: sha256('deterministic-bridge'),
+        },
+        inventoryVerified: false,
+        generatorSourceCommit: FAKE_COMMIT,
+        expectedGeneratorCommit: FAKE_COMMIT,
+      });
+      index.destroy();
+      return artifacts;
+    };
+    const a = await buildOnce(baseA);
+    const b = await buildOnce(baseB);
+    expect(a.manifest.aggregateFingerprint).toBe(b.manifest.aggregateFingerprint);
+    expect(a.manifest.reconciliation).toEqual(APPROVED_AGGREGATE_COUNTS);
+    rmSync(baseA, { recursive: true, force: true });
+    rmSync(baseB, { recursive: true, force: true });
   });
 
   it('SQLite rejects unknown output kinds and mapped byte pin is enforced', async () => {

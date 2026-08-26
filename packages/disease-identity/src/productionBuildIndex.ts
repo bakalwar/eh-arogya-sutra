@@ -1,8 +1,15 @@
-import { existsSync, mkdirSync, rmSync, statSync } from 'node:fs';
+import { existsSync, mkdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 import Database from 'better-sqlite3';
+import {
+  removeBuilderOwnedDirectory,
+  formatFailClosedCleanupMessage,
+  sleepSync,
+} from './controlledIndexCleanup.js';
 import { DiseaseIdentityError } from './errors.js';
 import {
+  CONTROLLED_INDEX_CHECKPOINT_HEADROOM_BYTES,
+  CONTROLLED_INDEX_OUTPUT_BATCH_ROWS,
   EXPECTED_BRIDGE_ROW_COUNT,
   EXPECTED_LEGACY_DB_DISEASE_COUNT,
   EXPECTED_MAPPED_JSON_ROW_COUNT,
@@ -29,6 +36,58 @@ type IndexMode =
 
 type SqlRow = Record<string, unknown>;
 
+export type MappedBridgeJoinRow = {
+  readonly dedupeKey: string;
+  readonly mappedSourceLabel: string;
+  readonly mappedCodeRaw: string;
+  readonly provenanceVariants: MappedDedupeEntry['provenanceVariants'];
+  readonly normalizedIdentityKey: string | null;
+  readonly disposition: ParsedBridgeRow['disposition'];
+  readonly candidateLegacyDbIds: number[];
+};
+
+type WalCheckpointResult = {
+  readonly busy: number;
+  readonly log: number;
+  readonly checkpointed: number;
+};
+
+function parseWalCheckpointResult(result: unknown, boundary: string): WalCheckpointResult {
+  const row = Array.isArray(result)
+    ? result[0]
+    : result && typeof result === 'object'
+      ? result
+      : null;
+  if (!row || typeof row !== 'object' || !('busy' in row)) {
+    throw new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      `${boundary}: controlled index WAL checkpoint returned unexpected result`,
+    );
+  }
+  return row as WalCheckpointResult;
+}
+
+/** Test-visible validation for better-sqlite3 WAL checkpoint row shape and fail-closed semantics. */
+export function validateWalCheckpointResult(
+  result: unknown,
+  boundary: string,
+): WalCheckpointResult {
+  const checkpoint = parseWalCheckpointResult(result, boundary);
+  if (checkpoint.busy !== 0) {
+    throw new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      `${boundary}: controlled index WAL checkpoint busy (active reader/writer)`,
+    );
+  }
+  if (checkpoint.log !== checkpoint.checkpointed) {
+    throw new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      `${boundary}: controlled index WAL checkpoint incomplete`,
+    );
+  }
+  return checkpoint;
+}
+
 export type ProductionBuildIndex = {
   readonly dbPath: string;
   readonly db: Database.Database;
@@ -51,6 +110,10 @@ export type ProductionBuildIndex = {
   checkControlledIndexSize(): bigint;
   assertIndexSizeLimit(): void;
   peakControlledIndexBytes(): bigint;
+  controlledIndexFootprintBytes(): bigint;
+  checkpointControlledIndexAtSafeBoundary(boundary: string): void;
+  fetchMappedBridgeJoinBatch(limit: number, offset: number): MappedBridgeJoinRow[];
+  fetchDbDiseaseBatch(limit: number, offset: number): LegacyDbRow[];
   /** Synthetic-test only: record an observed peak without reading the filesystem. */
   testOnlyRecordPeakBytes(bytes: bigint): void;
   iterateMappedEntries(): IterableIterator<MappedDedupeEntry>;
@@ -76,6 +139,10 @@ function safeJsonArray(value: string, label: string): unknown[] {
   return parsed;
 }
 
+function formatFailClosedMessage(reason: string, cleanupFailure: string | null): string {
+  return formatFailClosedCleanupMessage(reason, cleanupFailure);
+}
+
 export function createProductionBuildIndex(
   dir: string,
   options: IndexMode = {},
@@ -83,17 +150,40 @@ export function createProductionBuildIndex(
   mkdirSync(dir, { recursive: true });
   const dbPath = path.join(dir, 'production-build-index.sqlite');
   const ownsIndexFiles = !existsSync(dbPath);
-  const db = new Database(dbPath);
+  const primaryDb = new Database(dbPath);
   // Separate connection for output writes so ordered readers can stay open without
   // "database connection is busy" conflicts during streaming generation.
-  const writeDb = new Database(dbPath);
-  db.pragma('journal_mode = WAL');
-  db.pragma('synchronous = NORMAL');
-  db.pragma('foreign_keys = ON');
-  writeDb.pragma('journal_mode = WAL');
-  writeDb.pragma('synchronous = NORMAL');
-  writeDb.pragma('foreign_keys = ON');
-  db.exec(`
+  let closed = false;
+  let queryOnly = false;
+  const writeDbPath = dbPath;
+  let writeDb = new Database(writeDbPath);
+  const BUILDER_BUSY_TIMEOUT_MS = 5_000;
+  const CHECKPOINT_MAX_ATTEMPTS = 3;
+  const CHECKPOINT_BACKOFF_MS = 10;
+
+  function configureWriteConnection(conn: Database.Database): void {
+    conn.pragma(`busy_timeout = ${BUILDER_BUSY_TIMEOUT_MS}`);
+    conn.pragma('journal_mode = WAL');
+    conn.pragma('synchronous = NORMAL');
+    conn.pragma('foreign_keys = ON');
+    if (queryOnly) {
+      conn.pragma('query_only = ON');
+    }
+  }
+
+  function configurePrimaryConnection(conn: Database.Database): void {
+    conn.pragma(`busy_timeout = ${BUILDER_BUSY_TIMEOUT_MS}`);
+    conn.pragma('journal_mode = WAL');
+    conn.pragma('synchronous = NORMAL');
+    conn.pragma('foreign_keys = ON');
+    if (queryOnly) {
+      conn.pragma('query_only = ON');
+    }
+  }
+
+  configurePrimaryConnection(primaryDb);
+  configureWriteConnection(writeDb);
+  primaryDb.exec(`
     CREATE TABLE db_disease (
       id INTEGER PRIMARY KEY,
       icd10_code TEXT
@@ -131,19 +221,19 @@ export function createProductionBuildIndex(
     ) STRICT;
   `);
 
-  const insertDb = db.prepare('INSERT INTO db_disease(id, icd10_code) VALUES (?, ?)');
-  const insertMapped = db.prepare(
+  const insertDb = primaryDb.prepare('INSERT INTO db_disease(id, icd10_code) VALUES (?, ?)');
+  const insertMapped = primaryDb.prepare(
     'INSERT OR IGNORE INTO mapped_entry(dedupe_key, source_label, code_raw, provenance_json) VALUES (?, ?, ?, ?)',
   );
-  const insertBridge = db.prepare(
+  const insertBridge = primaryDb.prepare(
     `INSERT INTO bridge_entry
       (dedupe_key, source_label, code_raw, normalized_identity_key, disposition, candidates_json)
       VALUES (?, ?, ?, ?, ?, ?)`,
   );
-  const insertCandidate = db.prepare(
+  const insertCandidate = primaryDb.prepare(
     'INSERT INTO bridge_candidate(db_id, dedupe_key) VALUES (?, ?)',
   );
-  const insertBridgeTransaction = db.transaction((row: ParsedBridgeRow) => {
+  const insertBridgeTransaction = primaryDb.transaction((row: ParsedBridgeRow) => {
     insertBridge.run(
       row.dedupeKey,
       row.mappedSourceLabel,
@@ -156,24 +246,34 @@ export function createProductionBuildIndex(
       insertCandidate.run(id, row.dedupeKey);
     }
   });
-  const setMetaStatement = db.prepare(
+  const setMetaStatement = primaryDb.prepare(
     'INSERT INTO meta(key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value',
   );
-  const incrementMappedRaw = db.prepare(
+  const incrementMappedRaw = primaryDb.prepare(
     `INSERT INTO meta(key, value) VALUES ('mappedRawRows', '1')
      ON CONFLICT(key) DO UPDATE SET value=CAST(CAST(value AS INTEGER) + 1 AS TEXT)`,
   );
-  const addOutput = writeDb.prepare(
+  let addOutput = writeDb.prepare(
     'INSERT INTO output_record(kind, sort_key, json) VALUES (?, ?, ?)',
   );
+  const fetchMappedBridgeJoinBatchStmt = primaryDb.prepare(
+    `SELECT m.dedupe_key, m.source_label, m.code_raw, m.provenance_json,
+            b.normalized_identity_key, b.disposition, b.candidates_json
+     FROM mapped_entry m
+     INNER JOIN bridge_entry b ON b.dedupe_key = m.dedupe_key
+     ORDER BY m.dedupe_key
+     LIMIT ? OFFSET ?`,
+  );
+  const fetchDbDiseaseBatchStmt = primaryDb.prepare(
+    'SELECT id, icd10_code FROM db_disease ORDER BY id LIMIT ? OFFSET ?',
+  );
 
-  let closed = false;
-  let queryOnly = false;
   let peakControlledIndexBytes = 0n;
   let mutationsSinceSizeCheck = 0;
   let inputBatchRows = 0;
   let inputTransactionOpen = false;
-  const TRANSACTION_BATCH_ROWS = 256;
+  let activeReadScopes = 0;
+  const TRANSACTION_BATCH_ROWS = CONTROLLED_INDEX_OUTPUT_BATCH_ROWS;
   const configured =
     options.mode === 'synthetic-test'
       ? options
@@ -188,9 +288,13 @@ export function createProductionBuildIndex(
     configured.mode === 'synthetic-test' && typeof options.maxControlledIndexBytes === 'number'
       ? options.maxControlledIndexBytes
       : MAX_CONTROLLED_INDEX_BYTES;
+  const checkpointThresholdBytes =
+    BigInt(maxIndexBytes) - BigInt(CONTROLLED_INDEX_CHECKPOINT_HEADROOM_BYTES);
 
   function count(table: string): number {
-    return Number((db.prepare(`SELECT COUNT(*) AS count FROM ${table}`).get() as SqlRow).count);
+    return Number(
+      (primaryDb.prepare(`SELECT COUNT(*) AS count FROM ${table}`).get() as SqlRow).count,
+    );
   }
 
   function controlledIndexBytes(): bigint {
@@ -200,57 +304,149 @@ export function createProductionBuildIndex(
     );
   }
 
-  function failClosedOnIndexSize(reason: string): never {
+  function recordPeak(bytes: bigint): void {
+    if (bytes > peakControlledIndexBytes) {
+      peakControlledIndexBytes = bytes;
+    }
+  }
+
+  function closeOwnedConnections(): void {
     if (inputTransactionOpen) {
       try {
-        db.exec('ROLLBACK');
+        primaryDb.exec('ROLLBACK');
       } catch {
         // Continue fail-closed cleanup.
       }
       inputTransactionOpen = false;
       inputBatchRows = 0;
     }
-    if (ownsIndexFiles && !closed) {
+    if (!closed) {
+      closeWriteConnection();
       try {
-        writeDb.close();
-      } catch {
-        // Continue closing and removing only the owned index directory.
-      }
-      try {
-        db.close();
+        primaryDb.close();
       } catch {
         // Continue removing only the owned index directory.
       }
       closed = true;
-      rmSync(dir, { recursive: true, force: true });
     }
-    throw new DiseaseIdentityError('MALFORMED_INPUT', reason);
+  }
+
+  function failClosedOnIndexSize(reason: string): never {
+    closeOwnedConnections();
+    const cleanupFailure =
+      ownsIndexFiles && existsSync(dir) ? removeBuilderOwnedDirectory(dir) : null;
+    throw new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      formatFailClosedMessage(reason, cleanupFailure),
+    );
+  }
+
+  function enforceControlledIndexCap(context: string): bigint {
+    const bytes = controlledIndexBytes();
+    recordPeak(bytes);
+    if (bytes > BigInt(maxIndexBytes) || peakControlledIndexBytes > BigInt(maxIndexBytes)) {
+      failClosedOnIndexSize(
+        `${context}: production build index exceeds MAX_CONTROLLED_INDEX_BYTES (${maxIndexBytes})`,
+      );
+    }
+    return bytes;
   }
 
   function checkControlledIndexSize(): bigint {
     if (closed) {
       throw new DiseaseIdentityError('MALFORMED_INPUT', 'Controlled index already closed');
     }
-    const bytes = controlledIndexBytes();
-    if (bytes > peakControlledIndexBytes) peakControlledIndexBytes = bytes;
-    if (bytes > BigInt(maxIndexBytes) || peakControlledIndexBytes > BigInt(maxIndexBytes)) {
-      failClosedOnIndexSize(
-        `Production build index exceeds MAX_CONTROLLED_INDEX_BYTES (${maxIndexBytes})`,
+    return enforceControlledIndexCap('Controlled index size check');
+  }
+
+  function closeWriteConnection(): void {
+    try {
+      writeDb.close();
+    } catch {
+      // Continue checkpoint on the primary reader connection.
+    }
+  }
+
+  function reopenWriteConnection(): void {
+    if (closed) {
+      return;
+    }
+    writeDb = new Database(writeDbPath);
+    configureWriteConnection(writeDb);
+    addOutput = writeDb.prepare('INSERT INTO output_record(kind, sort_key, json) VALUES (?, ?, ?)');
+  }
+
+  function runWalCheckpointTruncate(boundary: string): WalCheckpointResult {
+    closeWriteConnection();
+    try {
+      for (let attempt = 1; attempt <= CHECKPOINT_MAX_ATTEMPTS; attempt += 1) {
+        let result: unknown;
+        try {
+          result = primaryDb.pragma('wal_checkpoint(TRUNCATE)', { simple: false });
+        } catch {
+          throw new DiseaseIdentityError(
+            'MALFORMED_INPUT',
+            `${boundary}: controlled index WAL checkpoint is unavailable on builder-owned index`,
+          );
+        }
+        try {
+          return validateWalCheckpointResult(result, boundary);
+        } catch (error) {
+          const busy =
+            error instanceof DiseaseIdentityError &&
+            error.message.includes('checkpoint busy (active reader/writer)');
+          if (busy && attempt < CHECKPOINT_MAX_ATTEMPTS) {
+            sleepSync(CHECKPOINT_BACKOFF_MS * attempt);
+            continue;
+          }
+          throw error;
+        }
+      }
+      throw new DiseaseIdentityError(
+        'MALFORMED_INPUT',
+        `${boundary}: controlled index WAL checkpoint failed`,
+      );
+    } finally {
+      if (!closed) {
+        reopenWriteConnection();
+      }
+    }
+  }
+
+  function checkpointControlledIndexAtSafeBoundary(boundary: string): void {
+    if (closed) {
+      throw new DiseaseIdentityError('MALFORMED_INPUT', 'Controlled index already closed');
+    }
+    if (activeReadScopes > 0) {
+      throw new DiseaseIdentityError(
+        'MALFORMED_INPUT',
+        `${boundary}: controlled index checkpoint blocked while read scope active`,
       );
     }
-    return bytes;
+    const before = enforceControlledIndexCap(`${boundary}: pre-checkpoint`);
+    const shouldCheckpoint =
+      before >= checkpointThresholdBytes ||
+      boundary === 'after-mapped-bridge-output' ||
+      boundary === 'after-output-population' ||
+      boundary === 'final-compact-assertion' ||
+      boundary.endsWith('-batch');
+    if (!shouldCheckpoint) {
+      return;
+    }
+    runWalCheckpointTruncate(boundary);
+    enforceControlledIndexCap(`${boundary}: post-checkpoint`);
   }
 
   function beginInputTransaction(): void {
     if (!inputTransactionOpen) {
-      db.exec('BEGIN IMMEDIATE');
+      primaryDb.exec('BEGIN IMMEDIATE');
       inputTransactionOpen = true;
     }
   }
 
   function flushInputTransaction(): void {
     if (inputTransactionOpen) {
-      db.exec('COMMIT');
+      primaryDb.exec('COMMIT');
       inputTransactionOpen = false;
       inputBatchRows = 0;
       checkControlledIndexSize();
@@ -273,21 +469,23 @@ export function createProductionBuildIndex(
   }
 
   const api: ProductionBuildIndex = {
+    get db(): Database.Database {
+      return primaryDb;
+    },
     dbPath,
-    db,
     mode: configured.mode,
-    insertDbRow(row) {
+    insertDbRow(row: LegacyDbRow) {
       checkControlledIndexSize();
       beginInputTransaction();
       insertDb.run(row.id, row.icd10_code);
       afterInputMutation();
     },
-    insertMappedRow(row) {
+    insertMappedRow(row: MappedJsonRow) {
       checkControlledIndexSize();
       beginInputTransaction();
       const dedupeKey = mappedRawKey(row.source, row.code);
       const variant = { mappedCodeRaw: row.code, mappedSourceLabel: row.source };
-      const existing = db
+      const existing = primaryDb
         .prepare('SELECT provenance_json FROM mapped_entry WHERE dedupe_key = ?')
         .get(dedupeKey) as SqlRow | undefined;
       if (!existing) {
@@ -309,30 +507,33 @@ export function createProductionBuildIndex(
             const labelCmp = a.mappedSourceLabel.localeCompare(b.mappedSourceLabel);
             return labelCmp !== 0 ? labelCmp : a.mappedCodeRaw.localeCompare(b.mappedCodeRaw);
           });
-          db.prepare(
-            'UPDATE mapped_entry SET source_label = ?, code_raw = ?, provenance_json = ? WHERE dedupe_key = ?',
-          ).run(
-            variants[0]!.mappedSourceLabel,
-            variants[0]!.mappedCodeRaw,
-            canonicalJsonString(variants),
-            dedupeKey,
-          );
+          primaryDb
+            .prepare(
+              'UPDATE mapped_entry SET source_label = ?, code_raw = ?, provenance_json = ? WHERE dedupe_key = ?',
+            )
+            .run(
+              variants[0]!.mappedSourceLabel,
+              variants[0]!.mappedCodeRaw,
+              canonicalJsonString(variants),
+              dedupeKey,
+            );
         }
       }
       incrementMappedRaw.run();
       afterInputMutation();
     },
-    insertBridgeRow(row) {
+    insertBridgeRow(row: ParsedBridgeRow) {
       checkControlledIndexSize();
       beginInputTransaction();
       insertBridgeTransaction(row);
       afterInputMutation();
     },
-    setMeta(key, value) {
+    setMeta(key: string, value: string) {
       setMetaStatement.run(key, value);
     },
-    getMeta(key) {
-      const row = db.prepare('SELECT value FROM meta WHERE key = ?').get(key) as SqlRow | undefined;
+    getMeta(key: string) {
+      const row = primaryDb.prepare('SELECT value FROM meta WHERE key = ?').get(key) as
+        SqlRow | undefined;
       return row ? String(row.value) : null;
     },
     counts() {
@@ -367,26 +568,52 @@ export function createProductionBuildIndex(
     setQueryOnlyAfterPopulate() {
       flushInputTransaction();
       checkControlledIndexSize();
-      db.pragma('optimize');
+      primaryDb.pragma('optimize');
       checkControlledIndexSize();
-      db.pragma('query_only = ON');
+      primaryDb.pragma('query_only = ON');
       writeDb.pragma('query_only = ON');
       queryOnly = true;
     },
     checkControlledIndexSize,
+    controlledIndexFootprintBytes() {
+      return controlledIndexBytes();
+    },
+    checkpointControlledIndexAtSafeBoundary(boundary: string) {
+      checkpointControlledIndexAtSafeBoundary(boundary);
+    },
+    fetchMappedBridgeJoinBatch(limit: number, offset: number) {
+      const rows = fetchMappedBridgeJoinBatchStmt.all(limit, offset) as SqlRow[];
+      return rows.map((row) => ({
+        dedupeKey: String(row.dedupe_key),
+        mappedSourceLabel: String(row.source_label),
+        mappedCodeRaw: String(row.code_raw),
+        provenanceVariants: safeJsonArray(
+          String(row.provenance_json),
+          'mapped provenance',
+        ) as MappedDedupeEntry['provenanceVariants'],
+        normalizedIdentityKey:
+          row.normalized_identity_key === null ? null : String(row.normalized_identity_key),
+        disposition: String(row.disposition) as ParsedBridgeRow['disposition'],
+        candidateLegacyDbIds: safeJsonArray(
+          String(row.candidates_json),
+          'bridge candidates',
+        ) as number[],
+      }));
+    },
+    fetchDbDiseaseBatch(limit: number, offset: number) {
+      const rows = fetchDbDiseaseBatchStmt.all(limit, offset) as SqlRow[];
+      return rows.map((row) => ({
+        id: Number(row.id),
+        icd10_code: row.icd10_code === null ? null : String(row.icd10_code),
+      }));
+    },
     peakControlledIndexBytes() {
       return peakControlledIndexBytes;
     },
     assertIndexSizeLimit() {
       checkControlledIndexSize();
       const peakBeforeCheckpoint = peakControlledIndexBytes;
-      try {
-        db.pragma('wal_checkpoint(TRUNCATE)');
-      } catch {
-        // DELETE journal mode may not expose WAL checkpoint.
-      }
-      checkControlledIndexSize();
-      // Checkpoint must not hide a previously observed over-limit peak.
+      checkpointControlledIndexAtSafeBoundary('final-compact-assertion');
       if (
         peakBeforeCheckpoint > BigInt(maxIndexBytes) ||
         peakControlledIndexBytes > BigInt(maxIndexBytes)
@@ -396,69 +623,84 @@ export function createProductionBuildIndex(
         );
       }
     },
-    testOnlyRecordPeakBytes(bytes) {
+    testOnlyRecordPeakBytes(bytes: bigint) {
       if (configured.mode !== 'synthetic-test') {
         throw new DiseaseIdentityError(
           'MALFORMED_INPUT',
           'testOnlyRecordPeakBytes is synthetic-test only',
         );
       }
-      if (bytes > peakControlledIndexBytes) peakControlledIndexBytes = bytes;
+      recordPeak(bytes);
     },
     *iterateMappedEntries() {
-      const rows = db
-        .prepare(
-          'SELECT dedupe_key, source_label, code_raw, provenance_json FROM mapped_entry ORDER BY dedupe_key',
-        )
-        .iterate() as IterableIterator<SqlRow>;
-      for (const row of rows) {
-        yield {
-          dedupeKey: String(row.dedupe_key),
-          mappedSourceLabel: String(row.source_label),
-          mappedCodeRaw: String(row.code_raw),
-          provenanceVariants: safeJsonArray(
-            String(row.provenance_json),
-            'mapped provenance',
-          ) as MappedDedupeEntry['provenanceVariants'],
-        };
+      activeReadScopes += 1;
+      try {
+        const rows = primaryDb
+          .prepare(
+            'SELECT dedupe_key, source_label, code_raw, provenance_json FROM mapped_entry ORDER BY dedupe_key',
+          )
+          .iterate() as IterableIterator<SqlRow>;
+        for (const row of rows) {
+          yield {
+            dedupeKey: String(row.dedupe_key),
+            mappedSourceLabel: String(row.source_label),
+            mappedCodeRaw: String(row.code_raw),
+            provenanceVariants: safeJsonArray(
+              String(row.provenance_json),
+              'mapped provenance',
+            ) as MappedDedupeEntry['provenanceVariants'],
+          };
+        }
+      } finally {
+        activeReadScopes -= 1;
       }
     },
     *iterateBridgeRows() {
-      const rows = db
-        .prepare(
-          `SELECT dedupe_key, source_label, code_raw, normalized_identity_key,
-                  disposition, candidates_json
-           FROM bridge_entry ORDER BY dedupe_key`,
-        )
-        .iterate() as IterableIterator<SqlRow>;
-      for (const row of rows) {
-        yield {
-          dedupeKey: String(row.dedupe_key),
-          mappedSourceLabel: String(row.source_label),
-          mappedCodeRaw: String(row.code_raw),
-          normalizedIdentityKey:
-            row.normalized_identity_key === null ? null : String(row.normalized_identity_key),
-          disposition: String(row.disposition) as ParsedBridgeRow['disposition'],
-          candidateLegacyDbIds: safeJsonArray(
-            String(row.candidates_json),
-            'bridge candidates',
-          ) as number[],
-        };
+      activeReadScopes += 1;
+      try {
+        const rows = primaryDb
+          .prepare(
+            `SELECT dedupe_key, source_label, code_raw, normalized_identity_key,
+                    disposition, candidates_json
+             FROM bridge_entry ORDER BY dedupe_key`,
+          )
+          .iterate() as IterableIterator<SqlRow>;
+        for (const row of rows) {
+          yield {
+            dedupeKey: String(row.dedupe_key),
+            mappedSourceLabel: String(row.source_label),
+            mappedCodeRaw: String(row.code_raw),
+            normalizedIdentityKey:
+              row.normalized_identity_key === null ? null : String(row.normalized_identity_key),
+            disposition: String(row.disposition) as ParsedBridgeRow['disposition'],
+            candidateLegacyDbIds: safeJsonArray(
+              String(row.candidates_json),
+              'bridge candidates',
+            ) as number[],
+          };
+        }
+      } finally {
+        activeReadScopes -= 1;
       }
     },
     *iterateDbRows() {
-      const rows = db
-        .prepare('SELECT id, icd10_code FROM db_disease ORDER BY id')
-        .iterate() as IterableIterator<SqlRow>;
-      for (const row of rows) {
-        yield {
-          id: Number(row.id),
-          icd10_code: row.icd10_code === null ? null : String(row.icd10_code),
-        };
+      activeReadScopes += 1;
+      try {
+        const rows = primaryDb
+          .prepare('SELECT id, icd10_code FROM db_disease ORDER BY id')
+          .iterate() as IterableIterator<SqlRow>;
+        for (const row of rows) {
+          yield {
+            id: Number(row.id),
+            icd10_code: row.icd10_code === null ? null : String(row.icd10_code),
+          };
+        }
+      } finally {
+        activeReadScopes -= 1;
       }
     },
-    bridgeRowsForDbId(dbId) {
-      const rows = db
+    bridgeRowsForDbId(dbId: number) {
+      const rows = primaryDb
         .prepare(
           `SELECT b.dedupe_key, b.source_label, b.code_raw, b.normalized_identity_key,
                   b.disposition, b.candidates_json
@@ -481,7 +723,7 @@ export function createProductionBuildIndex(
         ) as number[],
       }));
     },
-    addOutputRecord(kind, sortKey, json) {
+    addOutputRecord(kind: OutputRecordKind, sortKey: string, json: string) {
       if (!(OUTPUT_RECORD_KINDS as readonly string[]).includes(kind)) {
         throw new DiseaseIdentityError('MALFORMED_INPUT', `Unknown output_record kind: ${kind}`);
       }
@@ -495,53 +737,37 @@ export function createProductionBuildIndex(
       addOutput.run(kind, sortKey, json);
       afterOutputMutation();
     },
-    *iterateOutputRecords(kind) {
+    *iterateOutputRecords(kind: OutputRecordKind) {
       if (!(OUTPUT_RECORD_KINDS as readonly string[]).includes(kind)) {
         throw new DiseaseIdentityError('MALFORMED_INPUT', `Unknown output_record kind: ${kind}`);
       }
-      yield* db
+      yield* primaryDb
         .prepare('SELECT json FROM output_record WHERE kind = ? ORDER BY sort_key')
         .iterate(kind) as IterableIterator<{ json: string }>;
     },
-    outputCount(kind) {
+    outputCount(kind: OutputRecordKind) {
       if (!(OUTPUT_RECORD_KINDS as readonly string[]).includes(kind)) {
         throw new DiseaseIdentityError('MALFORMED_INPUT', `Unknown output_record kind: ${kind}`);
       }
       return Number(
         (
-          db
+          primaryDb
             .prepare('SELECT COUNT(*) AS count FROM output_record WHERE kind = ?')
             .get(kind) as SqlRow
         ).count,
       );
     },
-    scalarNumber(sql) {
-      const row = db.prepare(sql).get() as SqlRow | undefined;
+    scalarNumber(sql: string) {
+      const row = primaryDb.prepare(sql).get() as SqlRow | undefined;
       if (!row) return 0;
       return Number(Object.values(row)[0] ?? 0);
     },
     close() {
-      if (!closed) {
-        if (inputTransactionOpen) {
-          try {
-            db.exec('ROLLBACK');
-          } catch {
-            // Continue closing both handles.
-          }
-          inputTransactionOpen = false;
-        }
-        try {
-          writeDb.close();
-        } catch {
-          // Prefer closing the primary reader next.
-        }
-        db.close();
-        closed = true;
-      }
+      closeOwnedConnections();
     },
     destroy() {
       api.close();
-      rmSync(dir, { recursive: true, force: true });
+      removeBuilderOwnedDirectory(dir);
     },
   };
   return api;

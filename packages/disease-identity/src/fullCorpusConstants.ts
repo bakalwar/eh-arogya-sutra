@@ -51,6 +51,16 @@ export const MAX_STAGING_MEMBER_BYTES = 512 * 1024 * 1024;
 /** Fail closed if the private, temporary SQLite build index grows beyond 2 GiB. */
 export const MAX_CONTROLLED_INDEX_BYTES = 2 * 1024 * 1024 * 1024;
 
+/** Output-population batch size — matches input transaction batch cadence. */
+export const CONTROLLED_INDEX_OUTPUT_BATCH_ROWS = 256 as const;
+
+/**
+ * Conservative headroom below MAX_CONTROLLED_INDEX_BYTES. When aggregate footprint
+ * reaches (cap - headroom) at a closed reader boundary, an explicit WAL checkpoint
+ * runs before continuing output population.
+ */
+export const CONTROLLED_INDEX_CHECKPOINT_HEADROOM_BYTES = 64 * 1024 * 1024;
+
 export const PRIVATE_ENGINEERING_LICENSING_CLASSIFICATION =
   'PRIVATE_ENGINEERING_IDENTITY_PENDING_LEGAL_CLEARANCE' as const;
 

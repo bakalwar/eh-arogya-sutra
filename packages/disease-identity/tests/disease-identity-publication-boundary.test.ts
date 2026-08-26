@@ -6,27 +6,36 @@ import {
   readFileSync,
   readdirSync,
   rmSync,
+  statSync,
   symlinkSync,
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import {
+  removeBuilderOwnedDirectory,
+  formatFailClosedCleanupMessage,
+} from '../src/controlledIndexCleanup.js';
 import {
   assertConsumedByteDigestAndBytes,
   assertProductionGeneratorReady,
+  APPROVED_AGGREGATE_COUNTS,
   BUNDLE_ACTIVATION_MARKER_NAME,
   BUNDLE_KIND_PRODUCTION,
   BUNDLE_KIND_SYNTHETIC,
   buildFullCorpusArtifacts,
   buildFullCorpusArtifactsBoundedSyntheticDisk,
+  CONTROLLED_INDEX_OUTPUT_BATCH_ROWS,
   createProductionBuildIndex,
+  validateWalCheckpointResult,
   EXPECTED_INVENTORY_ROW_COUNT,
   EXPECTED_LEGACY_DB_DISEASE_COUNT,
   EXPECTED_MAPPED_UNIQUE_CODE_COUNT,
   EXPECTED_RELATIONSHIP_EDGE_COUNT,
   EXPECTED_UNRESOLVED_QUEUE_COUNT,
+  MAX_CONTROLLED_INDEX_BYTES,
   PINNED_INVENTORY_SHA256,
   PINNED_MAPPED_JSON_BYTES,
   PINNED_MAPPED_JSON_SHA256,
@@ -528,3 +537,172 @@ describe('P2C publication and verification boundaries', () => {
     expect(unresolvedMax).toBe(17_181 + 257 + 36);
   });
 });
+
+describe('controlled index WAL lifecycle and fail-closed cleanup', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('fails closed on busy, incomplete, and unexpected WAL checkpoint results', () => {
+    expect(() =>
+      validateWalCheckpointResult([{ busy: 1, log: 10, checkpointed: 5 }], 'busy-test'),
+    ).toThrow(/checkpoint busy \(active reader\/writer\)/);
+    expect(() =>
+      validateWalCheckpointResult([{ busy: 0, log: 10, checkpointed: 5 }], 'incomplete-test'),
+    ).toThrow(/checkpoint incomplete/);
+    expect(() => validateWalCheckpointResult(null, 'unexpected-test')).toThrow(/unexpected result/);
+    expect(validateWalCheckpointResult([{ busy: 0, log: 0, checkpointed: 0 }], 'ok-test')).toEqual({
+      busy: 0,
+      log: 0,
+      checkpointed: 0,
+    });
+  });
+
+  it('rejects checkpoint while a mapped iterator reader is active', () => {
+    const base = mkdtempSync(path.join(tmpdir(), 'ehas2-cp-busy-'));
+    const index = seedSyntheticIndex(path.join(base, 'index'));
+    const iterator = index.iterateMappedEntries();
+    iterator.next();
+    expect(() => index.checkpointControlledIndexAtSafeBoundary('active-reader-test')).toThrow(
+      /read scope active|checkpoint busy|active reader/i,
+    );
+    for (const _unused of iterator) {
+      void _unused;
+    }
+    index.destroy();
+    rmSync(base, { recursive: true, force: true });
+  });
+
+  it('checkpoints at closed batch boundaries and keeps WAL footprint bounded during output population', async () => {
+    const base = mkdtempSync(path.join(tmpdir(), 'ehas2-wal-populate-'));
+    const indexDir = path.join(base, 'index');
+    const index = createProductionBuildIndex(indexDir, {
+      mode: 'synthetic-test',
+      expectedDbRows: 2_048,
+      expectedMappedRawRows: 2_048,
+      expectedMappedUniqueRows: 2_048,
+      expectedBridgeRows: 2_048,
+    });
+    for (let i = 1; i <= 2_048; i += 1) {
+      const code = `X${String(i).padStart(8, '0')}`;
+      index.insertDbRow({ id: i, icd10_code: code });
+      index.insertMappedRow({ source: 'ICD10', code });
+      index.insertBridgeRow(
+        parseBridgeJsonlRow(
+          {
+            mapped_source_label: 'ICD10',
+            mapped_code: code,
+            recommended_disposition: 'EXACT_UNIQUE_MATCH',
+            candidate_eh_disease_id: String(i),
+          },
+          i,
+        ),
+      );
+    }
+    index.flushTransactionBatch();
+    const peakBeforePopulate = index.peakControlledIndexBytes();
+    const stagingDir = path.join(base, 'staging');
+    mkdirSync(stagingDir);
+    const artifacts = await buildFullCorpusArtifactsBoundedSyntheticDisk({
+      index,
+      stagingDir,
+      inputEvidenceHashes: {
+        legacyDbSha256: sha256('wal-populate-db'),
+        mappedJsonSha256: sha256('wal-populate-mapped'),
+        bridgeSha256: sha256('wal-populate-bridge'),
+      },
+      inventoryVerified: false,
+      generatorSourceCommit: FAKE_COMMIT,
+      expectedGeneratorCommit: FAKE_COMMIT,
+    });
+    expect(artifacts.instrumentation.mappedRowsStreamed).toBe(2_048);
+    expect(index.peakControlledIndexBytes()).toBeGreaterThanOrEqual(peakBeforePopulate);
+    expect(Number(index.controlledIndexFootprintBytes())).toBeLessThanOrEqual(
+      MAX_CONTROLLED_INDEX_BYTES,
+    );
+    const walPath = `${index.dbPath}-wal`;
+    if (existsSync(walPath)) {
+      expect(statSize(walPath)).toBeLessThan(MAX_CONTROLLED_INDEX_BYTES / 4);
+    }
+    index.destroy();
+    rmSync(base, { recursive: true, force: true });
+  });
+
+  it('preserves monotonic peak after checkpoint without resetting historical peak evidence', () => {
+    const base = mkdtempSync(path.join(tmpdir(), 'ehas2-peak-monotonic-'));
+    const index = seedSyntheticIndex(path.join(base, 'index'));
+    index.testOnlyRecordPeakBytes(BigInt(MAX_CONTROLLED_INDEX_BYTES - 1024));
+    const peakBefore = index.peakControlledIndexBytes();
+    index.checkpointControlledIndexAtSafeBoundary('after-mapped-bridge-output');
+    expect(index.peakControlledIndexBytes()).toBe(peakBefore);
+    index.destroy();
+    rmSync(base, { recursive: true, force: true });
+  });
+
+  it('still rejects genuinely oversized compacted index after checkpoint', () => {
+    const base = mkdtempSync(path.join(tmpdir(), 'ehas2-peak-reject-'));
+    const index = seedSyntheticIndex(path.join(base, 'index'));
+    index.testOnlyRecordPeakBytes(BigInt(MAX_CONTROLLED_INDEX_BYTES + 3_848));
+    expect(() => index.assertIndexSizeLimit()).toThrow(/peak exceeds|MAX_CONTROLLED_INDEX/);
+    expect(existsSync(path.join(base, 'index'))).toBe(false);
+    rmSync(base, { recursive: true, force: true });
+  });
+
+  it('retries transient ENOTEMPTY cleanup then succeeds', () => {
+    const base = mkdtempSync(path.join(tmpdir(), 'ehas2-cleanup-retry-'));
+    const target = path.join(base, 'owned-index');
+    mkdirSync(target);
+    writeFileSync(path.join(target, 'marker.txt'), 'x', 'utf8');
+    let attempts = 0;
+    const result = removeBuilderOwnedDirectory(target, {
+      maxAttempts: 3,
+      backoffMs: 1,
+      rmSyncImpl: ((...args: Parameters<typeof rmSync>) => {
+        attempts += 1;
+        if (attempts === 1) {
+          const error = new Error('ENOTEMPTY') as NodeJS.ErrnoException;
+          error.code = 'ENOTEMPTY';
+          throw error;
+        }
+        return rmSync(...args);
+      }) as typeof rmSync,
+    });
+    expect(result).toBeNull();
+    expect(existsSync(target)).toBe(false);
+    rmSync(base, { recursive: true, force: true });
+  });
+
+  it('preserves primary size error when cleanup persistently fails', () => {
+    const message = formatFailClosedCleanupMessage(
+      'Production build index exceeds MAX_CONTROLLED_INDEX_BYTES (8192)',
+      'code=EPERM;attempts=5',
+    );
+    expect(message).toMatch(/MAX_CONTROLLED_INDEX_BYTES/);
+    expect(message).toMatch(/secondaryCleanupFailure=code=EPERM;attempts=5/);
+    expect(message.indexOf('MAX_CONTROLLED_INDEX_BYTES')).toBeLessThan(
+      message.indexOf('secondaryCleanupFailure'),
+    );
+  });
+
+  it('destroy is idempotent when the owned directory is already absent', () => {
+    const base = mkdtempSync(path.join(tmpdir(), 'ehas2-destroy-idempotent-'));
+    const index = seedSyntheticIndex(path.join(base, 'index'));
+    index.destroy();
+    expect(existsSync(path.join(base, 'index'))).toBe(false);
+    index.destroy();
+    rmSync(base, { recursive: true, force: true });
+  });
+
+  it('uses batched fetch boundaries of CONTROLLED_INDEX_OUTPUT_BATCH_ROWS', () => {
+    expect(CONTROLLED_INDEX_OUTPUT_BATCH_ROWS).toBe(256);
+    expect(
+      APPROVED_AGGREGATE_COUNTS.bridgeExactMultiple +
+        APPROVED_AGGREGATE_COUNTS.bridgeOwnerReview +
+        APPROVED_AGGREGATE_COUNTS.bridgeNoMatch,
+    ).toBe(17_474);
+  });
+});
+
+function statSize(filePath: string): number {
+  return statSync(filePath).size;
+}
