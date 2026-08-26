@@ -19,12 +19,14 @@ import {
   validateSanitizedDiseaseIdentityRecord,
   canonicalJsonString,
 } from '../src/index.js';
+import * as toolingInternal from '../src/toolingInternal.js';
 import {
   deriveSanitizedDiseaseIdentity,
   deriveSanitizedDiseaseIdentitySyntheticHarness,
   loadSanitizedAdoptionManifestFromControlPlane,
   openLiveReadonlyDiseaseIdentityDb,
   streamDiseaseIdentityFingerprintInReadTransaction,
+  streamSanitizedIdentityJsonlFile,
   verifySanitizedArtifactPackage,
 } from '../src/toolingInternal.js';
 import { resolveSanitizedAdoptionControlPlanePath } from '../src/index.js';
@@ -139,6 +141,46 @@ describe('R2-DATA-P2C-C sanitized hardening', () => {
         DiseaseIdentityError,
       );
     }
+  });
+
+  it('tooling-internal exposes sanitized stream for generator CLI without public derive/open-live', () => {
+    expect(toolingInternal).toHaveProperty('streamSanitizedIdentityJsonlFile');
+    expect(typeof streamSanitizedIdentityJsonlFile).toBe('function');
+    expect(publicApi).not.toHaveProperty('openLiveReadonlyDiseaseIdentityDb');
+    expect(publicApi).not.toHaveProperty('deriveSanitizedDiseaseIdentity');
+    expect(publicApi).not.toHaveProperty('executeSanitizedDeriveOrchestration');
+  });
+
+  it('generator CLI module loads under Node without opening inputs or creating outputs', () => {
+    const cliPath = path.join(REPO_ROOT, 'tools/disease-identity-generator/cli.mjs');
+    let result: { status: number | null; stdout: string; stderr: string };
+    try {
+      execFileSync(process.execPath, [cliPath], {
+        cwd: REPO_ROOT,
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'pipe'],
+        env: { ...process.env, NODE_OPTIONS: '' },
+      });
+      result = { status: 0, stdout: '', stderr: '' };
+    } catch (error) {
+      const err = error as {
+        status?: number;
+        stdout?: string;
+        stderr?: string;
+        message?: string;
+      };
+      result = {
+        status: typeof err.status === 'number' ? err.status : null,
+        stdout: String(err.stdout ?? ''),
+        stderr: String(err.stderr ?? err.message ?? ''),
+      };
+    }
+    expect(result.stderr).not.toMatch(/does not provide an export named/);
+    expect(result.stderr).toMatch(/Usage:/);
+    expect(result.status).toBe(2);
+    expect(existsSync(path.join(REPO_ROOT, 'ehas2-sanitized-derivation-activation.json'))).toBe(
+      false,
+    );
   });
 
   it('derive generator gate fails before output creation for malformed commit', async () => {

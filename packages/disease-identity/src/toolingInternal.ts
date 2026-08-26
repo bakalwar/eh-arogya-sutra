@@ -23,5 +23,9 @@ export {
   type LiveReadonlyIdentityConnection,
   type SourceDbSidecarSnapshot,
 } from './liveReadonlyDiseaseIdentityRead.js';
-export { verifySanitizedArtifactPackage } from './streamSanitizedIdentityJsonl.js';
+export {
+  streamSanitizedIdentityJsonlFile,
+  verifySanitizedArtifactPackage,
+  type StreamSanitizedIdentityJsonlResult,
+} from './streamSanitizedIdentityJsonl.js';
 export { loadSanitizedAdoptionManifestFromControlPlane } from './sanitizedAdoptionControlPlane.js';
