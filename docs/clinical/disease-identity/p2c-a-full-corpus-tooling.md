@@ -59,6 +59,15 @@ Publication is fail-closed activation publication, not an atomic rename. It full
 
 Synthetic unit tests may still use small in-memory arrays via `buildFullCorpusArtifacts` or the synthetic streaming fixture builder. Only `buildFullCorpusArtifactsBoundedProduction` can emit the production bundle kind. Production CLI uses only that disk-backed path.
 
+## Bridge ingest schemas
+
+| Mode | API | Use |
+|------|-----|-----|
+| **Pinned Bridge V3 actual** (`pinned-bridge-v3-actual`) | `parsePinnedBridgeV3JsonlRow` / production stream default | Exact 13-key pinned `R2_BRIDGE_CANDIDATES_V3.jsonl` rows |
+| **Synthetic projected mini** (`synthetic-projected-mini`) | `parseBridgeJsonlRow` | Test/fixture rows only (`allowSyntheticBridgeSchema=true`) |
+
+Production full-corpus ingest requires the actual V3 key set (`ambiguity`, `bridge_id`, `candidate_eh_disease_id`, `majority_polarity`, `mapped_code`, `mapped_name`, `match_confidence`, `match_method`, `polarity_conflict`, `polarity_counts`, `recommended_disposition`, `source_system`, `technical_disposition`). It does **not** silently fall back to the synthetic mini-schema. Duplicate JSON object keys are rejected at **every** depth (including nested `polarity_counts`), with Unicode-escape–equivalent keys treated as identical, before identity extraction. Identity extraction uses `source_system`, `mapped_code`, authoritative `recommended_disposition`, and disposition-shaped `candidate_eh_disease_id` only. Polarity / `mapped_name` / `bridge_id` / match provenance fields are structurally validated and never enter `ParsedBridgeRow`, controlled-index identity columns, edges, unresolved queue, or clinical authority.
+
 ## Explicit non-goals
 
 - No real corpus execution in this PR/CI
