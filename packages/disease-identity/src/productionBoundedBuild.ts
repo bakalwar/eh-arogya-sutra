@@ -243,6 +243,13 @@ function populateMappedBridgeOutputRecords(
       break;
     }
   }
+  input.index.assertMappedBridgeJoinInvariant('mapped-bridge-output-batch-final');
+  if (instrumentation.mappedRowsStreamed !== input.index.mappedBridgeJoinRowCount()) {
+    throw new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      'mapped/bridge output streaming count does not match inner-join cardinality',
+    );
+  }
 }
 
 function populateDiseaseOutputRecords(
@@ -319,6 +326,7 @@ function populateOutputRecords(
   instrumentation: BoundedBuildInstrumentation,
 ): void {
   populateMappedBridgeOutputRecords(input, instrumentation);
+  input.index.assertMappedBridgeJoinInvariant('after-mapped-bridge-output');
   input.index.checkpointControlledIndexAtSafeBoundary('after-mapped-bridge-output');
   populateDiseaseOutputRecords(input, instrumentation);
   input.index.checkpointControlledIndexAtSafeBoundary('after-output-population');

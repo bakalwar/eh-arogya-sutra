@@ -1,8 +1,83 @@
-import { existsSync, rmSync } from 'node:fs';
+import { existsSync, lstatSync, rmSync } from 'node:fs';
+import path from 'node:path';
 
 const DEFAULT_MAX_ATTEMPTS = 5;
 const DEFAULT_BACKOFF_MS = 50;
 const TRANSIENT_CODES = new Set(['ENOTEMPTY', 'EPERM', 'EBUSY']);
+
+/** Builder-owned controlled-index SQLite basename — fixed contract. */
+export const CONTROLLED_INDEX_DB_BASENAME = 'production-build-index.sqlite' as const;
+
+export type BuilderOwnedDirectoryKind = 'controlled-index' | 'staging';
+
+/** Capability issued at construction time; deletion requires an exact match. */
+export type BuilderOwnedDirectoryOwnership = {
+  readonly kind: BuilderOwnedDirectoryKind;
+  readonly resolvedDir: string;
+  readonly expectedBasename: string;
+  readonly indexDbBasename?: string;
+};
+
+export function createBuilderOwnedDirectoryOwnership(
+  kind: BuilderOwnedDirectoryKind,
+  dir: string,
+  options?: { indexDbBasename?: string },
+): BuilderOwnedDirectoryOwnership {
+  const resolvedDir = path.resolve(dir);
+  return {
+    kind,
+    resolvedDir,
+    expectedBasename: path.basename(resolvedDir),
+    indexDbBasename:
+      kind === 'controlled-index'
+        ? (options?.indexDbBasename ?? CONTROLLED_INDEX_DB_BASENAME)
+        : undefined,
+  };
+}
+
+/**
+ * Validate builder-owned directory ownership before deletion.
+ * Returns aggregate redacted reason code or null when safe to delete.
+ */
+export function validateBuilderOwnedDirectoryOwnership(
+  ownership: BuilderOwnedDirectoryOwnership,
+  targetDir: string,
+): string | null {
+  const resolved = path.resolve(targetDir);
+  if (resolved !== ownership.resolvedDir) {
+    return 'ownership=path_mismatch';
+  }
+  if (path.basename(resolved) !== ownership.expectedBasename) {
+    return 'ownership=basename_mismatch';
+  }
+  let stat;
+  try {
+    stat = lstatSync(resolved);
+  } catch {
+    return null;
+  }
+  if (stat.isSymbolicLink()) {
+    return 'ownership=symlink_rejected';
+  }
+  if (ownership.kind === 'controlled-index') {
+    const dbBasename = ownership.indexDbBasename ?? CONTROLLED_INDEX_DB_BASENAME;
+    const dbPath = path.join(resolved, dbBasename);
+    if (existsSync(dbPath)) {
+      if (path.resolve(path.dirname(dbPath)) !== resolved) {
+        return 'ownership=index_db_parent_mismatch';
+      }
+      try {
+        const dbStat = lstatSync(dbPath);
+        if (dbStat.isSymbolicLink()) {
+          return 'ownership=index_db_symlink_rejected';
+        }
+      } catch {
+        return 'ownership=index_db_stat_failed';
+      }
+    }
+  }
+  return null;
+}
 
 export function sleepSync(ms: number): void {
   const deadline = Date.now() + ms;
@@ -24,10 +99,21 @@ export function formatFailClosedCleanupMessage(
 
 export function removeBuilderOwnedDirectory(
   dir: string,
-  options?: { maxAttempts?: number; backoffMs?: number; rmSyncImpl?: typeof rmSync },
+  options?: {
+    ownership?: BuilderOwnedDirectoryOwnership;
+    maxAttempts?: number;
+    backoffMs?: number;
+    rmSyncImpl?: typeof rmSync;
+  },
 ): string | null {
   if (!existsSync(dir)) {
     return null;
+  }
+  if (options?.ownership) {
+    const ownershipFailure = validateBuilderOwnedDirectoryOwnership(options.ownership, dir);
+    if (ownershipFailure) {
+      return ownershipFailure;
+    }
   }
   const rm = options?.rmSyncImpl ?? rmSync;
   const maxAttempts = options?.maxAttempts ?? DEFAULT_MAX_ATTEMPTS;

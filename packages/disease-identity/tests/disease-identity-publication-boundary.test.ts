@@ -17,6 +17,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   removeBuilderOwnedDirectory,
   formatFailClosedCleanupMessage,
+  createBuilderOwnedDirectoryOwnership,
+  validateBuilderOwnedDirectoryOwnership,
 } from '../src/controlledIndexCleanup.js';
 import {
   assertConsumedByteDigestAndBytes,
@@ -29,6 +31,7 @@ import {
   buildFullCorpusArtifactsBoundedSyntheticDisk,
   CONTROLLED_INDEX_OUTPUT_BATCH_ROWS,
   createProductionBuildIndex,
+  DiseaseIdentityError,
   validateWalCheckpointResult,
   EXPECTED_INVENTORY_ROW_COUNT,
   EXPECTED_LEGACY_DB_DISEASE_COUNT,
@@ -573,7 +576,7 @@ describe('controlled index WAL lifecycle and fail-closed cleanup', () => {
     rmSync(base, { recursive: true, force: true });
   });
 
-  it('checkpoints at closed batch boundaries and keeps WAL footprint bounded during output population', async () => {
+  it('checkpoints at closed batch boundaries and keeps real WAL footprint bounded during output population', async () => {
     const base = mkdtempSync(path.join(tmpdir(), 'ehas2-wal-populate-'));
     const indexDir = path.join(base, 'index');
     const index = createProductionBuildIndex(indexDir, {
@@ -601,6 +604,7 @@ describe('controlled index WAL lifecycle and fail-closed cleanup', () => {
     }
     index.flushTransactionBatch();
     const peakBeforePopulate = index.peakControlledIndexBytes();
+    const footprintBeforePopulate = controlledIndexFootprintParts(index);
     const stagingDir = path.join(base, 'staging');
     mkdirSync(stagingDir);
     const artifacts = await buildFullCorpusArtifactsBoundedSyntheticDisk({
@@ -615,15 +619,32 @@ describe('controlled index WAL lifecycle and fail-closed cleanup', () => {
       generatorSourceCommit: FAKE_COMMIT,
       expectedGeneratorCommit: FAKE_COMMIT,
     });
+    const footprintAfterPopulate = controlledIndexFootprintParts(index);
     expect(artifacts.instrumentation.mappedRowsStreamed).toBe(2_048);
     expect(index.peakControlledIndexBytes()).toBeGreaterThanOrEqual(peakBeforePopulate);
+    expect(footprintAfterPopulate.aggregate).toBeGreaterThanOrEqual(
+      footprintBeforePopulate.aggregate,
+    );
     expect(Number(index.controlledIndexFootprintBytes())).toBeLessThanOrEqual(
       MAX_CONTROLLED_INDEX_BYTES,
     );
+    // Exercises real main+wal+shm+journal files; does not reproduce a full-corpus ~2 GiB over-cap.
+    expect(footprintAfterPopulate.wal).toBeLessThan(MAX_CONTROLLED_INDEX_BYTES / 4);
+    index.destroy();
+    rmSync(base, { recursive: true, force: true });
+  });
+
+  it('truncates real WAL sidecars after a closed batch checkpoint boundary', () => {
+    const base = mkdtempSync(path.join(tmpdir(), 'ehas2-wal-truncate-'));
+    const index = seedSyntheticIndex(path.join(base, 'index'));
+    index.addOutputRecord('mapped', 'm1', '{"kind":"mapped"}');
+    index.addOutputRecord('mapped', 'm2', '{"kind":"mapped"}');
     const walPath = `${index.dbPath}-wal`;
-    if (existsSync(walPath)) {
-      expect(statSize(walPath)).toBeLessThan(MAX_CONTROLLED_INDEX_BYTES / 4);
-    }
+    const walBefore = existsSync(walPath) ? statSize(walPath) : 0;
+    index.checkpointControlledIndexAtSafeBoundary('physical-wal-truncate-test');
+    const walAfter = existsSync(walPath) ? statSize(walPath) : 0;
+    expect(walAfter).toBeLessThanOrEqual(walBefore);
+    expect(index.peakControlledIndexBytes()).toBeGreaterThan(0n);
     index.destroy();
     rmSync(base, { recursive: true, force: true });
   });
@@ -639,7 +660,7 @@ describe('controlled index WAL lifecycle and fail-closed cleanup', () => {
     rmSync(base, { recursive: true, force: true });
   });
 
-  it('still rejects genuinely oversized compacted index after checkpoint', () => {
+  it('peak-accounting unit test: injected +3848 peak rejects assertIndexSizeLimit (not physical WAL reproduction)', () => {
     const base = mkdtempSync(path.join(tmpdir(), 'ehas2-peak-reject-'));
     const index = seedSyntheticIndex(path.join(base, 'index'));
     index.testOnlyRecordPeakBytes(BigInt(MAX_CONTROLLED_INDEX_BYTES + 3_848));
@@ -648,13 +669,50 @@ describe('controlled index WAL lifecycle and fail-closed cleanup', () => {
     rmSync(base, { recursive: true, force: true });
   });
 
-  it('retries transient ENOTEMPTY cleanup then succeeds', () => {
+  it('library entry preserves primary size error when cleanup persistently fails (not CLI subprocess)', () => {
+    const base = mkdtempSync(path.join(tmpdir(), 'ehas2-lib-primary-cleanup-'));
+    const index = createProductionBuildIndex(path.join(base, 'index'), {
+      mode: 'synthetic-test',
+      expectedDbRows: 6,
+      expectedMappedRawRows: 4,
+      expectedMappedUniqueRows: 4,
+      expectedBridgeRows: 4,
+      testCleanupHooks: {
+        rmSyncImpl: (() => {
+          const error = new Error('EPERM') as NodeJS.ErrnoException;
+          error.code = 'EPERM';
+          throw error;
+        }) as typeof rmSync,
+      },
+    });
+    index.testOnlyRecordPeakBytes(BigInt(MAX_CONTROLLED_INDEX_BYTES + 3_848));
+    let caught: unknown;
+    try {
+      index.assertIndexSizeLimit();
+    } catch (error) {
+      caught = error;
+    }
+    expect(caught).toBeInstanceOf(DiseaseIdentityError);
+    const err = caught as DiseaseIdentityError;
+    expect(err.code).toBe('MALFORMED_INPUT');
+    expect(err.message).toMatch(/MAX_CONTROLLED_INDEX_BYTES/);
+    expect(err.message).toMatch(/secondaryCleanupFailure=code=EPERM/);
+    expect(err.message.indexOf('MAX_CONTROLLED_INDEX_BYTES')).toBeLessThan(
+      err.message.indexOf('secondaryCleanupFailure'),
+    );
+    expect(err.message).not.toMatch(/A00\.0|OMIM|patient|phi/i);
+    rmSync(base, { recursive: true, force: true });
+  });
+
+  it('retries transient ENOTEMPTY cleanup then succeeds with ownership validation', () => {
     const base = mkdtempSync(path.join(tmpdir(), 'ehas2-cleanup-retry-'));
     const target = path.join(base, 'owned-index');
     mkdirSync(target);
     writeFileSync(path.join(target, 'marker.txt'), 'x', 'utf8');
+    const ownership = createBuilderOwnedDirectoryOwnership('controlled-index', target);
     let attempts = 0;
     const result = removeBuilderOwnedDirectory(target, {
+      ownership,
       maxAttempts: 3,
       backoffMs: 1,
       rmSyncImpl: ((...args: Parameters<typeof rmSync>) => {
@@ -670,6 +728,199 @@ describe('controlled index WAL lifecycle and fail-closed cleanup', () => {
     expect(result).toBeNull();
     expect(existsSync(target)).toBe(false);
     rmSync(base, { recursive: true, force: true });
+  });
+
+  it('fails closed without deletion when ownership descriptor does not match target', () => {
+    const base = mkdtempSync(path.join(tmpdir(), 'ehas2-ownership-mismatch-'));
+    const owned = path.join(base, 'owned-index');
+    const other = path.join(base, 'other-index');
+    mkdirSync(owned);
+    mkdirSync(other);
+    writeFileSync(path.join(other, 'keep.txt'), 'x', 'utf8');
+    const ownership = createBuilderOwnedDirectoryOwnership('controlled-index', owned);
+    expect(validateBuilderOwnedDirectoryOwnership(ownership, other)).toBe(
+      'ownership=path_mismatch',
+    );
+    const result = removeBuilderOwnedDirectory(other, { ownership });
+    expect(result).toBe('ownership=path_mismatch');
+    expect(existsSync(other)).toBe(true);
+    rmSync(base, { recursive: true, force: true });
+  });
+
+  it('rejects symlink controlled-index directories without deletion', () => {
+    if (process.platform === 'win32') {
+      return;
+    }
+    const base = mkdtempSync(path.join(tmpdir(), 'ehas2-ownership-symlink-'));
+    const real = path.join(base, 'real-index');
+    const link = path.join(base, 'link-index');
+    mkdirSync(real);
+    symlinkSync(real, link, 'dir');
+    const ownership = createBuilderOwnedDirectoryOwnership('controlled-index', link);
+    expect(validateBuilderOwnedDirectoryOwnership(ownership, link)).toBe(
+      'ownership=symlink_rejected',
+    );
+    const result = removeBuilderOwnedDirectory(link, { ownership });
+    expect(result).toBe('ownership=symlink_rejected');
+    expect(existsSync(real)).toBe(true);
+    rmSync(base, { recursive: true, force: true });
+  });
+
+  it('fails closed on mapped key without bridge counterpart before publication', async () => {
+    const base = mkdtempSync(path.join(tmpdir(), 'ehas2-mapped-only-'));
+    const index = createProductionBuildIndex(path.join(base, 'index'), {
+      mode: 'synthetic-test',
+      expectedDbRows: 1,
+      expectedMappedRawRows: 2,
+      expectedMappedUniqueRows: 2,
+      expectedBridgeRows: 1,
+    });
+    index.insertDbRow({ id: 1, icd10_code: 'A00.0' });
+    index.insertMappedRow({ source: 'ICD10', code: 'A00.0' });
+    index.insertMappedRow({ source: 'ICD10', code: 'B00.0' });
+    index.insertBridgeRow(
+      parseBridgeJsonlRow(
+        {
+          mapped_source_label: 'ICD10',
+          mapped_code: 'A00.0',
+          recommended_disposition: 'EXACT_UNIQUE_MATCH',
+          candidate_eh_disease_id: '1',
+        },
+        1,
+      ),
+    );
+    index.flushTransactionBatch();
+    try {
+      await expect(
+        buildFullCorpusArtifactsBoundedSyntheticDisk({
+          index,
+          stagingDir: path.join(base, 'staging'),
+          inputEvidenceHashes: {
+            legacyDbSha256: sha256('m'),
+            mappedJsonSha256: sha256('m'),
+            bridgeSha256: sha256('b'),
+          },
+          inventoryVerified: false,
+          generatorSourceCommit: FAKE_COMMIT,
+          expectedGeneratorCommit: FAKE_COMMIT,
+        }),
+      ).rejects.toThrow(/join reconciliation failed/);
+    } finally {
+      index.destroy();
+      rmSync(base, { recursive: true, force: true });
+    }
+  });
+
+  it('fails closed on bridge key without mapped counterpart before publication', async () => {
+    const base = mkdtempSync(path.join(tmpdir(), 'ehas2-bridge-only-'));
+    const index = createProductionBuildIndex(path.join(base, 'index'), {
+      mode: 'synthetic-test',
+      expectedDbRows: 1,
+      expectedMappedRawRows: 1,
+      expectedMappedUniqueRows: 1,
+      expectedBridgeRows: 2,
+    });
+    index.insertDbRow({ id: 1, icd10_code: 'A00.0' });
+    index.insertMappedRow({ source: 'ICD10', code: 'A00.0' });
+    index.insertBridgeRow(
+      parseBridgeJsonlRow(
+        {
+          mapped_source_label: 'ICD10',
+          mapped_code: 'A00.0',
+          recommended_disposition: 'EXACT_UNIQUE_MATCH',
+          candidate_eh_disease_id: '1',
+        },
+        1,
+      ),
+    );
+    index.insertBridgeRow(
+      parseBridgeJsonlRow(
+        {
+          mapped_source_label: 'ICD10',
+          mapped_code: 'C00.0',
+          recommended_disposition: 'NO_MATCH',
+          candidate_eh_disease_id: '',
+        },
+        2,
+      ),
+    );
+    index.flushTransactionBatch();
+    try {
+      await expect(
+        buildFullCorpusArtifactsBoundedSyntheticDisk({
+          index,
+          stagingDir: path.join(base, 'staging'),
+          inputEvidenceHashes: {
+            legacyDbSha256: sha256('m'),
+            mappedJsonSha256: sha256('m'),
+            bridgeSha256: sha256('b'),
+          },
+          inventoryVerified: false,
+          generatorSourceCommit: FAKE_COMMIT,
+          expectedGeneratorCommit: FAKE_COMMIT,
+        }),
+      ).rejects.toThrow(/join reconciliation failed/);
+    } finally {
+      index.destroy();
+      rmSync(base, { recursive: true, force: true });
+    }
+  });
+
+  it('fails closed on compensating mapped/bridge count match with key mismatch', async () => {
+    const base = mkdtempSync(path.join(tmpdir(), 'ehas2-compensating-mismatch-'));
+    const index = createProductionBuildIndex(path.join(base, 'index'), {
+      mode: 'synthetic-test',
+      expectedDbRows: 2,
+      expectedMappedRawRows: 2,
+      expectedMappedUniqueRows: 2,
+      expectedBridgeRows: 2,
+    });
+    index.insertDbRow({ id: 1, icd10_code: 'A00.0' });
+    index.insertDbRow({ id: 2, icd10_code: 'B00.0' });
+    index.insertMappedRow({ source: 'ICD10', code: 'A00.0' });
+    index.insertMappedRow({ source: 'ICD10', code: 'B00.0' });
+    index.insertBridgeRow(
+      parseBridgeJsonlRow(
+        {
+          mapped_source_label: 'ICD10',
+          mapped_code: 'A00.0',
+          recommended_disposition: 'EXACT_UNIQUE_MATCH',
+          candidate_eh_disease_id: '1',
+        },
+        1,
+      ),
+    );
+    index.insertBridgeRow(
+      parseBridgeJsonlRow(
+        {
+          mapped_source_label: 'ICD10',
+          mapped_code: 'C00.0',
+          recommended_disposition: 'NO_MATCH',
+          candidate_eh_disease_id: '',
+        },
+        2,
+      ),
+    );
+    index.flushTransactionBatch();
+    try {
+      await expect(
+        buildFullCorpusArtifactsBoundedSyntheticDisk({
+          index,
+          stagingDir: path.join(base, 'staging'),
+          inputEvidenceHashes: {
+            legacyDbSha256: sha256('m'),
+            mappedJsonSha256: sha256('m'),
+            bridgeSha256: sha256('b'),
+          },
+          inventoryVerified: false,
+          generatorSourceCommit: FAKE_COMMIT,
+          expectedGeneratorCommit: FAKE_COMMIT,
+        }),
+      ).rejects.toThrow(/join reconciliation failed/);
+    } finally {
+      index.destroy();
+      rmSync(base, { recursive: true, force: true });
+    }
   });
 
   it('preserves primary size error when cleanup persistently fails', () => {
@@ -705,4 +956,19 @@ describe('controlled index WAL lifecycle and fail-closed cleanup', () => {
 
 function statSize(filePath: string): number {
   return statSync(filePath).size;
+}
+
+function controlledIndexFootprintParts(index: { dbPath: string }): {
+  main: number;
+  wal: number;
+  shm: number;
+  journal: number;
+  aggregate: number;
+} {
+  const dbPath = index.dbPath;
+  const main = existsSync(dbPath) ? statSize(dbPath) : 0;
+  const wal = existsSync(`${dbPath}-wal`) ? statSize(`${dbPath}-wal`) : 0;
+  const shm = existsSync(`${dbPath}-shm`) ? statSize(`${dbPath}-shm`) : 0;
+  const journal = existsSync(`${dbPath}-journal`) ? statSize(`${dbPath}-journal`) : 0;
+  return { main, wal, shm, journal, aggregate: main + wal + shm + journal };
 }

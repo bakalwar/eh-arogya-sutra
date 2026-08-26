@@ -1,10 +1,12 @@
-import { existsSync, mkdirSync, statSync } from 'node:fs';
+import { existsSync, mkdirSync, statSync, type rmSync } from 'node:fs';
 import path from 'node:path';
 import Database from 'better-sqlite3';
 import {
   removeBuilderOwnedDirectory,
   formatFailClosedCleanupMessage,
   sleepSync,
+  createBuilderOwnedDirectoryOwnership,
+  CONTROLLED_INDEX_DB_BASENAME,
 } from './controlledIndexCleanup.js';
 import { DiseaseIdentityError } from './errors.js';
 import {
@@ -32,6 +34,8 @@ type IndexMode =
       readonly expectedBridgeRows: number;
       /** Test-only override; production mode always uses MAX_CONTROLLED_INDEX_BYTES. */
       readonly maxControlledIndexBytes?: number;
+      /** Synthetic-test only: inject cleanup I/O for failure-path regression tests. */
+      readonly testCleanupHooks?: { readonly rmSyncImpl?: typeof rmSync };
     };
 
 type SqlRow = Record<string, unknown>;
@@ -114,6 +118,8 @@ export type ProductionBuildIndex = {
   checkpointControlledIndexAtSafeBoundary(boundary: string): void;
   fetchMappedBridgeJoinBatch(limit: number, offset: number): MappedBridgeJoinRow[];
   fetchDbDiseaseBatch(limit: number, offset: number): LegacyDbRow[];
+  mappedBridgeJoinRowCount(): number;
+  assertMappedBridgeJoinInvariant(boundary: string): void;
   /** Synthetic-test only: record an observed peak without reading the filesystem. */
   testOnlyRecordPeakBytes(bytes: bigint): void;
   iterateMappedEntries(): IterableIterator<MappedDedupeEntry>;
@@ -149,6 +155,9 @@ export function createProductionBuildIndex(
 ): ProductionBuildIndex {
   mkdirSync(dir, { recursive: true });
   const dbPath = path.join(dir, 'production-build-index.sqlite');
+  const indexOwnership = createBuilderOwnedDirectoryOwnership('controlled-index', dir, {
+    indexDbBasename: CONTROLLED_INDEX_DB_BASENAME,
+  });
   const ownsIndexFiles = !existsSync(dbPath);
   const primaryDb = new Database(dbPath);
   // Separate connection for output writes so ordered readers can stay open without
@@ -290,6 +299,17 @@ export function createProductionBuildIndex(
       : MAX_CONTROLLED_INDEX_BYTES;
   const checkpointThresholdBytes =
     BigInt(maxIndexBytes) - BigInt(CONTROLLED_INDEX_CHECKPOINT_HEADROOM_BYTES);
+  const testCleanupRmSync =
+    configured.mode === 'synthetic-test' && 'testCleanupHooks' in options
+      ? options.testCleanupHooks?.rmSyncImpl
+      : undefined;
+
+  function removeOwnedIndexDirectory(): string | null {
+    return removeBuilderOwnedDirectory(dir, {
+      ownership: indexOwnership,
+      rmSyncImpl: testCleanupRmSync,
+    });
+  }
 
   function count(table: string): number {
     return Number(
@@ -333,8 +353,7 @@ export function createProductionBuildIndex(
 
   function failClosedOnIndexSize(reason: string): never {
     closeOwnedConnections();
-    const cleanupFailure =
-      ownsIndexFiles && existsSync(dir) ? removeBuilderOwnedDirectory(dir) : null;
+    const cleanupFailure = ownsIndexFiles && existsSync(dir) ? removeOwnedIndexDirectory() : null;
     throw new DiseaseIdentityError(
       'MALFORMED_INPUT',
       formatFailClosedMessage(reason, cleanupFailure),
@@ -607,6 +626,32 @@ export function createProductionBuildIndex(
         icd10_code: row.icd10_code === null ? null : String(row.icd10_code),
       }));
     },
+    mappedBridgeJoinRowCount() {
+      return Number(
+        (
+          primaryDb
+            .prepare(
+              `SELECT COUNT(*) AS count FROM mapped_entry m
+               INNER JOIN bridge_entry b ON b.dedupe_key = m.dedupe_key`,
+            )
+            .get() as SqlRow
+        ).count,
+      );
+    },
+    assertMappedBridgeJoinInvariant(boundary: string) {
+      if (closed) {
+        throw new DiseaseIdentityError('MALFORMED_INPUT', 'Controlled index already closed');
+      }
+      const mapped = count('mapped_entry');
+      const bridge = count('bridge_entry');
+      const joined = api.mappedBridgeJoinRowCount();
+      if (mapped !== bridge || mapped !== joined || bridge !== joined) {
+        throw new DiseaseIdentityError(
+          'MALFORMED_INPUT',
+          `${boundary}: mapped/bridge join reconciliation failed (counts mapped=${mapped} bridge=${bridge} joined=${joined})`,
+        );
+      }
+    },
     peakControlledIndexBytes() {
       return peakControlledIndexBytes;
     },
@@ -767,7 +812,7 @@ export function createProductionBuildIndex(
     },
     destroy() {
       api.close();
-      removeBuilderOwnedDirectory(dir);
+      removeOwnedIndexDirectory();
     },
   };
   return api;
