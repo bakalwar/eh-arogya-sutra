@@ -36,6 +36,7 @@ import {
   parseBridgeJsonlRow,
   parsePinnedBridgeV3JsonlRow,
   parseBridgeRowForSchema,
+  parseJsonObjectRejectDuplicateKeys,
   parseJsonObjectRejectDuplicateRootKeys,
   BRIDGE_INGEST_SCHEMA_PINNED_V3,
   BRIDGE_INGEST_SCHEMA_SYNTHETIC,
@@ -1523,10 +1524,66 @@ describe('R2-DATA-P2C-C pinned Bridge V3 actual-schema adapter (synthetic)', () 
 
   it('rejects duplicate root JSON keys when detectable', () => {
     expect(() =>
-      parseJsonObjectRejectDuplicateRootKeys(
-        '{"ambiguity":false,"ambiguity":true,"bridge_id":"x"}',
+      parseJsonObjectRejectDuplicateKeys('{"ambiguity":false,"ambiguity":true,"bridge_id":"x"}', 1),
+    ).toThrow(/Duplicate bridge JSON key/);
+  });
+
+  it('rejects duplicate nested polarity_counts keys', () => {
+    expect(() =>
+      parseJsonObjectRejectDuplicateKeys(
+        '{"polarity_counts":{"MIXED":1,"MIXED":2},"bridge_id":"x"}',
         1,
       ),
     ).toThrow(/Duplicate bridge JSON key/);
+  });
+
+  it('rejects Unicode-escaped equivalent duplicate root keys', () => {
+    expect(() => parseJsonObjectRejectDuplicateKeys('{"a":1,"\\u0061":2}', 1)).toThrow(
+      /Duplicate bridge JSON key/,
+    );
+  });
+
+  it('rejects Unicode-escaped equivalent duplicate nested keys', () => {
+    expect(() =>
+      parseJsonObjectRejectDuplicateKeys('{"polarity_counts":{"MIXED":1,"\\u004dIXED":2}}', 1),
+    ).toThrow(/Duplicate bridge JSON key/);
+  });
+
+  it('accepts ordinary valid nested polarity_counts object via strict JSON parse', () => {
+    const obj = parseJsonObjectRejectDuplicateKeys(
+      '{"polarity_counts":{"MIXED":1,"POSITIVE":2},"bridge_id":"ok"}',
+      1,
+    );
+    expect(obj.polarity_counts).toEqual({ MIXED: 1, POSITIVE: 2 });
+    expect(obj.bridge_id).toBe('ok');
+  });
+
+  it('polarity-only variation still yields identical ParsedBridgeRow after strict parse', () => {
+    const base = makeSyntheticPinnedV3Row({
+      bridge_id: 'pol-a',
+      majority_polarity: 'POSITIVE',
+      polarity_counts: { POSITIVE: 3 },
+    });
+    const variant = makeSyntheticPinnedV3Row({
+      bridge_id: 'pol-b',
+      majority_polarity: 'NEGATIVE',
+      polarity_counts: { NEGATIVE: 9, MIXED: 1 },
+    });
+    const a = parsePinnedBridgeV3JsonlRow(
+      parseJsonObjectRejectDuplicateKeys(JSON.stringify(base), 1),
+      1,
+    );
+    const b = parsePinnedBridgeV3JsonlRow(
+      parseJsonObjectRejectDuplicateKeys(JSON.stringify(variant), 2),
+      2,
+    );
+    expect(JSON.stringify(a)).toBe(JSON.stringify(b));
+    expect(JSON.stringify(a)).not.toMatch(/polarity/i);
+  });
+
+  it('alias parseJsonObjectRejectDuplicateRootKeys remains all-depth', () => {
+    expect(() => parseJsonObjectRejectDuplicateRootKeys('{"outer":{"k":1,"k":2}}', 1)).toThrow(
+      /Duplicate bridge JSON key/,
+    );
   });
 });

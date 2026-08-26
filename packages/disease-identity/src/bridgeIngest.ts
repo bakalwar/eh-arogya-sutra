@@ -16,6 +16,10 @@ import {
 import { mappedRawKey } from './namespaceResolution.js';
 import { assertCandidateLegacyDbIds } from './validationPrimitives.js';
 import type { ProductionBuildIndex } from './productionBuildIndex.js';
+export {
+  parseJsonObjectRejectDuplicateKeys,
+  parseJsonObjectRejectDuplicateRootKeys,
+} from './bridgeJsonDuplicateKeyParse.js';
 
 /**
  * Synthetic / test-only projected mini-schema keys.
@@ -176,102 +180,7 @@ function assertBoundedNfcString(
   return normalized;
 }
 
-/**
- * Reject duplicate root JSON object keys when the streaming layer can detect them.
- * Nested object keys (e.g. polarity_counts) are ignored for this check.
- */
-export function parseJsonObjectRejectDuplicateRootKeys(
-  text: string,
-  lineNumber: number,
-): Record<string, unknown> {
-  let depth = 0;
-  let inString = false;
-  let escape = false;
-  let expectingKey = false;
-  let collectingKey = false;
-  let keyBuffer = '';
-  const rootKeys = new Set<string>();
-
-  for (let i = 0; i < text.length; i += 1) {
-    const ch = text[i]!;
-    if (inString) {
-      if (escape) {
-        if (collectingKey) keyBuffer += ch;
-        escape = false;
-        continue;
-      }
-      if (ch === '\\') {
-        escape = true;
-        if (collectingKey) keyBuffer += ch;
-        continue;
-      }
-      if (ch === '"') {
-        inString = false;
-        if (collectingKey && depth === 1 && expectingKey) {
-          if (rootKeys.has(keyBuffer)) {
-            throw new DiseaseIdentityError(
-              'MALFORMED_INPUT',
-              `Duplicate bridge JSON key at line ${lineNumber}`,
-            );
-          }
-          rootKeys.add(keyBuffer);
-          collectingKey = false;
-          expectingKey = false;
-          keyBuffer = '';
-        }
-        continue;
-      }
-      if (collectingKey) keyBuffer += ch;
-      continue;
-    }
-
-    if (ch === '"') {
-      inString = true;
-      if (depth === 1 && expectingKey) {
-        collectingKey = true;
-        keyBuffer = '';
-      }
-      continue;
-    }
-    if (ch === '{') {
-      depth += 1;
-      if (depth === 1) expectingKey = true;
-      continue;
-    }
-    if (ch === '}') {
-      depth -= 1;
-      continue;
-    }
-    if (ch === '[') {
-      depth += 1;
-      continue;
-    }
-    if (ch === ']') {
-      depth -= 1;
-      continue;
-    }
-    if (depth === 1 && ch === ',') {
-      expectingKey = true;
-    }
-  }
-
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(text);
-  } catch {
-    throw new DiseaseIdentityError(
-      'MALFORMED_INPUT',
-      `Malformed bridge JSON at line ${lineNumber}`,
-    );
-  }
-  if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
-    throw new DiseaseIdentityError(
-      'MALFORMED_INPUT',
-      `Bridge row must be a JSON object at line ${lineNumber}`,
-    );
-  }
-  return parsed as Record<string, unknown>;
-}
+/** Re-exported from bridgeJsonDuplicateKeyParse (all-depth duplicate-key firewall). */
 
 function assertPinnedV3ExactKeySet(raw: Record<string, unknown>, lineNumber: number): void {
   const keys = Object.keys(raw);

@@ -6,7 +6,7 @@ import { Transform } from 'node:stream';
 import {
   EXPECTED_BRIDGE_ROW_COUNT,
   parseBridgeRowForSchema,
-  parseJsonObjectRejectDuplicateRootKeys,
+  parseJsonObjectRejectDuplicateKeys,
   BRIDGE_INGEST_SCHEMA_PINNED_V3,
   BRIDGE_INGEST_SCHEMA_SYNTHETIC,
   DiseaseIdentityError,
@@ -46,7 +46,7 @@ function resolveBridgeSchema(options = {}) {
 }
 
 function parseBridgeLine(line, lineNumber, schema, options) {
-  const raw = parseJsonObjectRejectDuplicateRootKeys(line, lineNumber);
+  const raw = parseJsonObjectRejectDuplicateKeys(line, lineNumber);
   return parseBridgeRowForSchema(schema, raw, lineNumber, {
     seenBridgeIds: options.seenBridgeIds,
     allowSyntheticBridgeSchema: options.allowSyntheticBridgeSchema === true,
