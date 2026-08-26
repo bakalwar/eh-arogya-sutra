@@ -1353,6 +1353,7 @@ describe('R2-DATA-P2C-C pinned Bridge V3 actual-schema adapter (synthetic)', () 
     const indexDir = path.join(dir, 'index');
     mkdirSync(indexDir, { recursive: true });
     let index: ReturnType<typeof createProductionBuildIndex> | undefined;
+    let pendingCleanupError: unknown;
     try {
       const bridgePath = path.join(dir, 'bridge.jsonl');
       writeFileSync(
@@ -1378,9 +1379,12 @@ describe('R2-DATA-P2C-C pinned Bridge V3 actual-schema adapter (synthetic)', () 
       } catch (error) {
         // Known Windows ENOTEMPTY on SQLite teardown; Linux CI remains authoritative.
         if ((error as NodeJS.ErrnoException).code !== 'ENOTEMPTY') {
-          throw error;
+          pendingCleanupError = error;
         }
       }
+    }
+    if (pendingCleanupError !== undefined) {
+      throw pendingCleanupError;
     }
   });
 
@@ -1389,6 +1393,7 @@ describe('R2-DATA-P2C-C pinned Bridge V3 actual-schema adapter (synthetic)', () 
     const indexDir = path.join(dir, 'index');
     mkdirSync(indexDir, { recursive: true });
     let index: ReturnType<typeof createProductionBuildIndex> | undefined;
+    let pendingCleanupError: unknown;
     try {
       const bridgePath = path.join(dir, 'bridge.jsonl');
       const rows = [
@@ -1507,9 +1512,12 @@ describe('R2-DATA-P2C-C pinned Bridge V3 actual-schema adapter (synthetic)', () 
         rmSync(dir, { recursive: true, force: true });
       } catch (error) {
         if ((error as NodeJS.ErrnoException).code !== 'ENOTEMPTY') {
-          throw error;
+          pendingCleanupError = error;
         }
       }
+    }
+    if (pendingCleanupError !== undefined) {
+      throw pendingCleanupError;
     }
   });
 
