@@ -37,12 +37,69 @@ import {
   streamSanitizedIdentityJsonlFile,
   verifySanitizedArtifactPackage,
 } from '../../../packages/disease-identity/dist/toolingInternal.js';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp } from 'node:fs/promises';
 import path from 'node:path';
 import { tmpdir } from 'node:os';
+import {
+  createBuilderOwnedDirectoryOwnership,
+  formatFailClosedCleanupMessage,
+  removeBuilderOwnedDirectory,
+} from '../../../packages/disease-identity/dist/controlledIndexCleanup.js';
 import { ingestBridgeToBuildIndex } from './streamBridgeJsonl.mjs';
 import { streamDedupeMappedJsonFileWithConsumedDigest } from './streamMappedJson.mjs';
 import { streamLegacyDiseaseRowsToBuildIndex } from './readLegacyDb.mjs';
+
+/**
+ * Finalize index/staging cleanup without allowing cleanup failure to replace a
+ * primary DiseaseIdentityError (or other primary failure).
+ * Exported for process-boundary regression tests.
+ */
+export function finalizeBuildFullCorpusResources(input) {
+  const {
+    destroyIndex,
+    stagingDir,
+    stagingOwnership,
+    primaryError = null,
+    removeDirectory = removeBuilderOwnedDirectory,
+  } = input;
+  try {
+    destroyIndex?.();
+  } catch {
+    // Index destroy is best-effort after a primary failure; never mask primary.
+  }
+  let cleanupFailure = null;
+  if (stagingDir && stagingOwnership) {
+    cleanupFailure = removeDirectory(stagingDir, { ownership: stagingOwnership });
+  } else if (stagingDir && !stagingOwnership) {
+    cleanupFailure = 'ownership=missing_or_forged';
+  }
+  if (!cleanupFailure) {
+    return primaryError;
+  }
+  const primaryIsDiseaseIdentity =
+    primaryError instanceof DiseaseIdentityError ||
+    (primaryError &&
+      typeof primaryError === 'object' &&
+      primaryError.name === 'DiseaseIdentityError' &&
+      typeof primaryError.code === 'string' &&
+      typeof primaryError.message === 'string');
+  if (primaryIsDiseaseIdentity) {
+    return new DiseaseIdentityError(
+      primaryError.code,
+      formatFailClosedCleanupMessage(primaryError.message, cleanupFailure),
+    );
+  }
+  if (primaryError) {
+    const primaryMessage = primaryError instanceof Error ? primaryError.message : 'Build failed';
+    const wrapped = new Error(formatFailClosedCleanupMessage(primaryMessage, cleanupFailure));
+    wrapped.cause = primaryError;
+    return wrapped;
+  }
+  return new DiseaseIdentityError(
+    'MALFORMED_INPUT',
+    formatFailClosedCleanupMessage('Staging cleanup failed after build', cleanupFailure),
+  );
+}
 
 export async function cmdPreflightFullCorpus(args, repoRoot) {
   const inputClass = parseDbIdentityInputClass(args['db-identity-input-class']);
@@ -177,6 +234,8 @@ export async function cmdBuildFullCorpus(args, repoRoot) {
   const indexRoot = await mkdtemp(path.join(tmpdir(), 'ehas2-p2c-index-'));
   const index = createProductionBuildIndex(indexRoot);
   let stagingDir = null;
+  let stagingOwnership = null;
+  let primaryError = null;
   try {
     index.checkControlledIndexSize();
 
@@ -231,6 +290,7 @@ export async function cmdBuildFullCorpus(args, repoRoot) {
     });
 
     stagingDir = await mkdtemp(`${path.resolve(args.output)}.staging-`);
+    stagingOwnership = createBuilderOwnedDirectoryOwnership('staging', stagingDir);
     const legacyEvidenceHash =
       inputClass === DB_IDENTITY_INPUT_CLASS_SANITIZED_JSONL
         ? args['expected-artifact-sha256']
@@ -271,6 +331,7 @@ export async function cmdBuildFullCorpus(args, repoRoot) {
       manifest: artifacts.manifest,
     });
     stagingDir = null;
+    stagingOwnership = null;
     console.log(
       JSON.stringify(
         { ok: true, bundleDir: result.destinationDir, dbIdentityInputClass: inputClass },
@@ -278,11 +339,17 @@ export async function cmdBuildFullCorpus(args, repoRoot) {
         2,
       ),
     );
-  } finally {
-    index.destroy();
-    if (stagingDir) {
-      await rm(stagingDir, { recursive: true, force: true });
-    }
+  } catch (error) {
+    primaryError = error;
+  }
+  const finalized = finalizeBuildFullCorpusResources({
+    destroyIndex: () => index.destroy(),
+    stagingDir,
+    stagingOwnership,
+    primaryError,
+  });
+  if (finalized) {
+    throw finalized;
   }
 }
 

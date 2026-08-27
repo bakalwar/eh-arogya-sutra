@@ -13,6 +13,7 @@ import {
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   removeBuilderOwnedDirectory,
@@ -20,6 +21,11 @@ import {
   createBuilderOwnedDirectoryOwnership,
   validateBuilderOwnedDirectoryOwnership,
 } from '../src/controlledIndexCleanup.js';
+import { finalizeBuildFullCorpusResources } from '../../../tools/disease-identity-generator/lib/fullCorpusCommands.mjs';
+import {
+  createBuilderOwnedDirectoryOwnership as createCliOwnedDirectoryOwnership,
+  removeBuilderOwnedDirectory as removeCliOwnedDirectory,
+} from '../../../packages/disease-identity/dist/controlledIndexCleanup.js';
 import {
   assertConsumedByteDigestAndBytes,
   assertProductionGeneratorReady,
@@ -49,6 +55,7 @@ import {
 } from '../src/index.js';
 
 const FAKE_COMMIT = 'a'.repeat(40);
+const REPO_ROOT = path.resolve(path.join(path.dirname(fileURLToPath(import.meta.url)), '../../..'));
 
 function sha256(content: string | Buffer): string {
   return createHash('sha256').update(content).digest('hex');
@@ -637,14 +644,25 @@ describe('controlled index WAL lifecycle and fail-closed cleanup', () => {
   it('truncates real WAL sidecars after a closed batch checkpoint boundary', () => {
     const base = mkdtempSync(path.join(tmpdir(), 'ehas2-wal-truncate-'));
     const index = seedSyntheticIndex(path.join(base, 'index'));
-    index.addOutputRecord('mapped', 'm1', '{"kind":"mapped"}');
-    index.addOutputRecord('mapped', 'm2', '{"kind":"mapped"}');
+    // Force WAL growth with many output writes before checkpoint.
+    for (let i = 0; i < 64; i += 1) {
+      index.addOutputRecord(
+        'mapped',
+        `m${String(i).padStart(4, '0')}`,
+        `{"kind":"mapped","n":${i}}`,
+      );
+    }
     const walPath = `${index.dbPath}-wal`;
-    const walBefore = existsSync(walPath) ? statSize(walPath) : 0;
-    index.checkpointControlledIndexAtSafeBoundary('physical-wal-truncate-test');
+    expect(existsSync(walPath)).toBe(true);
+    const walBefore = statSize(walPath);
+    expect(walBefore).toBeGreaterThan(0);
+    const aggregateBefore = Number(index.controlledIndexFootprintBytes());
+    index.checkpointControlledIndexAtSafeBoundary('physical-wal-truncate-batch');
     const walAfter = existsSync(walPath) ? statSize(walPath) : 0;
-    expect(walAfter).toBeLessThanOrEqual(walBefore);
+    expect(walAfter).toBeLessThan(walBefore);
+    expect(Number(index.controlledIndexFootprintBytes())).toBeLessThanOrEqual(aggregateBefore);
     expect(index.peakControlledIndexBytes()).toBeGreaterThan(0n);
+    // Bounded synthetic test — does not reproduce the full-corpus ~2 GiB over-cap class.
     index.destroy();
     rmSync(base, { recursive: true, force: true });
   });
@@ -730,6 +748,34 @@ describe('controlled index WAL lifecycle and fail-closed cleanup', () => {
     rmSync(base, { recursive: true, force: true });
   });
 
+  it('rejects missing ownership and forged ownership tokens without calling rm', () => {
+    const base = mkdtempSync(path.join(tmpdir(), 'ehas2-ownership-forged-'));
+    const target = path.join(base, 'owned-index');
+    mkdirSync(target);
+    writeFileSync(path.join(target, 'keep.txt'), 'x', 'utf8');
+    let rmCalls = 0;
+    const rmSpy = ((...args: Parameters<typeof rmSync>) => {
+      rmCalls += 1;
+      return rmSync(...args);
+    }) as typeof rmSync;
+    const missing = removeBuilderOwnedDirectory(target, {
+      ownership: undefined as unknown as ReturnType<typeof createBuilderOwnedDirectoryOwnership>,
+      rmSyncImpl: rmSpy,
+    });
+    expect(missing).toBe('ownership=missing_or_forged');
+    expect(rmCalls).toBe(0);
+    const forged = removeBuilderOwnedDirectory(target, {
+      ownership: {
+        __builderOwnedDirectoryOwnership: true,
+      } as ReturnType<typeof createBuilderOwnedDirectoryOwnership>,
+      rmSyncImpl: rmSpy,
+    });
+    expect(forged).toBe('ownership=missing_or_forged');
+    expect(rmCalls).toBe(0);
+    expect(existsSync(target)).toBe(true);
+    rmSync(base, { recursive: true, force: true });
+  });
+
   it('fails closed without deletion when ownership descriptor does not match target', () => {
     const base = mkdtempSync(path.join(tmpdir(), 'ehas2-ownership-mismatch-'));
     const owned = path.join(base, 'owned-index');
@@ -747,6 +793,39 @@ describe('controlled index WAL lifecycle and fail-closed cleanup', () => {
     rmSync(base, { recursive: true, force: true });
   });
 
+  it('rejects path replacement between cleanup retry attempts before next rm', () => {
+    if (process.platform === 'win32') {
+      return;
+    }
+    const base = mkdtempSync(path.join(tmpdir(), 'ehas2-ownership-replace-'));
+    const target = path.join(base, 'owned-index');
+    const decoy = path.join(base, 'decoy');
+    mkdirSync(target);
+    mkdirSync(decoy);
+    writeFileSync(path.join(target, 'marker.txt'), 'x', 'utf8');
+    const ownership = createBuilderOwnedDirectoryOwnership('controlled-index', target);
+    let attempts = 0;
+    const result = removeBuilderOwnedDirectory(target, {
+      ownership,
+      maxAttempts: 3,
+      backoffMs: 1,
+      rmSyncImpl: ((..._args: Parameters<typeof rmSync>) => {
+        attempts += 1;
+        if (attempts === 1) {
+          rmSync(target, { recursive: true, force: true });
+          symlinkSync(decoy, target, 'dir');
+          const error = new Error('EBUSY') as NodeJS.ErrnoException;
+          error.code = 'EBUSY';
+          throw error;
+        }
+        throw new Error('rm must not run after replacement');
+      }) as typeof rmSync,
+    });
+    expect(result).toMatch(/symlink_or_reparse_rejected|realpath/);
+    expect(attempts).toBe(1);
+    rmSync(base, { recursive: true, force: true });
+  });
+
   it('rejects symlink controlled-index directories without deletion', () => {
     if (process.platform === 'win32') {
       return;
@@ -758,10 +837,10 @@ describe('controlled index WAL lifecycle and fail-closed cleanup', () => {
     symlinkSync(real, link, 'dir');
     const ownership = createBuilderOwnedDirectoryOwnership('controlled-index', link);
     expect(validateBuilderOwnedDirectoryOwnership(ownership, link)).toBe(
-      'ownership=symlink_rejected',
+      'ownership=symlink_or_reparse_rejected',
     );
     const result = removeBuilderOwnedDirectory(link, { ownership });
-    expect(result).toBe('ownership=symlink_rejected');
+    expect(result).toBe('ownership=symlink_or_reparse_rejected');
     expect(existsSync(real)).toBe(true);
     rmSync(base, { recursive: true, force: true });
   });
@@ -951,6 +1030,164 @@ describe('controlled index WAL lifecycle and fail-closed cleanup', () => {
         APPROVED_AGGREGATE_COUNTS.bridgeOwnerReview +
         APPROVED_AGGREGATE_COUNTS.bridgeNoMatch,
     ).toBe(17_474);
+  });
+});
+
+describe('CLI full-corpus finalize primary-error preservation', () => {
+  function isMalformedIdentityError(value: unknown): value is DiseaseIdentityError {
+    return (
+      !!value &&
+      typeof value === 'object' &&
+      (value as { name?: string }).name === 'DiseaseIdentityError' &&
+      (value as { code?: string }).code === 'MALFORMED_INPUT' &&
+      typeof (value as { message?: string }).message === 'string'
+    );
+  }
+
+  it('primary DiseaseIdentityError + staging cleanup success keeps primary only', () => {
+    const base = mkdtempSync(path.join(tmpdir(), 'ehas2-cli-fin-ok-'));
+    const staging = path.join(base, 'staging');
+    mkdirSync(staging);
+    const ownership = createCliOwnedDirectoryOwnership('staging', staging);
+    const primary = new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      'production build index exceeds MAX_CONTROLLED_INDEX_BYTES (2147483648)',
+    );
+    const out = finalizeBuildFullCorpusResources({
+      destroyIndex: () => undefined,
+      stagingDir: staging,
+      stagingOwnership: ownership,
+      primaryError: primary,
+      removeDirectory: removeCliOwnedDirectory,
+    });
+    expect(isMalformedIdentityError(out)).toBe(true);
+    expect((out as DiseaseIdentityError).message).toMatch(/MAX_CONTROLLED_INDEX_BYTES/);
+    expect((out as DiseaseIdentityError).message).not.toMatch(/secondaryCleanupFailure/);
+    expect(existsSync(staging)).toBe(false);
+    expect(existsSync(path.join(base, 'ehas2-bundle-activation.json'))).toBe(false);
+    rmSync(base, { recursive: true, force: true });
+  });
+
+  it('primary DiseaseIdentityError + persistent staging cleanup failure keeps primary first', () => {
+    const base = mkdtempSync(path.join(tmpdir(), 'ehas2-cli-fin-both-'));
+    const staging = path.join(base, 'staging');
+    mkdirSync(staging);
+    const ownership = createCliOwnedDirectoryOwnership('staging', staging);
+    const primary = new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      'after-output-population: production build index exceeds MAX_CONTROLLED_INDEX_BYTES (2147483648)',
+    );
+    const out = finalizeBuildFullCorpusResources({
+      destroyIndex: () => undefined,
+      stagingDir: staging,
+      stagingOwnership: ownership,
+      primaryError: primary,
+      removeDirectory: () => 'code=EPERM;attempts=5',
+    });
+    expect(isMalformedIdentityError(out)).toBe(true);
+    const err = out as DiseaseIdentityError;
+    expect(err.message.indexOf('MAX_CONTROLLED_INDEX_BYTES')).toBeLessThan(
+      err.message.indexOf('secondaryCleanupFailure'),
+    );
+    expect(err.message).toMatch(/secondaryCleanupFailure=code=EPERM/);
+    expect(err.message).not.toMatch(/EPERM:|ENOENT|\\\\|\/Users\/|C:\\\\Users/i);
+    expect(err.message).not.toMatch(/A00\.0|patient|phi/i);
+    expect(existsSync(path.join(base, BUNDLE_ACTIVATION_MARKER_NAME))).toBe(false);
+    rmSync(base, { recursive: true, force: true });
+  });
+
+  it('non-DiseaseIdentity primary + cleanup failure keeps primary message ahead of secondary', () => {
+    const staging = mkdtempSync(path.join(tmpdir(), 'ehas2-cli-fin-ndi-'));
+    const ownership = createCliOwnedDirectoryOwnership('staging', staging);
+    const out = finalizeBuildFullCorpusResources({
+      destroyIndex: () => undefined,
+      stagingDir: staging,
+      stagingOwnership: ownership,
+      primaryError: new Error('injector boom'),
+      removeDirectory: () => 'code=EBUSY;attempts=5',
+    });
+    expect(out).toBeInstanceOf(Error);
+    expect((out as Error).message).toMatch(/^injector boom;/);
+    expect((out as Error).message).toMatch(/secondaryCleanupFailure=code=EBUSY/);
+    rmSync(staging, { recursive: true, force: true });
+  });
+
+  it('cleanup-only failure returns structured MALFORMED_INPUT aggregate error', () => {
+    const staging = mkdtempSync(path.join(tmpdir(), 'ehas2-cli-fin-cleanup-only-'));
+    const ownership = createCliOwnedDirectoryOwnership('staging', staging);
+    const out = finalizeBuildFullCorpusResources({
+      destroyIndex: () => undefined,
+      stagingDir: staging,
+      stagingOwnership: ownership,
+      primaryError: null,
+      removeDirectory: () => 'code=EPERM;attempts=5',
+    });
+    expect(isMalformedIdentityError(out)).toBe(true);
+    expect((out as DiseaseIdentityError).message).toMatch(/Staging cleanup failed/);
+    expect((out as DiseaseIdentityError).message).toMatch(/secondaryCleanupFailure=code=EPERM/);
+    rmSync(staging, { recursive: true, force: true });
+  });
+
+  it('successful cleanup with no primary returns null', () => {
+    const staging = mkdtempSync(path.join(tmpdir(), 'ehas2-cli-fin-success-'));
+    const ownership = createCliOwnedDirectoryOwnership('staging', staging);
+    const out = finalizeBuildFullCorpusResources({
+      destroyIndex: () => undefined,
+      stagingDir: staging,
+      stagingOwnership: ownership,
+      primaryError: null,
+      removeDirectory: removeCliOwnedDirectory,
+    });
+    expect(out).toBeNull();
+    expect(existsSync(staging)).toBe(false);
+  });
+
+  it('CLI process-boundary stderr retains MALFORMED_INPUT ahead of secondary cleanup evidence', () => {
+    const script = `
+import { DiseaseIdentityError } from './packages/disease-identity/dist/errors.js';
+import { finalizeBuildFullCorpusResources } from './tools/disease-identity-generator/lib/fullCorpusCommands.mjs';
+const primary = new DiseaseIdentityError(
+  'MALFORMED_INPUT',
+  'production build index exceeds MAX_CONTROLLED_INDEX_BYTES (2147483648)',
+);
+const finalized = finalizeBuildFullCorpusResources({
+  destroyIndex: () => undefined,
+  stagingDir: 'synthetic-staging',
+  stagingOwnership: { __builderOwnedDirectoryOwnership: true },
+  primaryError: primary,
+  removeDirectory: () => 'code=EPERM;attempts=5',
+});
+try {
+  if (finalized) throw finalized;
+  process.exit(0);
+} catch (error) {
+  if (error && typeof error === 'object' && 'code' in error && 'message' in error) {
+    console.error(String(error.code) + ': ' + String(error.message));
+    process.exit(1);
+  }
+  throw error;
+}
+`;
+    let status: number | null = 0;
+    let stderr = '';
+    try {
+      execFileSync(process.execPath, ['--input-type=module', '-e', script], {
+        cwd: REPO_ROOT,
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'pipe'],
+        env: { ...process.env, NODE_OPTIONS: '' },
+      });
+    } catch (error) {
+      const err = error as { status?: number; stderr?: string };
+      status = typeof err.status === 'number' ? err.status : null;
+      stderr = String(err.stderr ?? '');
+    }
+    expect(status).toBe(1);
+    expect(stderr).toMatch(/^MALFORMED_INPUT:/);
+    expect(stderr.indexOf('MAX_CONTROLLED_INDEX_BYTES')).toBeLessThan(
+      stderr.indexOf('secondaryCleanupFailure'),
+    );
+    expect(stderr).not.toMatch(/EPERM:|private|patient|phi|A00\.0/i);
   });
 });
 
