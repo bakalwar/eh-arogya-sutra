@@ -714,9 +714,9 @@ describe('controlled index WAL lifecycle and fail-closed cleanup', () => {
     const err = caught as DiseaseIdentityError;
     expect(err.code).toBe('MALFORMED_INPUT');
     expect(err.message).toMatch(/MAX_CONTROLLED_INDEX_BYTES/);
-    expect(err.message).toMatch(/secondaryCleanupFailure=code=EPERM/);
+    expect(err.message).toMatch(/indexCleanup=code=EPERM/);
     expect(err.message.indexOf('MAX_CONTROLLED_INDEX_BYTES')).toBeLessThan(
-      err.message.indexOf('secondaryCleanupFailure'),
+      err.message.indexOf('indexCleanup='),
     );
     expect(err.message).not.toMatch(/A00\.0|OMIM|patient|phi/i);
     rmSync(base, { recursive: true, force: true });
@@ -1008,10 +1008,11 @@ describe('controlled index WAL lifecycle and fail-closed cleanup', () => {
       'code=EPERM;attempts=5',
     );
     expect(message).toMatch(/MAX_CONTROLLED_INDEX_BYTES/);
-    expect(message).toMatch(/secondaryCleanupFailure=code=EPERM;attempts=5/);
+    expect(message).toMatch(/indexCleanup=code=EPERM;attempts=5/);
     expect(message.indexOf('MAX_CONTROLLED_INDEX_BYTES')).toBeLessThan(
-      message.indexOf('secondaryCleanupFailure'),
+      message.indexOf('indexCleanup='),
     );
+    expect(message).not.toMatch(/secondaryCleanupFailure/);
   });
 
   it('destroy is idempotent when the owned directory is already absent', () => {
@@ -1054,7 +1055,7 @@ describe('CLI full-corpus finalize primary-error preservation', () => {
       'production build index exceeds MAX_CONTROLLED_INDEX_BYTES (2147483648)',
     );
     const out = finalizeBuildFullCorpusResources({
-      destroyIndex: () => undefined,
+      destroyIndex: () => null,
       stagingDir: staging,
       stagingOwnership: ownership,
       primaryError: primary,
@@ -1062,7 +1063,7 @@ describe('CLI full-corpus finalize primary-error preservation', () => {
     });
     expect(isMalformedIdentityError(out)).toBe(true);
     expect((out as DiseaseIdentityError).message).toMatch(/MAX_CONTROLLED_INDEX_BYTES/);
-    expect((out as DiseaseIdentityError).message).not.toMatch(/secondaryCleanupFailure/);
+    expect((out as DiseaseIdentityError).message).not.toMatch(/indexCleanup=|stagingCleanup=/);
     expect(existsSync(staging)).toBe(false);
     expect(existsSync(path.join(base, 'ehas2-bundle-activation.json'))).toBe(false);
     rmSync(base, { recursive: true, force: true });
@@ -1078,7 +1079,7 @@ describe('CLI full-corpus finalize primary-error preservation', () => {
       'after-output-population: production build index exceeds MAX_CONTROLLED_INDEX_BYTES (2147483648)',
     );
     const out = finalizeBuildFullCorpusResources({
-      destroyIndex: () => undefined,
+      destroyIndex: () => null,
       stagingDir: staging,
       stagingOwnership: ownership,
       primaryError: primary,
@@ -1087,20 +1088,68 @@ describe('CLI full-corpus finalize primary-error preservation', () => {
     expect(isMalformedIdentityError(out)).toBe(true);
     const err = out as DiseaseIdentityError;
     expect(err.message.indexOf('MAX_CONTROLLED_INDEX_BYTES')).toBeLessThan(
-      err.message.indexOf('secondaryCleanupFailure'),
+      err.message.indexOf('stagingCleanup='),
     );
-    expect(err.message).toMatch(/secondaryCleanupFailure=code=EPERM/);
+    expect(err.message).toMatch(/stagingCleanup=code=EPERM/);
+    expect(err.message).not.toMatch(/indexCleanup=/);
     expect(err.message).not.toMatch(/EPERM:|ENOENT|\\\\|\/Users\/|C:\\\\Users/i);
     expect(err.message).not.toMatch(/A00\.0|patient|phi/i);
     expect(existsSync(path.join(base, BUNDLE_ACTIVATION_MARKER_NAME))).toBe(false);
     rmSync(base, { recursive: true, force: true });
   });
 
+  it('primary DiseaseIdentityError + index cleanup failure retains primary then indexCleanup', () => {
+    const primary = new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      'production build index exceeds MAX_CONTROLLED_INDEX_BYTES (2147483648)',
+    );
+    const out = finalizeBuildFullCorpusResources({
+      destroyIndex: () => 'code=EPERM;attempts=5',
+      stagingDir: null,
+      stagingOwnership: null,
+      primaryError: primary,
+    });
+    expect(isMalformedIdentityError(out)).toBe(true);
+    const err = out as DiseaseIdentityError;
+    expect(err.message.indexOf('MAX_CONTROLLED_INDEX_BYTES')).toBeLessThan(
+      err.message.indexOf('indexCleanup='),
+    );
+    expect(err.message).toMatch(/indexCleanup=code=EPERM;attempts=5/);
+    expect(err.message).not.toMatch(/stagingCleanup=|secondaryCleanupFailure/);
+  });
+
+  it('primary DiseaseIdentityError + both cleanup failures keeps primary then index then staging', () => {
+    const staging = mkdtempSync(path.join(tmpdir(), 'ehas2-cli-fin-agg-'));
+    const primary = new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      'production build index exceeds MAX_CONTROLLED_INDEX_BYTES (2147483648)',
+    );
+    const out = finalizeBuildFullCorpusResources({
+      destroyIndex: () => 'code=EPERM;attempts=5',
+      stagingDir: staging,
+      stagingOwnership: createCliOwnedDirectoryOwnership('staging', staging),
+      primaryError: primary,
+      removeDirectory: () => 'code=EBUSY;attempts=5',
+    });
+    expect(isMalformedIdentityError(out)).toBe(true);
+    const err = out as DiseaseIdentityError;
+    expect(err.message.indexOf('MAX_CONTROLLED_INDEX_BYTES')).toBeLessThan(
+      err.message.indexOf('indexCleanup='),
+    );
+    expect(err.message.indexOf('indexCleanup=')).toBeLessThan(
+      err.message.indexOf('stagingCleanup='),
+    );
+    expect(err.message).toMatch(/indexCleanup=code=EPERM;attempts=5/);
+    expect(err.message).toMatch(/stagingCleanup=code=EBUSY;attempts=5/);
+    expect(err.message).not.toMatch(/secondaryCleanupFailure/);
+    rmSync(staging, { recursive: true, force: true });
+  });
+
   it('non-DiseaseIdentity primary + cleanup failure keeps primary message ahead of secondary', () => {
     const staging = mkdtempSync(path.join(tmpdir(), 'ehas2-cli-fin-ndi-'));
     const ownership = createCliOwnedDirectoryOwnership('staging', staging);
     const out = finalizeBuildFullCorpusResources({
-      destroyIndex: () => undefined,
+      destroyIndex: () => 'code=EPERM;attempts=3',
       stagingDir: staging,
       stagingOwnership: ownership,
       primaryError: new Error('injector boom'),
@@ -1108,15 +1157,16 @@ describe('CLI full-corpus finalize primary-error preservation', () => {
     });
     expect(out).toBeInstanceOf(Error);
     expect((out as Error).message).toMatch(/^injector boom;/);
-    expect((out as Error).message).toMatch(/secondaryCleanupFailure=code=EBUSY/);
+    expect((out as Error).message).toMatch(/indexCleanup=code=EPERM/);
+    expect((out as Error).message).toMatch(/stagingCleanup=code=EBUSY/);
     rmSync(staging, { recursive: true, force: true });
   });
 
-  it('cleanup-only failure returns structured MALFORMED_INPUT aggregate error', () => {
+  it('cleanup-only staging failure returns structured MALFORMED_INPUT aggregate error', () => {
     const staging = mkdtempSync(path.join(tmpdir(), 'ehas2-cli-fin-cleanup-only-'));
     const ownership = createCliOwnedDirectoryOwnership('staging', staging);
     const out = finalizeBuildFullCorpusResources({
-      destroyIndex: () => undefined,
+      destroyIndex: () => null,
       stagingDir: staging,
       stagingOwnership: ownership,
       primaryError: null,
@@ -1124,15 +1174,113 @@ describe('CLI full-corpus finalize primary-error preservation', () => {
     });
     expect(isMalformedIdentityError(out)).toBe(true);
     expect((out as DiseaseIdentityError).message).toMatch(/Staging cleanup failed/);
-    expect((out as DiseaseIdentityError).message).toMatch(/secondaryCleanupFailure=code=EPERM/);
+    expect((out as DiseaseIdentityError).message).toMatch(/stagingCleanup=code=EPERM/);
+    expect((out as DiseaseIdentityError).message).not.toMatch(/indexCleanup=/);
     rmSync(staging, { recursive: true, force: true });
+  });
+
+  it('cleanup-only index failure prevents success with structured MALFORMED_INPUT', () => {
+    const out = finalizeBuildFullCorpusResources({
+      destroyIndex: () => 'code=EPERM;attempts=5',
+      stagingDir: null,
+      stagingOwnership: null,
+      primaryError: null,
+    });
+    expect(isMalformedIdentityError(out)).toBe(true);
+    expect((out as DiseaseIdentityError).message).toMatch(/^Index cleanup failed after build;/);
+    expect((out as DiseaseIdentityError).message).toMatch(/indexCleanup=code=EPERM;attempts=5/);
+    expect((out as DiseaseIdentityError).message).not.toMatch(/stagingCleanup=/);
+  });
+
+  it('cleanup-only both failures aggregate index then staging under MALFORMED_INPUT', () => {
+    const out = finalizeBuildFullCorpusResources({
+      destroyIndex: () => 'code=EPERM;attempts=5',
+      stagingDir: 'synthetic-staging',
+      stagingOwnership: { __builderOwnedDirectoryOwnership: true },
+      primaryError: null,
+      removeDirectory: () => 'code=EBUSY;attempts=5',
+    });
+    expect(isMalformedIdentityError(out)).toBe(true);
+    const msg = (out as DiseaseIdentityError).message;
+    expect(msg).toMatch(/Index and staging cleanup failed after build/);
+    expect(msg.indexOf('indexCleanup=')).toBeLessThan(msg.indexOf('stagingCleanup='));
+    expect(msg).toMatch(/indexCleanup=code=EPERM;attempts=5/);
+    expect(msg).toMatch(/stagingCleanup=code=EBUSY;attempts=5/);
+  });
+
+  it('index destroy throw becomes redacted indexCleanup and never replaces primary', () => {
+    const primary = new DiseaseIdentityError(
+      'MALFORMED_INPUT',
+      'production build index exceeds MAX_CONTROLLED_INDEX_BYTES (2147483648)',
+    );
+    const out = finalizeBuildFullCorpusResources({
+      destroyIndex: () => {
+        const error = new Error('EPERM: operation not permitted, unlink C:\\Users\\secret\\index');
+        (error as NodeJS.ErrnoException).code = 'EPERM';
+        throw error;
+      },
+      stagingDir: null,
+      stagingOwnership: null,
+      primaryError: primary,
+    });
+    expect(isMalformedIdentityError(out)).toBe(true);
+    const err = out as DiseaseIdentityError;
+    expect(err.message).toMatch(/MAX_CONTROLLED_INDEX_BYTES/);
+    expect(err.message).toMatch(/indexCleanup=code=EPERM/);
+    expect(err.message).not.toMatch(/C:\\\\Users|secret|unlink/i);
+  });
+
+  it('published success + index cleanup failure fails closed without touching activation marker', () => {
+    const base = mkdtempSync(path.join(tmpdir(), 'ehas2-cli-fin-pub-'));
+    const activated = path.join(base, 'bundle');
+    mkdirSync(activated);
+    writeFileSync(path.join(activated, BUNDLE_ACTIVATION_MARKER_NAME), '{"ok":true}\n', 'utf8');
+    const out = finalizeBuildFullCorpusResources({
+      destroyIndex: () => 'code=EPERM;attempts=5',
+      stagingDir: null,
+      stagingOwnership: null,
+      primaryError: null,
+    });
+    expect(isMalformedIdentityError(out)).toBe(true);
+    expect((out as DiseaseIdentityError).message).toMatch(/Index cleanup failed after build/);
+    expect((out as DiseaseIdentityError).message).toMatch(/indexCleanup=code=EPERM/);
+    expect(existsSync(path.join(activated, BUNDLE_ACTIVATION_MARKER_NAME))).toBe(true);
+    rmSync(base, { recursive: true, force: true });
+  });
+
+  it('production destroy() return is propagated by finalize (not dropped)', () => {
+    const base = mkdtempSync(path.join(tmpdir(), 'ehas2-cli-fin-destroy-ret-'));
+    const index = createProductionBuildIndex(path.join(base, 'index'), {
+      mode: 'synthetic-test',
+      expectedDbRows: 6,
+      expectedMappedRawRows: 4,
+      expectedMappedUniqueRows: 4,
+      expectedBridgeRows: 4,
+      testCleanupHooks: {
+        rmSyncImpl: (() => {
+          const error = new Error('EPERM') as NodeJS.ErrnoException;
+          error.code = 'EPERM';
+          throw error;
+        }) as typeof rmSync,
+      },
+    });
+    const out = finalizeBuildFullCorpusResources({
+      destroyIndex: () => index.destroy(),
+      stagingDir: null,
+      stagingOwnership: null,
+      primaryError: null,
+    });
+    expect(isMalformedIdentityError(out)).toBe(true);
+    expect((out as DiseaseIdentityError).message).toMatch(/indexCleanup=code=EPERM/);
+    expect(existsSync(path.join(base, 'index'))).toBe(true);
+    rmSync(base, { recursive: true, force: true });
   });
 
   it('successful cleanup with no primary returns null', () => {
     const staging = mkdtempSync(path.join(tmpdir(), 'ehas2-cli-fin-success-'));
     const ownership = createCliOwnedDirectoryOwnership('staging', staging);
     const out = finalizeBuildFullCorpusResources({
-      destroyIndex: () => undefined,
+      destroyIndex: () => null,
       stagingDir: staging,
       stagingOwnership: ownership,
       primaryError: null,
@@ -1142,7 +1290,7 @@ describe('CLI full-corpus finalize primary-error preservation', () => {
     expect(existsSync(staging)).toBe(false);
   });
 
-  it('CLI process-boundary stderr retains MALFORMED_INPUT ahead of secondary cleanup evidence', () => {
+  it('formatting simulation retains MALFORMED_INPUT ahead of stagingCleanup (not actual cli.mjs subprocess)', () => {
     const script = `
 import { DiseaseIdentityError } from './packages/disease-identity/dist/errors.js';
 import { finalizeBuildFullCorpusResources } from './tools/disease-identity-generator/lib/fullCorpusCommands.mjs';
@@ -1151,7 +1299,7 @@ const primary = new DiseaseIdentityError(
   'production build index exceeds MAX_CONTROLLED_INDEX_BYTES (2147483648)',
 );
 const finalized = finalizeBuildFullCorpusResources({
-  destroyIndex: () => undefined,
+  destroyIndex: () => null,
   stagingDir: 'synthetic-staging',
   stagingOwnership: { __builderOwnedDirectoryOwnership: true },
   primaryError: primary,
@@ -1185,7 +1333,7 @@ try {
     expect(status).toBe(1);
     expect(stderr).toMatch(/^MALFORMED_INPUT:/);
     expect(stderr.indexOf('MAX_CONTROLLED_INDEX_BYTES')).toBeLessThan(
-      stderr.indexOf('secondaryCleanupFailure'),
+      stderr.indexOf('stagingCleanup='),
     );
     expect(stderr).not.toMatch(/EPERM:|private|patient|phi|A00\.0/i);
   });

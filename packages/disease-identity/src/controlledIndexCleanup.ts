@@ -24,6 +24,12 @@ type OwnershipRecord = {
 /**
  * Opaque ownership token. Only objects issued by createBuilderOwnedDirectoryOwnership
  * are accepted; plain/forged objects are rejected via a module-private WeakSet.
+ *
+ * Package-export disposition: this module is NOT listed in package.json `exports`
+ * (`@ehas2/disease-identity` / `./tooling-internal`). Supported public consumers cannot
+ * mint tokens via the package surface. Builder construction mints internally inside
+ * createProductionBuildIndex; staging mint is CLI-tooling-only via deep import of this
+ * file. Do not re-export from index.ts / toolingInternal.ts.
  */
 export type BuilderOwnedDirectoryOwnership = {
   readonly __builderOwnedDirectoryOwnership: true;
@@ -149,11 +155,45 @@ export function sleepSync(ms: number): void {
   }
 }
 
+/**
+ * Bounded cleanup evidence categories (deterministic order: index then staging).
+ * Avoids ambiguous duplicate `secondaryCleanupFailure` labels.
+ */
+export type CleanupFailureParts = {
+  readonly indexCleanup?: string | null;
+  readonly stagingCleanup?: string | null;
+};
+
+/**
+ * Append redacted cleanup evidence after the primary reason.
+ * A bare string is treated as indexCleanup (library fail-closed size path).
+ */
 export function formatFailClosedCleanupMessage(
   reason: string,
-  cleanupFailure: string | null,
+  cleanup: string | null | CleanupFailureParts,
 ): string {
-  return cleanupFailure ? `${reason}; secondaryCleanupFailure=${cleanupFailure}` : reason;
+  let indexCleanup: string | null = null;
+  let stagingCleanup: string | null = null;
+  if (typeof cleanup === 'string') {
+    indexCleanup = cleanup.length > 0 ? cleanup : null;
+  } else if (cleanup && typeof cleanup === 'object') {
+    indexCleanup =
+      typeof cleanup.indexCleanup === 'string' && cleanup.indexCleanup.length > 0
+        ? cleanup.indexCleanup
+        : null;
+    stagingCleanup =
+      typeof cleanup.stagingCleanup === 'string' && cleanup.stagingCleanup.length > 0
+        ? cleanup.stagingCleanup
+        : null;
+  }
+  const parts: string[] = [];
+  if (indexCleanup) {
+    parts.push(`indexCleanup=${indexCleanup}`);
+  }
+  if (stagingCleanup) {
+    parts.push(`stagingCleanup=${stagingCleanup}`);
+  }
+  return parts.length > 0 ? `${reason}; ${parts.join('; ')}` : reason;
 }
 
 /**

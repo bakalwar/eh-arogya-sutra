@@ -49,10 +49,22 @@ import { ingestBridgeToBuildIndex } from './streamBridgeJsonl.mjs';
 import { streamDedupeMappedJsonFileWithConsumedDigest } from './streamMappedJson.mjs';
 import { streamLegacyDiseaseRowsToBuildIndex } from './readLegacyDb.mjs';
 
+function redactedCleanupFailureFromThrown(error) {
+  if (error && typeof error === 'object' && typeof error.code === 'string' && error.code) {
+    return `code=${error.code}`;
+  }
+  return 'code=UNKNOWN';
+}
+
+function normalizeCleanupFailureResult(result) {
+  return typeof result === 'string' && result.length > 0 ? result : null;
+}
+
 /**
  * Finalize index/staging cleanup without allowing cleanup failure to replace a
- * primary DiseaseIdentityError (or other primary failure).
- * Exported for process-boundary regression tests.
+ * primary DiseaseIdentityError (or other primary failure). Aggregates both
+ * indexCleanup and stagingCleanup evidence in deterministic order.
+ * Exported for command-function / formatting-simulation regression tests.
  */
 export function finalizeBuildFullCorpusResources(input) {
   const {
@@ -62,18 +74,25 @@ export function finalizeBuildFullCorpusResources(input) {
     primaryError = null,
     removeDirectory = removeBuilderOwnedDirectory,
   } = input;
-  try {
-    destroyIndex?.();
-  } catch {
-    // Index destroy is best-effort after a primary failure; never mask primary.
+  let indexCleanup = null;
+  if (typeof destroyIndex === 'function') {
+    try {
+      indexCleanup = normalizeCleanupFailureResult(destroyIndex());
+    } catch (error) {
+      // Never let a raw fs throw replace primary; keep redacted secondary evidence only.
+      indexCleanup = redactedCleanupFailureFromThrown(error);
+    }
   }
-  let cleanupFailure = null;
+  let stagingCleanup = null;
   if (stagingDir && stagingOwnership) {
-    cleanupFailure = removeDirectory(stagingDir, { ownership: stagingOwnership });
+    stagingCleanup = normalizeCleanupFailureResult(
+      removeDirectory(stagingDir, { ownership: stagingOwnership }),
+    );
   } else if (stagingDir && !stagingOwnership) {
-    cleanupFailure = 'ownership=missing_or_forged';
+    stagingCleanup = 'ownership=missing_or_forged';
   }
-  if (!cleanupFailure) {
+  const cleanupParts = { indexCleanup, stagingCleanup };
+  if (!indexCleanup && !stagingCleanup) {
     return primaryError;
   }
   const primaryIsDiseaseIdentity =
@@ -86,18 +105,23 @@ export function finalizeBuildFullCorpusResources(input) {
   if (primaryIsDiseaseIdentity) {
     return new DiseaseIdentityError(
       primaryError.code,
-      formatFailClosedCleanupMessage(primaryError.message, cleanupFailure),
+      formatFailClosedCleanupMessage(primaryError.message, cleanupParts),
     );
   }
   if (primaryError) {
     const primaryMessage = primaryError instanceof Error ? primaryError.message : 'Build failed';
-    const wrapped = new Error(formatFailClosedCleanupMessage(primaryMessage, cleanupFailure));
+    const wrapped = new Error(formatFailClosedCleanupMessage(primaryMessage, cleanupParts));
     wrapped.cause = primaryError;
     return wrapped;
   }
+  const cleanupOnlyReason = indexCleanup
+    ? stagingCleanup
+      ? 'Index and staging cleanup failed after build'
+      : 'Index cleanup failed after build'
+    : 'Staging cleanup failed after build';
   return new DiseaseIdentityError(
     'MALFORMED_INPUT',
-    formatFailClosedCleanupMessage('Staging cleanup failed after build', cleanupFailure),
+    formatFailClosedCleanupMessage(cleanupOnlyReason, cleanupParts),
   );
 }
 
@@ -236,6 +260,7 @@ export async function cmdBuildFullCorpus(args, repoRoot) {
   let stagingDir = null;
   let stagingOwnership = null;
   let primaryError = null;
+  let successPayload = null;
   try {
     index.checkControlledIndexSize();
 
@@ -330,15 +355,16 @@ export async function cmdBuildFullCorpus(args, repoRoot) {
       serialized: artifacts.serialized,
       manifest: artifacts.manifest,
     });
+    // Staging was published; do not delete activated destination. Clear staging
+    // handles so finalize only cleans the temporary controlled index.
     stagingDir = null;
     stagingOwnership = null;
-    console.log(
-      JSON.stringify(
-        { ok: true, bundleDir: result.destinationDir, dbIdentityInputClass: inputClass },
-        null,
-        2,
-      ),
-    );
+    // Defer success stdout until after index cleanup finalization succeeds.
+    successPayload = {
+      ok: true,
+      bundleDir: result.destinationDir,
+      dbIdentityInputClass: inputClass,
+    };
   } catch (error) {
     primaryError = error;
   }
@@ -350,6 +376,9 @@ export async function cmdBuildFullCorpus(args, repoRoot) {
   });
   if (finalized) {
     throw finalized;
+  }
+  if (successPayload) {
+    console.log(JSON.stringify(successPayload, null, 2));
   }
 }
 

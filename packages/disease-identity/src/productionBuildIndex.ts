@@ -131,7 +131,12 @@ export type ProductionBuildIndex = {
   outputCount(kind: OutputRecordKind): number;
   scalarNumber(sql: string): number;
   close(): void;
-  destroy(): void;
+  /**
+   * Close connections and remove the builder-owned index directory.
+   * Returns a redacted cleanup failure string when removal fails; never throws for
+   * cleanup alone (callers must propagate the result).
+   */
+  destroy(): string | null;
 };
 
 export const OUTPUT_RECORD_KINDS = ['disease', 'mapped', 'relationship', 'unresolved'] as const;
@@ -812,7 +817,7 @@ export function createProductionBuildIndex(
     },
     destroy() {
       api.close();
-      removeOwnedIndexDirectory();
+      return removeOwnedIndexDirectory();
     },
   };
   return api;
